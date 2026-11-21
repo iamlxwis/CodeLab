@@ -34,6 +34,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     var busy by mutableStateOf(false)
         private set
     var console by mutableStateOf(false)
+    var preview by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
     private var revision = 0L
     private val autoSave = Runnable { flush() }
@@ -75,6 +76,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         active = open.file
         source = open.text
         dirty = false
+        preview = false
         revision++
     }
 
@@ -152,7 +154,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             val names = store.projects()
             val commit: () -> Unit = {
                 runner.stop(); projects = names; project = null; active = null
-                files = emptyList(); tabs = emptyList(); source = ""; console = false; revision++
+                files = emptyList(); tabs = emptyList(); source = ""; console = false; preview = false; revision++
             }
             commit
         }
@@ -223,6 +225,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val filename = active ?: return
         flush()
         console = true
+        preview = false
         runner.run(filename, source)
     }
 
