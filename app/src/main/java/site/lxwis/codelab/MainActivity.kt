@@ -142,20 +142,24 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
                 val wide = maxWidth >= 820.dp
                 Row(Modifier.fillMaxSize()) {
-                    if (!m.console || wide) Box(Modifier.weight(1f).fillMaxHeight()) {
+                    if ((!m.console && !m.preview) || wide) Box(Modifier.weight(1f).fillMaxHeight()) {
                         val file = m.active
                         if (file != null) key(p, file) {
                             CodeEditor(fileKey = "$p/$file", filename = file, text = m.source, onTextChange = m::edit, modifier = Modifier.fillMaxSize())
                         } else TextButton(onClick = { dialog = "files" }, modifier = Modifier.align(Alignment.Center)) { Text("Open a file") }
                     }
                     if (m.console) RunConsole(m.runner, Modifier.weight(if (wide) 0.7f else 1f).fillMaxHeight())
+                    else if (m.preview && m.active != null) HtmlPreview(p, m.active!!, m.source,
+                        Modifier.weight(if (wide) 0.8f else 1f).fillMaxHeight())
                 }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                PanelButton("Editor", !m.console) { m.console = false }
-                PanelButton("Console", m.console) { m.console = true }
-                Text(when { m.active?.endsWith(".js",true) == true -> "JavaScript"; m.active?.endsWith(".sql",true) == true -> "SQLite"; else -> "Text" }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                PanelButton("Editor", !m.console && !m.preview) { m.console = false; m.preview = false }
+                PanelButton("Console", m.console) { m.console = true; m.preview = false }
+                if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
+                    PanelButton("Preview", m.preview) { m.console = false; m.preview = true }
+                Text(when { m.active?.endsWith(".js",true) == true -> "JavaScript"; m.active?.endsWith(".sql",true) == true -> "SQLite"; m.active?.endsWith(".html",true) == true -> "HTML"; else -> "Text" }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         AnimatedVisibility(m.busy) { LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(2.dp)) }
