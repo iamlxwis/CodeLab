@@ -90,7 +90,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
     val p = m.project
     BackHandler(enabled = p != null && dialog.isEmpty()) {
-        if (m.console) m.console = false else m.home()
+        if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
     }
 
     Column(modifier.fillMaxSize()) {
@@ -166,7 +166,11 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
 
     when (dialog) {
-        "newproject", "newfile", "rename", "renameproject", "import" -> {
+        "newproject" -> CreateProjectDialog(cancel = { dialog = "" }) { name, template ->
+            m.openProject(name, true, template)
+            dialog = ""
+        }
+        "newfile", "rename", "renameproject", "import" -> {
             val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; else -> "Import project" }
             val file = dialog == "newfile" || dialog == "rename"
             NameDialog(title, if (dialog.startsWith("rename")) selected else "", if (file) "File path" else "Project name",
@@ -240,7 +244,7 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
                 Column(Modifier.fillMaxWidth().padding(20.dp)) {
                     Text("No projects yet", fontWeight = FontWeight.Medium)
                     Spacer(Modifier.height(6.dp))
-                    Text("Create a JavaScript project or import a project ZIP.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Create a project or import a project ZIP.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -270,6 +274,35 @@ private fun NameDialog(title: String, initial: String, label: String, example: S
         text = { OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true, label = { Text(label) }, placeholder = { Text(example) }) },
         confirmButton = { TextButton(onClick = { submit(name.trim()) }, enabled = name.isNotBlank()) { Text(if (title.startsWith("New")) "Create" else if (title.startsWith("Import")) "Import" else "Rename") } },
         dismissButton = { TextButton(onClick = cancel) { Text("Cancel") } })
+}
+
+@Composable
+private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> Unit) {
+    var name by rememberSaveable { mutableStateOf("") }
+    var template by rememberSaveable { mutableStateOf("JavaScript") }
+    AlertDialog(
+        onDismissRequest = cancel,
+        title = { Text("New project") },
+        text = {
+            Column {
+                OutlinedTextField(name, { name = it }, singleLine = true,
+                    label = { Text("Project name") }, placeholder = { Text("e.g. Playground") })
+                Spacer(Modifier.height(14.dp))
+                Text("STARTER", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("JavaScript", "SQLite", "Web").forEach { option ->
+                        FilterChip(selected = template == option, onClick = { template = option },
+                            label = { Text(option) })
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = { submit(name.trim(), template) },
+            enabled = name.isNotBlank()) { Text("Create") } },
+        dismissButton = { TextButton(onClick = cancel) { Text("Cancel") } }
+    )
 }
 
 @Composable
