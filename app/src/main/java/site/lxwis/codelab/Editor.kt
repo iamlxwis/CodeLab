@@ -16,6 +16,8 @@ import android.view.inputmethod.InputConnectionWrapper
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -46,6 +48,9 @@ fun CodeEditor(
     var search by remember { mutableStateOf("") }
     var replacement by remember { mutableStateOf("") }
     var replaceMode by remember { mutableStateOf(false) }
+    var lineDialog by remember { mutableStateOf(false) }
+    var lineInput by remember { mutableStateOf("") }
+    var lineError by remember { mutableStateOf(false) }
     var settings by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf("") }
     val changes by rememberUpdatedState(onTextChange)
@@ -67,6 +72,29 @@ fun CodeEditor(
             result = ""
         } else result = "No matches"
     }
+    if (lineDialog) AlertDialog(
+        onDismissRequest = { lineDialog = false },
+        title = { Text("Go to line") },
+        text = {
+            OutlinedTextField(lineInput, { lineInput = it; lineError = false },
+                singleLine = true, isError = lineError, label = { Text("Line number") },
+                supportingText = { if (lineError) Text("Enter a line in the current file") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val line = lineInput.toIntOrNull()
+                val editor = view
+                val layout = editor?.layout
+                if (editor != null && layout != null && line != null && line in 1..layout.lineCount) {
+                    editor.requestFocus()
+                    editor.setSelection(layout.getLineStart(line - 1))
+                    lineDialog = false
+                } else lineError = true
+            }) { Text("Go") }
+        },
+        dismissButton = { TextButton(onClick = { lineDialog = false }) { Text("Cancel") } }
+    )
     Column(modifier) {
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -76,6 +104,7 @@ fun CodeEditor(
             EditorAction("Undo") { view?.onTextContextMenuItem(android.R.id.undo) }
             EditorAction("Redo") { view?.onTextContextMenuItem(android.R.id.redo) }
             EditorAction("Find") { find = !find }
+            EditorAction("Line") { lineInput = ""; lineError = false; lineDialog = true }
             Box {
                 EditorAction("${fontSize}sp") { settings = true }
                 DropdownMenu(expanded = settings, onDismissRequest = { settings = false }) {
@@ -115,7 +144,7 @@ fun CodeEditor(
             factory = {
                 SourceView(it, filename).apply {
                     setText(text)
-                    setSelection(0)
+                    restorePosition(fileKey)
                     changed = { source -> changes(source) }
                     view = this
                 }
@@ -144,6 +173,8 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     var sourceSnapshot = ""
         private set
     private var syncing = false
+    private var positionKey: String? = null
+    private var pendingScroll: Pair<Int,Int>? = null
     private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         typeface = Typeface.MONOSPACE
         textAlign = Paint.Align.RIGHT
@@ -208,6 +239,24 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         setPadding(gutterWidth + dp(10), dp(8), dp(16), dp(36))
         scheduleHighlight(true)
         invalidate()
+    }
+
+    fun restorePosition(key: String) {
+        positionKey = key
+        val prefs = context.getSharedPreferences("editor-positions", Context.MODE_PRIVATE)
+        setSelection(prefs.getInt("$key|start", 0).coerceIn(0, length()),
+            prefs.getInt("$key|end", 0).coerceIn(0, length()))
+        pendingScroll = prefs.getInt("$key|x", 0) to prefs.getInt("$key|y", 0)
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        pendingScroll?.let { (x,y) ->
+            pendingScroll = null
+            val maxY = ((layout?.height ?: 0) + totalPaddingTop + totalPaddingBottom - height).coerceAtLeast(0)
+            val maxX = (computeHorizontalScrollRange() - width + totalPaddingLeft + totalPaddingRight).coerceAtLeast(0)
+            scrollTo(x.coerceIn(0,maxX), y.coerceIn(0,maxY))
+        }
     }
 
     fun replaceSource(source: String) {
@@ -314,6 +363,11 @@ internal class SourceView(context: Context, filename: String) : EditText(context
 
     override fun onDetachedFromWindow() {
         removeCallbacks(highlightJob)
+        positionKey?.let { key ->
+            context.getSharedPreferences("editor-positions", Context.MODE_PRIVATE).edit()
+                .putInt("$key|start", selectionStart).putInt("$key|end", selectionEnd)
+                .putInt("$key|x", scrollX).putInt("$key|y", scrollY).apply()
+        }
         super.onDetachedFromWindow()
     }
 

@@ -121,7 +121,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }
         }
         if (p == null) {
-            ProjectLibrary(m, { dialog = "newproject" }, { importZip.launch(arrayOf("*/*")) })
+            ProjectLibrary(m, { dialog = "newproject" }, { importZip.launch(arrayOf("*/*")) },
+                { selected = it; dialog = "renameproject" }, { selected = it; dialog = "deleteproject" })
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -161,12 +162,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
 
     when (dialog) {
-        "newproject", "newfile", "rename", "import" -> {
-            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "rename" -> "Rename file"; else -> "Import project" }
+        "newproject", "newfile", "rename", "renameproject", "import" -> {
+            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; else -> "Import project" }
             val file = dialog == "newfile" || dialog == "rename"
-            NameDialog(title, if (dialog == "rename") selected else "", if (file) "File path" else "Project name",
+            NameDialog(title, if (dialog.startsWith("rename")) selected else "", if (file) "File path" else "Project name",
                 if (file) "e.g. src/helpers.js" else "e.g. Playground", { dialog = "" }) { name ->
-                when (dialog) { "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) } }
+                when (dialog) { "renameproject" -> m.manageProject(selected, name); "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) } }
                 dialog = ""
             }
         }
@@ -174,6 +175,10 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             onOpen = { m.select(it); dialog = "" }, onRename = { selected = it; dialog = "rename" }, onDelete = { selected = it; dialog = "delete" })
         "delete" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Delete file?") },
             text = { Text(selected) }, confirmButton = { TextButton(onClick = { m.changeFile(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
+            dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
+        "deleteproject" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Delete project?") },
+            text = { Text("Delete $selected and all its files from this device?") },
+            confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
         "appearance" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Appearance") },
             text = { Column { listOf("Dark", "Light", "System").forEach { mode ->
@@ -210,7 +215,8 @@ private fun Mark(modifier: Modifier) {
 }
 
 @Composable
-private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> Unit) {
+private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> Unit, rename: (String) -> Unit, delete: (String) -> Unit) {
+    var options by remember { mutableStateOf<String?>(null) }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 22.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
@@ -240,6 +246,13 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Mark(Modifier.size(34.dp))
                     Text(name, Modifier.weight(1f).padding(start = 14.dp), maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Medium)
+                    Box {
+                        IconButton(onClick = { options = name }) { Icon(Icons.Default.MoreVert, "Manage $name") }
+                        DropdownMenu(expanded = options == name, onDismissRequest = { options = null }) {
+                            DropdownMenuItem(text = { Text("Rename") }, onClick = { options = null; rename(name) })
+                            DropdownMenuItem(text = { Text("Delete") }, onClick = { options = null; delete(name) })
+                        }
+                    }
                 }
             }
         }

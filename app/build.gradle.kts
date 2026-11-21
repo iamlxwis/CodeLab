@@ -30,7 +30,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.foundation:foundation")
-    implementation("org.mozilla:rhino:1.7.15")
+    implementation("org.mozilla:rhino:1.7.15.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test:runner:1.6.2")

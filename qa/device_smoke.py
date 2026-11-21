@@ -1,5 +1,5 @@
 """Exercise the installed debug build through Android's accessibility tree."""
-import os
+import shlex
 import re
 import subprocess
 import time
@@ -79,23 +79,42 @@ def main():
     tap("Run", "Run file")
     wait_for("Waiting for input")
     snapshot("03-input")
-    tap("Program input")
+    tap_node(wait_for(field=True))
     adb("shell", "input", "text", "Ada")
-    adb("shell", "input", "keyevent", "KEYCODE_ENTER")
+    tap("Send")
     wait_for("Hello, Ada!", contains=True)
     wait_for("Exit 0", contains=True)
     snapshot("04-output")
+    tap("Editor")
+    tap("Add file")
+    tap_node(wait_for(field=True))
+    adb("shell", "input", "text", "answer.js")
+    tap("Create")
+    wait_for("Close answer.js")
+    tap_node(wait_for(field=True))
+    adb("shell", "input", "text", shlex.quote("print(6*7)"))
+    wait_for("print(6*7)", contains=True)
+    tap("Run")
+    wait_for("42", contains=True)
+    wait_for("Exit 0", contains=True)
+    tap("Editor")
+    tap("main.js")
+    wait_for("Close main.js")
+    tap("answer.js")
+    wait_for("Close answer.js")
     adb("shell", "am", "force-stop", PACKAGE)
     launch()
-    wait_for("main.js", contains=True)
+    wait_for("Close answer.js")
+    wait_for("print(6*7)", contains=True)
     adb("shell", "settings", "put", "system", "accelerometer_rotation", "0")
     adb("shell", "settings", "put", "system", "user_rotation", "1")
     time.sleep(1)
-    wait_for("main.js", contains=True)
+    wait_for("print(6*7)", contains=True)
     snapshot("05-restored-landscape")
     (OUT / "result.txt").write_text(
         "Passed: install, create, launch offline JavaScript, interactive input, "
-        "computed output, normal exit, process restoration, and rotation.\n")
+        "computed output, normal exit, file creation, editing, tab switching, autosave, "
+        "process restoration, and rotation.\n")
 
 
 if __name__ == "__main__":

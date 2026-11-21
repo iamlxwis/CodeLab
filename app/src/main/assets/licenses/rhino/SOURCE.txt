@@ -1,0 +1,3 @@
+Mozilla Rhino 1.7.15.1
+Source archive: https://repo.maven.apache.org/maven2/org/mozilla/rhino/1.7.15.1/rhino-1.7.15.1-sources.jar
+Project: https://github.com/mozilla/rhino

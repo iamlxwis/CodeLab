@@ -43,7 +43,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             val names = store.projects()
             val session = store.restore()
             val selected = session.project?.takeIf { it in names }
-            val open = selected?.let { load(it, session.tabs, session.active) }
+            val open = selected?.let { load(it, session.tabs, session.active, autoOpen = false, allowUnavailable = true) }
             val commit: () -> Unit = { projects = names; if (open != null) apply(open) }
             commit
         }
@@ -51,11 +51,21 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     private data class Open(val project: String, val files: List<String>, val tabs: List<String>, val file: String?, val text: String)
 
-    private fun load(name: String, wanted: List<String>, target: String?): Open {
+    private fun load(
+        name: String, wanted: List<String>, target: String?,
+        autoOpen: Boolean = true, allowUnavailable: Boolean = false
+    ): Open {
         val all = store.files(name)
-        val file = target?.takeIf { it in all } ?: wanted.firstOrNull { it in all } ?: all.firstOrNull()
-        val open = (wanted.filter { it in all } + listOfNotNull(file)).distinct()
-        return Open(name, all, open, file, file?.let { store.read(name, it) }.orEmpty())
+        val available = wanted.filter { it in all }
+        val default = if (autoOpen) all.firstOrNull { it == "main.js" } ?: all.firstOrNull() else null
+        val file = target?.takeIf { it in all } ?: available.firstOrNull() ?: default
+        val text = try {
+            file?.let { store.read(name, it) }.orEmpty()
+        } catch (e: java.io.IOException) {
+            if (!allowUnavailable) throw e
+            return Open(name, all, available - listOfNotNull(file).toSet(), null, "")
+        }
+        return Open(name, all, (available + listOfNotNull(file)).distinct(), file, text)
     }
 
     private fun apply(open: Open) {
@@ -120,9 +130,18 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun openProject(name: String, create: Boolean = false) {
         work {
             if (create) store.createProject(name)
-            val opened = persist(load(name, emptyList(), null))
+            val opened = persist(load(name, emptyList(), null, allowUnavailable = true))
             val names = store.projects()
             val commit: () -> Unit = { runner.stop(); console = false; projects = names; apply(opened) }
+            commit
+        }
+    }
+
+    fun manageProject(name: String, replacement: String?) {
+        work {
+            if (replacement == null) store.deleteProject(name) else store.renameProject(name, replacement)
+            val names = store.projects()
+            val commit: () -> Unit = { projects = names }
             commit
         }
     }
@@ -188,7 +207,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         work {
             val resolver = getApplication<Application>().contentResolver
             val p = requireNotNull(resolver.openInputStream(uri)) { "Cannot open archive" }.use { store.importZip(name, it) }
-            val opened = persist(load(p, emptyList(), null))
+            val opened = persist(load(p, emptyList(), null, allowUnavailable = true))
             val names = store.projects()
             val commit: () -> Unit = { projects = names; apply(opened); console = false }
             commit
