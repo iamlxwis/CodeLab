@@ -15,7 +15,7 @@ internal fun packet(kind: Int, body: String = "", code: Int = 0) =
     Message.obtain(null, kind, code, 0).apply { data = Bundle().apply { putString("body", body) } }
 internal fun Message.body() = data.getString("body").orEmpty()
 
-class RuntimeService : Service() {
+open class RuntimeService : Service() {
     private val main = Handler(Looper.getMainLooper())
     private var client: Messenger? = null
     private val input = ArrayBlockingQueue<String>(1)

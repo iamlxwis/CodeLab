@@ -66,8 +66,9 @@ class RunSession(context: Context) {
         }
         connection = listener
         try {
-            val intent = Intent(app, RuntimeService::class.java)
-            val bound = if (Build.VERSION.SDK_INT >= 29)
+            val sql = name.endsWith(".sql", true)
+            val intent = Intent(app, if (sql) SqlRuntimeService::class.java else RuntimeService::class.java)
+            val bound = if (Build.VERSION.SDK_INT >= 29 && !sql)
                 app.bindIsolatedService(intent, Context.BIND_AUTO_CREATE, "run${java.util.UUID.randomUUID().toString().replace("-", "")}", app.mainExecutor, listener)
             else app.bindService(intent, listener, Context.BIND_AUTO_CREATE)
             if (bound) main.postDelayed(watchdog, 8000) else end("Unable to start runtime")

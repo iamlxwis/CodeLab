@@ -56,7 +56,7 @@ The automated [Android APK](https://github.com/iamlxwis/CodeLab/actions/workflow
 
 This is not yet a full desktop-class IDE. There is no Python interpreter, C/C++ compiler, language-server completion, PTY, Git integration, or a full browser development server. Editing support for a file extension does not imply runnable support. The Android SQLite engine is included with the OS, and SQL databases are ephemeral per run.
 
-The isolated process reduces the privileges of evaluated code but should not be treated as a guarantee that arbitrary hostile code is secure.
+JavaScript executes in an Android isolated process. The SQLite runner uses a separate, non-exported app-UID process because the Android SQLite API is not available to the isolated UID on tested Android versions. SQL runs against an in-memory database with restricted statement types. Neither runtime should be treated as a proven sandbox against arbitrary hostile code.
 
 ## Privacy & licensing
 
