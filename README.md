@@ -19,12 +19,17 @@ CodeLab is early-access software; back up projects with **Export project ZIP** b
 | JavaScript console output, errors and `readLine()` input | Implemented |
 | Offline SQLite | Implemented with Android SQLite (in-memory database per Run) |
 | Stop, timeout, isolated runtime process | Implemented for supported runtimes |
-| HTML/CSS preview, Python, C++, Java, Rust compilation | Not implemented |
+| Offline HTML/CSS/JavaScript preview | Implemented for local text assets |
+| Python, C++, Java, Rust compilation | Not implemented |
 | Full Linux shell / PTY | Not implemented |
 
 **JavaScript:** Open a `.js` file and tap Run. This is the Rhino JavaScript runtime, not Node.js or a web browser. Use `print("hello")`, `console.log()`, `console.error()`, and `readLine("Name?")`. Network and filesystem host APIs are not provided. A 60-second worker timeout and console output limit are enforced.
 
 **SQLite:** Create a `.sql` file, write SQL statements, and tap Run. CodeLab runs statements against a new in-memory SQLite database, prints query results and statement diagnostics, and returns a nonzero exit status for invalid SQL. State does **not** persist between runs. `ATTACH`, `DETACH`, and `VACUUM` are deliberately unavailable.
+
+## Project templates and offline web preview
+
+The new-project dialog includes JavaScript, SQLite, and Web starter projects. Web projects contain `index.html`, `style.css`, and `script.js`. Open an HTML file and choose **Preview** to render the page in a restricted embedded WebView. Relative project CSS/JS/text assets load from local app storage; external network resources are blocked. The preview can display browser `console.log` messages and refresh its document.
 
 ## Build locally
 
@@ -49,7 +54,7 @@ The automated [Android APK](https://github.com/iamlxwis/CodeLab/actions/workflow
 
 ## Current limitations
 
-This is not yet a full desktop-class IDE. There is no Python interpreter, C/C++ compiler, language-server completion, PTY, Git integration, or multi-file local HTML preview. Editing support for a file extension does not imply runnable support. The Android SQLite engine is included with the OS, and SQL databases are ephemeral per run.
+This is not yet a full desktop-class IDE. There is no Python interpreter, C/C++ compiler, language-server completion, PTY, Git integration, or a full browser development server. Editing support for a file extension does not imply runnable support. The Android SQLite engine is included with the OS, and SQL databases are ephemeral per run.
 
 The isolated process reduces the privileges of evaluated code but should not be treated as a guarantee that arbitrary hostile code is secure.
 
