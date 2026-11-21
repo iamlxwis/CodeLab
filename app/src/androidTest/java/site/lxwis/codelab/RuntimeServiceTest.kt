@@ -66,4 +66,27 @@ class RuntimeServiceTest {
             assertTrue(session.transcript.length < 70_000)
         }
     }
+    @Test fun sqlRunsCompletelyOffline() {
+        main {
+            session.run("data.sql", """
+                CREATE TABLE people (id INTEGER PRIMARY KEY, name TEXT);
+                INSERT INTO people(name) VALUES ('Ada; Lovelace'), ('Grace Hopper');
+                -- A semicolon in a comment; should not split the statement
+                SELECT name FROM people ORDER BY id;
+            """.trimIndent())
+        }
+        await { !session.running }
+        main {
+            assertEquals("Exit 0", session.status)
+            assertTrue(session.transcript.contains("Ada; Lovelace"))
+            assertTrue(session.transcript.contains("Grace Hopper"))
+            assertTrue(session.transcript.contains("2 rows"))
+            session.run("invalid.sql", "SELECT * FROM nonexistent_table;")
+        }
+        await { !session.running }
+        main {
+            assertEquals("Exit 1", session.status)
+            assertTrue(session.transcript.contains("nonexistent_table"))
+        }
+    }
 }
