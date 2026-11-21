@@ -1,26 +1,284 @@
 package site.lxwis.codelab
+
 import android.os.Bundle
+import android.net.Uri
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
+
+private val night = darkColorScheme(
+    primary = Color(0xff83e5ca), onPrimary = Color(0xff083329),
+    primaryContainer = Color(0xff1d3c35), onPrimaryContainer = Color(0xffadf4df),
+    surface = Color(0xff101517), background = Color(0xff101517),
+    surfaceVariant = Color(0xff20292d), onSurfaceVariant = Color(0xffacbbbd),
+    onSurface = Color(0xffe6eeed), outlineVariant = Color(0xff364145)
+)
+private val day = lightColorScheme(
+    primary = Color(0xff006b57), onPrimary = Color.White,
+    primaryContainer = Color(0xffc2efdf), onPrimaryContainer = Color(0xff103c32),
+    surface = Color(0xfff5f8f7), background = Color(0xfff5f8f7),
+    surfaceVariant = Color(0xffe2eae7), onSurfaceVariant = Color(0xff495852),
+    onSurface = Color(0xff152322), outlineVariant = Color(0xffbdcbc5)
+)
+
 class MainActivity : ComponentActivity() {
-    private val session by lazy { RunSession(this) }
+    private lateinit var model: WorkspaceModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val prefs = getSharedPreferences("editor", MODE_PRIVATE)
+        model = ViewModelProvider(this)[WorkspaceModel::class.java]
         setContent {
-            var code by remember { mutableStateOf(prefs.getString("main", null) ?: "print('Hello, CodeLab')") }
-            MaterialTheme(colorScheme=darkColorScheme()) {
-                Surface { Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
-                    Button(onClick={ if(session.running) session.stop() else session.run("main.js",code) }) { Text(if(session.running) "Stop" else "Run main.js") }
-                    CodeEditor("default/main.js","main.js",code,{code=it; prefs.edit().putString("main",it).apply()},Modifier.weight(1f))
-                    RunConsole(session,Modifier.weight(0.7f))
-                } }
+            val dark = model.appearance == "Dark" || (model.appearance == "System" && isSystemInDarkTheme())
+            val scheme = if (dark) night else day
+            SideEffect {
+                @Suppress("DEPRECATION")
+                window.statusBarColor = scheme.surface.toArgb()
+                @Suppress("DEPRECATION")
+                window.navigationBarColor = scheme.surface.toArgb()
+                if (android.os.Build.VERSION.SDK_INT >= 30) {
+                    val mask = android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS or android.view.WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                    window.insetsController?.setSystemBarsAppearance(if (dark) 0 else mask, mask)
+                }
+            }
+            MaterialTheme(colorScheme = scheme) {
+                Surface(Modifier.fillMaxSize()) {
+                    Studio(model, Modifier.windowInsetsPadding(WindowInsets.safeDrawing).imePadding())
+                }
             }
         }
     }
-    override fun onDestroy() {session.close(); super.onDestroy()}
+    override fun onStop() {
+        model.flush()
+        super.onStop()
+    }
+}
+
+@Composable
+private fun Studio(m: WorkspaceModel, modifier: Modifier) {
+    var dialog by rememberSaveable { mutableStateOf("") }
+    var selected by rememberSaveable { mutableStateOf("") }
+    var incoming by rememberSaveable { mutableStateOf<String?>(null) }
+    var menu by remember { mutableStateOf(false) }
+    val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { it?.let(m::export) }
+    val importZip = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+        if (it != null) { incoming = it.toString(); dialog = "import" }
+    }
+    val p = m.project
+    BackHandler(enabled = p != null && dialog.isEmpty()) {
+        if (m.console) m.console = false else m.home()
+    }
+
+    Column(modifier.fillMaxSize()) {
+        Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (p == null) Mark(Modifier.padding(horizontal = 8.dp).size(34.dp))
+            else IconButton(onClick = { m.home() }, enabled = !m.busy) { Icon(Icons.Default.ArrowBack, "Project library") }
+            Column(Modifier.weight(1f).padding(start = 4.dp)) {
+                Text(if (p == null) "CodeLab" else p, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (p != null) Text(if (m.dirty) "Saving changes…" else "Local workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (p != null && (m.runner.running || m.active?.endsWith(".js", true) == true)) {
+                FilledTonalButton(onClick = { if (m.runner.running) m.runner.stop() else m.run() }, enabled = !m.busy,
+                    contentPadding = PaddingValues(horizontal = 14.dp), colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
+                    if (!m.runner.running) Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp))
+                    Text(if (m.runner.running) "Stop" else "Run")
+                }
+            }
+            Box {
+                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "Workspace options") }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    if (p != null) {
+                        DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
+                        DropdownMenuItem(text = { Text("Export project ZIP") }, onClick = { menu = false; export.launch("$p.zip") })
+                    } else DropdownMenuItem(text = { Text("Import project ZIP") }, onClick = { menu = false; importZip.launch(arrayOf("*/*")) })
+                    DropdownMenuItem(text = { Text("Appearance") }, onClick = { menu = false; dialog = "appearance" })
+                }
+            }
+        }
+        if (p == null) {
+            ProjectLibrary(m, { dialog = "newproject" }, { importZip.launch(arrayOf("*/*")) })
+        } else {
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { dialog = "files" }) { Icon(Icons.Default.Menu, "Browse files") }
+                LazyRow(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                    items(m.tabs, key = { it }) { path ->
+                        val active = m.active == path
+                        Row(Modifier.padding(end = 3.dp).background(if (active) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent, RoundedCornerShape(7.dp)), verticalAlignment = Alignment.CenterVertically) {
+                            Text(path.substringAfterLast('/'), Modifier.clickable { if (!m.busy) m.select(path) }.padding(horizontal = 10.dp, vertical = 10.dp),
+                                color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                            if (active) IconButton(onClick = { m.closeTab(path) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.Close, "Close $path", Modifier.size(16.dp)) }
+                        }
+                    }
+                }
+                IconButton(onClick = { dialog = "newfile" }) { Icon(Icons.Default.Add, "Add file") }
+            }
+            BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
+                val wide = maxWidth >= 820.dp
+                Row(Modifier.fillMaxSize()) {
+                    if (!m.console || wide) Box(Modifier.weight(1f).fillMaxHeight()) {
+                        val file = m.active
+                        if (file != null) key(p, file) {
+                            CodeEditor(fileKey = "$p/$file", filename = file, text = m.source, onTextChange = m::edit, modifier = Modifier.fillMaxSize())
+                        } else TextButton(onClick = { dialog = "files" }, modifier = Modifier.align(Alignment.Center)) { Text("Open a file") }
+                    }
+                    if (m.console) RunConsole(m.runner, Modifier.weight(if (wide) 0.7f else 1f).fillMaxHeight())
+                }
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                PanelButton("Editor", !m.console) { m.console = false }
+                PanelButton("Console", m.console) { m.console = true }
+                Text(if (m.active?.endsWith(".js",true) == true) "JavaScript" else "Text", Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        AnimatedVisibility(m.busy) { LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(2.dp)) }
+    }
+
+    when (dialog) {
+        "newproject", "newfile", "rename", "import" -> {
+            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "rename" -> "Rename file"; else -> "Import project" }
+            val file = dialog == "newfile" || dialog == "rename"
+            NameDialog(title, if (dialog == "rename") selected else "", if (file) "File path" else "Project name",
+                if (file) "e.g. src/helpers.js" else "e.g. Playground", { dialog = "" }) { name ->
+                when (dialog) { "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) } }
+                dialog = ""
+            }
+        }
+        "files" -> FilePicker(m, onClose = { dialog = "" }, onNew = { dialog = "newfile" },
+            onOpen = { m.select(it); dialog = "" }, onRename = { selected = it; dialog = "rename" }, onDelete = { selected = it; dialog = "delete" })
+        "delete" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Delete file?") },
+            text = { Text(selected) }, confirmButton = { TextButton(onClick = { m.changeFile(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
+            dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
+        "appearance" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Appearance") },
+            text = { Column { listOf("Dark", "Light", "System").forEach { mode ->
+                Row(Modifier.fillMaxWidth().clickable { m.setMode(mode) }.heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(m.appearance == mode, onClick = null)
+                    Text(mode, Modifier.padding(start = 14.dp))
+                }
+            } } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
+    }
+    m.error?.let { issue ->
+        AlertDialog(onDismissRequest = { m.error = null }, title = { Text("Workspace error") }, text = { Text(issue) },
+            confirmButton = { TextButton(onClick = { m.error = null }) { Text("Close") } })
+    }
+}
+
+@Composable
+private fun PanelButton(text: String, active: Boolean, click: () -> Unit) {
+    TextButton(onClick = click, colors = ButtonDefaults.textButtonColors(contentColor = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)) {
+        Text(text, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+    }
+}
+
+@Composable
+private fun Mark(modifier: Modifier) {
+    val ink = MaterialTheme.colorScheme.onPrimaryContainer
+    Canvas(modifier.background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(9.dp)).padding(7.dp)) {
+        val w = size.width
+        val h = size.height
+        fun stroke(a: Float,b: Float,c: Float,d: Float) = drawLine(ink, Offset(w*a,h*b), Offset(w*c,h*d), w*.095f, StrokeCap.Round)
+        stroke(.28f,.29f,.07f,.5f); stroke(.07f,.5f,.28f,.71f)
+        stroke(.59f,.15f,.42f,.85f)
+        stroke(.73f,.29f,.94f,.5f); stroke(.94f,.5f,.73f,.71f)
+    }
+}
+
+@Composable
+private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> Unit) {
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 22.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            Text("Projects", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = new, enabled = !m.busy, shape = RoundedCornerShape(10.dp)) {
+                    Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Spacer(Modifier.width(5.dp)); Text("New project")
+                }
+                OutlinedButton(onClick = importZip, enabled = !m.busy, shape = RoundedCornerShape(10.dp)) { Text("Import ZIP") }
+            }
+            Spacer(Modifier.height(24.dp))
+            Text("ON THIS DEVICE", fontSize = 11.sp, letterSpacing = 1.6.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (m.projects.isEmpty() && !m.busy) item {
+            Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .65f), shape = RoundedCornerShape(14.dp)) {
+                Column(Modifier.fillMaxWidth().padding(20.dp)) {
+                    Text("No projects yet", fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(6.dp))
+                    Text("Create a JavaScript project or import a project ZIP.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        items(m.projects, key = { it }) { name ->
+            Surface(onClick = { m.openProject(name) }, enabled = !m.busy, shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .65f)) {
+                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Mark(Modifier.size(34.dp))
+                    Text(name, Modifier.weight(1f).padding(start = 14.dp), maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Medium)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NameDialog(title: String, initial: String, label: String, example: String, cancel: () -> Unit, submit: (String) -> Unit) {
+    var name by rememberSaveable(title, initial) { mutableStateOf(initial) }
+    AlertDialog(onDismissRequest = cancel, title = { Text(title) },
+        text = { OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true, label = { Text(label) }, placeholder = { Text(example) }) },
+        confirmButton = { TextButton(onClick = { submit(name.trim()) }, enabled = name.isNotBlank()) { Text(if (title.startsWith("New")) "Create" else if (title.startsWith("Import")) "Import" else "Rename") } },
+        dismissButton = { TextButton(onClick = cancel) { Text("Cancel") } })
+}
+
+@Composable
+private fun FilePicker(m: WorkspaceModel, onClose: () -> Unit, onNew: () -> Unit, onOpen: (String) -> Unit, onRename: (String) -> Unit, onDelete: (String) -> Unit) {
+    var query by rememberSaveable { mutableStateOf("") }
+    var options by remember { mutableStateOf<String?>(null) }
+    AlertDialog(onDismissRequest = onClose, title = { Text("Project files") },
+        text = { Column {
+            OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Find file") }, singleLine = true)
+            Spacer(Modifier.height(8.dp))
+            val results = m.files.filter { it.contains(query, ignoreCase = true) }
+            LazyColumn(Modifier.heightIn(max = 330.dp)) {
+                items(results, key = { it }) { path ->
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(path, Modifier.weight(1f).clickable { onOpen(path) }.padding(vertical = 14.dp), fontSize = 13.sp, fontFamily = FontFamily.Monospace,
+                            color = if (path == m.active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                        Box {
+                            IconButton(onClick = { options = path }) { Icon(Icons.Default.MoreVert, "Manage $path") }
+                            DropdownMenu(expanded = options == path, onDismissRequest = { options = null }) {
+                                DropdownMenuItem(text = { Text("Rename or move") }, onClick = { options = null; onRename(path) })
+                                DropdownMenuItem(text = { Text("Delete") }, onClick = { options = null; onDelete(path) })
+                            }
+                        }
+                    }
+                }
+                if (results.isEmpty()) item { Text("No files found", Modifier.padding(vertical = 12.dp)) }
+            }
+        } }, confirmButton = { TextButton(onClick = onNew) { Text("New file") } }, dismissButton = { TextButton(onClick = onClose) { Text("Close") } })
 }

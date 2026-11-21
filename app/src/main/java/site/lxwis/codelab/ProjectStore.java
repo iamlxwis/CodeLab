@@ -15,13 +15,11 @@ public final class ProjectStore {
     private static final int MAX_FILE_BYTES = 256 * 1024;
     private static final int MAX_ARCHIVE_BYTES = 16 * 1024 * 1024;
     private static final int MAX_ENTRIES = 1024;
-    private final File root;
     private final File projects;
     private final File scratch;
     private final File session;
 
     public ProjectStore(File root) {
-        this.root = root;
         projects = new File(root, "projects");
         scratch = new File(root, "pending");
         session = new File(root, "session.properties");

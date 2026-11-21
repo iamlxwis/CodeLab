@@ -11,6 +11,9 @@ import android.text.TextWatcher
 import android.text.style.ForegroundColorSpan
 import android.view.Gravity
 import android.view.KeyEvent
+import android.view.inputmethod.InputConnection
+import android.view.inputmethod.InputConnectionWrapper
+import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.compose.foundation.horizontalScroll
@@ -136,7 +139,7 @@ private fun EditorAction(label: String, onClick: () -> Unit) {
 
 private class SyntaxInk(color: Int) : ForegroundColorSpan(color)
 
-private class SourceView(context: Context, filename: String) : EditText(context) {
+internal class SourceView(context: Context, filename: String) : EditText(context) {
     var changed: ((String) -> Unit)? = null
     var sourceSnapshot = ""
         private set
@@ -232,10 +235,53 @@ private class SourceView(context: Context, filename: String) : EditText(context)
         setSelection((minOf(a,b) + value.length).coerceAtMost(length()))
     }
 
+    private fun typeCodeKey(key: Char): Boolean {
+        val start = minOf(selectionStart, selectionEnd)
+        val end = maxOf(selectionStart, selectionEnd)
+        if (start < 0 || BaseInputConnection.getComposingSpanStart(text) >= 0) return false
+        if (key == '\n') {
+            var first = start
+            while (first > 0 && text[first - 1] != '\n') first--
+            var spaces = first
+            while (spaces < start && (text[spaces] == ' ' || text[spaces] == '\t')) spaces++
+            val extra = if (start > 0 && text[start - 1] in "{[(:") "    " else ""
+            insertAtSelection("\n" + text.subSequence(first, spaces) + extra)
+            return true
+        }
+        if (start == end && end < length() && text[end] == key && key in closers) {
+            setSelection(end + 1)
+            return true
+        }
+        val closing = pairs[key] ?: return false
+        // A quote inside a name or after an escape is usually a literal apostrophe.
+        if (key == '\'' || key == '"') {
+            if (start > 0 && (text[start - 1].isLetterOrDigit() || text[start - 1] == '\\')) return false
+        }
+        if (start == end && end < length() && !text[end].isWhitespace() && text[end] !in closers) return false
+        val selected = text.subSequence(start, end).toString()
+        text.replace(start, end, key + selected + closing)
+        setSelection(start + 1, start + 1 + selected.length)
+        return true
+    }
+
+    override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
+        val connection = super.onCreateInputConnection(outAttrs) ?: return null
+        return object : InputConnectionWrapper(connection, false) {
+            override fun commitText(value: CharSequence?, newCursorPosition: Int): Boolean {
+                if (value != null && value.length == 1 && newCursorPosition == 1 && typeCodeKey(value[0])) return true
+                return super.commitText(value, newCursorPosition)
+            }
+        }
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_TAB && event.hasNoModifiers()) {
             insertAtSelection("    ")
             return true
+        }
+        if (event.hasNoModifiers() || event.isShiftPressed && !event.isCtrlPressed && !event.isAltPressed) {
+            val typed = if (keyCode == KeyEvent.KEYCODE_ENTER) '\n' else event.unicodeChar.toChar()
+            if (typeCodeKey(typed)) return true
         }
         return super.onKeyDown(keyCode, event)
     }
@@ -307,6 +353,8 @@ private class SourceView(context: Context, filename: String) : EditText(context)
     }
 
     companion object {
+        private val pairs = mapOf('(' to ')', '[' to ']', '{' to '}', '"' to '"', '\'' to '\'')
+        private val closers = pairs.values.toSet()
         private val supportedExtensions = setOf("js","mjs","ts","jsx","tsx","json","py","lua","sql","kt","kts","java","c","h","cpp","css","rs","sh")
         private val hashCommentLanguages = setOf("py","sh")
         private val tokenPattern  = """//[^\n]*|/\*[\s\S]*?(?:\*/|$)|"(?:\\.|[^"\\\n])*+"?|'(?:\\.|[^'\\\n])*+'?|`(?:\\.|[^`\\])*+`?|\b(?:0[xX][0-9a-fA-F]+|\d+(?:\.\d+)?)\b|[a-zA-Z_][a-zA-Z_0-9]*"""
