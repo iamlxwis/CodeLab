@@ -94,4 +94,16 @@ public class ProjectStoreTest {
         assertThrows(IllegalArgumentException.class, () -> store.createFile("First", "../../session.properties"));
         assertEquals(Collections.singletonList("main.js"), store.files("First"));
     }
+    @Test public void starterTemplatesContainRunnableProjectFiles() throws Exception {
+        store.createProject("Queries", "SQLite");
+        assertEquals(Collections.singletonList("main.sql"), store.files("Queries"));
+        assertTrue(store.read("Queries", "main.sql").contains("CREATE TABLE"));
+
+        store.createProject("Website", "Web");
+        assertEquals(Arrays.asList("index.html", "script.js", "style.css"), store.files("Website"));
+        assertTrue(store.read("Website", "index.html").contains("script.js"));
+
+        assertThrows(IllegalArgumentException.class, () -> store.createProject("Invalid", "Python"));
+        assertFalse(store.projects().contains("Invalid"));
+    }
 }
