@@ -88,14 +88,51 @@ public final class ProjectStore {
     }
 
     public synchronized String createProject(String name) throws IOException {
+        return createProject(name, "JavaScript");
+    }
+
+    public synchronized String createProject(String name, String template) throws IOException {
+        if (!Arrays.asList("JavaScript", "SQLite", "Web").contains(template))
+            throw new IllegalArgumentException("Unsupported project template.");
         File dest = new File(projects, segment(name));
         requireNew(dest);
         File stage = Files.createTempDirectory(scratch.toPath(), "project-").toFile();
         try {
-            String starter = "// Run this file, then enter your name in the console.\n"
-                    + "const name = readLine(\"What is your name? \");\n"
-                    + "print(\"Hello, \" + name + \"!\");\n";
-            writeText(new File(stage, "main.js"), starter);
+            if ("SQLite".equals(template)) {
+                writeText(new File(stage, "main.sql"),
+                    "-- Local SQLite: press Run to execute this file.\n" +
+                    "CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT);\n" +
+                    "INSERT INTO tasks(title) VALUES ('Write code'), ('Run it offline');\n" +
+                    "SELECT * FROM tasks;\n");
+            } else if ("Web".equals(template)) {
+                writeText(new File(stage, "index.html"),
+                    "<!doctype html>\n<html lang=\"en\">\n<head>\n" +
+                    "  <meta charset=\"utf-8\">\n" +
+                    "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n" +
+                    "  <title>CodeLab</title>\n" +
+                    "  <link rel=\"stylesheet\" href=\"style.css\">\n" +
+                    "</head>\n<body>\n  <main>\n" +
+                    "    <h1>Hello, CodeLab.</h1>\n" +
+                    "    <p>A local project, ready to preview offline.</p>\n" +
+                    "    <button id=\"hello\">Try it</button>\n" +
+                    "    <p id=\"output\"></p>\n" +
+                    "  </main>\n  <script src=\"script.js\"></script>\n</body>\n</html>\n");
+                writeText(new File(stage, "style.css"),
+                    ":root { color-scheme: dark; font-family: system-ui, sans-serif; }\n" +
+                    "body { margin: 0; padding: 2rem; background: #101517; color: #e6eeed; }\n" +
+                    "main { max-width: 42rem; margin: 3rem auto; }\n" +
+                    "button { background: #83e5ca; color: #083329; padding: .8rem 1.3rem; border: 0; border-radius: .6rem; font-weight: bold; }\n");
+                writeText(new File(stage, "script.js"),
+                    "document.getElementById('hello').addEventListener('click', () => {\n" +
+                    "  document.getElementById('output').textContent = 'Running locally.';\n" +
+                    "  console.log('Preview JavaScript executed');\n" +
+                    "});\n");
+            } else {
+                writeText(new File(stage, "main.js"),
+                    "// Run this file, then enter your name in the console.\n" +
+                    "const name = readLine(\"What is your name? \");\n" +
+                    "print(\"Hello, \" + name + \"!\");\n");
+            }
             moveNew(stage, dest);
             return name;
         } finally { clean(stage); }
