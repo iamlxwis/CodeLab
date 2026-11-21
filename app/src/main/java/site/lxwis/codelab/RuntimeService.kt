@@ -86,7 +86,7 @@ class RuntimeService : Service() {
                     return value
                 }
             }
-            val code = try { JsEngine.execute(name, source, io) }
+            val code = try { if (name.endsWith(".sql", true)) SqlEngine.execute(name, source, io) else JsEngine.execute(name, source, io) }
                 catch (_: OutputLimit) { flush(); emit(OUTPUT, "! Console output limit reached\n"); 1 }
                 catch (e: Exception) { flush(); emit(OUTPUT, "! ${e.javaClass.simpleName}\n"); 1 }
             flush()
