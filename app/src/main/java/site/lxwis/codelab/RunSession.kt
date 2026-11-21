@@ -24,7 +24,7 @@ class RunSession(context: Context) {
     fun run(name: String, source: String) {
         if (running) return
         transcript = ""
-        if (!name.endsWith(".js", true)) { status = "Run a .js file"; return }
+        if (!name.endsWith(".js", true) && !name.endsWith(".sql", true)) { status = "Run a .js or .sql file"; return }
         if (source.length > 128_000) { status = "Script exceeds 128,000 characters"; return }
         running = true
         status = "Starting"
