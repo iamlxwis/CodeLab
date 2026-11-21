@@ -77,7 +77,7 @@ class RuntimeServiceTest {
         }
         await { !session.running }
         main {
-            assertEquals("Exit 0", session.status)
+            assertEquals("SQLite transcript: " + session.transcript, "Exit 0", session.status)
             assertTrue(session.transcript.contains("Ada; Lovelace"))
             assertTrue(session.transcript.contains("Grace Hopper"))
             assertTrue(session.transcript.contains("2 rows"))
