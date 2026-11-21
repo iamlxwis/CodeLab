@@ -111,10 +111,40 @@ def main():
     time.sleep(1)
     wait_for("print(6*7)", contains=True)
     snapshot("05-restored-landscape")
+
+    # Verify the SQL starter and SQL console through the actual Android UI.
+    adb("shell", "settings", "put", "system", "user_rotation", "0")
+    time.sleep(1)
+    tap("Project library")
+    wait_for("New project")
+    tap("New project")
+    tap("SQLite")
+    tap_node(wait_for(field=True))
+    adb("shell", "input", "text", "SqlSmoke")
+    tap("Create")
+    wait_for("main.sql", contains=True)
+    tap("Run")
+    wait_for("2 rows", contains=True)
+    wait_for("Exit 0", contains=True)
+    snapshot("06-sql")
+
+    # Verify the web starter and embedded preview navigation, fully offline.
+    tap("Project library")
+    wait_for("New project")
+    tap("New project")
+    tap("Web")
+    tap_node(wait_for(field=True))
+    adb("shell", "input", "text", "WebSmoke")
+    tap("Create")
+    wait_for("index.html", contains=True)
+    tap("Preview")
+    wait_for("Local preview")
+    time.sleep(2)
+    snapshot("07-web-preview")
     (OUT / "result.txt").write_text(
         "Passed: install, create, launch offline JavaScript, interactive input, "
         "computed output, normal exit, file creation, editing, tab switching, autosave, "
-        "process restoration, and rotation.\n")
+        "process restoration, rotation, SQLite project execution, and local web preview navigation.\n")
 
 
 if __name__ == "__main__":
