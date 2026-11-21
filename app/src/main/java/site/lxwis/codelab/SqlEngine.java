@@ -107,7 +107,7 @@ public final class SqlEngine {
             } else if (c == '/' && next == '*') {
                 current.append(next); i++;
                 blockComment = true;
-            } else if (c == '\'' || c == '"' || c == '\`') {
+            } else if (c == '\'' || c == '"' || c == (char) 96) {
                 quote = c;
             } else if (c == '[') {
                 quote = ']';
