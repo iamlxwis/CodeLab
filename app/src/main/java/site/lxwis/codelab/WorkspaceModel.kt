@@ -129,9 +129,9 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun openProject(name: String, create: Boolean = false) {
+    fun openProject(name: String, create: Boolean = false, template: String = "JavaScript") {
         work {
-            if (create) store.createProject(name)
+            if (create) store.createProject(name, template)
             val opened = persist(load(name, emptyList(), null, allowUnavailable = true))
             val names = store.projects()
             val commit: () -> Unit = { runner.stop(); console = false; projects = names; apply(opened) }
