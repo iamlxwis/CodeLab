@@ -102,7 +102,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (p != null) Text(if (m.dirty) "Saving changes…" else "Local workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (p != null && (m.runner.running || m.active?.endsWith(".js", true) == true)) {
+            if (p != null && (m.runner.running || m.active?.endsWith(".js", true) == true || m.active?.endsWith(".sql", true) == true)) {
                 FilledTonalButton(onClick = { if (m.runner.running) m.runner.stop() else m.run() }, enabled = !m.busy,
                     contentPadding = PaddingValues(horizontal = 14.dp), colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
                     if (!m.runner.running) Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp))
@@ -155,7 +155,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 PanelButton("Editor", !m.console) { m.console = false }
                 PanelButton("Console", m.console) { m.console = true }
-                Text(if (m.active?.endsWith(".js",true) == true) "JavaScript" else "Text", Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(when { m.active?.endsWith(".js",true) == true -> "JavaScript"; m.active?.endsWith(".sql",true) == true -> "SQLite"; else -> "Text" }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         AnimatedVisibility(m.busy) { LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(2.dp)) }
