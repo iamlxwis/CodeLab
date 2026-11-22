@@ -73,6 +73,7 @@ fun CodeEditor(
     var lineError by remember { mutableStateOf(false) }
     var settings by remember { mutableStateOf(false) }
     var toolsMenu by remember { mutableStateOf(false) }
+    var snippetsMenu by remember { mutableStateOf(false) }
     var showLineNumbers by remember { mutableStateOf(preferences.getBoolean("line-numbers", true)) }
     var showActiveLine by remember { mutableStateOf(preferences.getBoolean("active-line", true)) }
     var result by remember { mutableStateOf("") }
@@ -206,6 +207,39 @@ fun CodeEditor(
                         "Move lines down").forEachIndexed { index, label ->
                         DropdownMenuItem(text = { Text(label) }, enabled = !readOnly,
                             onClick = { view?.applyCodeTool(index); toolsMenu = false })
+                    }
+                }
+            }
+            Box {
+                EditorIcon(Icons.Default.AutoAwesome, "Insert code snippets") { snippetsMenu = true }
+                DropdownMenu(expanded = snippetsMenu, onDismissRequest = { snippetsMenu = false }) {
+                    listOf(
+                        "Kotlin · function" to "fun example() {\\n    \\n}",
+                        "Kotlin · data class" to "data class Item(val id: Int, val name: String)",
+                        "Kotlin · when" to "when (value) {\\n    else -> Unit\\n}",
+                        "Kotlin · try/catch" to "try {\\n    \\n} catch (e: Exception) {\\n    e.printStackTrace()\\n}",
+                        "JavaScript · function" to "function example() {\\n  \\n}",
+                        "JavaScript · async" to "async function loadData() {\\n  try {\\n    \\n  } catch (error) {\\n    console.error(error);\\n  }\\n}",
+                        "JavaScript · event" to "document.addEventListener('DOMContentLoaded', () => {\\n  \\n});",
+                        "TypeScript · interface" to "interface Item {\\n  id: number;\\n  name: string;\\n}",
+                        "Python · function" to "def example():\\n    pass",
+                        "Python · main" to "def main():\\n    pass\\n\\nif __name__ == '__main__':\\n    main()",
+                        "Python · class" to "class Example:\\n    def __init__(self):\\n        pass",
+                        "HTML · document" to "<!doctype html>\\n<html lang=\"en\">\\n<head>\\n  <meta charset=\"utf-8\">\\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\\n  <title>Document</title>\\n</head>\\n<body>\\n  \\n</body>\\n</html>",
+                        "HTML · section" to "<section aria-label=\"Content\">\\n  <h2>Heading</h2>\\n  <p>Text</p>\\n</section>",
+                        "CSS · reset" to "*, *::before, *::after { box-sizing: border-box; }\\nbody { margin: 0; }",
+                        "CSS · responsive" to "@media (max-width: 600px) {\\n  .container { padding: 1rem; }\\n}",
+                        "SQL · create table" to "CREATE TABLE IF NOT EXISTS items (\\n    id INTEGER PRIMARY KEY,\\n    name TEXT NOT NULL\\n);",
+                        "SQL · select" to "SELECT id, name\\nFROM items\\nWHERE id = 1\\nORDER BY name ASC;",
+                        "Lua · function" to "local function example()\\n    \\nend",
+                        "Java · class" to "public class Example {\\n    public static void main(String[] args) {\\n        \\n    }\\n}",
+                        "Shell · script" to "#!/usr/bin/env sh\\nset -eu\\n\\n"
+                    ).forEach { (label, snippet) ->
+                        DropdownMenuItem(text = { Text(label) }, enabled = !readOnly,
+                            onClick = {
+                                view?.insertAtSelection(snippet)
+                                snippetsMenu = false
+                            })
                     }
                 }
             }
