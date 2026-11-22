@@ -17,6 +17,15 @@ public class CloudJudge0Test {
         assertEquals("ts", CloudJudge0.detect("TypeScript (5.0.3)"));
         assertNull(CloudJudge0.detect("Brainfuck (2.7)"));
     }
+    @Test public void prefersModernCompilerVersions() {
+        assertTrue(CloudJudge0.versionScore("Python (3.14.0)") >
+                   CloudJudge0.versionScore("Python (2.7.17)"));
+        assertTrue(CloudJudge0.versionScore("JavaScript (Node.js 22.08.0)") >
+                   CloudJudge0.versionScore("JavaScript (Node.js 12.14.0)"));
+        assertTrue(CloudJudge0.versionScore("C++ (Clang 19.1.7)") >
+                   CloudJudge0.versionScore("C++ (Clang 7.0.1)"));
+    }
+
     @Test public void requiresHttpsWithoutCredentialsInUrl() {
         assertEquals("https://ce.judge0.com", CloudJudge0.validateUrl("https://ce.judge0.com/"));
         assertThrows(IllegalArgumentException.class,
