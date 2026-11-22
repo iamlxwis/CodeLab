@@ -12,9 +12,11 @@ GitHub Actions:
 
 - Android APK: Gradle compilation, signature verification, unit tests,
   direct APK release and SHA-256 output.
-- Android device smoke: instrumented tests, real device performance measurements,
+- Android device smoke: instrumented tests, **emulator** performance measurements,
   accessibility inspection, airplane-mode editor/runtime journey, screenshots and logcat.
-- CI outputs are factual measurements; no FPS, startup, or memory target is claimed without evidence.
+- CI outputs are factual emulator measurements; no phone FPS, startup, or memory claim is made without physical evidence.
+- The static gate in `qa/security_gate.py` checks selected secret signatures, plaintext-token persistence, stage-all Git calls, backup policy and isolated runtime configuration.
+- `qa/motion_smoke.py` records gfxinfo after scrolling with Android animation scale set to 1x. Its previous setting is restored.
 
 ## Core user journeys
 

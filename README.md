@@ -27,7 +27,8 @@ Write, run, and manage projects from your phone.
 - **Run offline** — JavaScript, Lua, SQL, and limited Java support, with an integrated console.
 - **Web preview** — Build and preview HTML, CSS, and JavaScript locally.
 - **Projects** — Templates, autosave, file management, and ZIP import/export.
-- **Tools** — Local Git history, JavaScript debugging, and code screenshot sharing.
+- **Tools** — Selective local Git staging, JavaScript debugging, and code screenshot sharing.
+- **Privacy** — Cloud credentials encrypted with Android Keystore; confirmation required for online execution.
 
 ## Install
 
@@ -43,7 +44,7 @@ Requires JDK 17 and Android SDK 35.
 ./gradlew :app:assembleRelease :app:testDebugUnitTest
 ```
 
-[Implementation status](docs/IMPLEMENTATION_STATUS.md) · [QA checklist](docs/QA_CHECKLIST.md) · [Android CI](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml)
+[Implementation status](docs/IMPLEMENTATION_STATUS.md) · [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md) · [QA](docs/QA_CHECKLIST.md) · [Android CI](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml)
 
 ---
 <sub>CodeLab keeps local projects on your device. Online execution only sends source code when you explicitly approve a cloud run.</sub>

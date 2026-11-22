@@ -1,110 +1,35 @@
 # CodeLab engineering roadmap
 
-Work is reviewed on feature branches, with **main** kept unchanged until approval.
-Items are marked implemented only after source and tests exist; CI status is tracked
-in the corresponding main-branch workflow. As of Workstream #4, approved changes land
-directly on `main` instead of through pull requests. Android minSdk 26, targetSdk 35 and offline-first local
-execution remain unchanged.
+This tracks implemented code separately from evidence and unfinished acceptance work.
+From Workstream #4 onward the maintainer has authorized direct commits to `main`,
+with GitHub Actions required for validation.
 
-| Order | Workstream | Dependencies and acceptance evidence |
+| Workstream | Implemented foundation | Remaining work |
 | --- | --- | --- |
-| 1 | Architecture cleanup | Split oversized source files, stabilize theme allocation, migrate system bars; then hoist UI state out of composables. Build and device smoke required. |
-| 2 | Design system and adaptive UI | Semantic tokens, accessible themes, typography, library redesign, compact/expanded layouts; screenshots and contrast evidence. |
-| 3 | Interaction and discoverability | Split panels, run target, tab controls, undo, search and accessibility audits; Compose UI coverage. |
-| 4 | Motion | One reduced-motion-aware controller, transitions and measurements; emulator jank evidence. |
-| 5 | Editor engine | Incremental highlighting, editing primitives, diagnostics and IME correctness; large-file tests. |
-| 6 | Git/project safety | Keystore credentials, explicit remote operations, staging and hardened imports; offline and remote integration tests. |
-| 7 | Reliability and performance | Autosave, profiling, baseline profiles, coverage, lint/security checks; measured baselines and regression thresholds. |
-| 8 | Documentation and polish | README imagery captured from emulator, changelog, architecture map, contribution guide, truthful QA status. |
+| #1 Architecture | Split activity, theme, workspace, dialogs, editor; memoized theme allocation | UI state hoisting and layout/performance audits |
+| #2 Design | Material 3 tokens, restrained clay cards, project/library discoverability | Complete contrast, adaptive device and typography matrix |
+| #3 Interaction | PRs #9–#14 integrated through PR #15: phone split, tab controls, run targets, Undo, search/replace, palette, error navigation, 200% font smoke | Manual TalkBack, keyboard and foldable acceptance |
+| #4 Motion | Shared duration controller watches Android animator scale; even Full respects system disabled animations; existing tabs, panels, run and cards are connected | Fuller screen transitions, manual reduced-motion and device-wide jank review |
+| #5 Editor | Cancellable viewport-highlighting; redundant worker jobs avoided for edits below visible viewport | Tree-sitter/LSP, semantic editing, IME matrix, multi-cursor, large-files |
+| #6 Safety | Device-bound Keystore AES-GCM for optional cloud API token, automatic migration from plaintext; selective Git stage before commit; bounded imports | Explicit remote OAuth/push/pull, conflict resolution, hostile-file/provider testing |
+| #7 Reliability | Serialized atomic saves, session restoration, curated baseline rules, startup/memory/gfx metrics, static security CI guard, 1x motion emulator samples | Generated baseline profiles, code coverage, lint baseline, multi-hour soak and low-end devices |
+| #8 Documentation | Real emulator screenshots in README; architecture map, contributor guide, changelog, status/QA docs | Physical-device screenshots, stable-signing and release acceptance |
 
-## Workstream 1 current change
+## Evidence
 
-- Separate activity, theme, workspace shell, project library, project/file/Git/command dialogs and native
-  editor view without changing project or runtime state management.
-- Memoize the theme scheme, typography and shapes; use edge-to-edge APIs rather
-  than writing deprecated system-bar colors directly.
-- Add an instrumented regression check for root rendering and transparent status bar.
-- Still required: move business logic from composables to state holders, audit stability
-  annotations and derived state, and verify edge-to-edge on different navigation modes,
-  IME and large-display postures.
+The `Android APK` workflow builds an optimized release APK, runs JVM tests, verifies
+its signature and publishes the main-branch release. `Android device smoke` runs
+offline JS/Lua/SQL/Java journeys, instrumentation tests, emulator frame/memory
+measurements, 200% font inspection and accessibility hierarchy checks. Evidence
+is valid **only for the tested SHA**. Production signing is not claimed without
+stable signing secrets; fallback debug keys may change.
 
-No performance improvement, accessibility score or full workstream completion is
-claimed from source extraction alone. Refer to the PR checks for verification.
+## Deliberate limitations
 
-## Workstream 2 — initial visual foundation (in review)
+Rhino JS, LuaJ Lua, SQLite and limited BeanShell Java execute locally.
+Other editing languages do not automatically have an offline runtime.
+GitHub source import is a bounded ZIP download, not Git clone/sync.
+Remote Git auth/push/pull, a PTY, full Tree-sitter/LSP and physical
+accessibility certification are not implemented.
 
-- Build a shared spacing, shape and elevation vocabulary and use lightweight
-  Material 3 clay surfaces for project cards and empty states.
-- Use file-type icons consistently in the project file explorer and tablet sidebar
-  rather than incorrectly representing every file as a folder.
-- Remove the redundant online/offline project-library metric and correct the
-  Favorites sorter to rank rather than filter.
-- Reduce top-level dashboard actions to New project and Import, with ZIP/GitHub
-  sources available in a focused sheet and covered by an emulator UI test.
-- Keep the source editor, console, diagnostics and text inputs flat and
-  high-contrast. Decorative shadows must not encode status or accessibility state.
-- Still unverified: comprehensive semantic color migration, font bundling,
-  visual screenshots from the new branch, 200% text scaling, WCAG palette matrix,
-  adaptive device matrix, and the long-form dialog redesign.
-- This is a reviewable first slice, **not** completion of Workstream 2.
-
-## Workstream 3 — phone split and tabs (stacked review)
-
-- First slice adds an **opt-in persisted phone split mode**. Editor stays above
-  console/HTML preview, with a 48dp drag handle, snap positions and a settings
-  slider for keyboard/TalkBack adjustment. Reduced motion requires no animation.
-- File tabs get 48dp close buttons even when inactive; tests cover this and the
-  split toggle, divider semantics and pure split range/snap helpers.
-- Existing tablet side-by-side and phone single-panel modes remain available.
-- Still unverified until its own CI passes: release build, emulator smoke and UI
-  tests. Still pending: preferred run-target picker, tab pin/reorder/overflow,
-  undo snackbar, fuzzy command palette, project replace preview and comprehensive
-  accessibility/200% scaling audits. These are **not claimed implemented**.
-- This PR is stacked on Workstream 2 PR #8 until #8 is merged; do not merge it
-  into main out of order.
-
-### Workstream 3 — run targets, pinned tabs and ordering (second slice, in review)
-- The primary Run action resolves a valid project-preferred entry file before the
-  current tab. Run options allow running the current tab or any chosen file.
-  Selecting another target switches editor buffers safely before execution.
-- Pinned tabs are protected from accidental close; tab actions expose Pin/Unpin,
-  Close others, Close all unpinned, Move left/right and Reveal in Explorer.
-  A long-press menu, dedicated drag grip and overflow chooser keep tabs navigable.
-- Still required: toolbar and long-press menu for tab actions, drag affordance,
-  overflow selector, search/replace and destructive-action undo.
-
-### Workstream 3 — destructive-action recovery (third slice, in review)
-- File, folder and project deletes surface **Undo** only after a matching unique
-  trash record exists; the snackbar action restores that exact item asynchronously.
-- Existing Recently Deleted remains the fallback after snackbar expiry.
-- No permanent deletion undo is claimed. Tests cover identity matching and a
-  tappable semantic snackbar action.
-
-### Workstream 3 — scoped find and per-match replacement review (fourth slice)
-- Find and Replace both respect selected folder and file-type scope; the 200-hit
-  search bound is now enforced **after scope selection**. Results group by path.
-- Replace preview includes exact matched span and literal substitution for each
-  of the first 100 matches, grouped by file. The confirmation still applies
-  through the existing bounded, rollback-capable replace engine.
-- Still requires manual Unicode/very large project validation and exact preflight
-  snapshot pinning if the project changes between preview and confirmation.
-
-### Workstream 3 — discoverable commands and quick actions (fifth slice)
-- Fuzzy command ranking and recent history; shortcut hints are shown only for
-  wired hardware commands (Ctrl+S, Ctrl+Enter, Ctrl+Shift+P).
-- Configurable per-context quick actions (up to six) appear in the existing
-  scrollable workspace toolbar and home actions sheet.
-- Search within the Settings action category remains scoped to settings.
-- An empty editor provides a contextual file-opening hint.
-- Manual TalkBack, large-font and keyboard-only audits remain outstanding.
-
-### Workstream 3 — error navigation and large-font evidence (sixth slice)
-- Recognizes bounded source file/line references from local console traces.
-  Source-location chips are tappable and switch to the exact editor line.
-- Adds a real 200% font-scale emulator screenshot and hierarchy check to CI.
-  The existing hierarchy audit continues to report possibly small/unlabeled targets.
-- Full manual TalkBack navigation/focus order, physical hardware keyboards,
-  device-density matrix and every-theme contrast audit are still required.
-  Automated smoke evidence must not be called accessibility certification.
-- Multi-file replacement rejects stale previews by comparing a SHA-256
-  fingerprint before any writes. A changed preview must be regenerated.
+The entries above represent workstream **slices**, not proof of complete delivery.

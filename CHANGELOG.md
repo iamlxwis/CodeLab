@@ -1,16 +1,16 @@
-## Performance overhaul (work in progress; branch perf-overhaul)
-
-- Optimized release workflow with stable-signing secrets and explicit fallback-signing warning.
-- Profile installer and initial curated baseline-profile rules; R8 keeps for reflection-backed runtimes.
-- Queued, non-blocking editor saves, one-second autosave, atomic temp-file replace, durable explicit flush.
-- Cancellable asynchronous viewport syntax marking and lazy code-outline/minimap sampling.
-- Responsive Run/Save/Search/Menu top bar, optional animations and OLED/Dracula/Monokai/One Dark/GitHub Light palettes.
-- Editor format action, accessible symbol row, desktop Run shortcut, five runnable starter projects.
-- Performance smoke script now emits startup, memory and frame observations.
-
-**Not yet a published release**: merge into main only after branch CI, unit and device checks pass.
-
 # Changelog
+
+## 0.4.x development — 2026-11-23
+
+- System-aware motion controller honoring Android animation disable setting.
+- Viewport syntax highlighting skips off-screen edit invalidations.
+- Optional cloud compiler token encrypted using Android Keystore AES-GCM, with migration of legacy plaintext setting.
+- Local Git commits explicitly stage selected paths; no automatic stage-all.
+- CI static safety regression gate and animation-enabled emulator jank measurement.
+- Architecture/contributing guides, corrected roadmap and QA status.
+
+These updates remain subject to new `main` CI verification. Workstreams #4–#8 are not fully complete: remote Git, semantic editor/LSP, device-specific motion certification, generated baseline profiles, manual accessibility and stable signing are still outstanding.
+
 
 ## 0.3.0-alpha — 2026-11-22
 
