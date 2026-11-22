@@ -2,7 +2,7 @@ name: Android APK
 on:
   pull_request:
   push:
-    branches-ignore: [main, master]
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
