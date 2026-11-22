@@ -177,7 +177,7 @@ def main():
     tap("Project library")
     wait_for("New project")
     tap("New project")
-    tap("More languages", contains=True)
+    tap_node(wait_for("More languages", contains=True))
     tap("Python")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "PySmoke")
