@@ -241,6 +241,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     private var highlightedStart = -1
     private var highlightedEnd = -1
     private var highlightedSnapshot = ""
+    private var pendingEditStart = -1
     private data class HighlightMark(val start: Int, val end: Int, val ink: Int)
     private fun dp(value: Int) = (value * resources.displayMetrics.density).roundToInt()
     private fun dp(value: Float) = (value * resources.displayMetrics.density)
@@ -260,11 +261,19 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         setPadding(dp(52), dp(8), dp(16), dp(36))
         addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                pendingEditStart = start
+            }
             override fun afterTextChanged(s: Editable?) {
                 sourceSnapshot = s?.toString().orEmpty()
                 if (!syncing) changed?.invoke(sourceSnapshot)
-                scheduleHighlight(true)
+                // Editable moves existing spans as users edit. Changes *after* our
+                // viewport window cannot affect tokens already painted there.
+                // Avoid queuing a worker job for every keystroke in a distant region.
+                if (syncing || shouldRehighlightVisible(highlightedStart, highlightedEnd, pendingEditStart)) {
+                    scheduleHighlight(true)
+                }
+                pendingEditStart = -1
                 removeCallbacks(hintJob)
                 postDelayed(hintJob, 650)
             }
