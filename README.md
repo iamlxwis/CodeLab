@@ -31,7 +31,11 @@ The link points to the most recently published GitHub Release. A new APK is publ
 | Real local Git history and branches | Implemented using JGit; remote push/authentication pending Android-device verification |
 | Import public GitHub repository source | Implemented; HTTP download with size/path validation, no Git history |
 | Command palette and developer toolbox | Implemented: JSON, Base64, URL transformations, SHA-256 |
-| PNG code screenshots | Implemented as offline raster export; advanced compositing remains planned |
+| PNG code screenshots | Offline syntax-colored cards, gradient/solid/transparent backgrounds, aspect presets, line highlights and PNG export |
+| Project metadata | Description and preferred entry file stored in ZIP-portable project settings |
+| External-folder import | User-selected SAF folder is copied into an editable local project; not live external editing |
+| JavaScript debugger | Rhino source-line pause, breakpoints, Step and Continue; JavaScript only |
+| Workspace commands | Built-in offline pwd, ls, tree, cd, cat, head, wc, grep and git status; not a Linux shell or PTY |
 | File history and line diff | Implemented with bounded local snapshots and textual line differences |
 | Full Linux shell / PTY | Not implemented |
 
@@ -42,6 +46,12 @@ The link points to the most recently published GitHub Release. A new APK is publ
 **Lua:** Create a Lua project or open a `.lua` file and tap Run. Lua executes entirely offline using the LuaJ interpreter. Use `print('Hello')`, `readLine('Name?')` or `input('Name?')` for interactive input, and Lua's built-in string, table, math and coroutine features. Host filesystem, OS, module-loading, and Java reflection APIs are not exposed. This is LuaJ-compatible Lua 5.2-style behavior, not a full native Lua installation. The runtime is independently stopped by the worker service's 60-second timeout.
 
 **SQLite:** Create a `.sql` file, write SQL statements, and tap Run. CodeLab runs statements against a new in-memory SQLite database, prints query results and statement diagnostics, and returns a nonzero exit status for invalid SQL. State does **not** persist between runs. `ATTACH`, `DETACH`, and `VACUUM` are deliberately unavailable.
+
+## JavaScript debugger and workspace commands
+
+Open a `.js` file, choose **⋮ → Debug JavaScript…**, and optionally enter comma-separated source line numbers. The debugger pauses at the first statement and at configured breakpoints. Open the Console to **Step**, **Continue**, or **Stop**. This is real Rhino source-line instrumentation for JavaScript only. It does not yet include variable inspectors or debugging other runtimes. Normal Run continues to execute without debugger overhead.
+
+Choose **⋮ → Workspace commands…** to navigate local project files with safe built-ins (`help`, `pwd`, `ls`, `tree`, `cd`, `cat`, `head`, `wc`, `grep`, `git status`). No external shell commands or host processes can be executed.
 
 ## Hybrid language execution
 

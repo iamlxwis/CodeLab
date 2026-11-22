@@ -29,6 +29,28 @@ class RuntimeServiceTest {
         main { fail("Runtime condition timed out. Status: ${session.status}; output: ${session.transcript.takeLast(200)}") }
     }
 
+    @Test fun debuggerPausesStepsAndContinuesRealJavaScript() {
+        main {
+            session.run("debug.js", "let x = 1;\nlet y = x + 1;\nprint(y);",
+                debug = true, breakpoints = listOf(2))
+        }
+        await { session.paused }
+        main {
+            assertTrue("Expected source line", session.pausedLine > 0)
+            session.debugAction(step = true)
+        }
+        await { session.paused }
+        main {
+            assertTrue("Step should enter next source line", session.pausedLine >= 2)
+            session.debugAction(step = false)
+        }
+        await { !session.running }
+        main {
+            assertEquals("Exit 0", session.status)
+            assertTrue(session.transcript.contains("2"))
+        }
+    }
+
     @Test fun inputOutputErrorsAndRestart() {
         main { session.run("hello.js", "const name = readLine('Name?'); console.log('Hi', name); console.error('done')") }
         await { session.waiting }
