@@ -87,3 +87,6 @@ claimed from source extraction alone. Refer to the PR checks for verification.
   through the existing bounded, rollback-capable replace engine.
 - Still requires manual Unicode/very large project validation and exact preflight
   snapshot pinning if the project changes between preview and confirmation.
+- Replacement Apply now requires a SHA-256 fingerprint of the previewed matched
+  file contents to match the fresh preflight. Changed matching files abort without
+  any writes and require a new preview; covered by a JVM regression test.

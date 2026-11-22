@@ -616,10 +616,14 @@ public final class ProjectStore {
     public static final class ReplacementSummary {
         public final int files, matches;
         public final List<String> paths;
-        public ReplacementSummary(int files, int matches, List<String> paths) {
+        /** Fingerprint of the original matched source files, before replacement. */
+        public final String fingerprint;
+        public ReplacementSummary(int files, int matches, List<String> paths,
+                String fingerprint) {
             this.files = files;
             this.matches = matches;
             this.paths = Collections.unmodifiableList(new ArrayList<>(paths));
+            this.fingerprint = fingerprint;
         }
     }
 
@@ -634,6 +638,14 @@ public final class ProjectStore {
     public synchronized ReplacementSummary replaceAcrossProject(
             String projectName, String query, String replacement, boolean caseSensitive,
             boolean regex, boolean apply, List<String> allowedPaths) throws IOException {
+        return replaceAcrossProject(projectName, query, replacement, caseSensitive,
+            regex, apply, allowedPaths, null);
+    }
+
+    public synchronized ReplacementSummary replaceAcrossProject(
+            String projectName, String query, String replacement, boolean caseSensitive,
+            boolean regex, boolean apply, List<String> allowedPaths,
+            String expectedFingerprint) throws IOException {
         if (query == null || query.trim().isEmpty() || query.length() > 200)
             throw new IOException("Enter a search phrase up to 200 characters.");
         if (replacement == null || replacement.length() > 2000)
@@ -674,6 +686,12 @@ public final class ProjectStore {
             modified.put(path, changed);
         }
 
+        String fingerprint = replacementFingerprint(original);
+        // Previews cannot silently apply a different set of edits after source changes.
+        if (apply && expectedFingerprint != null &&
+                !expectedFingerprint.equals(fingerprint))
+            throw new IOException("Project files changed since preview. Preview again before replacing.");
+
         if (apply) {
             List<String> completed = new ArrayList<>();
             try {
@@ -691,7 +709,24 @@ public final class ProjectStore {
             }
         }
         return new ReplacementSummary(modified.size(), totalMatches,
-            new ArrayList<>(modified.keySet()));
+            new ArrayList<>(modified.keySet()), fingerprint);
+    }
+
+    private static String replacementFingerprint(LinkedHashMap<String, String> originals) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            for (Map.Entry<String, String> entry : originals.entrySet()) {
+                byte[] path = entry.getKey().getBytes(StandardCharsets.UTF_8);
+                byte[] body = entry.getValue().getBytes(StandardCharsets.UTF_8);
+                digest.update(java.nio.ByteBuffer.allocate(4).putInt(path.length).array());
+                digest.update(path);
+                digest.update(java.nio.ByteBuffer.allocate(4).putInt(body.length).array());
+                digest.update(body);
+            }
+            return java.util.Base64.getEncoder().encodeToString(digest.digest());
+        } catch (java.security.NoSuchAlgorithmException impossible) {
+            throw new IllegalStateException("SHA-256 unavailable", impossible);
+        }
     }
 
     /** Per-match replacement diff, including matches spanning multiple lines. Bounded to 100. */
