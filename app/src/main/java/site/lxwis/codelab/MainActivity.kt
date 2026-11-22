@@ -268,6 +268,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "Workspace options") }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     if (p != null) {
+                        DropdownMenuItem(text = { Text("Workspace commands…") },
+                            onClick = { menu = false; dialog = "workspacecommands" })
                         DropdownMenuItem(text = { Text("Project settings…") },
                             onClick = { menu = false; dialog = "projectsettings" })
                         DropdownMenuItem(text = { Text("Panel layout…") },
@@ -490,6 +492,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
         "switchproject" -> ProjectSwitcher(m) { dialog = "" }
         "screenshot" -> CodeScreenshotStudio(m.active.orEmpty(), m.source) { dialog = "" }
+        "workspacecommands" -> WorkspaceCommandSheet(m) { dialog = "" }
         "jsdebug" -> JavaScriptDebugDialog(m) { dialog = "" }
         "projectsettings" -> ProjectSettingsDialog(m) { dialog = "" }
         "git" -> GitDialog(m) { dialog = "" }

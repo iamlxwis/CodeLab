@@ -196,6 +196,30 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
     var accent by mutableStateOf(preferences.getString("accent", "Mint") ?: "Mint")
         private set
+    private var shellSession: WorkspaceShell? = null
+    private var shellProject: String? = null
+    var terminalOutput by mutableStateOf("CodeLab workspace commands\nType help for available commands.")
+        private set
+    fun clearWorkspaceTerminal() {
+        terminalOutput = "CodeLab workspace commands\nType help for available commands."
+    }
+    fun executeWorkspaceCommand(line: String) {
+        val p = project ?: return
+        work {
+            val terminal = if (shellProject == p) shellSession ?: WorkspaceShell(store, p)
+                else WorkspaceShell(store, p)
+            val result = runCatching { terminal.execute(line) }
+                .getOrElse { "Error: " + (it.localizedMessage ?: "Command failed") }
+            val apply: () -> Unit = {
+                shellSession = terminal
+                shellProject = p
+                terminalOutput = (terminalOutput + "\n$ " + line.take(512) +
+                    "\n" + result).takeLast(24000)
+            }
+            apply
+        }
+    }
+
     var projectMetadata by mutableStateOf(
         ProjectStore.ProjectMetadata("Imported", "", ""))
         private set
@@ -354,6 +378,11 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun apply(open: Open) {
+        if (project != open.project) {
+            shellSession = null
+            shellProject = null
+            clearWorkspaceTerminal()
+        }
         project = open.project
         files = open.files
         folders = open.folders
