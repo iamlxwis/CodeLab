@@ -161,6 +161,18 @@ fun CodeEditor(
             }
             if (replaceMode) Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(replacement, { replacement = it }, Modifier.weight(1f), singleLine = true, label = { Text("Replace with") })
+                EditorAction("All") {
+                    val editor = view
+                    if (editor != null && search.isNotEmpty()) {
+                        val original = editor.text.toString()
+                        val regex = Regex(Regex.escape(search), RegexOption.IGNORE_CASE)
+                        val count = regex.findAll(original).count()
+                        if (count > 0) {
+                            editor.replaceSource(regex.replace(original) { replacement })
+                            result = "$count replacements"
+                        } else result = "No matches"
+                    }
+                }
                 EditorAction("Replace") {
                     val editor = view
                     if (editor != null && search.isNotEmpty() && editor.selectedSource().equals(search, true)) {
