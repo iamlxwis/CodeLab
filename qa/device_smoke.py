@@ -181,6 +181,9 @@ def main():
     tap("Python")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "PySmoke")
+    # The longer Python template dialog may extend under the soft keyboard.
+    # Hide the IME before activating its confirm button.
+    adb("shell", "input", "keyevent", "4")
     tap("Create")
     wait_for("main.py", contains=True)
     tap("Run")

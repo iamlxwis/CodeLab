@@ -33,6 +33,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -850,6 +854,7 @@ private fun NameDialog(title: String, initial: String, label: String, example: S
 
 @Composable
 private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> Unit) {
+    val keyboard = LocalSoftwareKeyboardController.current
     var name by rememberSaveable { mutableStateOf("") }
     var template by rememberSaveable { mutableStateOf("JavaScript") }
     var otherTemplates by remember { mutableStateOf(false) }
@@ -857,8 +862,10 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
         onDismissRequest = cancel,
         title = { Text("New project") },
         text = {
-            Column {
+            Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 420.dp)) {
                 OutlinedTextField(name, { name = it }, singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
                     label = { Text("Project name") }, placeholder = { Text("e.g. Playground") })
                 Spacer(Modifier.height(14.dp))
                 Text("STARTER", style = MaterialTheme.typography.labelSmall,

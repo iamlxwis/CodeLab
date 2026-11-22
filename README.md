@@ -28,6 +28,11 @@ The link points to the most recently published GitHub Release. A new APK is publ
 | Stop, timeout, isolated runtime process | Implemented for supported runtimes |
 | Offline HTML/CSS/JavaScript preview | Implemented for local text assets |
 | Python, C, C++, Java, Rust, Go and other cloud languages | Available only when a reachable public Judge0-compatible server actually reports the requested language and accepts submissions; no guaranteed uptime |
+| Real local Git history and branches | Implemented using JGit; remote push/authentication pending Android-device verification |
+| Import public GitHub repository source | Implemented; HTTP download with size/path validation, no Git history |
+| Command palette and developer toolbox | Implemented: JSON, Base64, URL transformations, SHA-256 |
+| PNG code screenshots | Implemented as offline raster export; advanced compositing remains planned |
+| File history and line diff | Implemented with bounded local snapshots and textual line differences |
 | Full Linux shell / PTY | Not implemented |
 
 **JavaScript:** Open a `.js` file and tap Run. This is the Rhino JavaScript runtime, not Node.js or a web browser. Use `print("hello")`, `console.log()`, `console.error()`, and `readLine("Name?")`. Network and filesystem host APIs are not provided. A 60-second worker timeout and console output limit are enforced.
@@ -82,10 +87,10 @@ The automated [Android APK](https://github.com/iamlxwis/CodeLab/actions/workflow
 
 ## Current limitations
 
-This is not yet a full desktop-class IDE. There is no Python interpreter, C/C++ compiler, language-server completion, PTY, Git integration, or a full browser development server. Editing support for a file extension does not imply runnable support. The Android SQLite engine is included with the OS, and SQL databases are ephemeral per run.
+This is not yet a full desktop-class IDE. There is no offline Python interpreter, C/C++ compiler, semantic language-server completion, full PTY shell, remote GitHub push, or full browser development server. Basic local Git repositories, commits and branches are provided through JGit, and public GitHub source snapshots can be imported without Git history. Git runtime support is being validated on Android devices. Editing support for a file extension does not imply runnable support. The Android SQLite engine is included with the OS, and SQL databases are ephemeral per run.
 
 JavaScript executes in an Android isolated process. The SQLite runner uses a separate, non-exported app-UID process because the Android SQLite API is not available to the isolated UID on tested Android versions. SQL runs against an in-memory database with restricted statement types. Neither runtime should be treated as a proven sandbox against arbitrary hostile code.
 
 ## Privacy & licensing
 
-No account, analytics SDK, ads, or remote code execution service is required for local languages. A network permission enables compiler discovery and user-confirmed cloud submissions. Project files stay on-device unless exported. BeanShell 2.1.1 is available under the Apache License 2.0 license. LuaJ 3.0.1 is available under the MIT license and bundled as a Maven dependency. The bundled Rhino engine is distributed with its license and notices under `app/src/main/assets/licenses/rhino/`. Verify third-party licenses before redistribution.
+No account, analytics SDK, ads, or remote code execution service is required for local languages. A network permission enables compiler discovery and user-confirmed cloud submissions. Project files stay on-device unless exported. JGit 7.6.0 is distributed under the Eclipse Distribution License 1.0. BeanShell 2.1.1 is available under the Apache License 2.0 license. LuaJ 3.0.1 is available under the MIT license and bundled as a Maven dependency. The bundled Rhino engine is distributed with its license and notices under `app/src/main/assets/licenses/rhino/`. Verify third-party licenses before redistribution.

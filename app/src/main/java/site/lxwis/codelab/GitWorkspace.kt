@@ -50,7 +50,7 @@ internal class GitWorkspace(private val folder: File) {
             } catch (_: org.eclipse.jgit.api.errors.NoHeadException) {
                 emptyList()
             }
-            val names = git.branchList().call().map { it.name.substringAfterLast('/') }.sorted()
+            val names = git.branchList().call().map { it.name.removePrefix("refs/heads/") }.sorted()
             Snapshot(true, git.repository.branch, names, changes, commits)
         }
     }
