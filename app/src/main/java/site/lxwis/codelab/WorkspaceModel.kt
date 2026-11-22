@@ -196,7 +196,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
     var accent by mutableStateOf(preferences.getString("accent", "Mint") ?: "Mint")
         private set
-    var gitState by mutableStateOf<GitWorkspace.Snapshot?>(null)
+    internal var gitState by mutableStateOf<GitWorkspace.Snapshot?>(null)
         private set
     fun gitRefresh() {
         val p = project ?: return
