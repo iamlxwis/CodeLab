@@ -19,6 +19,7 @@ import android.view.inputmethod.InputConnectionWrapper
 import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.background
@@ -61,13 +62,14 @@ fun CodeEditor(
     onSave: () -> Unit = {},
     onPreviousTab: () -> Unit = {},
     onNextTab: () -> Unit = {},
-    onOpenCommands: () -> Unit = {}
+    onOpenCommands: () -> Unit = {},
+    onSelectionChange: (String, Int) -> Unit = { _, _ -> }
 ) = key(fileKey) {
     val context = LocalContext.current
     val hardwareKeyboard = LocalConfiguration.current.keyboard != Configuration.KEYBOARD_NOKEYS
     val preferences = remember { context.getSharedPreferences("editor", Context.MODE_PRIVATE) }
     var fontSize by remember { mutableStateOf(preferences.getInt("font-size", 15)) }
-    var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", false)) }
+    var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", true)) }
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", false)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
     var shortcutSettings by remember { mutableStateOf(false) }
@@ -96,6 +98,7 @@ fun CodeEditor(
     var view by remember { mutableStateOf<SourceView?>(null) }
     var cursor by remember { mutableStateOf("Ln 1 · Col 1") }
     var find by remember { mutableStateOf(false) }
+    var advancedTools by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf("") }
     var replacement by remember { mutableStateOf("") }
     var replaceMode by remember { mutableStateOf(false) }
@@ -267,6 +270,19 @@ fun CodeEditor(
                 view?.onTextContextMenuItem(android.R.id.redo)
             }
             EditorIcon(Icons.Default.Search, "Find and replace", selected = find) { find = !find }
+            EditorIcon(Icons.Default.WrapText, "Toggle line wrapping", selected = wordWrap) {
+                wordWrap = !wordWrap
+                preferences.edit().putBoolean("word-wrap", wordWrap).apply()
+            }
+            EditorIcon(if (advancedTools) Icons.Default.ExpandLess else Icons.Default.Tune,
+                if (advancedTools) "Hide advanced editor tools" else "Show advanced editor tools",
+                selected = advancedTools) { advancedTools = !advancedTools }
+        }
+        AnimatedVisibility(visible = advancedTools) {
+            Row(Modifier.fillMaxWidth().height(48.dp).horizontalScroll(rememberScrollState())
+                .padding(horizontal = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             Box {
                 EditorIcon(Icons.Default.List, "File symbol outline") { outlineMenu = true }
                 DropdownMenu(expanded = outlineMenu, onDismissRequest = { outlineMenu = false }) {
@@ -550,6 +566,7 @@ fun CodeEditor(
             EditorIcon(Icons.Default.VerticalAlignBottom, "Go to end of file") {
                 view?.let { editor -> editor.requestFocus(); editor.setSelection(editor.length()) }
             }
+            }
         }
         if (symbols && !(hardwareKeyboard && hideToolbarOnHardware)) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -678,7 +695,20 @@ fun CodeEditor(
                     setText(text)
                     restorePosition(fileKey)
                     changed = { source -> changes(source) }
-                    selectionChanged = { line, col -> cursor = "Ln " + line + " · Col " + col }
+                    selectionChanged = { line, col ->
+                        cursor = "Ln " + line + " · Col " + col
+                        // Use the live Editable, not the captured Composable text snapshot.
+                        // Android can emit selection span changes while replacing characters.
+                        val live = this.text
+                        val start = minOf(selectionStart, selectionEnd).coerceIn(0, live.length)
+                        val end = maxOf(selectionStart, selectionEnd).coerceIn(0, live.length)
+                        if (start == end) onSelectionChange("", line)
+                        else {
+                            val firstLine = live.subSequence(0, start).count { it == '\n' } + 1
+                            onSelectionChange(live.subSequence(start, end).toString().take(24000),
+                                firstLine)
+                        }
+                    }
                     view = this
                 }
             },
@@ -1192,9 +1222,10 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
 
     fun selectedSource(): String {
-        val a = selectionStart.coerceAtLeast(0)
-        val b = selectionEnd.coerceAtLeast(0)
-        return text.subSequence(minOf(a,b), maxOf(a,b)).toString()
+        val live = text
+        val a = minOf(selectionStart, selectionEnd).coerceIn(0, live.length)
+        val b = maxOf(selectionStart, selectionEnd).coerceIn(0, live.length)
+        return live.subSequence(a, b).toString()
     }
 
     fun insertAtSelection(value: String) {

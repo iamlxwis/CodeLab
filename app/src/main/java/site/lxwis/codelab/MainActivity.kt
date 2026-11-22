@@ -58,6 +58,8 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.ViewModelProvider
 
@@ -164,7 +166,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var dialog by rememberSaveable { mutableStateOf("") }
     var selected by rememberSaveable { mutableStateOf("") }
     var incoming by rememberSaveable { mutableStateOf<String?>(null) }
-    var menu by remember { mutableStateOf(false) }
+    var selectedSnippet by remember { mutableStateOf("") }
+    var selectedSnippetLine by remember { mutableIntStateOf(1) }
     var focusMode by rememberSaveable { mutableStateOf(false) }
     var explorerPinned by rememberSaveable { mutableStateOf(true) }
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -227,6 +230,30 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         if (it != null) { incoming = it.toString(); dialog = "import" }
     }
     val p = m.project
+    LaunchedEffect(m.active) {
+        selectedSnippet = ""
+        selectedSnippetLine = 1
+    }
+    fun openAction(action: String) {
+        when (action) {
+            "importfile" -> importFile.launch(arrayOf("*/*"))
+            "importmany" -> importMany.launch(arrayOf("*/*"))
+            "importzip" -> importZip.launch(arrayOf("*/*"))
+            "exportcurrent" -> m.active?.let { exportFile.launch(it.substringAfterLast('/')) }
+            "exportproject" -> p?.let { export.launch(it + ".zip") }
+            "rename", "duplicate" -> m.active?.let { selected = it; dialog = action }
+            "projectreplace" -> { m.clearReplaceSummary(); dialog = action }
+            "history" -> { m.refreshHistory(); dialog = action }
+            "git" -> { m.gitRefresh(); dialog = action }
+            "cloudrun" -> m.requestCloudRun()
+            "focus" -> {
+                focusMode = !focusMode
+                m.console = false
+                m.preview = false
+            }
+            else -> dialog = action
+        }
+    }
     BackHandler(enabled = p != null && dialog.isEmpty()) {
         if (focusMode) focusMode = false
         else if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
@@ -264,87 +291,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }
                 }
             }
-            Box {
-                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "Workspace options") }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    if (p != null) {
-                        DropdownMenuItem(text = { Text("Workspace commands…") },
-                            onClick = { menu = false; dialog = "workspacecommands" })
-                        DropdownMenuItem(text = { Text("Project settings…") },
-                            onClick = { menu = false; dialog = "projectsettings" })
-                        DropdownMenuItem(text = { Text("Panel layout…") },
-                            onClick = { menu = false; dialog = "panels" })
-                        DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
-                        DropdownMenuItem(text = { Text("Import file…") }, onClick = { menu = false; importFile.launch(arrayOf("*/*")) })
-                        DropdownMenuItem(text = { Text("Replace across files…") },
-                            onClick = {
-                                menu = false
-                                m.clearReplaceSummary()
-                                dialog = "projectreplace"
-                            })
-                        DropdownMenuItem(text = { Text("Search across files…") },
-                            onClick = { menu = false; dialog = "projectsearch" })
-                        DropdownMenuItem(text = { Text("New folder…") },
-                            onClick = { menu = false; dialog = "newfolder" })
-                        DropdownMenuItem(text = { Text("Copy file to another project…") },
-                            enabled = m.active != null && m.projects.size > 1,
-                            onClick = { menu = false; dialog = "copyproject" })
-                        DropdownMenuItem(text = { Text("Import multiple files…") },
-                            onClick = { menu = false; importMany.launch(arrayOf("*/*")) })
-                        if (m.active != null) {
-                            DropdownMenuItem(text = { Text("Rename current file…") }, onClick = {
-                                menu = false; selected = m.active!!; dialog = "rename"
-                            })
-                            DropdownMenuItem(text = { Text("Duplicate current file…") }, onClick = {
-                                menu = false; selected = m.active!!; dialog = "duplicate"
-                            })
-                            DropdownMenuItem(text = { Text("Export current file…") }, onClick = {
-                                menu = false; exportFile.launch(m.active!!.substringAfterLast('/'))
-                            })
-                        }
-                        DropdownMenuItem(text = { Text("Debug JavaScript…") },
-                            enabled = m.active?.endsWith(".js", true) == true,
-                            onClick = { menu = false; dialog = "jsdebug" })
-                        DropdownMenuItem(text = { Text("Code Screenshot Studio…") },
-                            enabled = m.active != null,
-                            onClick = { menu = false; dialog = "screenshot" })
-                        DropdownMenuItem(text = { Text("Git version control…") },
-                            onClick = { menu = false; dialog = "git"; m.gitRefresh() })
-                        DropdownMenuItem(text = { Text("File history…") }, enabled = m.active != null,
-                            onClick = { menu = false; dialog = "history"; m.refreshHistory() })
-                        DropdownMenuItem(text = { Text("File properties") },
-                            enabled = m.active != null, onClick = { menu = false; dialog = "properties" })
-                        DropdownMenuItem(text = { Text("Export project ZIP") }, onClick = { menu = false; export.launch("$p.zip") })
-                        if (m.active != null && m.cloudAvailable(m.active!!)) {
-                            DropdownMenuItem(text = { Text("Run via cloud…") },
-                                onClick = { menu = false; m.requestCloudRun() })
-                        }
-                    } else {
-                        DropdownMenuItem(text = { Text("Import project ZIP") },
-                            onClick = { menu = false; importZip.launch(arrayOf("*/*")) })
-                        DropdownMenuItem(text = { Text("Import external folder as project…") },
-                            onClick = { menu = false; dialog = "folderimport" })
-                        DropdownMenuItem(text = { Text("Import public GitHub project…") },
-                            onClick = { menu = false; dialog = "githubimport" })
-                    }
-                    DropdownMenuItem(text = { Text("Recently deleted…") },
-                        onClick = { menu = false; dialog = "trash" })
-                    if (p != null) DropdownMenuItem(text = { Text(if (focusMode) "Exit Focus Mode" else "Focus Mode") },
-                        onClick = { menu = false; focusMode = !focusMode; m.console = false; m.preview = false })
-                    DropdownMenuItem(text = { Text("Languages & Cloud") },
-                        onClick = { menu = false; dialog = "languages" })
-                    DropdownMenuItem(text = { Text("Accessibility") },
-                        onClick = { menu = false; dialog = "accessibility" })
-                    DropdownMenuItem(text = { Text("Command palette…") },
-                        onClick = { menu = false; dialog = "commands" })
-                    DropdownMenuItem(text = { Text("HTTPS Inspector…") },
-                        onClick = { menu = false; dialog = "httpsinspector" })
-                    DropdownMenuItem(text = { Text("Developer tools…") },
-                        onClick = { menu = false; dialog = "devtools" })
-                    DropdownMenuItem(text = { Text("Performance diagnostics") },
-                        onClick = { menu = false; dialog = "performance" })
-                    DropdownMenuItem(text = { Text("Appearance") }, onClick = { menu = false; dialog = "appearance" })
-                }
+            IconButton(onClick = { dialog = "actions" }) {
+                Icon(Icons.Default.MoreVert, "Browse workspace actions")
             }
         }
         if (p == null) {
@@ -443,6 +391,10 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 onPreviousTab = { m.moveActiveTab(-1) },
                                 onNextTab = { m.moveActiveTab(1) },
                                 onOpenCommands = { dialog = "commands" },
+                                onSelectionChange = { snippet, line ->
+                                    selectedSnippet = snippet
+                                    selectedSnippetLine = line
+                                },
                                 modifier = Modifier.fillMaxSize())
                         } else TextButton(onClick = { dialog = "files" }, modifier = Modifier.align(Alignment.Center)) { Text("Open a file") }
                     }
@@ -491,9 +443,20 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
 
     when (dialog) {
+        "actions" -> WorkspaceActionsSheet(
+            projectOpen = p != null,
+            fileOpen = m.active != null,
+            multipleProjects = m.projects.size > 1,
+            javascriptFile = m.active?.endsWith(".js", true) == true,
+            cloudReady = m.active?.let(m::cloudAvailable) == true,
+            focusMode = focusMode,
+            onAction = ::openAction,
+            onDismiss = { dialog = "" })
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
         "switchproject" -> ProjectSwitcher(m) { dialog = "" }
-        "screenshot" -> CodeScreenshotStudio(m.active.orEmpty(), m.source) { dialog = "" }
+        "screenshot" -> CodeScreenshotStudio(
+            m.active.orEmpty(), m.source, selectedSnippet, selectedSnippetLine
+        ) { dialog = "" }
         "workspacecommands" -> WorkspaceCommandSheet(m) { dialog = "" }
         "jsdebug" -> JavaScriptDebugDialog(m) { dialog = "" }
         "projectsettings" -> ProjectSettingsDialog(m) { dialog = "" }
@@ -696,7 +659,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     m.cloudPending?.let { filename ->
         val language = m.cloudLanguages[CloudJudge0.extension(filename)]
         if (language != null) {
-            OnlineRunConfirmation(filename, m.cloudEndpoint, language.name,
+            OnlineRunConfirmation(filename, language.name,
                 cancel = m::cancelCloudRun, start = m::startCloudRun)
         }
     }
@@ -877,64 +840,134 @@ private fun NameDialog(title: String, initial: String, label: String, example: S
         dismissButton = { TextButton(onClick = cancel) { Text("Cancel") } })
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> Unit) {
     val keyboard = LocalSoftwareKeyboardController.current
     var name by rememberSaveable { mutableStateOf("") }
     var template by rememberSaveable { mutableStateOf("JavaScript") }
-    var otherTemplates by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = cancel,
-        title = { Text("New project") },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 420.dp)) {
-                OutlinedTextField(name, { name = it }, singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
-                    label = { Text("Project name") }, placeholder = { Text("e.g. Playground") })
-                Spacer(Modifier.height(14.dp))
-                Text("STARTER", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                    listOf(listOf("JavaScript", "Java", "Lua"), listOf("SQLite", "Web")).forEach { row ->
-                        Row(Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                            row.forEach { option ->
-                                FilterChip(selected = template == option,
-                                    onClick = { template = option },
-                                    label = { Text(option) })
-                            }
-                        }
+    var browsing by rememberSaveable { mutableStateOf(false) }
+    var search by rememberSaveable { mutableStateOf("") }
+    var offlineOnly by rememberSaveable { mutableStateOf(false) }
+    val languages = LanguageCatalog.entries.filter {
+        (!offlineOnly || it.local != null) &&
+            (search.isBlank() || it.name.contains(search.trim(), true) ||
+                it.extension.contains(search.trim(), true))
+    }
+    ModalBottomSheet(onDismissRequest = cancel,
+        modifier = Modifier.imePadding(),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(.86f)
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                if (browsing) {
+                    IconButton(onClick = { browsing = false; keyboard?.hide() }) {
+                        Icon(Icons.Default.ArrowBack, "Back to project details")
                     }
-                }
-                Box {
-                    TextButton(onClick = { otherTemplates = true }) {
-                        Text(if (template in listOf("JavaScript", "Java", "Lua", "SQLite", "Web"))
-                            "More languages…" else template + " · change language")
+                    Text("Choose language", modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.headlineSmall)
+                } else {
+                    Text("New project", modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.headlineSmall)
+                    Button(onClick = { keyboard?.hide(); submit(name.trim(), template) },
+                        enabled = name.isNotBlank(), shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
+                        Text("Create project")
                     }
-                    DropdownMenu(expanded = otherTemplates, onDismissRequest = { otherTemplates = false }) {
-                        listOf("Python", "C", "C++", "C#", "TypeScript", "Kotlin", "Rust",
-                            "Go", "PHP", "Ruby", "Swift", "Bash", "Dart", "Scala", "Perl",
-                            "Haskell", "R").forEach { language ->
-                            DropdownMenuItem(text = { Text(language) }, onClick = {
-                                template = language
-                                otherTemplates = false
-                            })
-                        }
-                    }
-                }
-                if (template !in listOf("JavaScript", "Java", "Lua", "SQLite", "Web")) {
-                    Text("Editing works offline. Running " + template +
-                        " requires a verified online compiler.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-        },
-        confirmButton = { TextButton(onClick = { submit(name.trim(), template) },
-            enabled = name.isNotBlank()) { Text("Create") } },
-        dismissButton = { TextButton(onClick = cancel) { Text("Cancel") } }
-    )
+            if (!browsing) {
+            Text("Choose a language, then create your workspace.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedTextField(name, { name = it.take(100) }, modifier = Modifier.fillMaxWidth(),
+                singleLine = true, shape = RoundedCornerShape(14.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
+                label = { Text("Project name") }, placeholder = { Text("e.g. Playground") })
+            Text("POPULAR", style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                listOf(
+                    listOf("JavaScript", "Java", "Python"),
+                    listOf("Lua", "SQLite", "Web")
+                ).forEach { row ->
+                    Row(Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        row.forEach { choice ->
+                            FilterChip(
+                                selected = template == choice,
+                                onClick = { template = choice; browsing = false },
+                                modifier = Modifier.weight(1f),
+                                label = { Text(choice, maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis) })
+                        }
+                    }
+                }
+            }
+            Surface(onClick = { browsing = !browsing; keyboard?.hide() },
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                Row(Modifier.fillMaxWidth().padding(15.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Code, null, tint = MaterialTheme.colorScheme.primary)
+                    Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                        Text(template, fontWeight = FontWeight.SemiBold)
+                        Text("Browse ${LanguageCatalog.entries.size} languages & file types",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.Default.ExpandMore, contentDescription = "Browse languages")
+                }
+            }
+            }
+            if (browsing) {
+                Text("Search all languages and file types. Editing is offline; execution depends on the runtime.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(search, { search = it }, modifier = Modifier.fillMaxWidth(),
+                    singleLine = true, label = { Text("Search language or extension") },
+                    leadingIcon = { Icon(Icons.Default.Search, null) })
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    FilterChip(selected = offlineOnly, onClick = { offlineOnly = !offlineOnly },
+                        label = { Text("Offline-capable") })
+                    Spacer(Modifier.width(10.dp))
+                    Text("${languages.size} results", style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                LazyColumn(Modifier.weight(1f)) {
+                    items(languages, key = { it.name }) { language ->
+                        Row(Modifier.fillMaxWidth().clickable {
+                            template = language.name; browsing = false; keyboard?.hide()
+                        }.semantics { contentDescription = "Select " + language.name }
+                            .padding(vertical = 11.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(language.name)
+                                Text(language.local ?: "Edit offline · online run not guaranteed",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Text("." + language.extension, fontFamily = FontFamily.Monospace,
+                                style = MaterialTheme.typography.labelSmall)
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
+                    }
+                }
+            } else {
+                val info = if (template == "Web") "Offline HTML/CSS/JS preview"
+                    else LanguageCatalog.entries.firstOrNull { it.name == template }?.local
+                        ?.let { "$it · included with CodeLab" }
+                        ?: "Edit offline. Running this language may require an online compiler."
+                Text(info, style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.weight(1f))
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

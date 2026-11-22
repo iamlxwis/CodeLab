@@ -169,9 +169,7 @@ public final class ProjectStore {
     }
 
     public synchronized String createProject(String name, String template) throws IOException {
-        if (!Arrays.asList("JavaScript", "Java", "Lua", "SQLite", "Web",
-                "Python", "C", "C++", "C#", "TypeScript", "Kotlin", "Rust", "Go", "PHP",
-                "Ruby", "Swift", "Bash", "Dart", "Scala", "Perl", "Haskell", "R").contains(template))
+        if (!"Web".equals(template) && LanguageCatalog.extensionFor(template) == null)
             throw new IllegalArgumentException("Unsupported project template.");
         File dest = new File(projects, segment(name));
         requireNew(dest);
@@ -259,11 +257,19 @@ public final class ProjectStore {
                     "  document.getElementById('output').textContent = 'Running locally.';\n" +
                     "  console.log('Preview JavaScript executed');\n" +
                     "});\n");
-            } else {
+            } else if ("JavaScript".equals(template)) {
                 writeText(new File(stage, "main.js"),
                     "// Run this file, then enter your name in the console.\n" +
                     "const name = readLine(\"What is your name? \");\n" +
                     "print(\"Hello, \" + name + \"!\");\n");
+            } else {
+                // Added languages receive an empty, correctly extended source file.
+                // File editing is available offline, execution is not implied.
+                String extension = LanguageCatalog.extensionFor(template);
+                if (extension == null) throw new IllegalArgumentException("Unsupported project template.");
+                String fileName = ("Dockerfile".equals(template) || "Makefile".equals(template))
+                    ? template : "main." + extension;
+                writeText(new File(stage, fileName), "");
             }
             List<String> sourceFiles = new ArrayList<>();
             collect(stage, stage, sourceFiles, false);
