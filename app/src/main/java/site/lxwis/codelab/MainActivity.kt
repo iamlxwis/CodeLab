@@ -58,6 +58,8 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.ViewModelProvider
 
@@ -908,7 +910,8 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
                     items(languages, key = { it.name }) { language ->
                         Row(Modifier.fillMaxWidth().clickable {
                             template = language.name; browsing = false; keyboard?.hide()
-                        }.padding(vertical = 11.dp, horizontal = 8.dp),
+                        }.semantics { contentDescription = "Select " + language.name }
+                            .padding(vertical = 11.dp, horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(language.name)
