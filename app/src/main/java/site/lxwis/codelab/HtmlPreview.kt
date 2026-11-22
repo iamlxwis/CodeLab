@@ -12,10 +12,12 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,6 +43,8 @@ fun HtmlPreview(project: String, path: String, source: String, modifier: Modifie
     var loading by remember(project, path) { mutableStateOf(true) }
     var failure by remember(project, path) { mutableStateOf<String?>(null) }
     var messages by remember(project, path) { mutableStateOf(emptyList<String>()) }
+    var viewport by remember(project, path) { mutableStateOf("Auto") }
+    var consoleVisible by remember(project, path) { mutableStateOf(true) }
     val handler = remember { Handler(Looper.getMainLooper()) }
     val url = PREVIEW_ROOT + Uri.encode(path, "/") + "?revision=" + revision + "-" + debounced.hashCode()
 
@@ -61,8 +65,31 @@ fun HtmlPreview(project: String, path: String, source: String, modifier: Modifie
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh preview")
             }
         }
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            Icon(Icons.Default.Devices, null, Modifier.size(18.dp)
+                .align(Alignment.CenterVertically),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            listOf("Auto", "Phone", "Tablet", "Desktop").forEach { choice ->
+                FilterChip(selected = viewport == choice,
+                    onClick = { viewport = choice },
+                    label = { Text(choice) })
+            }
+            FilterChip(selected = consoleVisible,
+                onClick = { consoleVisible = !consoleVisible },
+                label = { Text("Log") })
+        }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
         HorizontalDivider()
+        Box(Modifier.weight(1f).fillMaxWidth(),
+            contentAlignment = Alignment.TopCenter) {
+        val viewportWidth = when (viewport) {
+            "Phone" -> 390.dp
+            "Tablet" -> 768.dp
+            "Desktop" -> 1100.dp
+            else -> 10000.dp
+        }
         AndroidView(
             factory = { ctx ->
                 WebView(ctx).apply {
@@ -119,7 +146,7 @@ fun HtmlPreview(project: String, path: String, source: String, modifier: Modifie
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth().weight(1f),
+            modifier = Modifier.fillMaxHeight().widthIn(max = viewportWidth).fillMaxWidth(),
             update = { view ->
                 live.text = debounced
                 if (view.tag != url) {
@@ -130,11 +157,12 @@ fun HtmlPreview(project: String, path: String, source: String, modifier: Modifie
                 }
             }
         )
+        }
         if (failure != null) {
             Text("Preview error: " + failure, Modifier.padding(12.dp), color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall)
         }
-        if (messages.isNotEmpty()) {
+        if (messages.isNotEmpty() && consoleVisible) {
             HorizontalDivider()
             Text("WEB CONSOLE", Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp),
                 style = MaterialTheme.typography.labelSmall)

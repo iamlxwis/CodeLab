@@ -35,6 +35,19 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     var showActions by remember { mutableStateOf(false) }
+    var showFilter by rememberSaveable { mutableStateOf(false) }
+    var filterOutput by rememberSaveable { mutableStateOf("") }
+    val consolePreferences = remember { context.getSharedPreferences("console-settings", android.content.Context.MODE_PRIVATE) }
+    var consoleFontSize by remember {
+        mutableIntStateOf(consolePreferences.getInt("font-size", 13))
+    }
+    val displayedOutput = remember(session.transcript, filterOutput, showFilter) {
+        if (showFilter && filterOutput.isNotBlank())
+            session.transcript.lineSequence().filter {
+                it.contains(filterOutput, ignoreCase = true)
+            }.joinToString("\n")
+        else session.transcript
+    }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         if (uri != null) {
             val saved = runCatching {
@@ -52,9 +65,13 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Console", style = MaterialTheme.typography.titleSmall)
-                    Text(session.status, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    Text(session.status, style = MaterialTheme.typography.labelSmall,
+                        color = if (session.running) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (session.running) TextButton(onClick = session::stop) { Text("Stop") }
+                FilterChip(selected = showFilter, onClick = { showFilter = !showFilter },
+                    label = { Text("Filter") })
                 Box {
                     IconButton(onClick = { showActions = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Console actions")
@@ -69,6 +86,19 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                             showActions = false
                             export.launch("console.txt")
                         })
+                        DropdownMenuItem(text = { Text("Smaller text") },
+                            enabled = consoleFontSize > 10, onClick = {
+                                consoleFontSize = (consoleFontSize - 1).coerceAtLeast(10)
+                                consolePreferences.edit().putInt("font-size", consoleFontSize).apply()
+                                showActions = false
+                            })
+                        DropdownMenuItem(text = { Text("Larger text") },
+                            enabled = consoleFontSize < 22, onClick = {
+                                consoleFontSize = (consoleFontSize + 1).coerceAtMost(22)
+                                consolePreferences.edit().putInt("font-size", consoleFontSize).apply()
+                                showActions = false
+                            })
+                        HorizontalDivider()
                         DropdownMenuItem(text = { Text("Clear output") }, enabled = hasOutput, onClick = {
                             session.clear()
                             showActions = false
@@ -76,6 +106,13 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                     }
                 }
             }
+            if (showFilter) {
+                OutlinedTextField(filterOutput, { filterOutput = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Filter console lines") },
+                    singleLine = true)
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             if (sqlResult != null) {
                 Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     FilterChip(selected = tableMode, onClick = { tableMode = true },
@@ -96,7 +133,10 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             }
             if (sqlResult != null && tableMode) SqlDataGrid(sqlResult, Modifier.weight(1f).fillMaxWidth())
             else SelectionContainer(Modifier.weight(1f).fillMaxWidth().verticalScroll(scroll)) {
-                Text(session.transcript, fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 18.sp)
+                Text(displayedOutput.ifEmpty {
+                    if (showFilter && filterOutput.isNotEmpty()) "No matching lines" else ""
+                }, fontFamily = FontFamily.Monospace, fontSize = consoleFontSize.sp,
+                    lineHeight = (consoleFontSize + 5).sp)
             }
             if (session.waiting) Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(value = input, onValueChange = { input = it.take(4096) }, singleLine = true,

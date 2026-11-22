@@ -61,6 +61,17 @@ private val catalog = listOf(
 @Composable
 fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var search by rememberSaveable { mutableStateOf("") }
+    var filter by rememberSaveable { mutableStateOf("All") }
+    val filteredLanguages = catalog.filter { language ->
+        (language.name.contains(search, ignoreCase = true) ||
+            language.extension.contains(search, ignoreCase = true)) &&
+        when (filter) {
+            "Offline" -> language.local != null
+            "Cloud ready" -> model.isOnline && model.cloudLanguages.containsKey(language.extension)
+            else -> true
+        }
+    }
 
     ModalBottomSheet(onDismissRequest = close, sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -77,6 +88,20 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
                 Icon(if (model.isOnline) Icons.Default.Cloud else Icons.Default.WifiOff,
                     contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             }
+            OutlinedTextField(search, { search = it },
+                modifier = Modifier.fillMaxWidth(), singleLine = true,
+                leadingIcon = { Icon(Icons.Default.Code, contentDescription = null) },
+                label = { Text("Find a language") })
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("All", "Offline", "Cloud ready").forEach { option ->
+                    FilterChip(selected = filter == option, onClick = { filter = option },
+                        label = { Text(option) })
+                }
+            }
+            Text("${filteredLanguages.size} languages matching",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             HorizontalDivider()
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(9.dp),
                 contentPadding = PaddingValues(bottom = 28.dp)) {
@@ -112,7 +137,13 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(6.dp))
                 }
-                items(catalog, key = { it.extension }) { language ->
+                if (filteredLanguages.isEmpty()) item {
+                    Text("No languages match this filter.",
+                        Modifier.padding(vertical = 24.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                items(filteredLanguages, key = { it.extension }) { language ->
                     val cloud = model.cloudLanguages[language.extension]
                     Row(Modifier.fillMaxWidth().heightIn(min = 50.dp),
                         verticalAlignment = Alignment.CenterVertically) {
