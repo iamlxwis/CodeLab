@@ -51,7 +51,11 @@ public final class CloudJudge0 {
     }
 
     public static String extension(String filename) {
-        return filename.toLowerCase(java.util.Locale.ROOT).replaceAll("^.*\\.", "");
+        String ext = filename.toLowerCase(java.util.Locale.ROOT).replaceAll("^.*\\.", "");
+        if (ext.equals("cc") || ext.equals("cxx")) return "cpp";
+        if (ext.equals("mjs")) return "js";
+        if (ext.equals("kts")) return "kt";
+        return ext;
     }
 
     /** Judge0 language names are checked at runtime; never assume stable numerical IDs. */
@@ -81,7 +85,6 @@ public final class CloudJudge0 {
     }
 
     public static Map<String, Language> fetchLanguages(String url, String header, String credential) throws IOException {
-        JSONObject ignored = null;
         HttpURLConnection conn = connect(url, "/languages", "GET", header, credential);
         try {
             JSONArray languages = new JSONArray(readBody(conn));
@@ -111,8 +114,6 @@ public final class CloudJudge0 {
             input.put("language_id", language.id);
             input.put("source_code", encode(source));
             input.put("stdin", encode(stdin));
-            input.put("cpu_time_limit", 5);
-            input.put("wall_time_limit", 12);
         } catch (JSONException ex) { throw new IOException("Could not serialize source code.", ex); }
         HttpURLConnection post = connect(url, "/submissions?base64_encoded=true&wait=false", "POST", header, credential);
         String token;
@@ -185,6 +186,8 @@ public final class CloudJudge0 {
             if (!header.equals("X-Auth-Token") && !header.equals("Authorization") &&
                     !header.equals("X-RapidAPI-Key")) throw new IOException("Unsupported authentication header.");
             c.setRequestProperty(header, credential);
+            if (header.equals("X-RapidAPI-Key"))
+                c.setRequestProperty("X-RapidAPI-Host", new URL(validateUrl(url)).getHost());
         }
         return c;
     }

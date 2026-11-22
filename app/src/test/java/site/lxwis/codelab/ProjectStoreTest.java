@@ -103,6 +103,17 @@ public class ProjectStoreTest {
         assertEquals(Collections.singletonList("Main.java"), store.files("JavaScripts"));
         assertTrue(store.read("JavaScripts", "Main.java").contains("public static void main"));
 
+        store.createProject("PyOnline", "Python");
+        assertEquals(Collections.singletonList("main.py"), store.files("PyOnline"));
+        assertTrue(store.read("PyOnline", "main.py").contains("print("));
+        store.createProject("CppOnline", "C++");
+        assertEquals(Collections.singletonList("main.cpp"), store.files("CppOnline"));
+        assertTrue(store.read("CppOnline", "main.cpp").contains("int main()"));
+        store.createProject("RustOnline", "Rust");
+        assertEquals(Collections.singletonList("main.rs"), store.files("RustOnline"));
+        store.createProject("KotlinOnline", "Kotlin");
+        assertEquals(Collections.singletonList("Main.kt"), store.files("KotlinOnline"));
+
         store.createProject("LuaScripts", "Lua");
         assertEquals(Collections.singletonList("main.lua"), store.files("LuaScripts"));
         assertTrue(store.read("LuaScripts", "main.lua").contains("readLine"));

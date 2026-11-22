@@ -92,13 +92,49 @@ public final class ProjectStore {
     }
 
     public synchronized String createProject(String name, String template) throws IOException {
-        if (!Arrays.asList("JavaScript", "Java", "Lua", "SQLite", "Web").contains(template))
+        if (!Arrays.asList("JavaScript", "Java", "Lua", "SQLite", "Web",
+                "Python", "C", "C++", "C#", "TypeScript", "Kotlin", "Rust", "Go", "PHP",
+                "Ruby", "Swift", "Bash", "Dart", "Scala", "Perl", "Haskell", "R").contains(template))
             throw new IllegalArgumentException("Unsupported project template.");
         File dest = new File(projects, segment(name));
         requireNew(dest);
         File stage = Files.createTempDirectory(scratch.toPath(), "project-").toFile();
         try {
-            if ("Java".equals(template)) {
+            if ("Python".equals(template)) {
+                writeText(new File(stage, "main.py"), "print('Hello from CodeLab!')\n");
+            } else             if ("C".equals(template)) {
+                writeText(new File(stage, "main.c"), "#include <stdio.h>\nint main(void) {\n    puts(\"Hello from CodeLab!\");\n    return 0;\n}\n");
+            } else             if ("C++".equals(template)) {
+                writeText(new File(stage, "main.cpp"), "#include <iostream>\nint main() {\n    std::cout << \"Hello from CodeLab!\" << std::endl;\n    return 0;\n}\n");
+            } else             if ("C#".equals(template)) {
+                writeText(new File(stage, "Program.cs"), "using System;\npublic class Program {\n    public static void Main() {\n        Console.WriteLine(\"Hello from CodeLab!\");\n    }\n}\n");
+            } else             if ("TypeScript".equals(template)) {
+                writeText(new File(stage, "main.ts"), "const message: string = 'Hello from CodeLab!';\nconsole.log(message);\n");
+            } else             if ("Kotlin".equals(template)) {
+                writeText(new File(stage, "Main.kt"), "fun main() {\n    println(\"Hello from CodeLab!\")\n}\n");
+            } else             if ("Rust".equals(template)) {
+                writeText(new File(stage, "main.rs"), "fn main() {\n    println!(\"Hello from CodeLab!\");\n}\n");
+            } else             if ("Go".equals(template)) {
+                writeText(new File(stage, "main.go"), "package main\nimport \"fmt\"\nfunc main() {\n    fmt.Println(\"Hello from CodeLab!\")\n}\n");
+            } else             if ("PHP".equals(template)) {
+                writeText(new File(stage, "main.php"), "<?php\necho \"Hello from CodeLab!\\n\";\n");
+            } else             if ("Ruby".equals(template)) {
+                writeText(new File(stage, "main.rb"), "puts 'Hello from CodeLab!'\n");
+            } else             if ("Swift".equals(template)) {
+                writeText(new File(stage, "main.swift"), "print(\"Hello from CodeLab!\")\n");
+            } else             if ("Bash".equals(template)) {
+                writeText(new File(stage, "main.sh"), "#!/usr/bin/env bash\necho 'Hello from CodeLab!'\n");
+            } else             if ("Dart".equals(template)) {
+                writeText(new File(stage, "main.dart"), "void main() {\n  print('Hello from CodeLab!');\n}\n");
+            } else             if ("Scala".equals(template)) {
+                writeText(new File(stage, "Main.scala"), "object Main extends App {\n  println(\"Hello from CodeLab!\")\n}\n");
+            } else             if ("Perl".equals(template)) {
+                writeText(new File(stage, "main.pl"), "use strict;\nuse warnings;\nprint \"Hello from CodeLab!\\n\";\n");
+            } else             if ("Haskell".equals(template)) {
+                writeText(new File(stage, "Main.hs"), "main = putStrLn \"Hello from CodeLab!\"\n");
+            } else             if ("R".equals(template)) {
+                writeText(new File(stage, "main.r"), "cat('Hello from CodeLab!\\n')\n");
+            } else             if ("Java".equals(template)) {
                 writeText(new File(stage, "Main.java"),
                     "// Java beta: basic main-method console programs (interpreted locally).\n" +
                     "public class Main {\n" +

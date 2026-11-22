@@ -1,6 +1,6 @@
 # CodeLab
 
-Native Android code editor and offline execution workspace. Built with Kotlin, Jetpack Compose, Android's standard file APIs, and an offline JavaScript/Lua/SQLite runtime services.
+Native Android code editor and hybrid offline/online execution workspace. Built with Kotlin, Jetpack Compose, Android's standard file APIs, and an offline JavaScript/Lua/SQLite runtime services.
 
 ## Install an APK
 
@@ -20,6 +20,7 @@ CodeLab is early-access software; back up projects with **Export project ZIP** b
 | Offline SQLite | Implemented with Android SQLite (in-memory database per Run) |
 | Offline Lua | Implemented with LuaJ 3.0.1 (Lua 5.2 style), local Run console and readLine input |
 | Java beta | Offline BeanShell interpreter for basic Java statements and a single `main` method; no javac, compiled classes, or full Java API compatibility |
+| Verified online compiler | Optional Judge0-compatible service; available language IDs fetched from the configured server |
 | Stop, timeout, isolated runtime process | Implemented for supported runtimes |
 | Offline HTML/CSS/JavaScript preview | Implemented for local text assets |
 | Python, C++, Java, Rust compilation | Not implemented |
@@ -28,6 +29,24 @@ CodeLab is early-access software; back up projects with **Export project ZIP** b
 **JavaScript:** Open a `.js` file and tap Run. This is the Rhino JavaScript runtime, not Node.js or a web browser. Use `print("hello")`, `console.log()`, `console.error()`, and `readLine("Name?")`. Network and filesystem host APIs are not provided. A 60-second worker timeout and console output limit are enforced.
 
 **Java beta:** Create a Java starter project and Run `Main.java`. This is an offline BeanShell interpreter running basic Java statements inside the body of `public static void main(String[] args)`. It supports common expressions, loops, method calls, `System.out.println` and `System.in` input where compatible. It is **not javac**, does not compile a JVM class, and does not yet support arbitrary custom class definitions, multi-file Java projects, or all standard Java language features. The Java runtime runs in a dedicated isolated process and remains subject to timeout and output limits. This interpreter is not a proven security sandbox.\n\n**Lua:** Create a Lua project or open a `.lua` file and tap Run. Lua executes entirely offline using the LuaJ interpreter. Use `print('Hello')`, `readLine('Name?')` or `input('Name?')` for interactive input, and Lua's built-in string, table, math and coroutine features. Host filesystem, OS, module-loading, and Java reflection APIs are not exposed. This is LuaJ-compatible Lua 5.2-style behavior, not a full native Lua installation. The runtime is independently stopped by the worker service's 60-second timeout.\n\n**SQLite:** Create a `.sql` file, write SQL statements, and tap Run. CodeLab runs statements against a new in-memory SQLite database, prints query results and statement diagnostics, and returns a nonzero exit status for invalid SQL. State does **not** persist between runs. `ATTACH`, `DETACH`, and `VACUUM` are deliberately unavailable.
+
+## Hybrid language execution
+
+CodeLab **detects local execution capability and actual online compiler availability separately**. The Languages & Cloud sheet identifies JavaScript, Java (beta), Lua and SQLite as local runtimes, and HTML/CSS as offline web-preview targets. Other languages can be edited without internet, but **execution requires a reachable Judge0-compatible compiler** that reports the language in its `GET /languages` endpoint. Supported remote languages depend on your server, permissions, quotas and runtime versions.
+
+To use an online compiler:
+
+1. Open the **⋮** menu → **Languages & Cloud**.
+2. Enter an HTTPS Judge0-compatible server URL (the documented public CE URL is prefilled, but is not guaranteed to accept submissions).
+3. Optionally select an authentication header and provide its API token.
+4. Tap **Save and check languages** and review the verified language list.
+5. Create a project or source file with a supported extension (.py, .c, .cpp, .cs, .kt, .go, .rs, .php, .rb, .swift, .ts and others).
+6. Tap **Run** (or **Run via cloud…** for a language that also runs locally).
+7. Confirm the exact destination before CodeLab sends source code or predefined standard input.
+
+Online submissions use Judge0's token-based asynchronous API and poll until execution finishes. Cloud input is specified **before** execution; interactive `readLine()` is supported only by suitable offline runtimes. The app can cancel local monitoring, but submitted code may continue executing remotely. The UI does not claim cloud functionality simply because internet is connected—only the server's verified `/languages` response enables the corresponding run options.
+
+**Privacy:** No source files are uploaded automatically. Only a confirmed cloud run sends the current source and its provided input. The configured endpoint and optional authentication token are stored in private application preferences. Do not include secrets in code submitted to public compiler services. The cloud server may retain execution data or impose quotas according to its own policies. Offline preview remains restricted to local project assets.
 
 ## Project templates and offline web preview
 
@@ -62,4 +81,4 @@ JavaScript executes in an Android isolated process. The SQLite runner uses a sep
 
 ## Privacy & licensing
 
-No account, analytics SDK, ads, or remote code execution service are required. Project files stay on-device unless exported. BeanShell 2.1.1 is available under the Apache License 2.0 license. LuaJ 3.0.1 is available under the MIT license and bundled as a Maven dependency. The bundled Rhino engine is distributed with its license and notices under `app/src/main/assets/licenses/rhino/`. Verify third-party licenses before redistribution.
+No account, analytics SDK, ads, or remote code execution service is required for local languages. An optional network permission enables compiler discovery and user-confirmed cloud submissions. Project files stay on-device unless exported. BeanShell 2.1.1 is available under the Apache License 2.0 license. LuaJ 3.0.1 is available under the MIT license and bundled as a Maven dependency. The bundled Rhino engine is distributed with its license and notices under `app/src/main/assets/licenses/rhino/`. Verify third-party licenses before redistribution.

@@ -374,6 +374,7 @@ private fun NameDialog(title: String, initial: String, label: String, example: S
 private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> Unit) {
     var name by rememberSaveable { mutableStateOf("") }
     var template by rememberSaveable { mutableStateOf("JavaScript") }
+    var otherTemplates by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = cancel,
         title = { Text("New project") },
@@ -395,6 +396,28 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
                             }
                         }
                     }
+                }
+                Box {
+                    TextButton(onClick = { otherTemplates = true }) {
+                        Text(if (template in listOf("JavaScript", "Java", "Lua", "SQLite", "Web"))
+                            "More languages…" else template + " · change language")
+                    }
+                    DropdownMenu(expanded = otherTemplates, onDismissRequest = { otherTemplates = false }) {
+                        listOf("Python", "C", "C++", "C#", "TypeScript", "Kotlin", "Rust",
+                            "Go", "PHP", "Ruby", "Swift", "Bash", "Dart", "Scala", "Perl",
+                            "Haskell", "R").forEach { language ->
+                            DropdownMenuItem(text = { Text(language) }, onClick = {
+                                template = language
+                                otherTemplates = false
+                            })
+                        }
+                    }
+                }
+                if (template !in listOf("JavaScript", "Java", "Lua", "SQLite", "Web")) {
+                    Text("Editing works offline. Running " + template +
+                        " requires a verified online compiler.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         },

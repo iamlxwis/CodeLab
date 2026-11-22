@@ -139,12 +139,60 @@ def main():
     wait_for("index.html", contains=True)
     tap("Preview")
     wait_for("Local preview")
-    time.sleep(2)
+    wait_for("Hello, CodeLab.", contains=True, timeout=20)
     snapshot("07-web-preview")
+
+    # Verify both additional offline interpreters from installed Android APK.
+    tap("Project library")
+    wait_for("New project")
+    tap("New project")
+    tap("Lua")
+    tap_node(wait_for(field=True))
+    adb("shell", "input", "text", "LuaSmoke")
+    tap("Create")
+    wait_for("main.lua", contains=True)
+    tap("Run")
+    wait_for("Waiting for input")
+    tap_node(wait_for(field=True))
+    adb("shell", "input", "text", "Ada")
+    tap("Send")
+    wait_for("Hello, Ada!", contains=True)
+    wait_for("Exit 0", contains=True)
+    snapshot("08-lua")
+
+    tap("Project library")
+    wait_for("New project")
+    tap("New project")
+    tap("Java")
+    tap_node(wait_for(field=True))
+    adb("shell", "input", "text", "JavaSmoke")
+    tap("Create")
+    wait_for("Main.java", contains=True)
+    tap("Run")
+    wait_for("Hello from CodeLab!", contains=True)
+    wait_for("Exit 0", contains=True)
+    snapshot("09-java-beta")
+
+    # Cloud-only template is editable in airplane mode, but cannot claim to run offline.
+    tap("Project library")
+    wait_for("New project")
+    tap("New project")
+    tap("More languages", contains=True)
+    tap("Python")
+    tap_node(wait_for(field=True))
+    adb("shell", "input", "text", "PySmoke")
+    tap("Create")
+    wait_for("main.py", contains=True)
+    tap("Run")
+    wait_for("This language needs an online compiler", contains=True)
+    tap("Close")
+    snapshot("10-online-required")
+
     (OUT / "result.txt").write_text(
         "Passed: install, create, launch offline JavaScript, interactive input, "
         "computed output, normal exit, file creation, editing, tab switching, autosave, "
-        "process restoration, rotation, SQLite project execution, and local web preview navigation.\n")
+        "process restoration, rotation, SQLite execution, rendered HTML preview, offline Lua, " 
+        "Java beta execution, and honest offline behavior for cloud-only Python.\n")
 
 
 if __name__ == "__main__":
