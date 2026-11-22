@@ -1,3 +1,5 @@
+import java.io.File
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -10,7 +12,7 @@ val keyAlias = System.getenv("CODELAB_KEY_ALIAS")
 val keyEntryPassword = System.getenv("CODELAB_KEY_PASSWORD")
 val hasReleaseSigning = !keyFile.isNullOrBlank() &&
     !keyPassword.isNullOrBlank() && !keyAlias.isNullOrBlank() &&
-    !keyEntryPassword.isNullOrBlank() && java.io.File(keyFile).isFile
+    !keyEntryPassword.isNullOrBlank() && File(keyFile).isFile
 
 android {
     namespace = "site.lxwis.codelab"
@@ -32,7 +34,7 @@ android {
     signingConfigs {
         if (hasReleaseSigning) {
             create("production") {
-                storeFile = java.io.File(requireNotNull(keyFile))
+                storeFile = File(requireNotNull(keyFile))
                 storePassword = keyPassword
                 keyAlias = keyAlias
                 keyPassword = keyEntryPassword
