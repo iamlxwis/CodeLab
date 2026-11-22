@@ -158,7 +158,7 @@ internal object ScreenshotRenderer {
         if (options.footer.isNotBlank()) {
             paint.color = palette.muted
             paint.textSize = 21f
-            paint.typeface = Typeface.create(Typeface.MONOSPACE)
+            paint.typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
             val footer = options.footer.trim().take(62)
             canvas.drawText(footer, frameLeft + 36f, frameBottom - 20f, paint)
         }
