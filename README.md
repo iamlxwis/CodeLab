@@ -20,7 +20,7 @@ The link points to the most recently published GitHub Release. A new APK is publ
 - Cleaner top bar: **Run · Save · Search · More**; navigation keeps advanced actions discoverable without requiring a row of buttons.
 - Syntax colors and UI presets include Dracula, One Dark, Monokai, GitHub Light and OLED black; motion follows Android system settings and the app's Reduced setting.
 - Editor undo/redo, symbol toolbar, formatting for JS/JSON/HTML/CSS/SQL, and Ctrl+Enter to Run, alongside existing bracket pairing, indentation and pinch-to-zoom support.
-- Starter projects: **To-do app**, **API fetch**, **Algorithms**, **SQL playground**, **Lua game loop**. The API fetch starter needs internet for its remote call but displays an offline fallback.
+- Starter projects: **To-do app**, **API fetch**, **Algorithms**, **SQL playground**, **Lua game loop**. The API fetch starter fetches its own local `data.json` file inside the offline web preview; no network or account is needed.
 - Debuggable builds log tap-to-next-frame latency in Logcat under `CodeLabLatency`; `qa/performance_smoke.py` records cold start, PSS, frame metrics and sampled input latency for comparison.
 
 **Release signing setup (repository maintainer):** Add a stable Android keystore, encode the keystore file as base64 in the GitHub Actions secret `CODELAB_KEYSTORE_B64`, and set `CODELAB_KEYSTORE_PASSWORD`, `CODELAB_KEY_ALIAS`, and `CODELAB_KEY_PASSWORD`. Keep the same keystore and alias for every subsequent update. A debug-signed APK cannot update directly over a production-signed APK (or vice versa) without uninstalling; back up project data before changing the signature.
