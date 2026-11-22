@@ -838,64 +838,109 @@ private fun NameDialog(title: String, initial: String, label: String, example: S
         dismissButton = { TextButton(onClick = cancel) { Text("Cancel") } })
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> Unit) {
     val keyboard = LocalSoftwareKeyboardController.current
     var name by rememberSaveable { mutableStateOf("") }
     var template by rememberSaveable { mutableStateOf("JavaScript") }
-    var otherTemplates by remember { mutableStateOf(false) }
-    AlertDialog(
-        onDismissRequest = cancel,
-        title = { Text("New project") },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState()).heightIn(max = 420.dp)) {
-                OutlinedTextField(name, { name = it }, singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                    keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
-                    label = { Text("Project name") }, placeholder = { Text("e.g. Playground") })
-                Spacer(Modifier.height(14.dp))
-                Text("STARTER", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                    listOf(listOf("JavaScript", "Java", "Lua"), listOf("SQLite", "Web")).forEach { row ->
-                        Row(Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                            row.forEach { option ->
-                                FilterChip(selected = template == option,
-                                    onClick = { template = option },
-                                    label = { Text(option) })
-                            }
-                        }
-                    }
-                }
-                Box {
-                    TextButton(onClick = { otherTemplates = true }) {
-                        Text(if (template in listOf("JavaScript", "Java", "Lua", "SQLite", "Web"))
-                            "More languages…" else template + " · change language")
-                    }
-                    DropdownMenu(expanded = otherTemplates, onDismissRequest = { otherTemplates = false }) {
-                        listOf("Python", "C", "C++", "C#", "TypeScript", "Kotlin", "Rust",
-                            "Go", "PHP", "Ruby", "Swift", "Bash", "Dart", "Scala", "Perl",
-                            "Haskell", "R").forEach { language ->
-                            DropdownMenuItem(text = { Text(language) }, onClick = {
-                                template = language
-                                otherTemplates = false
-                            })
-                        }
-                    }
-                }
-                if (template !in listOf("JavaScript", "Java", "Lua", "SQLite", "Web")) {
-                    Text("Editing works offline. Running " + template +
-                        " requires a verified online compiler.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+    var browsing by rememberSaveable { mutableStateOf(false) }
+    var search by rememberSaveable { mutableStateOf("") }
+    var offlineOnly by rememberSaveable { mutableStateOf(false) }
+    val languages = LanguageCatalog.entries.filter {
+        (!offlineOnly || it.local != null) &&
+            (search.isBlank() || it.name.contains(search.trim(), true) ||
+                it.extension.contains(search.trim(), true))
+    }
+    ModalBottomSheet(onDismissRequest = cancel,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(.86f)
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("New project", style = MaterialTheme.typography.headlineSmall)
+            Text("Choose a language, then create your workspace.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedTextField(name, { name = it.take(100) }, modifier = Modifier.fillMaxWidth(),
+                singleLine = true, shape = RoundedCornerShape(14.dp),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
+                label = { Text("Project name") }, placeholder = { Text("e.g. Playground") })
+            Text("POPULAR", style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LanguageCatalog.popular.forEach { choice ->
+                    FilterChip(selected = template == choice,
+                        onClick = { template = choice; browsing = false },
+                        label = { Text(choice) })
                 }
             }
-        },
-        confirmButton = { TextButton(onClick = { submit(name.trim(), template) },
-            enabled = name.isNotBlank()) { Text("Create") } },
-        dismissButton = { TextButton(onClick = cancel) { Text("Cancel") } }
-    )
+            Surface(onClick = { browsing = !browsing; keyboard?.hide() },
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                Row(Modifier.fillMaxWidth().padding(15.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Code, null, tint = MaterialTheme.colorScheme.primary)
+                    Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                        Text(template, fontWeight = FontWeight.SemiBold)
+                        Text("Browse ${LanguageCatalog.entries.size} languages & file types",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(if (browsing) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = "Browse languages")
+                }
+            }
+            if (browsing) {
+                OutlinedTextField(search, { search = it }, modifier = Modifier.fillMaxWidth(),
+                    singleLine = true, label = { Text("Search language or extension") },
+                    leadingIcon = { Icon(Icons.Default.Search, null) })
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    FilterChip(selected = offlineOnly, onClick = { offlineOnly = !offlineOnly },
+                        label = { Text("Offline-capable") })
+                    Spacer(Modifier.width(10.dp))
+                    Text("${languages.size} results", style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                LazyColumn(Modifier.weight(1f)) {
+                    items(languages, key = { it.name }) { language ->
+                        Row(Modifier.fillMaxWidth().clickable {
+                            template = language.name; browsing = false; keyboard?.hide()
+                        }.padding(vertical = 11.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(language.name)
+                                Text(language.local ?: "Edit offline · online run not guaranteed",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Text("." + language.extension, fontFamily = FontFamily.Monospace,
+                                style = MaterialTheme.typography.labelSmall)
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
+                    }
+                }
+            } else {
+                val info = if (template == "Web") "Offline HTML/CSS/JS preview"
+                    else LanguageCatalog.entries.firstOrNull { it.name == template }?.local
+                        ?.let { "$it · included with CodeLab" }
+                        ?: "Edit offline. Running this language may require an online compiler."
+                Text(info, style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.weight(1f))
+            }
+            Button(onClick = { keyboard?.hide(); submit(name.trim(), template) },
+                enabled = name.isNotBlank(), modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp)) {
+                Icon(Icons.Default.Add, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Create project")
+            }
+            Spacer(Modifier.height(6.dp))
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
