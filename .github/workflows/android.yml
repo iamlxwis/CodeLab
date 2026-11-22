@@ -39,6 +39,8 @@ jobs:
           else
             echo "CODELAB_SIGNING_MODE=fallback-debug" >> "$GITHUB_ENV"
           fi
+      - name: Static security regression gate
+        run: python3 qa/security_gate.py
       - name: Build optimized release and test
         run: bash gradlew --no-daemon :app:assembleRelease :app:testDebugUnitTest
       - name: Verify APK signature
