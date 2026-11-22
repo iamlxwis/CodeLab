@@ -256,6 +256,27 @@ public final class ProjectStore {
         Files.copy(target.toPath(), output);
     }
 
+    public synchronized void createFolder(String project, String path) throws IOException {
+        File target = resolve(project(project), path);
+        requireNew(target);
+        if (!target.mkdirs()) throw new IOException("Unable to create folder.");
+    }
+
+    public synchronized void moveFile(String project, String from, String to) throws IOException {
+        File base = project(project);
+        File source = resolve(base, from);
+        File destination = resolve(base, to);
+        if (!source.isFile()) throw new IOException("Source file does not exist.");
+        moveNew(source, destination);
+    }
+
+    public synchronized void copyToProject(String fromProject, String path,
+                                            String toProject, String destination) throws IOException {
+        File target = resolve(project(toProject), destination);
+        requireNew(target);
+        writeText(target, read(fromProject, path));
+    }
+
     public synchronized void duplicateFile(String project, String from, String to) throws IOException {
         File base = project(project);
         File source = resolve(base, from);

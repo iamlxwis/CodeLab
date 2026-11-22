@@ -193,6 +193,11 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     if (p != null) {
                         DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
                         DropdownMenuItem(text = { Text("Import file…") }, onClick = { menu = false; importFile.launch(arrayOf("*/*")) })
+                        DropdownMenuItem(text = { Text("New folder…") },
+                            onClick = { menu = false; dialog = "newfolder" })
+                        DropdownMenuItem(text = { Text("Copy file to another project…") },
+                            enabled = m.active != null && m.projects.size > 1,
+                            onClick = { menu = false; dialog = "copyproject" })
                         DropdownMenuItem(text = { Text("Import multiple files…") },
                             onClick = { menu = false; importMany.launch(arrayOf("*/*")) })
                         if (m.active != null) {
@@ -359,15 +364,26 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             m.openProject(name, true, template)
             dialog = ""
         }
-        "newfile", "rename", "renameproject", "import", "importfile", "duplicate" -> {
-            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; "importfile" -> "Import file"; "duplicate" -> "Duplicate file"; else -> "Import project" }
-            val file = dialog == "newfile" || dialog == "rename" || dialog == "importfile" || dialog == "duplicate"
+        "newfile", "newfolder", "rename", "renameproject", "import", "importfile", "duplicate" -> {
+            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "newfolder" -> "New folder"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; "importfile" -> "Import file"; "duplicate" -> "Duplicate file"; else -> "Import project" }
+            val file = dialog == "newfile" || dialog == "newfolder" || dialog == "rename" || dialog == "importfile" || dialog == "duplicate"
             NameDialog(title, if (dialog.startsWith("rename")) selected else if (dialog == "duplicate") selected.substringBeforeLast(".") + "-copy" + (if (selected.contains(".")) "." + selected.substringAfterLast(".") else "") else "", if (file) "File path" else "Project name",
                 if (file) "e.g. src/helpers.js" else "e.g. Playground", { dialog = "" }) { name ->
-                when (dialog) { "renameproject" -> m.manageProject(selected, name); "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) }; "importfile" -> importedFile?.let { m.importFile(Uri.parse(it), name) }; "duplicate" -> m.duplicateFile(selected, name) }
+                when (dialog) { "renameproject" -> m.manageProject(selected, name); "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "newfolder" -> m.createFolder(name); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) }; "importfile" -> importedFile?.let { m.importFile(Uri.parse(it), name) }; "duplicate" -> m.duplicateFile(selected, name) }
                 dialog = ""
             }
         }
+        "copyproject" -> AlertDialog(onDismissRequest = { dialog = "" },
+            title = { Text("Copy to project") },
+            text = { Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Copy " + m.active.orEmpty() + " to:")
+                m.projects.filter { it != m.project }.forEach { destination ->
+                    TextButton(onClick = {
+                        m.active?.let { m.copyFileToProject(it, destination, it) }
+                        dialog = ""
+                    }) { Text(destination) }
+                }
+            } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
         "files" -> FileExplorerSheet(m, onClose = { dialog = "" }, onNew = { dialog = "newfile" },
             onOpen = { m.select(it); dialog = "" }, onRename = { selected = it; dialog = "rename" },
             onDelete = { selected = it; dialog = "delete" })

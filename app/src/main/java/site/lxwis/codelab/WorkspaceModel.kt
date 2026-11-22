@@ -317,6 +317,25 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun createFolder(path: String) {
+        val p = project ?: return
+        work {
+            store.createFolder(p, path)
+            val opened = persist(load(p, tabs, active, allowUnavailable = true))
+            val commit: () -> Unit = { apply(opened) }
+            commit
+        }
+    }
+
+    fun copyFileToProject(path: String, destinationProject: String, destination: String) {
+        val p = project ?: return
+        work {
+            store.copyToProject(p, path, destinationProject, destination)
+            val commit: () -> Unit = {}
+            commit
+        }
+    }
+
     fun duplicateFile(from: String, to: String) {
         val p = project ?: return
         work {
