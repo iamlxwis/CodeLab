@@ -253,7 +253,7 @@ fun CodeEditor(
                         "SQL · update" to "UPDATE items SET name = 'Updated' WHERE id = 1;",
                         "SQL · join" to "SELECT a.id, b.name\nFROM table_a AS a\nINNER JOIN table_b AS b ON b.id = a.id;",
                         "Lua · table" to "local config = {\n    enabled = true,\n    name = 'Example'\n}",
-                        "Shell · loop" to "for file in *.txt; do\n  printf '%s\\\n' \"$file\"\ndone"
+                        "Shell · loop" to "for file in *.txt; do\n  printf '%s\\\n' \"${'\"\ndone}file\"\ndone"
                     ).forEach { (label, snippet) ->
                         DropdownMenuItem(text = { Text(label) }, enabled = !readOnly,
                             onClick = {
