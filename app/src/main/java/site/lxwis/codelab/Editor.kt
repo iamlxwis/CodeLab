@@ -72,6 +72,9 @@ fun CodeEditor(
     var lineInput by remember { mutableStateOf("") }
     var lineError by remember { mutableStateOf(false) }
     var settings by remember { mutableStateOf(false) }
+    var toolsMenu by remember { mutableStateOf(false) }
+    var showLineNumbers by remember { mutableStateOf(preferences.getBoolean("line-numbers", true)) }
+    var showActiveLine by remember { mutableStateOf(preferences.getBoolean("active-line", true)) }
     var result by remember { mutableStateOf("") }
     val changes by rememberUpdatedState(onTextChange)
     val palette = MaterialTheme.colorScheme
@@ -168,6 +171,15 @@ fun CodeEditor(
             Box {
                 EditorIcon(Icons.Default.TextFields, "Font size: ${fontSize}sp") { settings = true }
                 DropdownMenu(expanded = settings, onDismissRequest = { settings = false }) {
+                    DropdownMenuItem(text = { Text(if (showLineNumbers) "Hide line numbers" else "Show line numbers") },
+                        onClick = { showLineNumbers = !showLineNumbers
+                            preferences.edit().putBoolean("line-numbers", showLineNumbers).apply()
+                            settings = false })
+                    DropdownMenuItem(text = { Text(if (showActiveLine) "Hide active line" else "Highlight active line") },
+                        onClick = { showActiveLine = !showActiveLine
+                            preferences.edit().putBoolean("active-line", showActiveLine).apply()
+                            settings = false })
+                    HorizontalDivider()
                     listOf(12, 14, 15, 16, 18, 20, 24).forEach {
                         DropdownMenuItem(text = { Text("Font size · ${it}sp") }, onClick = {
                             fontSize = it
@@ -181,6 +193,21 @@ fun CodeEditor(
                 if (readOnly) "Disable read-only mode" else "Enable read-only mode", selected = readOnly) {
                 readOnly = !readOnly
                 view?.isEnabled = !readOnly
+            }
+            Box {
+                EditorIcon(Icons.Default.Build, "Code transformation tools") { toolsMenu = true }
+                DropdownMenu(expanded = toolsMenu, onDismissRequest = { toolsMenu = false }) {
+                    listOf("Uppercase", "Lowercase", "Title case", "Trim selection",
+                        "Trim trailing spaces", "Tabs to spaces", "Spaces to tabs",
+                        "Sort lines A–Z", "Sort lines Z–A", "Reverse lines",
+                        "Remove duplicate lines", "Remove blank lines", "Join lines",
+                        "Split commas", "Indent 2 spaces", "Indent 4 spaces",
+                        "Outdent 2 spaces", "Toggle comments", "Move lines up",
+                        "Move lines down").forEachIndexed { index, label ->
+                        DropdownMenuItem(text = { Text(label) }, enabled = !readOnly,
+                            onClick = { view?.applyCodeTool(index); toolsMenu = false })
+                    }
+                }
             }
             EditorIcon(Icons.Default.ContentCopy, "Duplicate current line") {
                 if (!readOnly) view?.duplicateCurrentLine()
@@ -290,6 +317,7 @@ fun CodeEditor(
             update = { editor ->
                 editor.appearance(fontSize, foreground, background, secondary, accent, dark)
                 editor.setCodeWrap(wordWrap)
+                editor.setGutterOptions(showLineNumbers, showActiveLine)
                 editor.isEnabled = !readOnly
                 if (editor.sourceSnapshot != text) editor.replaceSource(text)
             }
@@ -332,6 +360,15 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     var changed: ((String) -> Unit)? = null
     var selectionChanged: ((Int, Int) -> Unit)? = null
     private var codeWrapped: Boolean? = null
+    private var showNumbers = true
+    private var showCurrentLine = true
+    fun setGutterOptions(numbers: Boolean, currentLine: Boolean) {
+        if (showNumbers != numbers || showCurrentLine != currentLine) {
+            showNumbers = numbers
+            showCurrentLine = currentLine
+            invalidate()
+        }
+    }
     var sourceSnapshot = ""
         private set
     private var syncing = false
@@ -515,6 +552,78 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         setSelection(start, start + outdented.length)
     }
 
+    fun applyCodeTool(index: Int) {
+        if (!isEnabled || index !in 0..19) return
+        val editable = text ?: return
+        val source = editable.toString()
+        val from = minOf(selectionStart, selectionEnd).coerceIn(0, source.length)
+        val to = maxOf(selectionStart, selectionEnd).coerceIn(0, source.length)
+        val start = (source.lastIndexOf('\n', (from - 1).coerceAtLeast(0)) + 1).coerceAtMost(from)
+        val end = source.indexOf('\n', to).let { if (it < 0) source.length else it }
+        val chunk = source.substring(start, end)
+        val lines = chunk.split("\n")
+        if (index == 18 || index == 19) {
+            if (index == 18) {
+                if (start == 0) return
+                val priorEnd = start - 1
+                val priorStart = source.lastIndexOf('\n', (priorEnd - 1).coerceAtLeast(0)) + 1
+                val prior = source.substring(priorStart, priorEnd)
+                editable.replace(priorStart, end, chunk + "\n" + prior)
+                setSelection(priorStart, priorStart + chunk.length)
+            } else {
+                if (end >= source.length) return
+                val nextStart = end + 1
+                val nextEnd = source.indexOf('\n', nextStart).let { if (it < 0) source.length else it }
+                val next = source.substring(nextStart, nextEnd)
+                editable.replace(start, nextEnd, next + "\n" + chunk)
+                val movedStart = start + next.length + 1
+                setSelection(movedStart, movedStart + chunk.length)
+            }
+            return
+        }
+        val transformed = when (index) {
+            0 -> chunk.uppercase()
+            1 -> chunk.lowercase()
+            2 -> chunk.split(Regex("(?<=\\W)|(?=\\W)")).joinToString("") { word ->
+                word.lowercase().replaceFirstChar { it.titlecase() }
+            }
+            3 -> chunk.trim()
+            4 -> lines.joinToString("\n") { it.trimEnd() }
+            5 -> chunk.replace("\t", "    ")
+            6 -> chunk.replace("    ", "\t")
+            7 -> lines.sortedWith(String.CASE_INSENSITIVE_ORDER).joinToString("\n")
+            8 -> lines.sortedWith(String.CASE_INSENSITIVE_ORDER.reversed()).joinToString("\n")
+            9 -> lines.reversed().joinToString("\n")
+            10 -> lines.distinct().joinToString("\n")
+            11 -> lines.filter { it.isNotBlank() }.joinToString("\n")
+            12 -> lines.joinToString(" ") { it.trim() }
+            13 -> chunk.replace(Regex(",\\s*"), ",\n")
+            14 -> lines.joinToString("\n") { "  " + it }
+            15 -> lines.joinToString("\n") { "    " + it }
+            16 -> lines.joinToString("\n") { it.drop(it.takeWhile { ch -> ch == ' ' }.length.coerceAtMost(2)) }
+            17 -> {
+                val prefix = when (language) {
+                    "py", "rb", "sh", "bash", "yaml", "yml", "toml" -> "#"
+                    "sql", "lua" -> "--"
+                    else -> "//"
+                }
+                val commented = lines.filter { it.isNotBlank() }.all { it.trimStart().startsWith(prefix) }
+                lines.joinToString("\n") { line ->
+                    if (line.isBlank()) line
+                    else if (commented) {
+                        val indent = line.length - line.trimStart().length
+                        line.substring(0, indent) + line.substring(indent).removePrefix(prefix).removePrefix(" ")
+                    } else prefix + " " + line
+                }
+            }
+            else -> return
+        }
+        if (transformed != chunk) {
+            editable.replace(start, end, transformed)
+            setSelection(start, start + transformed.length)
+        }
+    }
+
     fun selectedSource(): String {
         val a = selectionStart.coerceAtLeast(0)
         val b = selectionEnd.coerceAtLeast(0)
@@ -589,7 +698,8 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         fill.color = paper
         canvas.drawRect(scrollX.toFloat(), scrollY.toFloat(), (scrollX + gutterWidth).toFloat(), (scrollY + height).toFloat(), fill)
         for (line in first..last) {
-            linePaint.color = if (line == selected) active else muted
+            if (!showNumbers) break
+            linePaint.color = if (showCurrentLine && line == selected) active else muted
             linePaint.alpha = if (line == selected) 255 else 170
             canvas.drawText((line + 1).toString(), (scrollX + gutterWidth - dp(8)).toFloat(),
                 (totalPaddingTop + lines.getLineBaseline(line)).toFloat(), linePaint)
