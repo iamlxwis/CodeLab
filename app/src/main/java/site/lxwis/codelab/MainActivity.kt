@@ -862,14 +862,23 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
             .padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("New project", modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.headlineSmall)
-                Button(onClick = { keyboard?.hide(); submit(name.trim(), template) },
-                    enabled = name.isNotBlank(), shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
-                    Text("Create project")
+                if (browsing) {
+                    IconButton(onClick = { browsing = false; keyboard?.hide() }) {
+                        Icon(Icons.Default.ArrowBack, "Back to project details")
+                    }
+                    Text("Choose language", modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.headlineSmall)
+                } else {
+                    Text("New project", modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.headlineSmall)
+                    Button(onClick = { keyboard?.hide(); submit(name.trim(), template) },
+                        enabled = name.isNotBlank(), shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
+                        Text("Create project")
+                    }
                 }
             }
+            if (!browsing) {
             Text("Choose a language, then create your workspace.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -910,11 +919,14 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Icon(if (browsing) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = "Browse languages")
+                    Icon(Icons.Default.ExpandMore, contentDescription = "Browse languages")
                 }
             }
+            }
             if (browsing) {
+                Text("Search all languages and file types. Editing is offline; execution depends on the runtime.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                 OutlinedTextField(search, { search = it }, modifier = Modifier.fillMaxWidth(),
                     singleLine = true, label = { Text("Search language or extension") },
                     leadingIcon = { Icon(Icons.Default.Search, null) })
