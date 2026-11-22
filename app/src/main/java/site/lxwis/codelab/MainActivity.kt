@@ -880,12 +880,22 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
                 label = { Text("Project name") }, placeholder = { Text("e.g. Playground") })
             Text("POPULAR", style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                LanguageCatalog.popular.forEach { choice ->
-                    FilterChip(selected = template == choice,
-                        onClick = { template = choice; browsing = false },
-                        label = { Text(choice) })
+            Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                listOf(
+                    listOf("JavaScript", "Java", "Python"),
+                    listOf("Lua", "SQLite", "Web")
+                ).forEach { row ->
+                    Row(Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        row.forEach { choice ->
+                            FilterChip(
+                                selected = template == choice,
+                                onClick = { template = choice; browsing = false },
+                                modifier = Modifier.weight(1f),
+                                label = { Text(choice, maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis) })
+                        }
+                    }
                 }
             }
             Surface(onClick = { browsing = !browsing; keyboard?.hide() },
