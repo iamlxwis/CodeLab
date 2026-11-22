@@ -334,7 +334,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         if (file != null) key(p, file) {
                             CodeEditor(fileKey = "$p/$file", filename = file, text = m.source,
                                 onTextChange = m::edit, jumpLine = m.pendingLine,
-                                onJumpHandled = m::consumeJump, modifier = Modifier.fillMaxSize())
+                                onJumpHandled = m::consumeJump, onSave = m::flush,
+                                modifier = Modifier.fillMaxSize())
                         } else TextButton(onClick = { dialog = "files" }, modifier = Modifier.align(Alignment.Center)) { Text("Open a file") }
                     }
                     if (m.console) RunConsole(m.runner, Modifier.weight(if (wide) 0.7f else 1f).fillMaxHeight(), m.active)
