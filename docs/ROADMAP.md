@@ -78,3 +78,15 @@ claimed from source extraction alone. Refer to the PR checks for verification.
 - Existing Recently Deleted remains the fallback after snackbar expiry.
 - No permanent deletion undo is claimed. Tests cover identity matching and a
   tappable semantic snackbar action.
+
+### Workstream 3 — scoped find and per-match replacement review (fourth slice)
+- Find and Replace both respect selected folder and file-type scope; the 200-hit
+  search bound is now enforced **after scope selection**. Results group by path.
+- Replace preview includes exact matched span and literal substitution for each
+  of the first 100 matches, grouped by file. The confirmation still applies
+  through the existing bounded, rollback-capable replace engine.
+- Still requires manual Unicode/very large project validation and exact preflight
+  snapshot pinning if the project changes between preview and confirmation.
+- Replacement Apply now requires a SHA-256 fingerprint of the previewed matched
+  file contents to match the fresh preflight. Changed matching files abort without
+  any writes and require a new preview; covered by a JVM regression test.
