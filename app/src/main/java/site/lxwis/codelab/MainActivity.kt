@@ -216,6 +216,13 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         }
     }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { it?.let(m::export) }
+    var folderImportName by rememberSaveable { mutableStateOf("") }
+    val importTree = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null && folderImportName.isNotBlank()) {
+            m.importExternalFolder(uri, folderImportName)
+            folderImportName = ""
+        }
+    }
     val importZip = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
         if (it != null) { incoming = it.toString(); dialog = "import" }
     }
@@ -310,6 +317,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     } else {
                         DropdownMenuItem(text = { Text("Import project ZIP") },
                             onClick = { menu = false; importZip.launch(arrayOf("*/*")) })
+                        DropdownMenuItem(text = { Text("Import external folder as project…") },
+                            onClick = { menu = false; dialog = "folderimport" })
                         DropdownMenuItem(text = { Text("Import public GitHub project…") },
                             onClick = { menu = false; dialog = "githubimport" })
                     }
@@ -542,6 +551,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             text = { Text("Delete $selected and all its files from this device?") },
             confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
+        "folderimport" -> NameDialog("Import folder as project", "", "Project name",
+            "MyExternalProject", { dialog = "" }) { name ->
+                folderImportName = name
+                dialog = ""
+                importTree.launch(null)
+            }
         "githubimport" -> GitHubImportDialog(m) { dialog = "" }
         "devtools" -> DeveloperToolbox { dialog = "" }
         "commands" -> CommandPaletteDialog(m, dismiss = { dialog = "" },

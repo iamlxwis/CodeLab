@@ -444,6 +444,21 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun importExternalFolder(uri: Uri, targetProject: String) {
+        val app = getApplication<Application>()
+        work {
+            ExternalFolderImporter.copyToProject(app, uri, targetProject, store)
+            val names = store.projects()
+            val opened = persist(load(targetProject, emptyList(), null, allowUnavailable = true))
+            val commit: () -> Unit = {
+                projects = names
+                apply(opened)
+                console = false
+            }
+            commit
+        }
+    }
+
     fun importPublicGitHub(slug: String, targetProject: String) {
         work {
             GitHubSnapshotImporter.importPublic(store, slug, targetProject)
