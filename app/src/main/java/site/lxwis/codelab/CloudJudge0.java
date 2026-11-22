@@ -84,6 +84,19 @@ public final class CloudJudge0 {
         return null;
     }
 
+    /** Choose newer language versions reported by a server instead of arbitrary first entries. */
+    static long versionScore(String name) {
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+            .compile("(\\d+)(?:\\.(\\d+))?(?:\\.(\\d+))?").matcher(name);
+        if (!matcher.find()) return 0;
+        try {
+            long major = Long.parseLong(matcher.group(1));
+            long minor = matcher.group(2) == null ? 0 : Long.parseLong(matcher.group(2));
+            long patch = matcher.group(3) == null ? 0 : Long.parseLong(matcher.group(3));
+            return major * 1_000_000L + minor * 1000L + patch;
+        } catch (NumberFormatException error) { return 0; }
+    }
+
     public static Map<String, Language> fetchLanguages(String url, String header, String credential) throws IOException {
         HttpURLConnection conn = connect(url, "/languages", "GET", header, credential);
         try {
@@ -95,8 +108,11 @@ public final class CloudJudge0 {
                 String name = entry.optString("name");
                 int id = entry.optInt("id", -1);
                 String ext = detect(name);
-                if (id > 0 && ext != null && !found.containsKey(ext))
-                    found.put(ext, new Language(id, name));
+                if (id > 0 && ext != null) {
+                    Language previous = found.get(ext);
+                    if (previous == null || versionScore(name) > versionScore(previous.name))
+                        found.put(ext, new Language(id, name));
+                }
             }
             if (found.isEmpty()) throw new IOException("No supported languages returned by this Judge0 server.");
             return Collections.unmodifiableMap(found);
