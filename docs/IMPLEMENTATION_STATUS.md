@@ -41,3 +41,11 @@ a bounded source snapshot, not Git history.
 
 A full PTY, semantics-based language server, production signing and Play Store compliance
 must not be advertised as implemented until working code and tests exist.
+
+## Architecture workstream (in review)
+
+Source files are being split into activity, theme, workspace, library, dialogs and
+native editor view units. The theme objects are memoized and edge-to-edge system
+bars use AndroidX APIs. A UI regression test is added, but this is **not** a claim
+of completed architecture cleanup. Business-logic state hoisting, stability
+profiling, and device-layout verification remain pending. See `docs/ROADMAP.md`.
