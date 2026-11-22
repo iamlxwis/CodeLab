@@ -51,7 +51,9 @@ open class RuntimeService : Service() {
         input.clear()
         val name = message.data.getString("name") ?: "main.js"
         val source = message.body()
-        main.postDelayed(timeout, 60_000L)
+        val seconds = message.data.getInt("limit-seconds", 60).coerceIn(10, 60)
+        val maximumOutput = message.data.getInt("output-chars", 64000).coerceIn(8000, 64000)
+        main.postDelayed(timeout, seconds * 1000L)
         Thread({
             var size = 0
             var lines = 0
@@ -71,7 +73,7 @@ open class RuntimeService : Service() {
                 override fun write(text: String, error: Boolean) {
                     val line = (if (error) "! " else "") + text.take(8192) + "\n"
                     size += line.length
-                    if (++lines > 1500 || size > 64_000 || text.length > 8192) {
+                    if (++lines > 1500 || size > maximumOutput || text.length > 8192) {
                         throw OutputLimit()
                     }
                     batch.append(line)

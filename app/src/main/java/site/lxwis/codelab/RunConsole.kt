@@ -35,6 +35,9 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     var showActions by remember { mutableStateOf(false) }
+    var showExecutionSettings by remember { mutableStateOf(false) }
+    var showHistory by remember { mutableStateOf(false) }
+    var selectedRun by remember { mutableStateOf<RunSession.RunRecord?>(null) }
     var showFilter by rememberSaveable { mutableStateOf(false) }
     var filterOutput by rememberSaveable { mutableStateOf("") }
     val consolePreferences = remember { context.getSharedPreferences("console-settings", android.content.Context.MODE_PRIVATE) }
@@ -60,6 +63,70 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     var input by rememberSaveable { mutableStateOf("") }
     LaunchedEffect(scroll.maxValue) { scroll.scrollTo(scroll.maxValue) }
     LaunchedEffect(session.waiting) { if (!session.waiting) input = "" }
+    if (showExecutionSettings) AlertDialog(
+        onDismissRequest = { showExecutionSettings = false },
+        title = { Text("Local execution limits") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Timeout", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    listOf(10, 30, 60).forEach { seconds ->
+                        FilterChip(selected = session.timeLimitSeconds == seconds,
+                            onClick = {
+                                session.chooseExecutionLimits(seconds, session.outputLimitCharacters)
+                            }, label = { Text("${seconds}s") })
+                    }
+                }
+                Text("Maximum output", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    listOf(16000, 32000, 64000).forEach { characters ->
+                        FilterChip(selected = session.outputLimitCharacters == characters,
+                            onClick = {
+                                session.chooseExecutionLimits(session.timeLimitSeconds, characters)
+                            }, label = { Text("${characters / 1000}K") })
+                    }
+                }
+                Text("Limits apply to the next offline run. A long-running program is stopped automatically.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }, confirmButton = {
+            TextButton(onClick = { showExecutionSettings = false }) { Text("Done") }
+        })
+    if (showHistory) AlertDialog(
+        onDismissRequest = { showHistory = false },
+        title = { Text("Execution history") },
+        text = {
+            Column {
+                if (session.history.isEmpty()) Text("No completed runs yet.")
+                LazyColumn(Modifier.heightIn(max = 280.dp)) {
+                    items(session.history.size) { index ->
+                        val item = session.history[index]
+                        Column(Modifier.fillMaxWidth().clickable { selectedRun = item }
+                            .padding(vertical = 10.dp)) {
+                            Text(item.file, fontFamily = FontFamily.Monospace,
+                                style = MaterialTheme.typography.bodyMedium)
+                            Text(item.result, style = MaterialTheme.typography.bodySmall)
+                            Text(java.text.DateFormat.getDateTimeInstance()
+                                .format(java.util.Date(item.time)),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+                }
+                selectedRun?.let { record ->
+                    Text("Saved output · last 3,000 characters",
+                        style = MaterialTheme.typography.labelSmall)
+                    SelectionContainer {
+                        Text(record.excerpt, fontFamily = FontFamily.Monospace,
+                            maxLines = 12, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }, confirmButton = {
+            TextButton(onClick = { selectedRun = null; showHistory = false }) { Text("Close") }
+        })
     Surface(modifier, color = MaterialTheme.colorScheme.surface) {
         Column(Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -70,6 +137,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                         else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (session.running) TextButton(onClick = session::stop) { Text("Stop") }
+                else if (session.canRerun) TextButton(onClick = session::rerun) { Text("Rerun") }
                 FilterChip(selected = showFilter, onClick = { showFilter = !showFilter },
                     label = { Text("Filter") })
                 Box {
@@ -78,6 +146,12 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                     }
                     DropdownMenu(expanded = showActions, onDismissRequest = { showActions = false }) {
                         val hasOutput = session.transcript.isNotEmpty()
+                        DropdownMenuItem(text = { Text("Execution history…") },
+                            onClick = { showActions = false; showHistory = true })
+                        DropdownMenuItem(text = { Text("Execution limits…") },
+                            enabled = !session.running,
+                            onClick = { showActions = false; showExecutionSettings = true })
+                        HorizontalDivider()
                         DropdownMenuItem(text = { Text("Copy output") }, enabled = hasOutput, onClick = {
                             clipboard.setText(AnnotatedString(session.transcript))
                             showActions = false

@@ -3,10 +3,46 @@ package site.lxwis.codelab
 import android.content.*
 import android.os.*
 import androidx.compose.runtime.*
+import org.json.JSONArray
+import org.json.JSONObject
 
 class RunSession(context: Context) {
     private val app = context.applicationContext
     private val main = Handler(Looper.getMainLooper())
+    private val settings = app.getSharedPreferences("run-settings", Context.MODE_PRIVATE)
+    data class RunRecord(val file: String, val time: Long, val result: String,
+                         val excerpt: String)
+    var timeLimitSeconds by mutableIntStateOf(settings.getInt("timeout", 60).coerceIn(10, 60))
+        private set
+    var outputLimitCharacters by mutableIntStateOf(settings.getInt("output", 64000).coerceIn(8000, 64000))
+        private set
+    fun chooseExecutionLimits(seconds: Int, outputCharacters: Int) {
+        if (running) return
+        timeLimitSeconds = seconds.coerceIn(10, 60)
+        outputLimitCharacters = outputCharacters.coerceIn(8000, 64000)
+        settings.edit().putInt("timeout", timeLimitSeconds)
+            .putInt("output", outputLimitCharacters).apply()
+    }
+    private fun loadHistory(): List<RunRecord> = runCatching {
+        val encoded = JSONArray(settings.getString("history", "[]") ?: "[]")
+        (0 until encoded.length()).mapNotNull { i ->
+            encoded.optJSONObject(i)?.let { obj ->
+                RunRecord(obj.optString("file"), obj.optLong("time"),
+                    obj.optString("result"), obj.optString("excerpt"))
+            }
+        }.take(12)
+    }.getOrDefault(emptyList())
+    var history by mutableStateOf(loadHistory())
+        private set
+    private var activeName: String? = null
+    private var lastLocalName: String? = null
+    private var lastLocalSource: String? = null
+    val canRerun: Boolean get() = !running && lastLocalName != null
+    fun rerun() {
+        val name = lastLocalName ?: return
+        val source = lastLocalSource ?: return
+        run(name, source)
+    }
     private var connection: ServiceConnection? = null
     private var worker: Messenger? = null
     private var onlineThread: Thread? = null
@@ -27,6 +63,9 @@ class RunSession(context: Context) {
         transcript = ""
         if (!name.endsWith(".js", true) && !name.endsWith(".sql", true) && !name.endsWith(".lua", true) && !name.endsWith(".java", true)) { status = "Run a .js, .sql, .lua or .java file"; return }
         if (source.length > 128_000) { status = "Script exceeds 128,000 characters"; return }
+        activeName = name
+        lastLocalName = name
+        lastLocalSource = source
         running = true
         status = "Starting"
         val token = ++generation
@@ -47,12 +86,14 @@ class RunSession(context: Context) {
                 worker = Messenger(binder)
                 val request = packet(START, source).apply {
                     data.putString("name", name)
+                    data.putInt("limit-seconds", timeLimitSeconds)
+                    data.putInt("output-chars", outputLimitCharacters)
                     replyTo = replies
                 }
                 status = "Running"
                 try {
                     worker?.send(request)
-                    main.postDelayed(watchdog, 65_000)
+                    main.postDelayed(watchdog, timeLimitSeconds * 1000L + 5_000L)
                 } catch (_: RemoteException) { end("Runtime disconnected") }
             }
             override fun onServiceDisconnected(component: ComponentName) {
@@ -84,6 +125,9 @@ class RunSession(context: Context) {
         if (running) return
         transcript = ""
         if (source.length > 128_000) { status = "Source exceeds 128,000 characters"; return }
+        activeName = name
+        lastLocalName = null
+        lastLocalSource = null
         running = true
         waiting = false
         status = "Submitting to online compiler…"
@@ -134,6 +178,18 @@ class RunSession(context: Context) {
     fun close() { stop() }
 
     private fun end(result: String) {
+        activeName?.let { filename ->
+            val record = RunRecord(filename, System.currentTimeMillis(), result,
+                transcript.takeLast(3000))
+            history = (listOf(record) + history).take(12)
+            val encoded = JSONArray()
+            history.forEach { item ->
+                encoded.put(JSONObject().put("file", item.file).put("time", item.time)
+                    .put("result", item.result).put("excerpt", item.excerpt))
+            }
+            settings.edit().putString("history", encoded.toString()).apply()
+        }
+        activeName = null
         generation++
         main.removeCallbacks(watchdog)
         onlineThread = null
