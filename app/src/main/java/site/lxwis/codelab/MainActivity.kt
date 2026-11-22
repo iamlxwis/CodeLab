@@ -855,12 +855,21 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
                 it.extension.contains(search.trim(), true))
     }
     ModalBottomSheet(onDismissRequest = cancel,
+        modifier = Modifier.imePadding(),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(.86f)
             .padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("New project", style = MaterialTheme.typography.headlineSmall)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("New project", modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.headlineSmall)
+                Button(onClick = { keyboard?.hide(); submit(name.trim(), template) },
+                    enabled = name.isNotBlank(), shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
+                    Text("Create project")
+                }
+            }
             Text("Choose a language, then create your workspace.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -933,13 +942,6 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
                 Text(info, style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(Modifier.weight(1f))
-            }
-            Button(onClick = { keyboard?.hide(); submit(name.trim(), template) },
-                enabled = name.isNotBlank(), modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp)) {
-                Icon(Icons.Default.Add, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Create project")
             }
             Spacer(Modifier.height(6.dp))
         }
