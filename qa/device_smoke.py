@@ -85,6 +85,11 @@ def main():
     wait_for("Hello, Ada!", contains=True)
     wait_for("Exit 0", contains=True)
     snapshot("04-output")
+    # Exercise the real stacked mobile layout before returning to single-panel editing.
+    tap("Split")
+    wait_for("Resize split panels")
+    snapshot("04a-phone-split")
+    tap("Split")
     tap("Editor")
     tap("Add file")
     tap_node(wait_for(field=True))
