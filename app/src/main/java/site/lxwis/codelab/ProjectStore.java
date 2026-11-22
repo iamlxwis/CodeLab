@@ -94,6 +94,13 @@ public final class ProjectStore {
         return createProject(name, "JavaScript");
     }
 
+    /** Reuse the bounded and path-validated archive pipeline for a safe project copy. */
+    public synchronized void duplicateProject(String from, String to) throws IOException {
+        ByteArrayOutputStream archive = new ByteArrayOutputStream();
+        exportZip(from, archive);
+        importZip(to, new ByteArrayInputStream(archive.toByteArray()));
+    }
+
     public synchronized String createProject(String name, String template) throws IOException {
         if (!Arrays.asList("JavaScript", "Java", "Lua", "SQLite", "Web",
                 "Python", "C", "C++", "C#", "TypeScript", "Kotlin", "Rust", "Go", "PHP",

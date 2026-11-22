@@ -302,6 +302,15 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun duplicateProject(from: String, to: String) {
+        work {
+            store.duplicateProject(from, to)
+            val names = store.projects()
+            val commit: () -> Unit = { projects = names }
+            commit
+        }
+    }
+
     fun manageProject(name: String, replacement: String?) {
         work {
             if (replacement == null) store.deleteProject(name) else store.renameProject(name, replacement)
@@ -346,6 +355,27 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             store.createFolder(p, path)
             val opened = persist(load(p, tabs, active, allowUnavailable = true))
             val commit: () -> Unit = { apply(opened) }
+            commit
+        }
+    }
+
+    fun changeFolder(path: String, replacement: String?) {
+        val p = project ?: return
+        val prefix = path.removeSuffix("/") + "/"
+        val wanted = tabs.mapNotNull { name ->
+            if (name.startsWith(prefix)) replacement?.removeSuffix("/")?.plus("/")?.plus(name.removePrefix(prefix))
+            else name
+        }
+        val target = active?.let { name ->
+            if (name.startsWith(prefix)) replacement?.removeSuffix("/")?.plus("/")?.plus(name.removePrefix(prefix))
+            else name
+        }
+        work {
+            if (replacement == null) store.deleteFile(p, path.removeSuffix("/"))
+            else store.renameFile(p, path.removeSuffix("/"), replacement.removeSuffix("/"))
+            val opened = persist(load(p, wanted, target, allowUnavailable = true))
+            val deleted = store.trashItems()
+            val commit: () -> Unit = { apply(opened); trashItems = deleted }
             commit
         }
     }

@@ -9,7 +9,7 @@ class CodeAnalysisTest {
         val pair = CodeAnalysis.matchBracket(content, 5)
         assertNotNull(pair)
         assertEquals(4, pair!!.first)
-        assertEquals(20, pair.second)
+        assertEquals(content.lastIndex, pair.second)
         assertNull(CodeAnalysis.matchBracket(content, 10))
     }
 

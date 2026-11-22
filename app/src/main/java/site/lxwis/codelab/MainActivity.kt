@@ -195,8 +195,6 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         DropdownMenuItem(text = { Text("Import file…") }, onClick = { menu = false; importFile.launch(arrayOf("*/*")) })
                         DropdownMenuItem(text = { Text("Search across files…") },
                             onClick = { menu = false; dialog = "projectsearch" })
-                        DropdownMenuItem(text = { Text("Recently deleted…") },
-                            onClick = { menu = false; dialog = "trash" })
                         DropdownMenuItem(text = { Text("New folder…") },
                             onClick = { menu = false; dialog = "newfolder" })
                         DropdownMenuItem(text = { Text("Copy file to another project…") },
@@ -223,6 +221,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 onClick = { menu = false; m.requestCloudRun() })
                         }
                     } else DropdownMenuItem(text = { Text("Import project ZIP") }, onClick = { menu = false; importZip.launch(arrayOf("*/*")) })
+                    DropdownMenuItem(text = { Text("Recently deleted…") },
+                        onClick = { menu = false; dialog = "trash" })
                     if (p != null) DropdownMenuItem(text = { Text(if (focusMode) "Exit Focus Mode" else "Focus Mode") },
                         onClick = { menu = false; focusMode = !focusMode; m.console = false; m.preview = false })
                     DropdownMenuItem(text = { Text("Languages & Cloud") },
@@ -233,7 +233,9 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         }
         if (p == null) {
             ProjectLibrary(m, { dialog = "newproject" }, { importZip.launch(arrayOf("*/*")) },
-                { selected = it; dialog = "renameproject" }, { selected = it; dialog = "deleteproject" })
+                { selected = it; dialog = "renameproject" },
+                { selected = it; dialog = "deleteproject" },
+                { selected = it; dialog = "duplicateproject" })
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             if (!focusMode) Row(verticalAlignment = Alignment.CenterVertically) {
@@ -375,12 +377,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             m.openProject(name, true, template)
             dialog = ""
         }
-        "newfile", "newfolder", "rename", "renameproject", "import", "importfile", "duplicate" -> {
-            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "newfolder" -> "New folder"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; "importfile" -> "Import file"; "duplicate" -> "Duplicate file"; else -> "Import project" }
-            val file = dialog == "newfile" || dialog == "newfolder" || dialog == "rename" || dialog == "importfile" || dialog == "duplicate"
-            NameDialog(title, if (dialog.startsWith("rename")) selected else if (dialog == "duplicate") selected.substringBeforeLast(".") + "-copy" + (if (selected.contains(".")) "." + selected.substringAfterLast(".") else "") else "", if (file) "File path" else "Project name",
+        "newfile", "newfolder", "rename", "renamefolder", "renameproject", "duplicateproject", "import", "importfile", "duplicate" -> {
+            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "newfolder" -> "New folder"; "renamefolder" -> "Rename folder"; "duplicateproject" -> "Duplicate project"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; "importfile" -> "Import file"; "duplicate" -> "Duplicate file"; else -> "Import project" }
+            val file = dialog == "newfile" || dialog == "newfolder" || dialog == "renamefolder" || dialog == "rename" || dialog == "importfile" || dialog == "duplicate"
+            NameDialog(title, if (dialog.startsWith("rename")) selected else if (dialog == "duplicateproject") selected + "-copy" else if (dialog == "duplicate") selected.substringBeforeLast(".") + "-copy" + (if (selected.contains(".")) "." + selected.substringAfterLast(".") else "") else "", if (file) "File path" else "Project name",
                 if (file) "e.g. src/helpers.js" else "e.g. Playground", { dialog = "" }) { name ->
-                when (dialog) { "renameproject" -> m.manageProject(selected, name); "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "newfolder" -> m.createFolder(name); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) }; "importfile" -> importedFile?.let { m.importFile(Uri.parse(it), name) }; "duplicate" -> m.duplicateFile(selected, name) }
+                when (dialog) { "renameproject" -> m.manageProject(selected, name); "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "newfolder" -> m.createFolder(name); "renamefolder" -> m.changeFolder(selected, name); "duplicateproject" -> m.duplicateProject(selected, name); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) }; "importfile" -> importedFile?.let { m.importFile(Uri.parse(it), name) }; "duplicate" -> m.duplicateFile(selected, name) }
                 dialog = ""
             }
         }
@@ -397,7 +399,17 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
         "files" -> FileExplorerSheet(m, onClose = { dialog = "" }, onNew = { dialog = "newfile" },
             onOpen = { m.select(it); dialog = "" }, onRename = { selected = it; dialog = "rename" },
-            onDelete = { selected = it; dialog = "delete" })
+            onDelete = { selected = it; dialog = "delete" },
+            onRenameFolder = { selected = it; dialog = "renamefolder" },
+            onDeleteFolder = { selected = it; dialog = "deletefolder" },
+            onNewFolder = { dialog = "newfolder" })
+        "deletefolder" -> AlertDialog(onDismissRequest = { dialog = "" },
+            title = { Text("Delete folder?") },
+            text = { Text("Move " + selected + " and its contents to Recently deleted?") },
+            confirmButton = { TextButton(onClick = { m.changeFolder(selected, null); dialog = "" }) {
+                Text("Move to trash", color = MaterialTheme.colorScheme.error)
+            } },
+            dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
         "delete" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Delete file?") },
             text = { Text(selected) }, confirmButton = { TextButton(onClick = { m.changeFile(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
@@ -513,7 +525,8 @@ private fun DashboardMetric(value: String, label: String,
 }
 
 @Composable
-private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> Unit, rename: (String) -> Unit, delete: (String) -> Unit) {
+private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> Unit,
+    rename: (String) -> Unit, delete: (String) -> Unit, duplicate: (String) -> Unit) {
     var options by remember { mutableStateOf<String?>(null) }
     var projectSearch by rememberSaveable { mutableStateOf("") }
     var projectSort by rememberSaveable { mutableStateOf("Recent") }
@@ -608,6 +621,7 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
                     Box {
                         IconButton(onClick = { options = name }) { Icon(Icons.Default.MoreVert, "Manage $name") }
                         DropdownMenu(expanded = options == name, onDismissRequest = { options = null }) {
+                            DropdownMenuItem(text = { Text("Duplicate") }, onClick = { options = null; duplicate(name) })
                             DropdownMenuItem(text = { Text("Rename") }, onClick = { options = null; rename(name) })
                             DropdownMenuItem(text = { Text("Delete") }, onClick = { options = null; delete(name) })
                         }
@@ -692,7 +706,10 @@ private fun FileExplorerSheet(
     onNew: () -> Unit,
     onOpen: (String) -> Unit,
     onRename: (String) -> Unit,
-    onDelete: (String) -> Unit
+    onDelete: (String) -> Unit,
+    onRenameFolder: (String) -> Unit,
+    onDeleteFolder: (String) -> Unit,
+    onNewFolder: () -> Unit
 ) {
     var search by rememberSaveable(m.project) { mutableStateOf("") }
     var directory by rememberSaveable(m.project) { mutableStateOf("") }
@@ -725,6 +742,7 @@ private fun FileExplorerSheet(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                TextButton(onClick = onNewFolder, enabled = !m.busy) { Text("Folder") }
                 FilledTonalButton(onClick = onNew, shape = RoundedCornerShape(11.dp)) {
                     Icon(Icons.Default.Add, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(4.dp))
@@ -753,8 +771,17 @@ private fun FileExplorerSheet(
                             Text(folder.removeSuffix("/").substringAfterLast('/'),
                                 Modifier.weight(1f).padding(start = 12.dp),
                                 fontWeight = FontWeight.Medium)
-                            Text("Open", style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Box {
+                                IconButton(onClick = { menuFor = folder }) {
+                                    Icon(Icons.Default.MoreVert, "Folder actions")
+                                }
+                                DropdownMenu(expanded = menuFor == folder, onDismissRequest = { menuFor = null }) {
+                                    DropdownMenuItem(text = { Text("Rename / move") },
+                                        onClick = { menuFor = null; onRenameFolder(folder) })
+                                    DropdownMenuItem(text = { Text("Move to trash") },
+                                        onClick = { menuFor = null; onDeleteFolder(folder) })
+                                }
+                            }
                         }
                     }
                 }
@@ -832,6 +859,13 @@ private fun ProjectSearchDialog(m: WorkspaceModel, onDismiss: () -> Unit,
 
 @Composable
 private fun TrashDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
+    var confirmEmpty by remember { mutableStateOf(false) }
+    if (confirmEmpty) AlertDialog(onDismissRequest = { confirmEmpty = false },
+        title = { Text("Permanently delete trash?") },
+        text = { Text("This removes all deleted projects and files. This cannot be undone.") },
+        confirmButton = { TextButton(onClick = { m.emptyTrash(); confirmEmpty = false }) {
+            Text("Delete permanently", color = MaterialTheme.colorScheme.error)
+        } }, dismissButton = { TextButton(onClick = { confirmEmpty = false }) { Text("Cancel") } })
     AlertDialog(onDismissRequest = onDismiss, title = { Text("Recently deleted") },
         text = {
             Column {
@@ -860,6 +894,6 @@ private fun TrashDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
         confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
         dismissButton = {
             if (m.trashItems.isNotEmpty()) TextButton(enabled = !m.busy,
-                onClick = m::emptyTrash) { Text("Empty trash", color = MaterialTheme.colorScheme.error) }
+                onClick = { confirmEmpty = true }) { Text("Empty trash", color = MaterialTheme.colorScheme.error) }
         })
 }
