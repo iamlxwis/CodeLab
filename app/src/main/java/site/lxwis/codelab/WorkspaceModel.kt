@@ -172,6 +172,58 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
     var accent by mutableStateOf(preferences.getString("accent", "Mint") ?: "Mint")
         private set
+    var gitState by mutableStateOf<GitWorkspace.Snapshot?>(null)
+        private set
+    fun gitRefresh() {
+        val p = project ?: return
+        work {
+            val state = GitWorkspace(store.projectDirectory(p)).inspect()
+            val apply: () -> Unit = { gitState = state }
+            apply
+        }
+    }
+    fun gitInit() {
+        val p = project ?: return
+        work {
+            val git = GitWorkspace(store.projectDirectory(p))
+            git.init()
+            val state = git.inspect()
+            val apply: () -> Unit = { gitState = state }
+            apply
+        }
+    }
+    fun gitCommit(message: String, name: String, email: String) {
+        val p = project ?: return
+        work {
+            val git = GitWorkspace(store.projectDirectory(p))
+            git.commit(message, name, email)
+            val state = git.inspect()
+            val apply: () -> Unit = { gitState = state }
+            apply
+        }
+    }
+    fun gitBranch(name: String) {
+        val p = project ?: return
+        work {
+            val git = GitWorkspace(store.projectDirectory(p))
+            git.createBranch(name)
+            val snapshot = git.inspect()
+            val opened = persist(load(p, tabs, active, allowUnavailable = true))
+            val apply: () -> Unit = { apply(opened); gitState = snapshot }
+            apply
+        }
+    }
+    fun gitCheckout(name: String) {
+        val p = project ?: return
+        work {
+            val git = GitWorkspace(store.projectDirectory(p))
+            git.checkout(name)
+            val snapshot = git.inspect()
+            val opened = persist(load(p, tabs, active, allowUnavailable = true))
+            val apply: () -> Unit = { apply(opened); gitState = snapshot }
+            apply
+        }
+    }
     var fileHistory by mutableStateOf(emptyList<ProjectStore.FileVersion>())
         private set
     var historyPreview by mutableStateOf<String?>(null)

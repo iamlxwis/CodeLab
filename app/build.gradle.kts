@@ -34,6 +34,7 @@ dependencies {
     implementation("org.mozilla:rhino:1.7.15.1")
     implementation("org.luaj:luaj-jse:3.0.1")
     implementation("io.github.beanshell:bsh:2.1.1")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.6.0.202603022253-r")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test:runner:1.6.2")

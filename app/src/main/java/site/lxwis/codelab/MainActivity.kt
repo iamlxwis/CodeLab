@@ -264,6 +264,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         DropdownMenuItem(text = { Text("Code Screenshot Studio…") },
                             enabled = m.active != null,
                             onClick = { menu = false; dialog = "screenshot" })
+                        DropdownMenuItem(text = { Text("Git version control…") },
+                            onClick = { menu = false; dialog = "git"; m.gitRefresh() })
                         DropdownMenuItem(text = { Text("File history…") }, enabled = m.active != null,
                             onClick = { menu = false; dialog = "history"; m.refreshHistory() })
                         DropdownMenuItem(text = { Text("File properties") },
@@ -427,6 +429,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
         "switchproject" -> ProjectSwitcher(m) { dialog = "" }
         "screenshot" -> CodeScreenshotStudio(m.active.orEmpty(), m.source) { dialog = "" }
+        "git" -> GitDialog(m) { dialog = "" }
         "history" -> FileHistoryDialog(m) { dialog = "" }
         "projectreplace" -> ProjectReplaceDialog(m) { dialog = "" }
         "projectsearch" -> ProjectSearchDialog(m, onDismiss = { dialog = "" }) { path, line ->
@@ -1176,4 +1179,83 @@ private fun ProjectSwitcher(m: WorkspaceModel, dismiss: () -> Unit) {
             }
         },
         confirmButton = { TextButton(onClick = dismiss) { Text("Close") } })
+}
+
+@Composable
+private fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val prefs = remember { context.getSharedPreferences("git-identity", 0) }
+    var message by rememberSaveable { mutableStateOf("") }
+    var author by rememberSaveable { mutableStateOf(prefs.getString("author", "") ?: "") }
+    var email by rememberSaveable { mutableStateOf(prefs.getString("email", "") ?: "") }
+    var branch by rememberSaveable { mutableStateOf("") }
+    val state = m.gitState
+    AlertDialog(onDismissRequest = dismiss,
+        title = { Text("Git · local history") },
+        text = {
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (m.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+                if (state == null) Text("Loading repository status…")
+                else if (!state.initialized) {
+                    Text("No repository in this project.")
+                    Button(enabled = !m.busy, onClick = m::gitInit) { Text("Initialize Git") }
+                } else {
+                    Text("Branch · " + state.branch, fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.titleSmall)
+                    Row(Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(enabled = !m.busy, onClick = m::gitRefresh) { Text("Refresh") }
+                        state.branches.forEach { name ->
+                            FilterChip(selected = name == state.branch, enabled = !m.busy,
+                                onClick = { m.gitCheckout(name) }, label = { Text(name) })
+                        }
+                    }
+                    OutlinedTextField(branch, { branch = it }, modifier = Modifier.fillMaxWidth(),
+                        label = { Text("New branch") }, singleLine = true)
+                    TextButton(enabled = branch.isNotBlank() && !m.busy, onClick = {
+                        m.gitBranch(branch)
+                        branch = ""
+                    }) { Text("Create and switch branch") }
+                    HorizontalDivider()
+                    Text("Working tree · " + state.changes.size + " entries",
+                        style = MaterialTheme.typography.titleSmall)
+                    state.changes.take(20).forEach { change ->
+                        Text(change.kind + " · " + change.path, fontFamily = FontFamily.Monospace,
+                            style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                    }
+                    if (state.changes.size > 20)
+                        Text("Additional entries not shown.", style = MaterialTheme.typography.labelSmall)
+                    HorizontalDivider()
+                    Text("Commit all changes", style = MaterialTheme.typography.titleSmall)
+                    OutlinedTextField(message, { message = it.take(500) },
+                        modifier = Modifier.fillMaxWidth(), label = { Text("Commit message") },
+                        maxLines = 3)
+                    OutlinedTextField(author, { author = it.take(100) },
+                        modifier = Modifier.fillMaxWidth(), label = { Text("Author name") },
+                        singleLine = true)
+                    OutlinedTextField(email, { email = it.take(200) },
+                        modifier = Modifier.fillMaxWidth(), label = { Text("Author email") },
+                        singleLine = true)
+                    Button(enabled = !m.busy && message.isNotBlank()
+                        && author.isNotBlank() && email.contains('@') && state.changes.isNotEmpty(),
+                        onClick = {
+                            prefs.edit().putString("author", author).putString("email", email).apply()
+                            m.gitCommit(message, author, email)
+                            message = ""
+                        }, modifier = Modifier.fillMaxWidth()) { Text("Commit locally") }
+                    HorizontalDivider()
+                    Text("Recent commits", style = MaterialTheme.typography.titleSmall)
+                    if (state.commits.isEmpty()) Text("No commits yet.")
+                    state.commits.forEach { commit ->
+                        Text(commit.shortId + " · " + commit.message + " — " + commit.author,
+                            style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                    }
+                    Text("Git operations work offline. Remote pushes and GitHub authentication are not configured.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = dismiss) { Text("Done") } })
 }

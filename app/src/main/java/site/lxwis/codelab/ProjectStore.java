@@ -63,6 +63,8 @@ public final class ProjectStore {
         return file;
     }
 
+    public synchronized File projectDirectory(String name) { return project(name); }
+
     public synchronized List<String> projects() {
         File[] list = projects.listFiles(File::isDirectory);
         if (list == null) throw new IllegalStateException("Cannot read projects.");
@@ -78,6 +80,7 @@ public final class ProjectStore {
         Arrays.sort(children, Comparator.comparing(File::getName));
         for (File child : children) {
             if (Files.isSymbolicLink(child.toPath())) continue;
+            if (".git".equals(child.getName()) || ".codelab".equals(child.getName())) continue;
             String path = base.toPath().relativize(child.toPath()).toString();
             if (child.isDirectory()) {
                 if (includeDirectories) results.add(path + "/");
