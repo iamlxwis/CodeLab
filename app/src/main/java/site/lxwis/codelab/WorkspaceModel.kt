@@ -991,9 +991,13 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         kind: ProjectFileKind? = null) {
         val p = project ?: return
         val allowed = scopedProjectFiles(files, folder, kind)
+        val expectedFingerprint = replaceSummary?.fingerprint ?: run {
+            error = "Preview changes before applying replacements."
+            return
+        }
         work {
             val summary = store.replaceAcrossProject(p, query, replacement, matchCase,
-                regex, true, allowed)
+                regex, true, allowed, expectedFingerprint)
             val opened = persist(load(p, tabs, active, allowUnavailable = true))
             val commit: () -> Unit = {
                 if (project == p) {

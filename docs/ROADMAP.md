@@ -96,3 +96,5 @@ claimed from source extraction alone. Refer to the PR checks for verification.
 - Search within the Settings action category remains scoped to settings.
 - An empty editor provides a contextual file-opening hint.
 - Manual TalkBack, large-font and keyboard-only audits remain outstanding.
+- Replacement Apply rejects stale preview fingerprints before writes; the
+  safe re-preview requirement remains enforced across stacked UX branches.
