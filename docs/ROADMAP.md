@@ -29,3 +29,20 @@ execution remain unchanged.
 
 No performance improvement, accessibility score or full workstream completion is
 claimed from source extraction alone. Refer to the PR checks for verification.
+
+## Workstream 2 — initial visual foundation (in review)
+
+- Build a shared spacing, shape and elevation vocabulary and use lightweight
+  Material 3 clay surfaces for project cards and empty states.
+- Use file-type icons consistently in the project file explorer and tablet sidebar
+  rather than incorrectly representing every file as a folder.
+- Remove the redundant online/offline project-library metric and correct the
+  Favorites sorter to rank rather than filter.
+- Reduce top-level dashboard actions to New project and Import, with ZIP/GitHub
+  sources available in a focused sheet and covered by an emulator UI test.
+- Keep the source editor, console, diagnostics and text inputs flat and
+  high-contrast. Decorative shadows must not encode status or accessibility state.
+- Still unverified: comprehensive semantic color migration, font bundling,
+  visual screenshots from the new branch, 200% text scaling, WCAG palette matrix,
+  adaptive device matrix, and the long-form dialog redesign.
+- This is a reviewable first slice, **not** completion of Workstream 2.

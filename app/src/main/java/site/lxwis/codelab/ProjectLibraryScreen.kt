@@ -154,34 +154,17 @@ private fun Mark(modifier: Modifier) {
 }
 
 @Composable
-private fun DashboardMetric(value: String, label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier = Modifier) {
-    Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        shape = RoundedCornerShape(16.dp)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-            Icon(icon, null, Modifier.size(19.dp), tint = MaterialTheme.colorScheme.primary)
-            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
-                maxLines = 1)
-            Text(label, style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
-@Composable
 internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit,
     importZip: () -> Unit, importGitHub: () -> Unit,
     rename: (String) -> Unit, delete: (String) -> Unit, duplicate: (String) -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var options by remember { mutableStateOf<String?>(null) }
+    var importOptions by rememberSaveable { mutableStateOf(false) }
     var projectSearch by rememberSaveable { mutableStateOf("") }
     var projectSort by rememberSaveable { mutableStateOf("Recent") }
-    val spacing = when (m.interfaceDensity) {
-        "Compact" -> 8.dp
-        "Spacious" -> 18.dp
-        else -> 12.dp
-    }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 22.dp, vertical = 18.dp),
+    val spacing = CodeLabSpacing.forDensity(m.interfaceDensity)
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(
+        horizontal = CodeLabSpacing.screen, vertical = CodeLabSpacing.large),
         verticalArrangement = Arrangement.spacedBy(spacing)) {
         item {
             Text("WORKSPACE", fontSize = 11.sp, letterSpacing = 2.sp,
@@ -190,21 +173,21 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
             Text("Projects", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
             Text("Local development, organized.", style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(18.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                DashboardMetric("${m.projects.size}", "Projects", Icons.Default.Folder,
-                    Modifier.weight(1f))
-                DashboardMetric(if (m.isOnline) "Online" else "Offline", "Connection",
-                    Icons.Default.Wifi, Modifier.weight(1f))
-            }
-            Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = new, enabled = true, shape = RoundedCornerShape(10.dp)) {
-                    Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Spacer(Modifier.width(5.dp)); Text("New project")
+            Spacer(Modifier.height(CodeLabSpacing.large))
+            Row(Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(CodeLabSpacing.small)) {
+                Button(onClick = new, modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)) {
+                    Icon(Icons.Default.Add, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(5.dp))
+                    Text("New project", maxLines = 1)
                 }
-                OutlinedButton(onClick = importZip, enabled = true,
-                    shape = RoundedCornerShape(10.dp)) { Text("Import ZIP") }
-                TextButton(onClick = importGitHub, enabled = true) { Text("GitHub") }
+                OutlinedButton(onClick = { importOptions = true }, modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)) {
+                    Icon(Icons.Default.FileDownload, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(5.dp))
+                    Text("Import", maxLines = 1)
+                }
             }
             Spacer(Modifier.height(24.dp))
             OutlinedTextField(value = projectSearch, onValueChange = { projectSearch = it },
@@ -229,7 +212,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
             }
         }
         if (m.projects.isEmpty()) item {
-            Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .65f), shape = RoundedCornerShape(14.dp)) {
+            ClayPanel {
                 Column(Modifier.fillMaxWidth().padding(20.dp)) {
                     Text("No projects yet", fontWeight = FontWeight.Medium)
                     Spacer(Modifier.height(6.dp))
@@ -238,7 +221,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
             }
         }
         if (projectSearch.isNotBlank() && m.projects.none { it.contains(projectSearch.trim(), ignoreCase = true) }) item {
-            Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(14.dp)) {
+            ClayPanel {
                 Column(Modifier.fillMaxWidth().padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.SearchOff, null, Modifier.size(26.dp),
@@ -249,30 +232,26 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 }
             }
         }
-        items(m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) }.let { visible ->
-            when (projectSort) {
-                "Favorites" -> visible.filter { it in m.favorites }
-                "A–Z" -> visible.sortedWith(String.CASE_INSENSITIVE_ORDER)
-                "Z–A" -> visible.sortedWith(String.CASE_INSENSITIVE_ORDER.reversed())
-                else -> visible.sortedWith(compareBy<String> { it !in m.favorites }
-                    .thenBy { m.projects.indexOf(it) })
-            }
-        }, key = { it }) { name ->
+        items(orderedProjects(
+            m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) },
+            m.favorites,
+            projectSort
+        ), key = { it }) { name ->
             val pressInteraction = remember(name) { MutableInteractionSource() }
             val isPressed by pressInteraction.collectIsPressedAsState()
             val pressScale by animateFloatAsState(
                 if (isPressed) .97f else 1f,
                 animationSpec = tween(motionMillis, easing = FastOutSlowInEasing),
                 label = "project-press")
-            Surface(onClick = { UiLatencyProbe.nextFrame(context, "Open project"); m.openProject(name) },
-                enabled = true,
+            ClayActionCard(
+                onClick = { UiLatencyProbe.nextFrame(context, "Open project"); m.openProject(name) },
                 interactionSource = pressInteraction,
                 modifier = Modifier.graphicsLayer { scaleX = pressScale; scaleY = pressScale }
-                    .animateContentSize(animationSpec = tween(motionMillis)),
-                shape = RoundedCornerShape(16.dp), tonalElevation = 1.dp,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                    .animateContentSize(animationSpec = tween(motionMillis))
+            ) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Surface(shape = RoundedCornerShape(11.dp),
+                    Surface(shape = CodeLabCorners.iconTile,
+                        tonalElevation = CodeLabElevation.icon,
                         color = MaterialTheme.colorScheme.primaryContainer) {
                         Icon(Icons.Default.Folder, null, Modifier.padding(10.dp).size(22.dp),
                             tint = MaterialTheme.colorScheme.primary)
@@ -282,7 +261,8 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(start = 10.dp).size(18.dp))
                     }
-                    Text(name, Modifier.weight(1f).padding(start = 14.dp), maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Medium)
+                    Text(name, Modifier.weight(1f).padding(start = 14.dp), maxLines = 2,
+                        overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
                     Box {
                         IconButton(onClick = { options = name }) { Icon(Icons.Default.MoreVert, "Manage $name") }
                         DropdownMenu(expanded = options == name, onDismissRequest = { options = null }) {
@@ -298,4 +278,9 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
             }
         }
     }
+    if (importOptions) LibraryImportSheet(
+        onDismiss = { importOptions = false },
+        onZip = { importOptions = false; importZip() },
+        onGitHub = { importOptions = false; importGitHub() }
+    )
 }
