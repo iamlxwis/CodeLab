@@ -44,7 +44,7 @@ jobs:
           set -euo pipefail
           if gh release view latest >/dev/null 2>&1; then
             gh release upload latest release/CodeLab.apk release/CodeLab.apk.sha256 --clobber
-            gh release edit latest --title "CodeLab — latest Android APK" --notes "Latest CI-verified Android debug APK from main. Android 8.0+. No signup required. This is an early-access debug build, not a production-signed release. Back up projects before updating. SHA256 provided alongside the APK."
+            gh release edit latest --latest --title "CodeLab — latest Android APK" --notes "Latest CI-verified Android debug APK from main. Android 8.0+. No signup required. This is an early-access debug build, not a production-signed release. Back up projects before updating. SHA256 provided alongside the APK."
           else
-            gh release create latest release/CodeLab.apk release/CodeLab.apk.sha256 --target "${GITHUB_SHA}" --title "CodeLab — latest Android APK" --notes "Latest CI-verified Android debug APK from main. Android 8.0+. No signup required. This is an early-access debug build, not a production-signed release. Back up projects before updating. SHA256 provided alongside the APK." --prerelease
+            gh release create latest release/CodeLab.apk release/CodeLab.apk.sha256 --target "${GITHUB_SHA}" --title "CodeLab — latest Android APK" --notes "Latest CI-verified Android debug APK from main. Android 8.0+. No signup required. This is an early-access debug build, not a production-signed release. Back up projects before updating. SHA256 provided alongside the APK." --latest
           fi
