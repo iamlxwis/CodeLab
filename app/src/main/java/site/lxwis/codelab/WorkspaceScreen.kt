@@ -35,6 +35,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -75,6 +76,16 @@ import androidx.lifecycle.ViewModelProvider
 internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var dialog by rememberSaveable { mutableStateOf("") }
     var selected by rememberSaveable { mutableStateOf("") }
+    val snackbarHost = remember { SnackbarHostState() }
+    LaunchedEffect(m.undoDeletion?.id) {
+        val deleted = m.undoDeletion ?: return@LaunchedEffect
+        val result = snackbarHost.showSnackbar(deleted.label,
+            actionLabel = "Undo",
+            withDismissAction = true,
+            duration = SnackbarDuration.Long)
+        if (result == SnackbarResult.ActionPerformed) m.undoDelete(deleted.id)
+        else m.dismissUndo(deleted.id)
+    }
     var incoming by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedSnippet by remember { mutableStateOf("") }
     var selectedSnippetLine by remember { mutableIntStateOf(1) }
@@ -156,6 +167,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             "history" -> { m.refreshHistory(); dialog = action }
             "git" -> { m.gitRefresh(); dialog = action }
             "cloudrun" -> m.requestCloudRun()
+            "run-active" -> m.run()
+            "save" -> m.flush()
             "focus" -> {
                 focusMode = !focusMode
                 m.console = false
@@ -169,7 +182,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         else if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
     }
 
-    Column(modifier.fillMaxSize()) {
+    Box(modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize()) {
         if (!focusMode || p == null) WorkspaceTopBar(m, p) { dialog = it }
         if (p == null) {
             ProjectLibrary(m, motionMillis, { dialog = "newproject" },
@@ -190,18 +204,32 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             "Toggle tablet explorer", Modifier.size(19.dp))
                     }
                 }
-                LazyRow(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                val tabScroll = rememberLazyListState()
+                LaunchedEffect(m.active, m.tabs) {
+                    val index = m.tabs.indexOf(m.active)
+                    if (index >= 0) tabScroll.scrollToItem(index)
+                }
+                LazyRow(Modifier.weight(1f), state = tabScroll,
+                    verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
                         WorkspaceTab(path = path, active = m.active == path,
+                            pinned = path in m.pinnedTabs,
+                            dirty = m.isTabDirty(path),
                             motionMillis = motionMillis,
                             onSelect = {
                                 UiLatencyProbe.nextFrame(context, "Switch tab")
                                 if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 m.select(path)
                             },
-                            onClose = { m.closeTab(path) })
+                            onClose = { m.closeTab(path) },
+                            onTogglePin = { m.togglePinnedTab(path) },
+                            onCloseOthers = { m.closeOtherTabs(path) },
+                            onCloseAll = { m.closeOtherTabs(null) },
+                            onMove = { m.reorderTab(path, it) },
+                            onReveal = { selected = path; dialog = "filereveal" })
                     }
                 }
+                if (m.tabs.size > 1) OpenTabsMenu(m.tabs, m.active, m::select)
                 IconButton(onClick = { dialog = "newfile" }) { Icon(Icons.Default.Add, "Add file") }
             }
             BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
@@ -219,7 +247,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         })
                 }
                 val outputPane: @Composable (Modifier) -> Unit = { pane ->
-                    if (m.console) RunConsole(m.runner, pane, m.active)
+                    if (m.console) RunConsole(m.runner, pane, m.active, m.files) { path, line ->
+                        m.select(path, goToLine = line)
+                    }
                     else if (m.preview && m.active != null)
                         HtmlPreview(p, m.active!!, m.source, pane)
                 }
@@ -321,6 +351,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     else -> "Text · cloud setup"
                 }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall,
                     fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                QuickActionsBar(m.quickEditorActions, onAction = ::openAction)
             }
         }
         AnimatedVisibility(m.busy,
@@ -333,6 +364,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        }
+        SnackbarHost(hostState = snackbarHost,
+            modifier = Modifier.align(Alignment.BottomCenter))
     }
 
     when (dialog) {
@@ -343,6 +377,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             javascriptFile = m.active?.endsWith(".js", true) == true,
             cloudReady = m.active?.let(m::cloudAvailable) == true,
             focusMode = focusMode,
+            quickActions = if (p != null) m.quickEditorActions else m.quickHomeActions,
+            onToggleQuick = { m.toggleQuickAction(it, p != null) },
             onAction = ::openAction,
             onDismiss = { dialog = "" })
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
@@ -396,7 +432,11 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }) { Text(destination) }
                 }
             } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
-        "files" -> FileExplorerSheet(m, onClose = { dialog = "" }, onNew = { dialog = "newfile" },
+        "files", "filereveal" -> FileExplorerSheet(m,
+            initialDirectory = if (dialog == "filereveal") {
+                selected.substringBeforeLast('/', "").let { if (it.isBlank()) "" else "$it/" }
+            } else "",
+            onClose = { dialog = "" }, onNew = { dialog = "newfile" },
             onOpen = { m.select(it); dialog = "" }, onRename = { selected = it; dialog = "rename" },
             onDelete = { selected = it; dialog = "delete" },
             onRenameFolder = { selected = it; dialog = "renamefolder" },

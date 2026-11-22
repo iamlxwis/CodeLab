@@ -28,8 +28,11 @@ class WorkspacePanelsUiTest {
         var closed = false
         compose.setContent {
             MaterialTheme {
-                WorkspaceTab("other.js", active = false, motionMillis = 0,
-                    onSelect = {}, onClose = { closed = true })
+                WorkspaceTab("other.js", active = false, pinned = false,
+                    dirty = false, motionMillis = 0,
+                    onSelect = {}, onClose = { closed = true },
+                    onTogglePin = {}, onCloseOthers = {}, onCloseAll = {},
+                    onMove = {}, onReveal = {})
             }
         }
         compose.onNodeWithContentDescription("Close other.js").performClick()

@@ -45,6 +45,8 @@ internal fun WorkspaceActionsSheet(
     javascriptFile: Boolean,
     cloudReady: Boolean,
     focusMode: Boolean,
+    quickActions: List<String>,
+    onToggleQuick: (String) -> Unit,
     onAction: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -107,7 +109,7 @@ internal fun WorkspaceActionsSheet(
     }
     val query = search.trim()
     val matches = all.filter {
-        (section == null || it.section == section || query.isNotBlank()) &&
+        (section == null || it.section == section) &&
             (query.isBlank() || it.name.contains(query, true) || it.description.contains(query, true))
     }
     fun act(id: String) {
@@ -136,13 +138,12 @@ internal fun WorkspaceActionsSheet(
             OutlinedTextField(search, { search = it }, modifier = Modifier.fillMaxWidth(),
                 singleLine = true, shape = RoundedCornerShape(14.dp),
                 leadingIcon = { Icon(Icons.Default.Search, null) },
-                placeholder = { Text("Search actions") })
+                placeholder = { Text(if (section == "Settings") "Search settings" else "Search actions") })
             if (section == null && query.isBlank()) {
                 Text("QUICK ACTIONS", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                val quick = if (projectOpen) listOf("newfile", "files", "projectsearch", "exportcurrent")
-                    else listOf("newproject", "importzip", "languages", "appearance")
-                quick.mapNotNull { id -> all.firstOrNull { it.id == id } }.chunked(2).forEach { pair ->
+                quickActions.mapNotNull { id -> all.firstOrNull { it.id == id } }
+                    .chunked(2).forEach { pair ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         pair.forEach { item ->
                             Surface(onClick = { act(item.id) }, modifier = Modifier.weight(1f),
@@ -160,6 +161,9 @@ internal fun WorkspaceActionsSheet(
                         if (pair.size == 1) Spacer(Modifier.weight(1f))
                     }
                 }
+                Text("Star actions below to customize your quick actions.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("BROWSE", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -202,8 +206,14 @@ internal fun WorkspaceActionsSheet(
                                 Text(item.description, style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Icon(Icons.Default.ChevronRight, null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            IconButton(onClick = { onToggleQuick(item.id) },
+                                enabled = item.id in quickActions || quickActions.size < 6,
+                                modifier = Modifier.size(48.dp)) {
+                                Icon(if (item.id in quickActions) Icons.Default.Star
+                                    else Icons.Default.StarBorder,
+                                    if (item.id in quickActions) "Unpin ${item.name} quick action"
+                                        else "Pin ${item.name} quick action")
+                            }
                         }
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .45f))
                     }
