@@ -164,7 +164,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var dialog by rememberSaveable { mutableStateOf("") }
     var selected by rememberSaveable { mutableStateOf("") }
     var incoming by rememberSaveable { mutableStateOf<String?>(null) }
-    var menu by remember { mutableStateOf(false) }
+    var selectedSnippet by remember { mutableStateOf("") }
+    var selectedSnippetLine by remember { mutableIntStateOf(1) }
     var focusMode by rememberSaveable { mutableStateOf(false) }
     var explorerPinned by rememberSaveable { mutableStateOf(true) }
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -227,6 +228,30 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         if (it != null) { incoming = it.toString(); dialog = "import" }
     }
     val p = m.project
+    LaunchedEffect(m.active) {
+        selectedSnippet = ""
+        selectedSnippetLine = 1
+    }
+    fun openAction(action: String) {
+        when (action) {
+            "importfile" -> importFile.launch(arrayOf("*/*"))
+            "importmany" -> importMany.launch(arrayOf("*/*"))
+            "importzip" -> importZip.launch(arrayOf("*/*"))
+            "exportcurrent" -> m.active?.let { exportFile.launch(it.substringAfterLast('/')) }
+            "exportproject" -> p?.let { export.launch(it + ".zip") }
+            "rename", "duplicate" -> m.active?.let { selected = it; dialog = action }
+            "projectreplace" -> { m.clearReplaceSummary(); dialog = action }
+            "history" -> { m.refreshHistory(); dialog = action }
+            "git" -> { m.gitRefresh(); dialog = action }
+            "cloudrun" -> m.requestCloudRun()
+            "focus" -> {
+                focusMode = !focusMode
+                m.console = false
+                m.preview = false
+            }
+            else -> dialog = action
+        }
+    }
     BackHandler(enabled = p != null && dialog.isEmpty()) {
         if (focusMode) focusMode = false
         else if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
@@ -264,87 +289,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }
                 }
             }
-            Box {
-                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "Workspace options") }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    if (p != null) {
-                        DropdownMenuItem(text = { Text("Workspace commands…") },
-                            onClick = { menu = false; dialog = "workspacecommands" })
-                        DropdownMenuItem(text = { Text("Project settings…") },
-                            onClick = { menu = false; dialog = "projectsettings" })
-                        DropdownMenuItem(text = { Text("Panel layout…") },
-                            onClick = { menu = false; dialog = "panels" })
-                        DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
-                        DropdownMenuItem(text = { Text("Import file…") }, onClick = { menu = false; importFile.launch(arrayOf("*/*")) })
-                        DropdownMenuItem(text = { Text("Replace across files…") },
-                            onClick = {
-                                menu = false
-                                m.clearReplaceSummary()
-                                dialog = "projectreplace"
-                            })
-                        DropdownMenuItem(text = { Text("Search across files…") },
-                            onClick = { menu = false; dialog = "projectsearch" })
-                        DropdownMenuItem(text = { Text("New folder…") },
-                            onClick = { menu = false; dialog = "newfolder" })
-                        DropdownMenuItem(text = { Text("Copy file to another project…") },
-                            enabled = m.active != null && m.projects.size > 1,
-                            onClick = { menu = false; dialog = "copyproject" })
-                        DropdownMenuItem(text = { Text("Import multiple files…") },
-                            onClick = { menu = false; importMany.launch(arrayOf("*/*")) })
-                        if (m.active != null) {
-                            DropdownMenuItem(text = { Text("Rename current file…") }, onClick = {
-                                menu = false; selected = m.active!!; dialog = "rename"
-                            })
-                            DropdownMenuItem(text = { Text("Duplicate current file…") }, onClick = {
-                                menu = false; selected = m.active!!; dialog = "duplicate"
-                            })
-                            DropdownMenuItem(text = { Text("Export current file…") }, onClick = {
-                                menu = false; exportFile.launch(m.active!!.substringAfterLast('/'))
-                            })
-                        }
-                        DropdownMenuItem(text = { Text("Debug JavaScript…") },
-                            enabled = m.active?.endsWith(".js", true) == true,
-                            onClick = { menu = false; dialog = "jsdebug" })
-                        DropdownMenuItem(text = { Text("Code Screenshot Studio…") },
-                            enabled = m.active != null,
-                            onClick = { menu = false; dialog = "screenshot" })
-                        DropdownMenuItem(text = { Text("Git version control…") },
-                            onClick = { menu = false; dialog = "git"; m.gitRefresh() })
-                        DropdownMenuItem(text = { Text("File history…") }, enabled = m.active != null,
-                            onClick = { menu = false; dialog = "history"; m.refreshHistory() })
-                        DropdownMenuItem(text = { Text("File properties") },
-                            enabled = m.active != null, onClick = { menu = false; dialog = "properties" })
-                        DropdownMenuItem(text = { Text("Export project ZIP") }, onClick = { menu = false; export.launch("$p.zip") })
-                        if (m.active != null && m.cloudAvailable(m.active!!)) {
-                            DropdownMenuItem(text = { Text("Run via cloud…") },
-                                onClick = { menu = false; m.requestCloudRun() })
-                        }
-                    } else {
-                        DropdownMenuItem(text = { Text("Import project ZIP") },
-                            onClick = { menu = false; importZip.launch(arrayOf("*/*")) })
-                        DropdownMenuItem(text = { Text("Import external folder as project…") },
-                            onClick = { menu = false; dialog = "folderimport" })
-                        DropdownMenuItem(text = { Text("Import public GitHub project…") },
-                            onClick = { menu = false; dialog = "githubimport" })
-                    }
-                    DropdownMenuItem(text = { Text("Recently deleted…") },
-                        onClick = { menu = false; dialog = "trash" })
-                    if (p != null) DropdownMenuItem(text = { Text(if (focusMode) "Exit Focus Mode" else "Focus Mode") },
-                        onClick = { menu = false; focusMode = !focusMode; m.console = false; m.preview = false })
-                    DropdownMenuItem(text = { Text("Languages & Cloud") },
-                        onClick = { menu = false; dialog = "languages" })
-                    DropdownMenuItem(text = { Text("Accessibility") },
-                        onClick = { menu = false; dialog = "accessibility" })
-                    DropdownMenuItem(text = { Text("Command palette…") },
-                        onClick = { menu = false; dialog = "commands" })
-                    DropdownMenuItem(text = { Text("HTTPS Inspector…") },
-                        onClick = { menu = false; dialog = "httpsinspector" })
-                    DropdownMenuItem(text = { Text("Developer tools…") },
-                        onClick = { menu = false; dialog = "devtools" })
-                    DropdownMenuItem(text = { Text("Performance diagnostics") },
-                        onClick = { menu = false; dialog = "performance" })
-                    DropdownMenuItem(text = { Text("Appearance") }, onClick = { menu = false; dialog = "appearance" })
-                }
+            IconButton(onClick = { dialog = "actions" }) {
+                Icon(Icons.Default.MoreVert, "Browse workspace actions")
             }
         }
         if (p == null) {
@@ -443,6 +389,10 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 onPreviousTab = { m.moveActiveTab(-1) },
                                 onNextTab = { m.moveActiveTab(1) },
                                 onOpenCommands = { dialog = "commands" },
+                                onSelectionChange = { snippet, line ->
+                                    selectedSnippet = snippet
+                                    selectedSnippetLine = line
+                                },
                                 modifier = Modifier.fillMaxSize())
                         } else TextButton(onClick = { dialog = "files" }, modifier = Modifier.align(Alignment.Center)) { Text("Open a file") }
                     }
@@ -491,9 +441,20 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
 
     when (dialog) {
+        "actions" -> WorkspaceActionsSheet(
+            projectOpen = p != null,
+            fileOpen = m.active != null,
+            multipleProjects = m.projects.size > 1,
+            javascriptFile = m.active?.endsWith(".js", true) == true,
+            cloudReady = m.active?.let(m::cloudAvailable) == true,
+            focusMode = focusMode,
+            onAction = ::openAction,
+            onDismiss = { dialog = "" })
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
         "switchproject" -> ProjectSwitcher(m) { dialog = "" }
-        "screenshot" -> CodeScreenshotStudio(m.active.orEmpty(), m.source) { dialog = "" }
+        "screenshot" -> CodeScreenshotStudio(
+            m.active.orEmpty(), m.source, selectedSnippet, selectedSnippetLine
+        ) { dialog = "" }
         "workspacecommands" -> WorkspaceCommandSheet(m) { dialog = "" }
         "jsdebug" -> JavaScriptDebugDialog(m) { dialog = "" }
         "projectsettings" -> ProjectSettingsDialog(m) { dialog = "" }
@@ -696,7 +657,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     m.cloudPending?.let { filename ->
         val language = m.cloudLanguages[CloudJudge0.extension(filename)]
         if (language != null) {
-            OnlineRunConfirmation(filename, m.cloudEndpoint, language.name,
+            OnlineRunConfirmation(filename, language.name,
                 cancel = m::cancelCloudRun, start = m::startCloudRun)
         }
     }
