@@ -15,7 +15,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 
 private data class SupportedLanguage(val name: String, val extension: String, val local: String? = null)
@@ -62,9 +61,6 @@ private val catalog = listOf(
 @Composable
 fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var endpoint by rememberSaveable { mutableStateOf(model.cloudEndpoint) }
-    var header by rememberSaveable { mutableStateOf(model.cloudHeader) }
-    var credential by rememberSaveable { mutableStateOf(model.cloudCredential) }
 
     ModalBottomSheet(onDismissRequest = close, sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -73,7 +69,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Languages & Cloud", style = MaterialTheme.typography.headlineSmall)
+                    Text("Languages", style = MaterialTheme.typography.headlineSmall)
                     Text("Local execution first · online when available",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall)
@@ -100,35 +96,15 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
                         LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
                     }
                     Spacer(Modifier.height(12.dp))
-                    OutlinedTextField(endpoint, { endpoint = it.take(256) }, Modifier.fillMaxWidth(),
-                        label = { Text("Judge0 HTTPS endpoint") }, singleLine = true,
-                        shape = RoundedCornerShape(12.dp))
-                    Spacer(Modifier.height(6.dp))
-                    Text("Optional authentication header",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Row(Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("X-Auth-Token", "Authorization", "X-RapidAPI-Key").forEach { name ->
-                            FilterChip(selected = header == name, onClick = { header = name },
-                                label = { Text(name) })
-                        }
-                    }
-                    OutlinedTextField(credential, { credential = it.take(512) },
-                        modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        label = { Text("API token (optional)") },
-                        visualTransformation = PasswordVisualTransformation(),
-                        shape = RoundedCornerShape(12.dp))
-                    Spacer(Modifier.height(6.dp))
-                    Button(onClick = { model.saveCloudConfig(endpoint, header, credential) },
-                        modifier = Modifier.fillMaxWidth(), enabled = !model.cloudChecking,
+                    Button(onClick = { model.refreshCloudLanguages() },
+                        modifier = Modifier.fillMaxWidth(), enabled = !model.cloudChecking && model.isOnline,
                         shape = RoundedCornerShape(12.dp)) {
-                        Text("Save and check languages")
+                        Text(if (model.cloudChecking) "Checking…" else "Check free compiler availability")
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text("Online runs send source code and the input you provide to this server. " +
-                        "CodeLab always asks before uploading. Public endpoints may have quotas or require a key. " +
-                        "An internet connection does not guarantee compiler availability.",
+                    Text("No account or API key needed in CodeLab. The public compiler may be busy, " +
+                        "unavailable, or restrict free requests. Local languages work without internet. " +
+                        "Online runs require your confirmation before any source code is sent.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(16.dp))
