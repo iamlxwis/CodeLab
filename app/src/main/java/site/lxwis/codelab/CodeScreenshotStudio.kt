@@ -1,10 +1,6 @@
 package site.lxwis.codelab
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Typeface
-import android.graphics.Color as AColor
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,126 +19,106 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import kotlin.math.min
-
-/**
- * Deterministic raster export: no external service, permission, or network call.
- * Limits are deliberate to cap bitmap memory on inexpensive Android devices.
- */
-internal object ScreenshotRenderer {
-    fun render(filename: String, source: String, style: String, lineNumbers: Boolean,
-               firstLine: Int, visibleLines: Int): Bitmap {
-        val palette = when (style) {
-            "Paper" -> intArrayOf(0xfff6f7f4.toInt(), 0xff1c2826.toInt(),
-                0xff6d7b78.toInt(), 0xffdbe2dc.toInt(), 0xff276d57.toInt())
-            "Nocturne" -> intArrayOf(0xff111626.toInt(), 0xffe6e9f6.toInt(),
-                0xff8792ad.toInt(), 0xff202942.toInt(), 0xff9ab5fa.toInt())
-            else -> intArrayOf(0xff141a1d.toInt(), 0xffe2ede7.toInt(),
-                0xff82998d.toInt(), 0xff28352f.toInt(), 0xff8fd5b2.toInt())
-        }
-        val data = source.lineSequence().drop((firstLine - 1).coerceAtLeast(0))
-            .take(visibleLines.coerceIn(1, 55))
-            .map { it.replace('\t', ' ').take(100) }.toList()
-        val entries = if (data.isEmpty()) listOf("") else data
-        val width = 1080
-        val padding = 54f
-        val lineHeight = 42f
-        val contentTop = 160f
-        val height = (contentTop + entries.size * lineHeight + 52).toInt().coerceAtMost(2600)
-        val image = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(image)
-        canvas.drawColor(palette[0])
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
-        }
-        paint.color = palette[3]
-        canvas.drawRoundRect(32f, 26f, width - 32f, 119f, 18f, 18f, paint)
-        paint.color = palette[4]
-        paint.textSize = 23f
-        canvas.drawCircle(66f, 71f, 8f, paint)
-        canvas.drawCircle(94f, 71f, 8f, paint)
-        canvas.drawCircle(122f, 71f, 8f, paint)
-        paint.color = palette[1]
-        paint.textSize = 27f
-        val title = filename.take(48)
-        canvas.drawText(title, 162f, 81f, paint)
-        paint.textSize = 28f
-        for ((position, raw) in entries.withIndex()) {
-            val baseline = contentTop + position * lineHeight
-            val number = firstLine + position
-            if (lineNumbers) {
-                paint.color = palette[2]
-                paint.textAlign = Paint.Align.RIGHT
-                canvas.drawText(number.toString(), 116f, baseline, paint)
-            }
-            paint.textAlign = Paint.Align.LEFT
-            paint.color = palette[1]
-            val column = if (lineNumbers) 145f else padding
-            val fit = paint.breakText(raw, true, width - column - padding, null)
-            canvas.drawText(raw.substring(0, min(raw.length, fit)), column, baseline, paint)
-        }
-        return image
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CodeScreenshotStudio(filename: String, source: String, close: () -> Unit) {
     val context = LocalContext.current
     var preset by rememberSaveable { mutableStateOf("Obsidian") }
+    var aspect by rememberSaveable { mutableStateOf(ScreenshotAspect.SQUARE) }
+    var background by rememberSaveable { mutableStateOf("Gradient") }
     var lineNumbers by rememberSaveable { mutableStateOf(true) }
     var start by rememberSaveable { mutableStateOf("1") }
-    var count by rememberSaveable { mutableFloatStateOf(22f) }
+    var count by rememberSaveable { mutableFloatStateOf(18f) }
+    var title by rememberSaveable { mutableStateOf("") }
+    var footer by rememberSaveable { mutableStateOf("") }
+    var highlight by rememberSaveable { mutableStateOf("") }
     val firstLine = (start.toIntOrNull() ?: 1).coerceIn(1, 100000)
-    val output = remember(filename, source, preset, lineNumbers, firstLine, count) {
-        ScreenshotRenderer.render(filename, source, preset, lineNumbers, firstLine, count.toInt())
+    val options = ScreenshotOptions(
+        palette = preset, aspect = aspect, background = background,
+        lineNumbers = lineNumbers, firstLine = firstLine,
+        selectedLines = count.toInt(), title = title, footer = footer,
+        highlightLine = highlight.toIntOrNull()?.coerceAtLeast(0) ?: 0)
+    val preview = remember(filename, source, options) {
+        ScreenshotRenderer.render(filename, source, options)
     }
     val export = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("image/png")
     ) { uri ->
         if (uri != null) {
-            val successful = runCatching {
+            val saved = runCatching {
                 checkNotNull(context.contentResolver.openOutputStream(uri, "w")).use { stream ->
-                    check(output.compress(Bitmap.CompressFormat.PNG, 100, stream))
+                    check(preview.compress(Bitmap.CompressFormat.PNG, 100, stream))
                 }
             }.isSuccess
-            Toast.makeText(context, if (successful) "PNG saved" else "Unable to save PNG",
+            Toast.makeText(context, if (saved) "PNG saved" else "Unable to save PNG",
                 Toast.LENGTH_SHORT).show()
         }
     }
-    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = close, sheetState = state,
+    val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = close, sheetState = sheet,
         containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(.94f).verticalScroll(rememberScrollState())
+        Column(Modifier.fillMaxWidth().fillMaxHeight(.94f)
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Code Screenshot Studio", style = MaterialTheme.typography.headlineSmall)
-            Text("Create a PNG locally from the selected source file.",
+            Text("Syntax-colored code cards, rendered locally without internet.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Theme", style = MaterialTheme.typography.labelMedium)
             Row(Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                listOf("Obsidian", "Nocturne", "Paper").forEach { option ->
-                    FilterChip(selected = preset == option, onClick = { preset = option },
-                        label = { Text(option) })
+                listOf("Obsidian", "Nocturne", "Paper").forEach { value ->
+                    FilterChip(selected = preset == value, onClick = { preset = value },
+                        label = { Text(value) })
                 }
             }
+            Text("Aspect ratio", style = MaterialTheme.typography.labelMedium)
+            Row(Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                ScreenshotAspect.values().forEach { value ->
+                    FilterChip(selected = aspect == value, onClick = { aspect = value },
+                        label = { Text(value.label) })
+                }
+            }
+            Text("Background", style = MaterialTheme.typography.labelMedium)
+            Row(Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf("Gradient", "Solid", "Transparent").forEach { value ->
+                    FilterChip(selected = background == value,
+                        onClick = { background = value }, label = { Text(value) })
+                }
+            }
+            OutlinedTextField(title, { title = it.take(55) }, Modifier.fillMaxWidth(),
+                singleLine = true, label = { Text("Card title (optional)") })
+            OutlinedTextField(footer, { footer = it.take(62) }, Modifier.fillMaxWidth(),
+                singleLine = true, label = { Text("Footer (optional)") })
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text("Line numbers", Modifier.weight(1f))
                 Switch(checked = lineNumbers, onCheckedChange = { lineNumbers = it })
             }
-            OutlinedTextField(start, { start = it.filter(Char::isDigit).take(6) },
-                modifier = Modifier.fillMaxWidth(), label = { Text("Start at line") },
-                singleLine = true)
-            Text("Lines in image · " + count.toInt(), style = MaterialTheme.typography.labelMedium)
-            Slider(value = count, onValueChange = { count = it }, valueRange = 5f..55f)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(start, { start = it.filter(Char::isDigit).take(6) },
+                    modifier = Modifier.weight(1f), singleLine = true,
+                    label = { Text("Start line") })
+                OutlinedTextField(highlight, { highlight = it.filter(Char::isDigit).take(6) },
+                    modifier = Modifier.weight(1f), singleLine = true,
+                    label = { Text("Highlight line") })
+            }
+            Text("Requested lines · " + count.toInt() +
+                " · " + ScreenshotRenderer.lineCapacity(aspect) + " fit in this layout",
+                style = MaterialTheme.typography.labelSmall)
+            Slider(value = count, onValueChange = { count = it }, valueRange = 1f..40f)
             Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 1.dp) {
-                Image(output.asImageBitmap(), contentDescription = "Code screenshot preview",
+                Image(preview.asImageBitmap(), contentDescription = "Code screenshot preview",
                     modifier = Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
             }
-            Button(onClick = { export.launch(filename.substringAfterLast('/') + ".png") },
-                modifier = Modifier.fillMaxWidth()) { Text("Save PNG") }
-            Text("1080 px wide · no internet required",
+            Button(onClick = {
+                export.launch(filename.substringAfterLast('/') + "-" +
+                    aspect.name.lowercase() + ".png")
+            }, modifier = Modifier.fillMaxWidth()) { Text("Export PNG") }
+            Text("1080 px wide · PNG alpha supported · all rendering stays on-device",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(12.dp))
