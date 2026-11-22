@@ -456,7 +456,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         if (file != null) key(p, file) {
                             CodeEditor(fileKey = "$p/$file", filename = file, text = m.source,
                                 onTextChange = m::edit, jumpLine = m.pendingLine,
-                                onJumpHandled = m::consumeJump, onSave = m::flush,
+                                onJumpHandled = m::consumeJump, onSave = m::flush, onRun = m::run,
                                 onPreviousTab = { m.moveActiveTab(-1) },
                                 onNextTab = { m.moveActiveTab(1) },
                                 onOpenCommands = { dialog = "commands" },
@@ -975,6 +975,23 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
                         }
                     }
                 }
+            }
+            Text("STARTER TEMPLATES", style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                listOf("To-do app", "API fetch", "Algorithms", "SQL playground", "Lua game loop")
+                    .chunked(2).forEach { choices ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            choices.forEach { choice ->
+                                FilterChip(selected = template == choice,
+                                    onClick = { template = choice; browsing = false },
+                                    modifier = Modifier.weight(1f),
+                                    label = { Text(choice, maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis) })
+                            }
+                            if (choices.size == 1) Spacer(Modifier.weight(1f))
+                        }
+                    }
             }
             Surface(onClick = { browsing = !browsing; keyboard?.hide() },
                 shape = RoundedCornerShape(14.dp),

@@ -65,6 +65,7 @@ fun CodeEditor(
     jumpLine: Int? = null,
     onJumpHandled: () -> Unit = {},
     onSave: () -> Unit = {},
+    onRun: () -> Unit = {},
     onPreviousTab: () -> Unit = {},
     onNextTab: () -> Unit = {},
     onOpenCommands: () -> Unit = {},
@@ -75,7 +76,7 @@ fun CodeEditor(
     val preferences = remember { context.getSharedPreferences("editor", Context.MODE_PRIVATE) }
     var fontSize by remember { mutableStateOf(preferences.getInt("font-size", 15)) }
     var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", true)) }
-    var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", false)) }
+    var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", true)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
     var shortcutSettings by remember { mutableStateOf(false) }
     var customizeShortcuts by remember { mutableStateOf(false) }
@@ -273,6 +274,18 @@ fun CodeEditor(
             }
             EditorIcon(Icons.Default.Redo, "Redo") {
                 view?.onTextContextMenuItem(android.R.id.redo)
+            }
+            EditorIcon(Icons.Default.FormatAlignLeft, "Format code") {
+                if (!readOnly) view?.let { activeEditor ->
+                    val formatted = CodeFormatter.format(filename, activeEditor.text.toString())
+                    if (formatted == null) result = "Format supports JS, JSON, HTML, CSS and SQL."
+                    else if (formatted != activeEditor.text.toString()) {
+                        val caret = activeEditor.selectionStart.coerceIn(0, formatted.length)
+                        activeEditor.text.replace(0, activeEditor.length(), formatted)
+                        activeEditor.setSelection(caret)
+                        result = "Formatted"
+                    }
+                }
             }
             EditorIcon(Icons.Default.Search, "Find and replace", selected = find) { find = !find }
             EditorIcon(Icons.Default.WrapText, "Toggle line wrapping", selected = wordWrap) {
@@ -578,62 +591,6 @@ fun CodeEditor(
             }
             }
         }
-        if (symbols && !(hardwareKeyboard && hideToolbarOnHardware)) {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                verticalAlignment = Alignment.CenterVertically) {
-                if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") EditorAction("Tab") { if (!readOnly) view?.indentSelection() }
-                if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") EditorAction("Outdent") { if (!readOnly) view?.outdentSelection() }
-                if (shortcutLayout != "Brackets" && shortcutLayout != "Custom") EditorAction("←") { view?.let { editor ->
-                    editor.setSelection((editor.selectionStart - 1).coerceAtLeast(0))
-                } }
-                if (shortcutLayout != "Brackets" && shortcutLayout != "Custom") EditorAction("→") { view?.let { editor ->
-                    editor.setSelection((editor.selectionEnd + 1).coerceAtMost(editor.length()))
-                } }
-                if (shortcutLayout == "Selection") {
-                    EditorAction("Line") { view?.selectCurrentLine() }
-                    EditorAction("All") { view?.selectAll() }
-                    EditorAction("Copy") { view?.onTextContextMenuItem(android.R.id.copy) }
-                    EditorAction("Cut") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.cut) }
-                    EditorAction("Paste") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.paste) }
-                    EditorAction("Undo") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.undo) }
-                    EditorAction("Redo") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.redo) }
-                }
-                if (shortcutLayout == "Navigation") {
-                    EditorAction("Start") { view?.scrollToStart() }
-                    EditorAction("End") { view?.setSelection(view?.length() ?: 0) }
-                    EditorAction("↑") { view?.moveCursorLine(-1) }
-                    EditorAction("↓") { view?.moveCursorLine(1) }
-                    EditorAction("Mark") { view?.toggleBookmark() }
-                }
-                val shortcutSymbols = when (shortcutLayout) {
-                    "Brackets" -> listOf("{", "}", "(", ")", "[", "]", "<", ">", "'", "\"")
-                    "Navigation" -> listOf("{", "}", "(", ")", ";")
-                    "Selection" -> emptyList()
-                    "Custom" -> emptyList()
-                    "Minimal" -> listOf("{", "}", "(", ")", ";")
-                    else -> listOf("{", "}", "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">")
-                }
-                shortcutSymbols.forEach { symbol ->
-                    EditorAction(symbol) { if (!readOnly) view?.insertAtSelection(symbol) }
-                }
-                if (shortcutLayout == "Custom") {
-                    customShortcuts.forEach { symbol ->
-                        EditorAction(symbol) {
-                            val editor = view
-                            if (editor != null) when (symbol) {
-                                "Tab" -> if (!readOnly) editor.indentSelection()
-                                "Esc" -> editor.hideKeyboard()
-                                "←" -> editor.setSelection((editor.selectionStart - 1).coerceAtLeast(0))
-                                "→" -> editor.setSelection((editor.selectionEnd + 1).coerceAtMost(editor.length()))
-                                "↑" -> editor.moveCursorLine(-1)
-                                "↓" -> editor.moveCursorLine(1)
-                                else -> if (!readOnly) editor.insertAtSelection(symbol)
-                            }
-                        }
-                    }
-                }
-            }
-        }
         if (find) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(search, { search = it; result = "" }, Modifier.weight(1f),
@@ -734,6 +691,7 @@ fun CodeEditor(
                 editor.lineShortcut = { lineInput = ""; lineDialog = true }
                 editor.bookmarkShortcut = { editor.toggleBookmark() }
                 editor.saveShortcut = onSave
+                editor.runShortcut = onRun
                 editor.commandShortcut = onOpenCommands
                 editor.zoomShortcut = { delta ->
                     fontSize = (fontSize + delta).coerceIn(10, 28)
@@ -746,6 +704,62 @@ fun CodeEditor(
         if (minimap) EditorMinimap(text = text, onNavigate = { line ->
             view?.goToLogicalLine(line)
         })
+        }
+        if (symbols && !(hardwareKeyboard && hideToolbarOnHardware)) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                verticalAlignment = Alignment.CenterVertically) {
+                if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") EditorAction("Tab") { if (!readOnly) view?.indentSelection() }
+                if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") EditorAction("Outdent") { if (!readOnly) view?.outdentSelection() }
+                if (shortcutLayout != "Brackets" && shortcutLayout != "Custom") EditorAction("←") { view?.let { editor ->
+                    editor.setSelection((editor.selectionStart - 1).coerceAtLeast(0))
+                } }
+                if (shortcutLayout != "Brackets" && shortcutLayout != "Custom") EditorAction("→") { view?.let { editor ->
+                    editor.setSelection((editor.selectionEnd + 1).coerceAtMost(editor.length()))
+                } }
+                if (shortcutLayout == "Selection") {
+                    EditorAction("Line") { view?.selectCurrentLine() }
+                    EditorAction("All") { view?.selectAll() }
+                    EditorAction("Copy") { view?.onTextContextMenuItem(android.R.id.copy) }
+                    EditorAction("Cut") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.cut) }
+                    EditorAction("Paste") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.paste) }
+                    EditorAction("Undo") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.undo) }
+                    EditorAction("Redo") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.redo) }
+                }
+                if (shortcutLayout == "Navigation") {
+                    EditorAction("Start") { view?.scrollToStart() }
+                    EditorAction("End") { view?.setSelection(view?.length() ?: 0) }
+                    EditorAction("↑") { view?.moveCursorLine(-1) }
+                    EditorAction("↓") { view?.moveCursorLine(1) }
+                    EditorAction("Mark") { view?.toggleBookmark() }
+                }
+                val shortcutSymbols = when (shortcutLayout) {
+                    "Brackets" -> listOf("{", "}", "(", ")", "[", "]", "<", ">", "'", "\"")
+                    "Navigation" -> listOf("{", "}", "(", ")", ";")
+                    "Selection" -> emptyList()
+                    "Custom" -> emptyList()
+                    "Minimal" -> listOf("{", "}", "(", ")", ";")
+                    else -> listOf("{", "}", "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">")
+                }
+                shortcutSymbols.forEach { symbol ->
+                    EditorAction(symbol) { if (!readOnly) view?.insertAtSelection(symbol) }
+                }
+                if (shortcutLayout == "Custom") {
+                    customShortcuts.forEach { symbol ->
+                        EditorAction(symbol) {
+                            val editor = view
+                            if (editor != null) when (symbol) {
+                                "Tab" -> if (!readOnly) editor.indentSelection()
+                                "Esc" -> editor.hideKeyboard()
+                                "←" -> editor.setSelection((editor.selectionStart - 1).coerceAtLeast(0))
+                                "→" -> editor.setSelection((editor.selectionEnd + 1).coerceAtMost(editor.length()))
+                                "↑" -> editor.moveCursorLine(-1)
+                                "↓" -> editor.moveCursorLine(1)
+                                else -> if (!readOnly) editor.insertAtSelection(symbol)
+                            }
+                        }
+                    }
+                }
+            }
         }
         var tabSwipe by remember { mutableFloatStateOf(0f) }
         Row(Modifier.fillMaxWidth().height(38.dp)
@@ -893,6 +907,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     var lineShortcut: (() -> Unit)? = null
     var bookmarkShortcut: (() -> Unit)? = null
     var saveShortcut: (() -> Unit)? = null
+    var runShortcut: (() -> Unit)? = null
     var commandShortcut: (() -> Unit)? = null
     var zoomShortcut: ((Int) -> Unit)? = null
     private val zoomDetector = ScaleGestureDetector(context,
@@ -1323,6 +1338,11 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         if (event.isCtrlPressed && !event.isAltPressed) {
             when (keyCode) {
                 KeyEvent.KEYCODE_S -> { saveShortcut?.invoke(); return true }
+                KeyEvent.KEYCODE_ENTER -> { runShortcut?.invoke(); return true }
+                KeyEvent.KEYCODE_Z -> {
+                    onTextContextMenuItem(if (event.isShiftPressed) android.R.id.redo else android.R.id.undo)
+                    return true
+                }
                 KeyEvent.KEYCODE_F -> { findShortcut?.invoke(); return true }
                 KeyEvent.KEYCODE_G -> { lineShortcut?.invoke(); return true }
                 KeyEvent.KEYCODE_B -> { bookmarkShortcut?.invoke(); return true }

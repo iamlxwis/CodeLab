@@ -169,13 +169,25 @@ public final class ProjectStore {
     }
 
     public synchronized String createProject(String name, String template) throws IOException {
-        if (!"Web".equals(template) && LanguageCatalog.extensionFor(template) == null)
+        if (!"Web".equals(template) &&
+                !Arrays.asList("To-do app", "API fetch", "Algorithms", "SQL playground", "Lua game loop").contains(template) &&
+                LanguageCatalog.extensionFor(template) == null)
             throw new IllegalArgumentException("Unsupported project template.");
         File dest = new File(projects, segment(name));
         requireNew(dest);
         File stage = Files.createTempDirectory(scratch.toPath(), "project-").toFile();
         try {
-            if ("Python".equals(template)) {
+            if ("To-do app".equals(template)) {
+                writeText(new File(stage, "main.js"), "const tasks = [\"Write code\", \"Run it offline\", \"Share your result\"];\nfor (let i = 0; i < tasks.length; i++) {\n  print((i + 1) + \". [ ] \" + tasks[i]);\n}\n");
+            } else             if ("API fetch".equals(template)) {
+                writeText(new File(stage, "index.html"), "<!doctype html>\n<html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>API fetch starter</title><body><h1>API fetch</h1><pre id=\"result\">Loading…</pre>\n<script>\nconst output = document.querySelector('#result');\nfetch('https://jsonplaceholder.typicode.com/todos/1')\n  .then(response => response.json()).then(data => output.textContent = JSON.stringify(data, null, 2))\n  .catch(() => output.textContent = JSON.stringify({offline: true, title: 'Offline demo'}, null, 2));\n</script></body></html>\n");
+            } else             if ("Algorithms".equals(template)) {
+                writeText(new File(stage, "main.js"), "function sort(values) {\n  for (let i = 0; i < values.length; i++) {\n    for (let j = 0; j < values.length - i - 1; j++) {\n      if (values[j] > values[j + 1]) {\n        const value = values[j]; values[j] = values[j + 1]; values[j + 1] = value;\n      }\n    }\n  }\n  return values;\n}\nprint(sort([9, 2, 7, 1, 4]).join(', '));\n");
+            } else             if ("SQL playground".equals(template)) {
+                writeText(new File(stage, "main.sql"), "CREATE TABLE notes (id INTEGER PRIMARY KEY, title TEXT NOT NULL);\nINSERT INTO notes (title) VALUES ('Try a query'), ('Everything runs offline');\nSELECT id, title FROM notes ORDER BY id;\n");
+            } else             if ("Lua game loop".equals(template)) {
+                writeText(new File(stage, "main.lua"), "local player = { x = 0, health = 3 }\nfor frame = 1, 5 do\n  player.x = player.x + 2\n  print('Frame ' .. frame .. ': x=' .. player.x .. ', hp=' .. player.health)\nend\n");
+            } else             if ("Python".equals(template)) {
                 writeText(new File(stage, "main.py"), "print('Hello from CodeLab!')\n");
             } else             if ("C".equals(template)) {
                 writeText(new File(stage, "main.c"), "#include <stdio.h>\nint main(void) {\n    puts(\"Hello from CodeLab!\");\n    return 0;\n}\n");
