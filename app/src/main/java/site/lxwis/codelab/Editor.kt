@@ -11,6 +11,9 @@ import android.text.TextWatcher
 import android.text.style.ForegroundColorSpan
 import android.view.Gravity
 import android.view.KeyEvent
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
+import android.content.res.Configuration
 import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputConnectionWrapper
 import android.view.inputmethod.BaseInputConnection
@@ -33,6 +36,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -46,15 +50,20 @@ fun CodeEditor(
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     jumpLine: Int? = null,
-    onJumpHandled: () -> Unit = {}
+    onJumpHandled: () -> Unit = {},
+    onSave: () -> Unit = {}
 ) = key(fileKey) {
     val context = LocalContext.current
+    val hardwareKeyboard = LocalConfiguration.current.keyboard != Configuration.KEYBOARD_NOKEYS
     val preferences = remember { context.getSharedPreferences("editor", Context.MODE_PRIVATE) }
     var fontSize by remember { mutableStateOf(preferences.getInt("font-size", 15)) }
     var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", false)) }
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", false)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
     var shortcutSettings by remember { mutableStateOf(false) }
+    var hideToolbarOnHardware by remember {
+        mutableStateOf(preferences.getBoolean("auto-hide-hardware-toolbar", false))
+    }
     var syntaxPalette by remember { mutableStateOf(preferences.getString("syntax-palette", "Classic") ?: "Classic") }
     var indentWidth by remember { mutableStateOf(preferences.getInt("indent-width", 4)) }
     var useTabs by remember { mutableStateOf(preferences.getBoolean("indent-tabs", false)) }
@@ -245,7 +254,15 @@ fun CodeEditor(
             Box {
                 EditorIcon(Icons.Default.Keyboard, "Mobile shortcut layout") { shortcutSettings = true }
                 DropdownMenu(expanded = shortcutSettings, onDismissRequest = { shortcutSettings = false }) {
-                    listOf("Standard", "Brackets", "Navigation", "Minimal").forEach { layout ->
+                    DropdownMenuItem(
+                        text = { Text(if (hideToolbarOnHardware) "Show toolbar with hardware keyboard" else "Hide toolbar with hardware keyboard") },
+                        onClick = {
+                            hideToolbarOnHardware = !hideToolbarOnHardware
+                            preferences.edit().putBoolean("auto-hide-hardware-toolbar", hideToolbarOnHardware).apply()
+                            shortcutSettings = false
+                        })
+                    HorizontalDivider()
+                    listOf("Standard", "Brackets", "Navigation", "Selection", "Minimal").forEach { layout ->
                         DropdownMenuItem(text = { Text(layout) },
                             leadingIcon = {
                                 if (shortcutLayout == layout) Icon(Icons.Default.Check, null)
@@ -395,7 +412,7 @@ fun CodeEditor(
                 view?.let { editor -> editor.requestFocus(); editor.setSelection(editor.length()) }
             }
         }
-        if (symbols) {
+        if (symbols && !(hardwareKeyboard && hideToolbarOnHardware)) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically) {
                 if (shortcutLayout != "Minimal") EditorAction("Tab") { if (!readOnly) view?.indentSelection() }
@@ -406,9 +423,26 @@ fun CodeEditor(
                 if (shortcutLayout != "Brackets") EditorAction("→") { view?.let { editor ->
                     editor.setSelection((editor.selectionEnd + 1).coerceAtMost(editor.length()))
                 } }
+                if (shortcutLayout == "Selection") {
+                    EditorAction("Line") { view?.selectCurrentLine() }
+                    EditorAction("All") { view?.selectAll() }
+                    EditorAction("Copy") { view?.onTextContextMenuItem(android.R.id.copy) }
+                    EditorAction("Cut") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.cut) }
+                    EditorAction("Paste") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.paste) }
+                    EditorAction("Undo") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.undo) }
+                    EditorAction("Redo") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.redo) }
+                }
+                if (shortcutLayout == "Navigation") {
+                    EditorAction("Start") { view?.scrollToStart() }
+                    EditorAction("End") { view?.setSelection(view?.length() ?: 0) }
+                    EditorAction("↑") { view?.moveCursorLine(-1) }
+                    EditorAction("↓") { view?.moveCursorLine(1) }
+                    EditorAction("Mark") { view?.toggleBookmark() }
+                }
                 val shortcutSymbols = when (shortcutLayout) {
                     "Brackets" -> listOf("{", "}", "(", ")", "[", "]", "<", ">", "'", "\"")
                     "Navigation" -> listOf("{", "}", "(", ")", ";")
+                    "Selection" -> emptyList()
                     "Minimal" -> listOf("{", "}", "(", ")", ";")
                     else -> listOf("{", "}", "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">")
                 }
@@ -501,6 +535,11 @@ fun CodeEditor(
                 editor.findShortcut = { find = true }
                 editor.lineShortcut = { lineInput = ""; lineDialog = true }
                 editor.bookmarkShortcut = { editor.toggleBookmark() }
+                editor.saveShortcut = onSave
+                editor.zoomShortcut = { delta ->
+                    fontSize = (fontSize + delta).coerceIn(10, 28)
+                    preferences.edit().putInt("font-size", fontSize).apply()
+                }
                 editor.isEnabled = !readOnly
                 if (editor.sourceSnapshot != text) editor.replaceSource(text)
             }
@@ -565,6 +604,52 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     var findShortcut: (() -> Unit)? = null
     var lineShortcut: (() -> Unit)? = null
     var bookmarkShortcut: (() -> Unit)? = null
+    var saveShortcut: (() -> Unit)? = null
+    var zoomShortcut: ((Int) -> Unit)? = null
+    private val zoomDetector = ScaleGestureDetector(context,
+        object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            private var accumulator = 1f
+            override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
+                accumulator = 1f
+                return true
+            }
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                accumulator *= detector.scaleFactor
+                if (accumulator > 1.17f) {
+                    zoomShortcut?.invoke(1)
+                    accumulator = 1f
+                } else if (accumulator < .85f) {
+                    zoomShortcut?.invoke(-1)
+                    accumulator = 1f
+                }
+                return true
+            }
+        })
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        zoomDetector.onTouchEvent(event)
+        if (zoomDetector.isInProgress || event.pointerCount > 1) return true
+        return super.onTouchEvent(event)
+    }
+
+    fun selectCurrentLine() {
+        val value = text.toString()
+        val caret = selectionStart.coerceIn(0, value.length)
+        val first = value.lastIndexOf('\n', (caret - 1).coerceAtLeast(0)) + 1
+        val last = value.indexOf('\n', caret).let { if (it < 0) value.length else it }
+        requestFocus()
+        setSelection(first, last)
+    }
+
+    fun moveCursorLine(offset: Int) {
+        val layout = layout ?: return
+        val caret = selectionStart.coerceIn(0, length())
+        val line = layout.getLineForOffset(caret)
+        val target = (line + offset).coerceIn(0, layout.lineCount - 1)
+        val column = caret - layout.getLineStart(line)
+        setSelection((layout.getLineStart(target) + column)
+            .coerceAtMost(layout.getLineEnd(target)).coerceIn(0, length()))
+    }
     private var indentUnit = "    "
     private var indentSpaces = 4
     fun setIndentPolicy(width: Int, tabs: Boolean) {
@@ -911,6 +996,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (event.isCtrlPressed && !event.isAltPressed) {
             when (keyCode) {
+                KeyEvent.KEYCODE_S -> { saveShortcut?.invoke(); return true }
                 KeyEvent.KEYCODE_F -> { findShortcut?.invoke(); return true }
                 KeyEvent.KEYCODE_G -> { lineShortcut?.invoke(); return true }
                 KeyEvent.KEYCODE_B -> { bookmarkShortcut?.invoke(); return true }
