@@ -24,8 +24,8 @@ class CodeLabMotionTest {
         assertEquals(900, CodeLabMotion(4f).millis(300))
     }
     @Test fun unusualSettingsFailSafe() {
-        assertEquals(0f, resolveMotionScale("System", 100, Float.NaN))
-        assertEquals(0f, resolveMotionScale("Full", 100, -1f))
-        assertEquals(3f, resolveMotionScale("Full", 100, 10f))
+        assertEquals(0f, resolveMotionScale("System", 100, Float.NaN), 0f)
+        assertEquals(0f, resolveMotionScale("Full", 100, -1f), 0f)
+        assertEquals(3f, resolveMotionScale("Full", 100, 10f), 0f)
     }
 }
