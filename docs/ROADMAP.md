@@ -2,7 +2,8 @@
 
 Work is reviewed on feature branches, with **main** kept unchanged until approval.
 Items are marked implemented only after source and tests exist; CI status is tracked
-in the related pull request. Android minSdk 26, targetSdk 35 and offline-first local
+in the corresponding main-branch workflow. As of Workstream #4, approved changes land
+directly on `main` instead of through pull requests. Android minSdk 26, targetSdk 35 and offline-first local
 execution remain unchanged.
 
 | Order | Workstream | Dependencies and acceptance evidence |

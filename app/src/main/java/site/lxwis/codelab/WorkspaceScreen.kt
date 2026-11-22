@@ -93,16 +93,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var explorerPinned by rememberSaveable { mutableStateOf(true) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val haptics = LocalHapticFeedback.current
-    val systemMotionEnabled = remember(context) {
-        Settings.Global.getFloat(context.contentResolver,
-            Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
-    }
-    val motionEnabled = when (m.motionPreference) {
-        "Full" -> true
-        "Reduced" -> false
-        else -> systemMotionEnabled
-    }
-    val motionMillis = if (motionEnabled) (150 + m.motionIntensity / 2).coerceIn(150, 200) else 0
+    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity)
+    val motionMillis = motion.millis(170)
     val activity = context as? ComponentActivity
     DisposableEffect(activity, focusMode) {
         val window = activity?.window
@@ -329,8 +321,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }
             if (!focusMode) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                PanelButton("Editor", !m.console && !m.preview) { m.console = false; m.preview = false }
-                PanelButton("Console", m.console) { m.console = true; m.preview = false }
+                PanelButton("Editor", !m.console && !m.preview, motionMillis) { m.console = false; m.preview = false }
+                PanelButton("Console", m.console, motionMillis) { m.console = true; m.preview = false }
                 if (LocalConfiguration.current.screenWidthDp < 820) {
                     PhoneSplitToggle(m.phoneSplitEnabled) {
                         val next = !m.phoneSplitEnabled
@@ -340,7 +332,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }
                 }
                 if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
-                    PanelButton("Preview", m.preview) { m.console = false; m.preview = true }
+                    PanelButton("Preview", m.preview, motionMillis) { m.console = false; m.preview = true }
                 Text(when {
                     m.active?.endsWith(".js", true) == true -> "JavaScript"
                     m.active?.endsWith(".sql", true) == true -> "SQLite"
@@ -607,9 +599,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
 }
 
 @Composable
-private fun PanelButton(text: String, active: Boolean, click: () -> Unit) {
+private fun PanelButton(text: String, active: Boolean, motionMillis: Int, click: () -> Unit) {
     val target = if (active) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-    val background by animateColorAsState(target, animationSpec = tween(170), label = "panel-selection")
+    val background by animateColorAsState(target, animationSpec = tween(motionMillis), label = "panel-selection")
     Surface(onClick = click, color = background, shape = RoundedCornerShape(10.dp)) {
         Text(text, Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             style = MaterialTheme.typography.labelLarge,

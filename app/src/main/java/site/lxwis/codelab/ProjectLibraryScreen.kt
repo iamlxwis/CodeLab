@@ -75,11 +75,7 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
     val context = androidx.compose.ui.platform.LocalContext.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val systemMotion = remember(context) {
-        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
-    }
-    val duration = if (m.motionPreference == "Reduced" ||
-        (m.motionPreference == "System" && !systemMotion)) 0 else 170
+    val duration = rememberCodeLabMotion(m.motionPreference, m.motionIntensity).millis(170)
     val scale by animateFloatAsState(if (pressed) .97f else 1f,
         animationSpec = tween(duration, easing = FastOutSlowInEasing), label = "run-press")
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
