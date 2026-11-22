@@ -66,6 +66,7 @@ fun CodeEditor(
     onJumpHandled: () -> Unit = {},
     onSave: () -> Unit = {},
     onRun: () -> Unit = {},
+    onShare: () -> Unit = {},
     onPreviousTab: () -> Unit = {},
     onNextTab: () -> Unit = {},
     onOpenCommands: () -> Unit = {},
@@ -102,7 +103,7 @@ fun CodeEditor(
     var issuesMenu by remember { mutableStateOf(false) }
     var readOnly by remember { mutableStateOf(false) }
     var view by remember { mutableStateOf<SourceView?>(null) }
-    var cursor by remember { mutableStateOf("Ln 1 · Col 1") }
+    val cursorStatus = remember { EditorCursorStatus() }
     var find by remember { mutableStateOf(false) }
     var advancedTools by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf("") }
@@ -287,6 +288,7 @@ fun CodeEditor(
                     }
                 }
             }
+            EditorIcon(Icons.Default.Share, "Share code as an image") { onShare() }
             EditorIcon(Icons.Default.Search, "Find and replace", selected = find) { find = !find }
             EditorIcon(Icons.Default.WrapText, "Toggle line wrapping", selected = wordWrap) {
                 wordWrap = !wordWrap
@@ -663,7 +665,7 @@ fun CodeEditor(
                     restorePosition(fileKey)
                     changed = { source -> changes(source) }
                     selectionChanged = { line, col ->
-                        cursor = "Ln " + line + " · Col " + col
+                        cursorStatus.label = "Ln " + line + " · Col " + col
                         // Use the live Editable, not the captured Composable text snapshot.
                         // Android can emit selection span changes while replacing characters.
                         val live = this.text
@@ -761,29 +763,50 @@ fun CodeEditor(
                 }
             }
         }
-        var tabSwipe by remember { mutableFloatStateOf(0f) }
-        Row(Modifier.fillMaxWidth().height(38.dp)
-            .pointerInput(fileKey) {
-                detectHorizontalDragGestures(onDragStart = { tabSwipe = 0f },
-                    onDragEnd = {
-                        if (tabSwipe > 70f) onPreviousTab()
-                        else if (tabSwipe < -70f) onNextTab()
-                        tabSwipe = 0f
-                    }, onHorizontalDrag = { change, amount ->
-                        change.consume()
-                        tabSwipe += amount
-                    })
-            }
-            .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(cursor + " · " + (view?.text?.count { it == '\n' }?.plus(1) ?: text.count { it == '\n' } + 1) + " lines",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text((if (readOnly) "READ ONLY · " else "") + (if (wordWrap) "Wrap · " else "") + "UTF-8 · " + filename.substringAfterLast('.', "text").uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        EditorStatusBar(
+            fileKey = fileKey, filename = filename, text = text, status = cursorStatus,
+            readOnly = readOnly, wordWrap = wordWrap,
+            onPreviousTab = onPreviousTab, onNextTab = onNextTab
+        )
+    }
+}
+
+@Stable
+private class EditorCursorStatus {
+    var label by mutableStateOf("Ln 1 · Col 1")
+}
+
+@Composable
+private fun EditorStatusBar(
+    fileKey: String, filename: String, text: String, status: EditorCursorStatus,
+    readOnly: Boolean, wordWrap: Boolean,
+    onPreviousTab: () -> Unit, onNextTab: () -> Unit
+) {
+    var tabSwipe by remember { mutableFloatStateOf(0f) }
+    val lines = remember(text) { text.count { it == '\n' } + 1 }
+    Row(Modifier.fillMaxWidth().height(38.dp)
+        .pointerInput(fileKey) {
+            detectHorizontalDragGestures(onDragStart = { tabSwipe = 0f },
+                onDragEnd = {
+                    if (tabSwipe > 70f) onPreviousTab()
+                    else if (tabSwipe < -70f) onNextTab()
+                    tabSwipe = 0f
+                }, onHorizontalDrag = { change, amount ->
+                    change.consume()
+                    tabSwipe += amount
+                })
         }
+        .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(status.label + " · " + lines + " lines",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text((if (readOnly) "READ ONLY · " else "") +
+            (if (wordWrap) "Wrap · " else "") + "UTF-8 · " +
+            filename.substringAfterLast('.', "text").uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
