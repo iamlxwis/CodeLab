@@ -10,6 +10,8 @@ Additional source implementations; Android device verification is performed by C
 - Android Storage Access Framework folder snapshot import with size and path checks.
 - Rhino source-line debugger with breakpoint, Step and Continue controls.
 - Safe interactive offline workspace command panel for browsing and searching project files.
+- Raw image/font asset support in offline HTML/CSS/JS previews.
+- HTTPS GET inspection with size/time bounds and JSON formatting.
 - JVM and Android-device tests covering screenshot rendering and debugger behavior.
 
 The roadmap is **not complete**. Unfinished major work includes semantic LSP, Tree-sitter,

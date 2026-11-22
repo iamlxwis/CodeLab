@@ -36,6 +36,7 @@ The link points to the most recently published GitHub Release. A new APK is publ
 | External-folder import | User-selected SAF folder is copied into an editable local project; not live external editing |
 | JavaScript debugger | Rhino source-line pause, breakpoints, Step and Continue; JavaScript only |
 | Workspace commands | Built-in offline pwd, ls, tree, cd, cat, head, wc, grep and git status; not a Linux shell or PTY |
+| HTTPS Inspector | Opt-in bounded GET inspection with headers, JSON formatting and 10-second network timeout |
 | File history and line diff | Implemented with bounded local snapshots and textual line differences |
 | Full Linux shell / PTY | Not implemented |
 
@@ -69,6 +70,10 @@ The app uses a public Judge0-compatible endpoint by default. **Free online compi
 Online submissions use Judge0's token-based asynchronous API and poll until execution finishes. Cloud input is specified **before** execution; interactive `readLine()` is supported only by suitable offline runtimes. The app can cancel local monitoring, but submitted code may continue executing remotely. The UI does not claim cloud functionality simply because internet is connected—only the server's verified `/languages` response enables the corresponding run options.
 
 **Privacy:** No source files are uploaded automatically. Only a confirmed cloud run sends the current source and its provided input. The default public compiler endpoint is configured in the app; users do not need credentials. Do not include secrets in code submitted to public compiler services. The cloud server may retain execution data or impose quotas according to its own policies. Offline preview remains restricted to local project assets.
+
+## HTTPS Inspector
+
+Choose **⋮ → HTTPS Inspector…** and enter a URL beginning with `https://`. CodeLab sends a GET request only after you press **Send GET**. Redirects are not followed; requests use a 10-second network timeout and read at most 128 KiB of the response. Embedded credentials and localhost URLs are rejected. No project code is uploaded. This feature is optional and requires internet access.
 
 ## Imported binary web assets
 

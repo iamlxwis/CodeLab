@@ -80,7 +80,7 @@ internal class WorkspaceShell(private val store: ProjectStore, private val proje
                     throw IOException("Folder does not exist.")
                 val prefix = if (folder.isEmpty()) "" else folder + "/"
                 val files = store.files(project).filter { it.startsWith(prefix) }
-                    .map { it.removePrefix(prefix).substringBefore('/') }
+                    .map { it.removePrefix(prefix) }
                     .filter { it.isNotEmpty() && '/' !in it }
                 val folders = store.folders(project).filter { it.startsWith(prefix) }
                     .map { it.removePrefix(prefix).substringBefore('/') }

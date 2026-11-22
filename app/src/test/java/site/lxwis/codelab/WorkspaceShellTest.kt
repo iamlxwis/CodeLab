@@ -16,6 +16,7 @@ class WorkspaceShellTest {
         val shell = WorkspaceShell(store, "Demo")
         assertEquals("/", shell.execute("pwd"))
         assertTrue(shell.execute("ls").contains("src/"))
+        assertFalse(shell.execute("ls").lines().contains("src"))
         assertEquals("/src", shell.execute("cd src"))
         assertEquals("/src", shell.execute("pwd"))
         assertTrue(shell.execute("cat notes.txt").contains("second keyword"))

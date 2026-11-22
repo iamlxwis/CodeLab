@@ -364,7 +364,11 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     ): Open {
         val all = store.files(name)
         val available = wanted.filter { it in all }
-        val default = if (autoOpen) all.firstOrNull { it == "main.js" } ?: all.firstOrNull() else null
+        val default = if (autoOpen) {
+            listOf("main.js", "index.html", "main.lua", "main.sql", "Main.java",
+                "main.py", "main.kt", "main.ts").firstOrNull { it in all }
+                ?: all.firstOrNull { !ProjectStore.isBinaryAsset(it) }
+        } else null
         val file = target?.takeIf { it in all } ?: available.firstOrNull() ?: default
         val text = try {
             file?.let { store.read(name, it) }.orEmpty()
