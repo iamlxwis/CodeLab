@@ -36,11 +36,11 @@ public class ProjectStoreHistoryTest {
         store.createProject("Test", "JavaScript");
         store.createFile("Test", "src/notes.txt", "Hello there\nHello again\n");
         ProjectStore.ReplacementSummary preview =
-            store.replaceAcrossProject("Test", "Hello", "Hi", true, false, false);
+            store.replaceAcrossProject("Test", "Hello ", "Hi ", true, false, false);
         assertEquals(2, preview.matches);
         assertEquals(1, preview.files);
         assertTrue(store.read("Test", "src/notes.txt").contains("Hello"));
-        store.replaceAcrossProject("Test", "Hello", "Hi", true, false, true);
+        store.replaceAcrossProject("Test", "Hello ", "Hi ", true, false, true);
         assertEquals("Hi there\nHi again\n", store.read("Test", "src/notes.txt"));
         assertFalse(store.versions("Test", "src/notes.txt").isEmpty());
     }
