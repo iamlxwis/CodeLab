@@ -20,7 +20,7 @@ internal fun RunTargetMenu(m: WorkspaceModel, onProjectSettings: () -> Unit) {
     Box {
         IconButton(
             onClick = { expanded = true },
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier.size(48.dp)
         ) { Icon(Icons.Default.ArrowDropDown, "Choose run target") }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             m.active?.let { path ->

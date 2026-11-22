@@ -58,7 +58,8 @@ internal fun WorkspaceTab(
                 append(path.substringAfterLast('/'))
                 if (dirty) append(" •")
             },
-            Modifier.combinedClickable(onClick = onSelect, onLongClick = { menu = true })
+            Modifier.heightIn(min = 48.dp)
+                .combinedClickable(onClick = onSelect, onLongClick = { menu = true })
                 .padding(horizontal = 8.dp, vertical = 14.dp),
             color = if (active) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -70,7 +71,7 @@ internal fun WorkspaceTab(
         Box {
             // Combined action/grip avoids pushing the active close button off phone screens.
             IconButton(onClick = { menu = true },
-                modifier = Modifier.size(40.dp).pointerInput(path, moveThreshold) {
+                modifier = Modifier.size(48.dp).pointerInput(path, moveThreshold) {
                     detectDragGesturesAfterLongPress(
                         onDragStart = { dragX = 0f },
                         onDragEnd = {
