@@ -72,10 +72,12 @@ class MainActivity : ComponentActivity() {
                 "Amber" -> if (dark) Color(0xffffc978) else Color(0xff936000)
                 else -> base.primary
             }
-            val scheme = base.copy(primary = accent, onPrimary = if (dark) Color(0xff101517) else Color.White,
-                primaryContainer = if (dark) accent.copy(alpha = .15f).compositeOver(base.surface)
-                    else accent.copy(alpha = .15f).compositeOver(base.surface),
-                onPrimaryContainer = accent)
+            val accentContainer = accent.copy(alpha = .15f).compositeOver(base.surface)
+            val scheme = base.copy(primary = accent,
+                onPrimary = if (dark) Color(0xff101517) else Color.White,
+                primaryContainer = accentContainer, onPrimaryContainer = accent,
+                secondary = accent, onSecondary = if (dark) Color(0xff101517) else Color.White,
+                secondaryContainer = accentContainer, onSecondaryContainer = accent)
             SideEffect {
                 @Suppress("DEPRECATION")
                 window.statusBarColor = scheme.surface.toArgb()

@@ -18,14 +18,20 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -100,25 +106,31 @@ fun CodeEditor(
     )
     Column(modifier) {
         Row(
-            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            verticalAlignment = Alignment.CenterVertically
+            Modifier.fillMaxWidth().height(48.dp).horizontalScroll(rememberScrollState())
+                .padding(horizontal = 5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
         ) {
-            EditorAction("Tab") { view?.insertAtSelection("    ") }
-            EditorAction("Undo") { view?.onTextContextMenuItem(android.R.id.undo) }
-            EditorAction("Redo") { view?.onTextContextMenuItem(android.R.id.redo) }
-            EditorAction("Find") { find = !find }
-            EditorAction("Go to") { lineInput = ""; lineError = false; lineDialog = true }
-            EditorAction(if (wordWrap) "Wrap on" else "Wrap off") {
+            EditorIcon(Icons.Default.Undo, "Undo") {
+                view?.onTextContextMenuItem(android.R.id.undo)
+            }
+            EditorIcon(Icons.Default.Redo, "Redo") {
+                view?.onTextContextMenuItem(android.R.id.redo)
+            }
+            EditorIcon(Icons.Default.Search, "Find and replace", selected = find) { find = !find }
+            EditorIcon(Icons.Default.FormatListNumbered, "Go to line") {
+                lineInput = ""; lineError = false; lineDialog = true
+            }
+            EditorIcon(Icons.Default.WrapText, "Toggle word wrap", selected = wordWrap) {
                 wordWrap = !wordWrap
                 preferences.edit().putBoolean("word-wrap", wordWrap).apply()
             }
-            EditorAction("Start") { view?.scrollToStart() }
-            EditorAction(if (symbols) "Symbols −" else "Symbols +") {
+            EditorIcon(Icons.Default.Code, "Show code symbols", selected = symbols) {
                 symbols = !symbols
                 preferences.edit().putBoolean("symbol-toolbar", symbols).apply()
             }
             Box {
-                EditorAction("${fontSize}sp") { settings = true }
+                EditorIcon(Icons.Default.TextFields, "Font size: ${fontSize}sp") { settings = true }
                 DropdownMenu(expanded = settings, onDismissRequest = { settings = false }) {
                     listOf(12, 14, 15, 16, 18, 20, 24).forEach {
                         DropdownMenuItem(text = { Text("Font size · ${it}sp") }, onClick = {
@@ -129,10 +141,12 @@ fun CodeEditor(
                     }
                 }
             }
+            EditorIcon(Icons.Default.Home, "Go to beginning of file") { view?.scrollToStart() }
         }
         if (symbols) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically) {
+                EditorAction("Tab") { view?.insertAtSelection("    ") }
                 listOf("{", "}", "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">").forEach { symbol ->
                     EditorAction(symbol) { view?.insertAtSelection(symbol) }
                 }
@@ -183,6 +197,17 @@ fun CodeEditor(
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+    }
+}
+
+@Composable
+private fun EditorIcon(icon: ImageVector, description: String, selected: Boolean = false,
+                       onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    IconButton(onClick = onClick, modifier = Modifier.size(41.dp)
+        .background(if (selected) colors.primaryContainer else Color.Transparent, RoundedCornerShape(10.dp))) {
+        Icon(icon, contentDescription = description, modifier = Modifier.size(20.dp),
+            tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant)
     }
 }
 

@@ -79,9 +79,15 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             if (sqlResult != null) {
                 Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     FilterChip(selected = tableMode, onClick = { tableMode = true },
-                        label = { Text("Results") })
+                        label = { Text("Results") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer))
                     FilterChip(selected = !tableMode, onClick = { tableMode = false },
-                        label = { Text("Output") })
+                        label = { Text("Output") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer))
                     Spacer(Modifier.weight(1f))
                     Text("${sqlResult.rows.size} rows", Modifier.align(Alignment.CenterVertically),
                         style = MaterialTheme.typography.labelSmall,
