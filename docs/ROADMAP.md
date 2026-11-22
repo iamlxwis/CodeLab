@@ -87,3 +87,12 @@ claimed from source extraction alone. Refer to the PR checks for verification.
   through the existing bounded, rollback-capable replace engine.
 - Still requires manual Unicode/very large project validation and exact preflight
   snapshot pinning if the project changes between preview and confirmation.
+
+### Workstream 3 — discoverable commands and quick actions (fifth slice)
+- Fuzzy command ranking and recent history; shortcut hints are shown only for
+  wired hardware commands (Ctrl+S, Ctrl+Enter, Ctrl+Shift+P).
+- Configurable per-context quick actions (up to six) appear in the existing
+  scrollable workspace toolbar and home actions sheet.
+- Search within the Settings action category remains scoped to settings.
+- An empty editor provides a contextual file-opening hint.
+- Manual TalkBack, large-font and keyboard-only audits remain outstanding.
