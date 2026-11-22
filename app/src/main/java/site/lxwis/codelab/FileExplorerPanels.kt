@@ -198,32 +198,52 @@ internal fun ProjectSearchDialog(m: WorkspaceModel, onDismiss: () -> Unit,
     onHit: (String, Int) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
     var matchCase by rememberSaveable { mutableStateOf(false) }
+    var folder by rememberSaveable { mutableStateOf("") }
+    var kind by remember { mutableStateOf<ProjectFileKind?>(null) }
+    val grouped = m.searchHits.groupBy { it.path }
     AlertDialog(onDismissRequest = onDismiss, title = { Text("Search project") },
         text = {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(),
-                    singleLine = true, label = { Text("Find text in all files") })
+                OutlinedTextField(query, { query = it; m.clearSearchHits() },
+                    Modifier.fillMaxWidth(), singleLine = true,
+                    label = { Text("Search text") })
+                SearchScopeFilters(m.folders, folder, kind,
+                    onFolder = { folder = it; m.clearSearchHits() },
+                    onKind = { kind = it; m.clearSearchHits() })
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = matchCase, onCheckedChange = { matchCase = it })
+                    Checkbox(checked = matchCase,
+                        onCheckedChange = { matchCase = it; m.clearSearchHits() })
                     Text("Match case")
                     Spacer(Modifier.weight(1f))
                     FilledTonalButton(enabled = query.isNotBlank(),
-                        onClick = { m.searchProject(query, matchCase) }) { Text("Search") }
+                        onClick = { m.searchProject(query, matchCase, folder, kind) }) {
+                        Text("Search")
+                    }
                 }
-                Text("${m.searchHits.size} results · first 200 matches",
+                Text("${m.searchHits.size} results in ${grouped.size} files · first 200 matches",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 LazyColumn(Modifier.heightIn(max = 340.dp)) {
-                    items(m.searchHits) { hit ->
-                        Column(Modifier.fillMaxWidth().clickable { onHit(hit.path, hit.line) }
-                            .padding(vertical = 9.dp)) {
-                            Text("${hit.path}:${hit.line}", fontFamily = FontFamily.Monospace,
+                    grouped.forEach { (path, hits) ->
+                        item(key = "group:$path") {
+                            Text("$path · ${hits.size}",
+                                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+                                style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.labelMedium)
-                            Text(hit.preview, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.bodySmall)
+                                fontFamily = FontFamily.Monospace)
                         }
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        items(hits, key = { "$path:${it.line}" }) { hit ->
+                            Column(Modifier.fillMaxWidth().clickable {
+                                onHit(hit.path, hit.line)
+                            }.padding(vertical = 9.dp)) {
+                                Text("Line ${hit.line}",
+                                    style = MaterialTheme.typography.labelSmall)
+                                Text(hit.preview, maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.bodySmall)
+                            }
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        }
                     }
                 }
             }
@@ -350,13 +370,15 @@ internal fun ProjectReplaceDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
     var replacement by rememberSaveable { mutableStateOf("") }
     var matchCase by rememberSaveable { mutableStateOf(false) }
     var regex by rememberSaveable { mutableStateOf(false) }
+    var folder by rememberSaveable { mutableStateOf("") }
+    var kind by remember { mutableStateOf<ProjectFileKind?>(null) }
     var confirm by remember { mutableStateOf(false) }
     if (confirm) AlertDialog(onDismissRequest = { confirm = false },
         title = { Text("Replace in multiple files?") },
         text = { Text("Replace " + (m.replaceSummary?.matches ?: 0) + " matches in " +
             (m.replaceSummary?.files ?: 0) + " files? Previous versions can be restored from file history.") },
         confirmButton = { TextButton(onClick = {
-            m.replaceAcrossFiles(query, replacement, matchCase, regex)
+            m.replaceAcrossFiles(query, replacement, matchCase, regex, folder, kind)
             confirm = false
             onDismiss()
         }) { Text("Replace all") } },
@@ -388,19 +410,20 @@ internal fun ProjectReplaceDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
                     })
                     Text("Regex", style = MaterialTheme.typography.labelMedium)
                 }
+                SearchScopeFilters(m.folders, folder, kind,
+                    onFolder = { folder = it; m.clearReplaceSummary() },
+                    onKind = { kind = it; m.clearReplaceSummary() })
                 Button(enabled = query.isNotBlank(),
-                    onClick = { m.previewReplaceAcrossFiles(query, replacement, matchCase, regex) },
+                    onClick = { m.previewReplaceAcrossFiles(query, replacement, matchCase,
+                        regex, folder, kind) },
                     modifier = Modifier.fillMaxWidth()) { Text("Preview changes") }
                 m.replaceSummary?.let { summary ->
                     Text("${summary.matches} matches in ${summary.files} files",
                         fontWeight = FontWeight.SemiBold)
-                    summary.paths.take(12).forEach { path ->
-                        Text(path, fontFamily = FontFamily.Monospace,
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                    if (summary.paths.size > 12)
-                        Text("… and ${summary.paths.size - 12} more files")
+                    ReplaceMatchPreview(m.replaceHits)
+                    if (summary.matches > m.replaceHits.size)
+                        Text("Showing first ${m.replaceHits.size} individual matches",
+                            style = MaterialTheme.typography.labelSmall)
                 }
             }
         },

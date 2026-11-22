@@ -318,9 +318,12 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
     var replaceSummary by mutableStateOf<ProjectStore.ReplacementSummary?>(null)
         private set
-    fun clearReplaceSummary() { replaceSummary = null }
+    var replaceHits by mutableStateOf(emptyList<ProjectStore.ReplaceHit>())
+        private set
+    fun clearReplaceSummary() { replaceSummary = null; replaceHits = emptyList() }
     var searchHits by mutableStateOf(emptyList<ProjectStore.SearchHit>())
         private set
+    fun clearSearchHits() { searchHits = emptyList() }
     var pendingLine by mutableStateOf<Int?>(null)
         private set
     fun consumeJump() { pendingLine = null }
@@ -932,34 +935,50 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun previewReplaceAcrossFiles(query: String, replacement: String,
-        matchCase: Boolean, regex: Boolean) {
+        matchCase: Boolean, regex: Boolean, folder: String = "",
+        kind: ProjectFileKind? = null) {
         val p = project ?: return
+        val allowed = scopedProjectFiles(files, folder, kind)
         work {
-            val summary = store.replaceAcrossProject(p, query, replacement, matchCase, regex, false)
-            val commit: () -> Unit = { replaceSummary = summary }
-            commit
-        }
-    }
-
-    fun replaceAcrossFiles(query: String, replacement: String,
-        matchCase: Boolean, regex: Boolean) {
-        val p = project ?: return
-        work {
-            val summary = store.replaceAcrossProject(p, query, replacement, matchCase, regex, true)
-            val opened = persist(load(p, tabs, active, allowUnavailable = true))
+            val summary = store.replaceAcrossProject(p, query, replacement, matchCase,
+                regex, false, allowed)
+            val hits = store.previewReplaceHits(p, query, replacement, matchCase,
+                regex, allowed)
             val commit: () -> Unit = {
-                apply(opened)
-                replaceSummary = summary
+                if (project == p) { replaceSummary = summary; replaceHits = hits }
             }
             commit
         }
     }
 
-    fun searchProject(query: String, caseSensitive: Boolean) {
+    fun replaceAcrossFiles(query: String, replacement: String,
+        matchCase: Boolean, regex: Boolean, folder: String = "",
+        kind: ProjectFileKind? = null) {
         val p = project ?: return
+        val allowed = scopedProjectFiles(files, folder, kind)
         work {
-            val found = store.searchText(p, query, caseSensitive)
-            val commit: () -> Unit = { searchHits = found }
+            val summary = store.replaceAcrossProject(p, query, replacement, matchCase,
+                regex, true, allowed)
+            val opened = persist(load(p, tabs, active, allowUnavailable = true))
+            val commit: () -> Unit = {
+                if (project == p) {
+                    apply(opened)
+                    replaceSummary = summary
+                    replaceHits = emptyList()
+                }
+            }
+            commit
+        }
+    }
+
+    fun searchProject(query: String, caseSensitive: Boolean,
+        folder: String = "", kind: ProjectFileKind? = null) {
+        val p = project ?: return
+        val allowed = scopedProjectFiles(files, folder, kind)
+        searchHits = emptyList()
+        work {
+            val found = store.searchText(p, query, caseSensitive, allowed)
+            val commit: () -> Unit = { if (project == p) searchHits = found }
             commit
         }
     }

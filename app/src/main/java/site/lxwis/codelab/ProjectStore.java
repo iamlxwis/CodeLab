@@ -627,6 +627,13 @@ public final class ProjectStore {
     public synchronized ReplacementSummary replaceAcrossProject(
             String projectName, String query, String replacement, boolean caseSensitive,
             boolean regex, boolean apply) throws IOException {
+        return replaceAcrossProject(projectName, query, replacement, caseSensitive,
+            regex, apply, files(projectName));
+    }
+
+    public synchronized ReplacementSummary replaceAcrossProject(
+            String projectName, String query, String replacement, boolean caseSensitive,
+            boolean regex, boolean apply, List<String> allowedPaths) throws IOException {
         if (query == null || query.trim().isEmpty() || query.length() > 200)
             throw new IOException("Enter a search phrase up to 200 characters.");
         if (replacement == null || replacement.length() > 2000)
@@ -645,7 +652,7 @@ public final class ProjectStore {
         LinkedHashMap<String, String> original = new LinkedHashMap<>();
         LinkedHashMap<String, String> modified = new LinkedHashMap<>();
         int totalMatches = 0;
-        for (String path : files(projectName)) {
+        for (String path : allowedPaths) {
             String content;
             try { content = read(projectName, path); }
             catch (IOException e) { continue; }
@@ -687,15 +694,68 @@ public final class ProjectStore {
             new ArrayList<>(modified.keySet()));
     }
 
+    /** Per-match replacement diff, including matches spanning multiple lines. Bounded to 100. */
+    public static final class ReplaceHit {
+        public final String path, before, after;
+        public final int line;
+        public ReplaceHit(String path, int line, String before, String after) {
+            this.path = path;
+            this.line = line;
+            this.before = before;
+            this.after = after;
+        }
+    }
+
+    private static String diffExcerpt(String content) {
+        String escaped = content.replace("\\r", "\\\\r").replace("\\n", "\\\\n");
+        return escaped.length() > 160 ? escaped.substring(0, 160) + "…" : escaped;
+    }
+
+    public synchronized List<ReplaceHit> previewReplaceHits(String projectName,
+            String query, String replacement, boolean caseSensitive, boolean regex,
+            List<String> allowedPaths) throws IOException {
+        if (query == null || query.trim().isEmpty() || query.length() > 200
+                || replacement == null || replacement.length() > 2000)
+            throw new IOException("Enter a valid search phrase and replacement.");
+        java.util.regex.Pattern pattern;
+        try {
+            pattern = java.util.regex.Pattern.compile(regex ? query :
+                java.util.regex.Pattern.quote(query), caseSensitive ? 0 :
+                java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.UNICODE_CASE);
+        } catch (java.util.regex.PatternSyntaxException e) {
+            throw new IOException("Invalid search pattern: " + e.getDescription());
+        }
+        if (pattern.matcher("").find()) throw new IOException("Empty matches cannot be replaced.");
+        List<ReplaceHit> hits = new ArrayList<>();
+        for (String path : allowedPaths) {
+            String content;
+            try { content = read(projectName, path); }
+            catch (IOException ignored) { continue; }
+            java.util.regex.Matcher matcher = pattern.matcher(content);
+            int line = 1, position = 0;
+            while (matcher.find()) {
+                while (position < matcher.start()) if (content.charAt(position++) == '\\n') line++;
+                hits.add(new ReplaceHit(path, line, diffExcerpt(matcher.group()),
+                    diffExcerpt(replacement)));
+                if (hits.size() >= 100) return hits;
+            }
+        }
+        return hits;
+    }
+
     /** Bounded, offline project-wide literal search. Invalid/binary files are skipped. */
     public synchronized List<SearchHit> searchText(String projectName, String query, boolean caseSensitive)
             throws IOException {
+        return searchText(projectName, query, caseSensitive, files(projectName));
+    }
+
+    public synchronized List<SearchHit> searchText(String projectName, String query,
+            boolean caseSensitive, List<String> allowedPaths) throws IOException {
         if (query == null || query.trim().isEmpty() || query.length() > 200)
             throw new IOException("Enter a search phrase (up to 200 characters).");
         List<SearchHit> hits = new ArrayList<>();
-        List<String> paths = files(projectName);
         String needle = caseSensitive ? query : query.toLowerCase(Locale.ROOT);
-        for (String path : paths) {
+        for (String path : allowedPaths) {
             String content;
             try { content = read(projectName, path); }
             catch (IOException ignored) { continue; }
