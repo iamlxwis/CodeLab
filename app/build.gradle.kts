@@ -32,6 +32,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.foundation:foundation")
     implementation("org.mozilla:rhino:1.7.15.1")
+    implementation("org.luaj:luaj-jse:3.0.1")
+    implementation("io.github.beanshell:bsh:2.1.1")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test:runner:1.6.2")

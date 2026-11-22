@@ -123,7 +123,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (p != null) Text(if (m.dirty) "Saving changes…" else "Local workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (p != null && (m.runner.running || m.active?.endsWith(".js", true) == true || m.active?.endsWith(".sql", true) == true)) {
+            if (p != null && (m.runner.running || m.active?.endsWith(".js", true) == true || m.active?.endsWith(".sql", true) == true || m.active?.endsWith(".lua", true) == true || m.active?.endsWith(".java", true) == true)) {
                 Button(
                     onClick = { if (m.runner.running) m.runner.stop() else m.run() },
                     enabled = !m.busy,
@@ -197,7 +197,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 PanelButton("Console", m.console) { m.console = true; m.preview = false }
                 if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
                     PanelButton("Preview", m.preview) { m.console = false; m.preview = true }
-                Text(when { m.active?.endsWith(".js",true) == true -> "JavaScript"; m.active?.endsWith(".sql",true) == true -> "SQLite"; m.active?.endsWith(".html",true) == true -> "HTML"; else -> "Text" }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(when { m.active?.endsWith(".js",true) == true -> "JavaScript"; m.active?.endsWith(".sql",true) == true -> "SQLite"; m.active?.endsWith(".lua",true) == true -> "Lua"; m.active?.endsWith(".java",true) == true -> "Java · beta"; m.active?.endsWith(".html",true) == true -> "HTML"; else -> "Text" }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         AnimatedVisibility(m.busy, enter = fadeIn(tween(130)), exit = fadeOut(tween(130))) {
@@ -251,7 +251,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Row(Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("Mint", "Blue", "Violet", "Amber").forEach { accent ->
-                        FilterChip(selected = m.accent == accent, onClick = { m.setAccent(accent) },
+                        FilterChip(selected = m.accent == accent, onClick = { m.chooseAccent(accent) },
                             label = { Text(accent) })
                     }
                 }
@@ -362,7 +362,7 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(Modifier.horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("JavaScript", "SQLite", "Web").forEach { option ->
+                    listOf("JavaScript", "Java", "Lua", "SQLite", "Web").forEach { option ->
                         FilterChip(selected = template == option, onClick = { template = option },
                             label = { Text(option) })
                     }

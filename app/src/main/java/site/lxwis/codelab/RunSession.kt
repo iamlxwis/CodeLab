@@ -24,7 +24,7 @@ class RunSession(context: Context) {
     fun run(name: String, source: String) {
         if (running) return
         transcript = ""
-        if (!name.endsWith(".js", true) && !name.endsWith(".sql", true)) { status = "Run a .js or .sql file"; return }
+        if (!name.endsWith(".js", true) && !name.endsWith(".sql", true) && !name.endsWith(".lua", true) && !name.endsWith(".java", true)) { status = "Run a .js, .sql, .lua or .java file"; return }
         if (source.length > 128_000) { status = "Script exceeds 128,000 characters"; return }
         running = true
         status = "Starting"
@@ -67,7 +67,9 @@ class RunSession(context: Context) {
         connection = listener
         try {
             val sql = name.endsWith(".sql", true)
-            val intent = Intent(app, if (sql) SqlRuntimeService::class.java else RuntimeService::class.java)
+            val lua = name.endsWith(".lua", true)
+            val java = name.endsWith(".java", true)
+            val intent = Intent(app, when { sql -> SqlRuntimeService::class.java; lua -> LuaRuntimeService::class.java; java -> JavaRuntimeService::class.java; else -> RuntimeService::class.java })
             val bound = if (Build.VERSION.SDK_INT >= 29 && !sql)
                 app.bindIsolatedService(intent, Context.BIND_AUTO_CREATE, "run${java.util.UUID.randomUUID().toString().replace("-", "")}", app.mainExecutor, listener)
             else app.bindService(intent, listener, Context.BIND_AUTO_CREATE)

@@ -1,6 +1,6 @@
 # CodeLab
 
-Native Android code editor and offline execution workspace. Built with Kotlin, Jetpack Compose, Android's standard file APIs, and an isolated JavaScript/SQLite runtime service.
+Native Android code editor and offline execution workspace. Built with Kotlin, Jetpack Compose, Android's standard file APIs, and an offline JavaScript/Lua/SQLite runtime services.
 
 ## Install an APK
 
@@ -18,6 +18,8 @@ CodeLab is early-access software; back up projects with **Export project ZIP** b
 | Offline JavaScript execution | Implemented via Mozilla Rhino interpreter |
 | JavaScript console output, errors and `readLine()` input | Implemented |
 | Offline SQLite | Implemented with Android SQLite (in-memory database per Run) |
+| Offline Lua | Implemented with LuaJ 3.0.1 (Lua 5.2 style), local Run console and readLine input |
+| Java beta | Offline BeanShell interpreter for basic Java statements and a single `main` method; no javac, compiled classes, or full Java API compatibility |
 | Stop, timeout, isolated runtime process | Implemented for supported runtimes |
 | Offline HTML/CSS/JavaScript preview | Implemented for local text assets |
 | Python, C++, Java, Rust compilation | Not implemented |
@@ -25,11 +27,11 @@ CodeLab is early-access software; back up projects with **Export project ZIP** b
 
 **JavaScript:** Open a `.js` file and tap Run. This is the Rhino JavaScript runtime, not Node.js or a web browser. Use `print("hello")`, `console.log()`, `console.error()`, and `readLine("Name?")`. Network and filesystem host APIs are not provided. A 60-second worker timeout and console output limit are enforced.
 
-**SQLite:** Create a `.sql` file, write SQL statements, and tap Run. CodeLab runs statements against a new in-memory SQLite database, prints query results and statement diagnostics, and returns a nonzero exit status for invalid SQL. State does **not** persist between runs. `ATTACH`, `DETACH`, and `VACUUM` are deliberately unavailable.
+**Java beta:** Create a Java starter project and Run `Main.java`. This is an offline BeanShell interpreter running basic Java statements inside the body of `public static void main(String[] args)`. It supports common expressions, loops, method calls, `System.out.println` and `System.in` input where compatible. It is **not javac**, does not compile a JVM class, and does not yet support arbitrary custom class definitions, multi-file Java projects, or all standard Java language features. The Java runtime runs in a dedicated isolated process and remains subject to timeout and output limits. This interpreter is not a proven security sandbox.\n\n**Lua:** Create a Lua project or open a `.lua` file and tap Run. Lua executes entirely offline using the LuaJ interpreter. Use `print('Hello')`, `readLine('Name?')` or `input('Name?')` for interactive input, and Lua's built-in string, table, math and coroutine features. Host filesystem, OS, module-loading, and Java reflection APIs are not exposed. This is LuaJ-compatible Lua 5.2-style behavior, not a full native Lua installation. The runtime is independently stopped by the worker service's 60-second timeout.\n\n**SQLite:** Create a `.sql` file, write SQL statements, and tap Run. CodeLab runs statements against a new in-memory SQLite database, prints query results and statement diagnostics, and returns a nonzero exit status for invalid SQL. State does **not** persist between runs. `ATTACH`, `DETACH`, and `VACUUM` are deliberately unavailable.
 
 ## Project templates and offline web preview
 
-The new-project dialog includes JavaScript, SQLite, and Web starter projects. Web projects contain `index.html`, `style.css`, and `script.js`. Open an HTML file and choose **Preview** to render the page in a restricted embedded WebView. Relative project CSS/JS/text assets load from local app storage; external network resources are blocked. The preview can display browser `console.log` messages and refresh its document.
+The new-project dialog includes JavaScript, Java beta, Lua, SQLite, and Web starter projects. Web projects contain `index.html`, `style.css`, and `script.js`. Open an HTML file and choose **Preview** to render the page in a restricted embedded WebView. Relative project CSS/JS/text assets load from local app storage; external network resources are blocked. The preview can display browser `console.log` messages and refresh its document.
 
 ## Build locally
 
@@ -60,4 +62,4 @@ JavaScript executes in an Android isolated process. The SQLite runner uses a sep
 
 ## Privacy & licensing
 
-No account, analytics SDK, ads, or remote code execution service are required. Project files stay on-device unless exported. The bundled Rhino engine is distributed with its license and notices under `app/src/main/assets/licenses/rhino/`. Verify third-party licenses before redistribution.
+No account, analytics SDK, ads, or remote code execution service are required. Project files stay on-device unless exported. BeanShell 2.1.1 is available under the Apache License 2.0 license. LuaJ 3.0.1 is available under the MIT license and bundled as a Maven dependency. The bundled Rhino engine is distributed with its license and notices under `app/src/main/assets/licenses/rhino/`. Verify third-party licenses before redistribution.

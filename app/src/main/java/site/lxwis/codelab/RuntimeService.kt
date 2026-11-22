@@ -86,7 +86,14 @@ open class RuntimeService : Service() {
                     return value
                 }
             }
-            val code = try { if (name.endsWith(".sql", true)) SqlEngine.execute(name, source, io) else JsEngine.execute(name, source, io) }
+            val code = try {
+                when {
+                    name.endsWith(".sql", true) -> SqlEngine.execute(name, source, io)
+                    name.endsWith(".lua", true) -> LuaEngine.execute(name, source, io)
+                    name.endsWith(".java", true) -> JavaEngine.execute(name, source, io)
+                    else -> JsEngine.execute(name, source, io)
+                }
+            }
                 catch (_: OutputLimit) { flush(); emit(OUTPUT, "! Console output limit reached\n"); 1 }
                 catch (e: Exception) { flush(); emit(OUTPUT, "! ${e.javaClass.simpleName}\n"); 1 }
             flush()
@@ -95,7 +102,7 @@ open class RuntimeService : Service() {
                 if (!finished) { finished = true; emit(FINISH, "", code) }
                 client = null
             }
-        }, "CodeLab-JavaScript").start()
+        }, "CodeLab-OfflineRuntime").start()
     }
 
     override fun onDestroy() {

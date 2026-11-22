@@ -92,13 +92,32 @@ public final class ProjectStore {
     }
 
     public synchronized String createProject(String name, String template) throws IOException {
-        if (!Arrays.asList("JavaScript", "SQLite", "Web").contains(template))
+        if (!Arrays.asList("JavaScript", "Java", "Lua", "SQLite", "Web").contains(template))
             throw new IllegalArgumentException("Unsupported project template.");
         File dest = new File(projects, segment(name));
         requireNew(dest);
         File stage = Files.createTempDirectory(scratch.toPath(), "project-").toFile();
         try {
-            if ("SQLite".equals(template)) {
+            if ("Java".equals(template)) {
+                writeText(new File(stage, "Main.java"),
+                    "// Java beta: basic main-method console programs (interpreted locally).\n" +
+                    "public class Main {\n" +
+                    "    public static void main(String[] args) {\n" +
+                    "        int total = 0;\n" +
+                    "        for (int i = 1; i <= 4; i++) { total += i; }\n" +
+                    "        System.out.println(\"Hello from CodeLab!\");\n" +
+                    "        System.out.println(\"Sum = \" + total);\n" +
+                    "    }\n" +
+                    "}\n");
+            } else if ("Lua".equals(template)) {
+                writeText(new File(stage, "main.lua"),
+                    "-- CodeLab offline Lua (LuaJ). Press Run.\n" +
+                    "local name = readLine('What is your name? ')\n" +
+                    "print('Hello, ' .. name .. '!')\n" +
+                    "for i = 1, 3 do\n" +
+                    "    print('Count ' .. i)\n" +
+                    "end\n");
+            } else if ("SQLite".equals(template)) {
                 writeText(new File(stage, "main.sql"),
                     "-- Local SQLite: press Run to execute this file.\n" +
                     "CREATE TABLE tasks (id INTEGER PRIMARY KEY, title TEXT);\n" +

@@ -99,6 +99,14 @@ public class ProjectStoreTest {
         assertEquals(Collections.singletonList("main.sql"), store.files("Queries"));
         assertTrue(store.read("Queries", "main.sql").contains("CREATE TABLE"));
 
+        store.createProject("JavaScripts", "Java");
+        assertEquals(Collections.singletonList("Main.java"), store.files("JavaScripts"));
+        assertTrue(store.read("JavaScripts", "Main.java").contains("public static void main"));
+
+        store.createProject("LuaScripts", "Lua");
+        assertEquals(Collections.singletonList("main.lua"), store.files("LuaScripts"));
+        assertTrue(store.read("LuaScripts", "main.lua").contains("readLine"));
+
         store.createProject("Website", "Web");
         assertEquals(Arrays.asList("index.html", "script.js", "style.css"), store.files("Website"));
         assertTrue(store.read("Website", "index.html").contains("script.js"));

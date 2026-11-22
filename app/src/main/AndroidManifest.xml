@@ -9,6 +9,10 @@
         </activity>
         <service android:name=".RuntimeService" android:exported="false"
             android:isolatedProcess="true" android:process=":js"/>
+        <service android:name=".JavaRuntimeService" android:exported="false"
+            android:isolatedProcess="true" android:process=":java"/>
+        <service android:name=".LuaRuntimeService" android:exported="false"
+            android:isolatedProcess="true" android:process=":lua"/>
         <service android:name=".SqlRuntimeService" android:exported="false" android:process=":sql"/>
     </application>
 </manifest>

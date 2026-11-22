@@ -223,7 +223,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         preferences.edit().putString("mode", mode).apply()
     }
 
-    fun setAccent(value: String) {
+    fun chooseAccent(value: String) {
         if (value !in listOf("Mint", "Blue", "Violet", "Amber")) return
         accent = value
         preferences.edit().putString("accent", value).apply()
