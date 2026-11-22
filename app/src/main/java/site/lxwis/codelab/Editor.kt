@@ -22,6 +22,11 @@ import android.widget.EditText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -68,6 +73,10 @@ fun CodeEditor(
     var indentWidth by remember { mutableStateOf(preferences.getInt("indent-width", 4)) }
     var useTabs by remember { mutableStateOf(preferences.getBoolean("indent-tabs", false)) }
     var completionMenu by remember { mutableStateOf(false) }
+    var minimap by remember { mutableStateOf(preferences.getBoolean("minimap", false)) }
+    var diagnosticMarkers by remember {
+        mutableStateOf(preferences.getBoolean("diagnostic-markers", true))
+    }
     var issuesMenu by remember { mutableStateOf(false) }
     var readOnly by remember { mutableStateOf(false) }
     var view by remember { mutableStateOf<SourceView?>(null) }
@@ -287,6 +296,18 @@ fun CodeEditor(
                         onClick = { showLineNumbers = !showLineNumbers
                             preferences.edit().putBoolean("line-numbers", showLineNumbers).apply()
                             settings = false })
+                    DropdownMenuItem(text = { Text(if (minimap) "Hide minimap" else "Show minimap") },
+                        onClick = {
+                            minimap = !minimap
+                            preferences.edit().putBoolean("minimap", minimap).apply()
+                            settings = false
+                        })
+                    DropdownMenuItem(text = { Text(if (diagnosticMarkers) "Hide structural hints" else "Show structural hints") },
+                        onClick = {
+                            diagnosticMarkers = !diagnosticMarkers
+                            preferences.edit().putBoolean("diagnostic-markers", diagnosticMarkers).apply()
+                            settings = false
+                        })
                     DropdownMenuItem(text = { Text(if (showActiveLine) "Hide active line" else "Highlight active line") },
                         onClick = { showActiveLine = !showActiveLine
                             preferences.edit().putBoolean("active-line", showActiveLine).apply()
@@ -515,6 +536,7 @@ fun CodeEditor(
                 color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
             if (result.isNotEmpty()) Text(result, Modifier.padding(horizontal = 12.dp), style = MaterialTheme.typography.labelSmall)
         }
+        Row(Modifier.fillMaxWidth().weight(1f)) {
         AndroidView(
             factory = {
                 SourceView(it, filename).apply {
@@ -525,13 +547,14 @@ fun CodeEditor(
                     view = this
                 }
             },
-            modifier = Modifier.fillMaxWidth().weight(1f),
+            modifier = Modifier.weight(1f).fillMaxHeight(),
             update = { editor ->
                 editor.appearance(fontSize, foreground, background, secondary, accent, dark)
                 editor.setCodeWrap(wordWrap)
                 editor.setGutterOptions(showLineNumbers, showActiveLine)
                 editor.setIndentPolicy(indentWidth, useTabs)
                 editor.setSyntaxPalette(syntaxPalette)
+                editor.setStructuralHints(diagnosticMarkers)
                 editor.findShortcut = { find = true }
                 editor.lineShortcut = { lineInput = ""; lineDialog = true }
                 editor.bookmarkShortcut = { editor.toggleBookmark() }
@@ -544,6 +567,10 @@ fun CodeEditor(
                 if (editor.sourceSnapshot != text) editor.replaceSource(text)
             }
         )
+        if (minimap) EditorMinimap(text = text, onNavigate = { line ->
+            view?.goToLogicalLine(line)
+        })
+        }
         Row(Modifier.fillMaxWidth().height(28.dp).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
@@ -576,6 +603,34 @@ private fun EditorAction(label: String, onClick: () -> Unit) {
     }
 }
 
+@Composable
+private fun EditorMinimap(text: String, onNavigate: (Int) -> Unit) {
+    val ink = MaterialTheme.colorScheme.onSurfaceVariant
+    val surface = MaterialTheme.colorScheme.surfaceContainer
+    val sample = remember(text) { text.lineSequence().map { it.trimEnd().length }.take(240).toList() }
+    val allLines = remember(text) { text.count { it == '\n' } + 1 }
+    Canvas(Modifier.width(34.dp).fillMaxHeight()
+        .background(surface)
+        .pointerInput(allLines) {
+            detectTapGestures { offset ->
+                val ratio = (offset.y / size.height.coerceAtLeast(1)).coerceIn(0f, 1f)
+                onNavigate((ratio * allLines).toInt().coerceIn(1, allLines))
+            }
+        }) {
+        val total = sample.size.coerceAtLeast(1)
+        val step = size.height / total
+        val sampleColor = ink.copy(alpha = .38f)
+        sample.forEachIndexed { index, length ->
+            val y = index * step + 2f
+            val width = (length.coerceAtMost(48) / 48f) * (size.width - 7f)
+            if (width > 0f) drawRect(
+                sampleColor, topLeft = Offset(3f, y),
+                size = Size(width, step.coerceAtLeast(.8f).coerceAtMost(2.3f))
+            )
+        }
+    }
+}
+
 private class SyntaxInk(color: Int) : ForegroundColorSpan(color)
 
 internal class SourceView(context: Context, filename: String) : EditText(context) {
@@ -583,11 +638,33 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     var selectionChanged: ((Int, Int) -> Unit)? = null
     private var codeWrapped: Boolean? = null
     private val bookmarks = sortedSetOf<Int>()
+    private var diagnostics = emptySet<Int>()
+    private var hintsEnabled = true
+    private val hintJob = Runnable {
+        diagnostics = if (hintsEnabled && sourceSnapshot.length < 32000
+            && language in setOf("js", "mjs", "ts", "kt", "kts", "java", "c", "cpp", "cs", "css", "go", "rs")) {
+            CodeAnalysis.bracketIssues(sourceSnapshot).map { it.line }.toSet()
+        } else emptySet()
+        invalidate()
+    }
+    fun setStructuralHints(enabled: Boolean) {
+        if (hintsEnabled == enabled) return
+        hintsEnabled = enabled
+        removeCallbacks(hintJob)
+        postDelayed(hintJob, 250)
+    }
     fun bookmarkedLines(): List<Int> = bookmarks.toList()
     fun toggleBookmark() {
         val line = text.substring(0, selectionStart.coerceIn(0, length())).count { it == '\n' } + 1
         if (!bookmarks.add(line)) bookmarks.remove(line)
+        persistBookmarks()
         invalidate()
+    }
+    private fun persistBookmarks() {
+        positionKey?.let { key ->
+            context.getSharedPreferences("editor-positions", Context.MODE_PRIVATE)
+                .edit().putString("$key|bookmarks", bookmarks.joinToString(",")).apply()
+        }
     }
     fun goToLogicalLine(number: Int) {
         if (number < 1) return
@@ -712,6 +789,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     private var highlightedStart = -1
     private var highlightedEnd = -1
     private fun dp(value: Int) = (value * resources.displayMetrics.density).roundToInt()
+    private fun dp(value: Float) = (value * resources.displayMetrics.density)
 
     init {
         background = null
@@ -733,6 +811,8 @@ internal class SourceView(context: Context, filename: String) : EditText(context
                 sourceSnapshot = s?.toString().orEmpty()
                 if (!syncing) changed?.invoke(sourceSnapshot)
                 scheduleHighlight(true)
+                removeCallbacks(hintJob)
+                postDelayed(hintJob, 380)
             }
         })
         ready = true
@@ -782,6 +862,10 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     fun restorePosition(key: String) {
         positionKey = key
         val prefs = context.getSharedPreferences("editor-positions", Context.MODE_PRIVATE)
+        bookmarks.clear()
+        prefs.getString("$key|bookmarks", "")?.split(",")?.forEach {
+            it.toIntOrNull()?.takeIf { line -> line > 0 }?.let(bookmarks::add)
+        }
         setSelection(prefs.getInt("$key|start", 0).coerceIn(0, length()),
             prefs.getInt("$key|end", 0).coerceIn(0, length()))
         pendingScroll = 0 to prefs.getInt("$key|y", 0)
@@ -1027,6 +1111,12 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             if (!showNumbers) break
             linePaint.color = if (showCurrentLine && line == selected) active else muted
             linePaint.alpha = if (line == selected) 255 else 170
+            if (diagnostics.contains(line + 1)) {
+                fill.color = 0xffdc6a6a.toInt()
+                canvas.drawCircle((scrollX + dp(5)).toFloat(),
+                    (totalPaddingTop + lines.getLineBaseline(line) - dp(4)).toFloat(),
+                    dp(2.5f).toFloat(), fill)
+            }
             if (bookmarks.contains(line + 1)) {
                 fill.color = active
                 canvas.drawCircle((scrollX + dp(7)).toFloat(),
@@ -1050,6 +1140,8 @@ internal class SourceView(context: Context, filename: String) : EditText(context
 
     override fun onDetachedFromWindow() {
         removeCallbacks(highlightJob)
+        removeCallbacks(hintJob)
+        persistBookmarks()
         positionKey?.let { key ->
             context.getSharedPreferences("editor-positions", Context.MODE_PRIVATE).edit()
                 .putInt("$key|start", selectionStart).putInt("$key|end", selectionEnd)
