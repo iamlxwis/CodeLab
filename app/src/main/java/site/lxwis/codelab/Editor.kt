@@ -49,6 +49,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Composable
 fun CodeEditor(
@@ -286,7 +291,12 @@ fun CodeEditor(
             Box {
                 EditorIcon(Icons.Default.List, "File symbol outline") { outlineMenu = true }
                 DropdownMenu(expanded = outlineMenu, onDismissRequest = { outlineMenu = false }) {
-                    val outline = remember(text) { CodeAnalysis.symbols(text) }
+                    val outline by produceState(initialValue = emptyList<CodeAnalysis.Symbol>(), text, outlineMenu) {
+                        if (outlineMenu) {
+                            delay(100)
+                            value = withContext(Dispatchers.Default) { CodeAnalysis.symbols(text).take(400) }
+                        }
+                    }
                     if (outline.isEmpty()) DropdownMenuItem(
                         text = { Text("No symbols detected") }, enabled = false, onClick = {})
                     outline.forEach { (line, name) ->
@@ -786,8 +796,15 @@ private fun EditorAction(label: String, onClick: () -> Unit) {
 private fun EditorMinimap(text: String, onNavigate: (Int) -> Unit) {
     val ink = MaterialTheme.colorScheme.onSurfaceVariant
     val surface = MaterialTheme.colorScheme.surfaceContainer
-    val sample = remember(text) { text.lineSequence().map { it.trimEnd().length }.take(240).toList() }
-    val allLines = remember(text) { text.count { it == '\n' } + 1 }
+    val model by produceState(initialValue = Pair(emptyList<Int>(), 1), text) {
+        delay(180)
+        value = withContext(Dispatchers.Default) {
+            Pair(text.lineSequence().map { it.trimEnd().length }.take(240).toList(),
+                text.count { it == '\n' } + 1)
+        }
+    }
+    val sample = model.first
+    val allLines = model.second
     ComposeCanvas(Modifier.width(34.dp).fillMaxHeight()
         .background(surface)
         .pointerInput(allLines) {
@@ -819,18 +836,33 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     private val bookmarks = sortedSetOf<Int>()
     private var diagnostics = emptySet<Int>()
     private var hintsEnabled = true
+    private var hintGeneration = 0
+    private var hintTask: Future<*>? = null
     private val hintJob = Runnable {
-        diagnostics = if (hintsEnabled && sourceSnapshot.length < 32000
-            && language in setOf("js", "mjs", "ts", "kt", "kts", "java", "c", "cpp", "cs", "css", "go", "rs")) {
-            CodeAnalysis.bracketIssues(sourceSnapshot).map { it.line }.toSet()
-        } else emptySet()
-        invalidate()
+        val snapshot = sourceSnapshot
+        val generation = ++hintGeneration
+        hintTask?.cancel(true)
+        val shouldCheck = hintsEnabled && snapshot.length < 32000 &&
+            language in setOf("js", "mjs", "ts", "kt", "kts", "java", "c", "cpp", "cs", "css", "go", "rs")
+        if (!shouldCheck) {
+            diagnostics = emptySet()
+            invalidate()
+        } else {
+            hintTask = background.submit(Runnable {
+                val issues = CodeAnalysis.bracketIssues(snapshot).map { it.line }.toSet()
+                post(Runnable applyHints@ {
+                    if (generation != hintGeneration || snapshot != sourceSnapshot) return@applyHints
+                    diagnostics = issues
+                    invalidate()
+                })
+            })
+        }
     }
     fun setStructuralHints(enabled: Boolean) {
         if (hintsEnabled == enabled) return
         hintsEnabled = enabled
         removeCallbacks(hintJob)
-        postDelayed(hintJob, 250)
+        postDelayed(hintJob, 500)
     }
     fun bookmarkedLines(): List<Int> = bookmarks.toList()
     fun toggleBookmark() {
@@ -971,9 +1003,16 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         "lua", "sql" -> "--[^\n]*|" + tokenPattern
         else -> tokenPattern
     })
+    private val background = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "CodeLab-editor-analysis").apply { isDaemon = true }
+    }
+    private var highlightTask: Future<*>? = null
+    private var highlightGeneration = 0
     private val highlightJob = Runnable { highlightVisible() }
     private var highlightedStart = -1
     private var highlightedEnd = -1
+    private var highlightedSnapshot = ""
+    private data class HighlightMark(val start: Int, val end: Int, val ink: Int)
     private fun dp(value: Int) = (value * resources.displayMetrics.density).roundToInt()
     private fun dp(value: Float) = (value * resources.displayMetrics.density)
 
@@ -998,7 +1037,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
                 if (!syncing) changed?.invoke(sourceSnapshot)
                 scheduleHighlight(true)
                 removeCallbacks(hintJob)
-                postDelayed(hintJob, 380)
+                postDelayed(hintJob, 650)
             }
         })
         ready = true
@@ -1344,6 +1383,11 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     override fun onDetachedFromWindow() {
         removeCallbacks(highlightJob)
         removeCallbacks(hintJob)
+        ++highlightGeneration
+        ++hintGeneration
+        highlightTask?.cancel(true)
+        hintTask?.cancel(true)
+        background.shutdownNow()
         persistBookmarks()
         positionKey?.let { key ->
             context.getSharedPreferences("editor-positions", Context.MODE_PRIVATE).edit()
@@ -1354,73 +1398,108 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
 
     private fun scheduleHighlight(force: Boolean) {
+        // Ignore individual scroll ticks while the visible viewport remains within the
+        // highlighted margin. Recompute only after crossing the highlighted window.
+        if (!force && highlightedStart >= 0) {
+            val lines = layout
+            if (lines != null && lines.lineCount > 0) {
+                val first = lines.getLineStart(lines.getLineForVertical(scrollY.coerceAtLeast(0)))
+                val last = lines.getLineEnd(lines.getLineForVertical((scrollY + height).coerceAtLeast(0)))
+                if (first >= highlightedStart && last <= highlightedEnd) return
+            }
+        }
         if (force) highlightedStart = -1
+        ++highlightGeneration
+        highlightTask?.cancel(true)
         removeCallbacks(highlightJob)
-        postDelayed(highlightJob, 45)
+        postDelayed(highlightJob, if (force) 110 else 100)
     }
 
     private fun highlightVisible() {
         val lines = layout ?: return
-        val source = text
-        val first = (lines.getLineForVertical(scrollY) - 14).coerceAtLeast(0)
-        val last = (lines.getLineForVertical(scrollY + height) + 14).coerceAtMost(lines.lineCount - 1)
+        if (lines.lineCount == 0) return
+        val first = (lines.getLineForVertical(scrollY.coerceAtLeast(0)) - 14).coerceAtLeast(0)
+        val last = (lines.getLineForVertical((scrollY + height).coerceAtLeast(0)) + 14)
+            .coerceAtMost(lines.lineCount - 1)
         val start = lines.getLineStart(first)
-        val end = minOf(lines.getLineEnd(last), start + 24000, source.length)
-        if (start == highlightedStart && end == highlightedEnd) return
-        highlightedStart = start
-        highlightedEnd = end
-        source.getSpans(0, source.length, SyntaxInk::class.java).forEach(source::removeSpan)
-        if (language !in supportedExtensions || start >= end) return
-        val snippet = source.subSequence(start, end).toString()
-        val colors = when (syntaxPalette) {
-            "Neon" -> if (darkMode) neonDarkInk else neonLightInk
-            "Monochrome" -> if (darkMode) monoDarkInk else monoLightInk
-            else -> if (darkMode) darkInk else lightInk
-        }
-        if (language == "html" || language == "htm") {
-            htmlTags.findAll(snippet).forEach { tag ->
-                val value = tag.value
-                if (value.startsWith("<!--")) {
-                    source.setSpan(SyntaxInk(colors[0]), start + tag.range.first,
-                        start + tag.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                } else {
-                    val name = htmlTagName.find(value)
-                    if (name != null) source.setSpan(SyntaxInk(colors[3]),
-                        start + tag.range.first + name.range.first,
-                        start + tag.range.first + name.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    htmlAttributes.findAll(value).forEach { attr ->
-                        source.setSpan(SyntaxInk(colors[2]),
-                            start + tag.range.first + attr.range.first,
-                            start + tag.range.first + attr.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    }
-                    htmlStrings.findAll(value).forEach { quoted ->
-                        source.setSpan(SyntaxInk(colors[1]),
-                            start + tag.range.first + quoted.range.first,
-                            start + tag.range.first + quoted.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    }
-                }
-            }
+        val end = minOf(lines.getLineEnd(last), start + 24000, length())
+        val snapshot = sourceSnapshot
+        if (start == highlightedStart && end == highlightedEnd &&
+            snapshot == highlightedSnapshot) return
+        val ticket = ++highlightGeneration
+        highlightTask?.cancel(true)
+        if (start >= end || language !in supportedExtensions) {
+            text?.getSpans(0, length(), SyntaxInk::class.java)?.forEach(text::removeSpan)
+            highlightedStart = start
+            highlightedEnd = end
+            highlightedSnapshot = snapshot
             return
         }
-        if (language == "css") {
-            cssNames.findAll(snippet).forEach { property ->
-                source.setSpan(SyntaxInk(colors[3]), start + property.range.first,
-                    start + property.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        // Copy only a viewport-sized fragment on the UI thread. Regex parsing and
+        // structural analysis run on the dedicated, cancellable worker.
+        val fragment = snapshot.substring(start.coerceAtMost(snapshot.length), end.coerceAtMost(snapshot.length))
+        val colors = when (syntaxPalette) {
+            "Neon", "Dracula" -> if (darkMode) neonDarkInk else neonLightInk
+            "Monochrome" -> if (darkMode) monoDarkInk else monoLightInk
+            "One Dark" -> darkInk
+            "Monokai" -> neonDarkInk
+            "GitHub Light" -> lightInk
+            else -> if (darkMode) darkInk else lightInk
+        }.copyOf()
+        highlightTask = background.submit(Runnable {
+            val marks = ArrayList<HighlightMark>()
+            fun add(from: Int, to: Int, kind: Int) {
+                if (to > from && marks.size < 3200) marks.add(HighlightMark(start + from, start + to, colors[kind]))
             }
-        }
-        tokens.findAll(snippet).forEach { token ->
-            val value = token.value
-            val type = when {
-                value.startsWith("//") || value.startsWith("/*") -> 0
-                value.startsWith("#") -> if (language in hashCommentLanguages) 0 else return@forEach
-                value.startsWith("--") -> if (language == "sql" || language == "lua") 0 else return@forEach
-                value[0] == '"' || value[0] == '\'' || value[0] == '`' -> 1
-                value[0].isDigit() -> 2
-                value.lowercase() in keywords -> 3
-                else -> return@forEach
+            if (language == "html" || language == "htm") {
+                for (tag in htmlTags.findAll(fragment)) {
+                    if (Thread.currentThread().isInterrupted) return@Runnable
+                    val value = tag.value
+                    if (value.startsWith("<!--")) {
+                        add(tag.range.first, tag.range.last + 1, 0)
+                    } else {
+                        htmlTagName.find(value)?.let { name ->
+                            add(tag.range.first + name.range.first, tag.range.first + name.range.last + 1, 3)
+                        }
+                        for (attr in htmlAttributes.findAll(value))
+                            add(tag.range.first + attr.range.first, tag.range.first + attr.range.last + 1, 2)
+                        for (quoted in htmlStrings.findAll(value))
+                            add(tag.range.first + quoted.range.first, tag.range.first + quoted.range.last + 1, 1)
+                    }
+                }
+            } else {
+                if (language == "css") {
+                    for (property in cssNames.findAll(fragment))
+                        add(property.range.first, property.range.last + 1, 3)
+                }
+                for (token in tokens.findAll(fragment)) {
+                    if (Thread.currentThread().isInterrupted) return@Runnable
+                    val value = token.value
+                    val kind = when {
+                        value.startsWith("//") || value.startsWith("/*") -> 0
+                        value.startsWith("#") -> if (language in hashCommentLanguages) 0 else continue
+                        value.startsWith("--") -> if (language in setOf("sql", "lua")) 0 else continue
+                        value[0] == '"' || value[0] == '\'' || value[0] == '`' -> 1
+                        value[0].isDigit() -> 2
+                        value.lowercase() in keywords -> 3
+                        else -> continue
+                    }
+                    add(token.range.first, token.range.last + 1, kind)
+                }
             }
-            source.setSpan(SyntaxInk(colors[type]), start + token.range.first, start + token.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
+            post(Runnable applySpans@ {
+                if (ticket != highlightGeneration || !isAttachedToWindow || sourceSnapshot != snapshot)
+                    return@applySpans
+                val editable = text ?: return@applySpans
+                editable.getSpans(0, editable.length, SyntaxInk::class.java).forEach(editable::removeSpan)
+                for (mark in marks) if (mark.end <= editable.length) {
+                    editable.setSpan(SyntaxInk(mark.ink), mark.start, mark.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
+                highlightedStart = start
+                highlightedEnd = end
+                highlightedSnapshot = snapshot
+            })
+        })
     }
 
     companion object {
