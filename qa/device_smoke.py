@@ -180,7 +180,7 @@ def main():
     tap_node(wait_for("Browse", contains=True))
     tap("Search language or extension")
     adb("shell", "input", "text", "Python")
-    tap("Python")
+    tap("Select Python")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "PySmoke")
     # Ensure the software keyboard does not obscure the sheet's Create action.
