@@ -196,6 +196,18 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
     var accent by mutableStateOf(preferences.getString("accent", "Mint") ?: "Mint")
         private set
+    var projectMetadata by mutableStateOf(
+        ProjectStore.ProjectMetadata("Imported", "", ""))
+        private set
+    fun configureProject(description: String, entrypoint: String) {
+        val p = project ?: return
+        work {
+            val updated = store.configureProject(p, description, entrypoint)
+            val commit: () -> Unit = { projectMetadata = updated }
+            commit
+        }
+    }
+
     internal var gitState by mutableStateOf<GitWorkspace.Snapshot?>(null)
         private set
     fun gitRefresh() {
@@ -318,7 +330,9 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     private data class Open(val project: String, val files: List<String>,
         val tabs: List<String>, val file: String?, val text: String,
-        val folders: List<String> = emptyList())
+        val folders: List<String> = emptyList(),
+        val metadata: ProjectStore.ProjectMetadata =
+            ProjectStore.ProjectMetadata("Imported", "", ""))
 
     private fun load(
         name: String, wanted: List<String>, target: String?,
@@ -332,15 +346,18 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             file?.let { store.read(name, it) }.orEmpty()
         } catch (e: java.io.IOException) {
             if (!allowUnavailable) throw e
-            return Open(name, all, available - listOfNotNull(file).toSet(), null, "", store.folders(name))
+            return Open(name, all, available - listOfNotNull(file).toSet(), null,
+                "", store.folders(name), store.metadata(name))
         }
-        return Open(name, all, (available + listOfNotNull(file)).distinct(), file, text, store.folders(name))
+        return Open(name, all, (available + listOfNotNull(file)).distinct(), file,
+            text, store.folders(name), store.metadata(name))
     }
 
     private fun apply(open: Open) {
         project = open.project
         files = open.files
         folders = open.folders
+        projectMetadata = open.metadata
         tabs = open.tabs
         active = open.file
         source = open.text

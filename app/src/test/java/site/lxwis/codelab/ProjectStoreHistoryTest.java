@@ -21,6 +21,20 @@ public class ProjectStoreHistoryTest {
         assertEquals(before, store.read("History", "main.js"));
     }
 
+    @Test public void projectSettingsSurviveDuplicationAndArchiveBackup() throws Exception {
+        ProjectStore store = new ProjectStore(temp.newFolder("metadata-root"));
+        store.createProject("Original", "JavaScript");
+        assertEquals("JavaScript", store.metadata("Original").template);
+        store.configureProject("Original", "A small example", "main.js");
+        store.duplicateProject("Original", "Duplicated");
+        assertEquals("A small example", store.metadata("Duplicated").description);
+        assertEquals("main.js", store.metadata("Duplicated").entrypoint);
+        java.io.ByteArrayOutputStream zip = new java.io.ByteArrayOutputStream();
+        store.exportZip("Original", zip);
+        store.importZip("Imported", new java.io.ByteArrayInputStream(zip.toByteArray()));
+        assertEquals("A small example", store.metadata("Imported").description);
+    }
+
     @Test public void deletedFileCanBeRecovered() throws Exception {
         ProjectStore store = new ProjectStore(temp.newFolder("workspace2"));
         store.createProject("Test", "JavaScript");

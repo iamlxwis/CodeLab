@@ -261,6 +261,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "Workspace options") }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     if (p != null) {
+                        DropdownMenuItem(text = { Text("Project settings…") },
+                            onClick = { menu = false; dialog = "projectsettings" })
                         DropdownMenuItem(text = { Text("Panel layout…") },
                             onClick = { menu = false; dialog = "panels" })
                         DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
@@ -476,6 +478,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
         "switchproject" -> ProjectSwitcher(m) { dialog = "" }
         "screenshot" -> CodeScreenshotStudio(m.active.orEmpty(), m.source) { dialog = "" }
+        "projectsettings" -> ProjectSettingsDialog(m) { dialog = "" }
         "git" -> GitDialog(m) { dialog = "" }
         "history" -> FileHistoryDialog(m) { dialog = "" }
         "projectreplace" -> ProjectReplaceDialog(m) { dialog = "" }
@@ -1435,6 +1438,61 @@ private fun GitHubImportDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                     m.importPublicGitHub(slug, name)
                     dismiss()
                 }) { Text("Import") }
+        },
+        dismissButton = { TextButton(onClick = dismiss) { Text("Cancel") } })
+}
+
+@Composable
+private fun ProjectSettingsDialog(m: WorkspaceModel, dismiss: () -> Unit) {
+    var description by remember(m.project) { mutableStateOf(m.projectMetadata.description) }
+    var entrypoint by remember(m.project) { mutableStateOf(m.projectMetadata.entrypoint) }
+    var filesExpanded by remember { mutableStateOf(false) }
+    AlertDialog(onDismissRequest = dismiss,
+        title = { Text("Project settings") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Template · " + m.projectMetadata.template,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(description, { description = it.take(500) },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2, maxLines = 4,
+                    label = { Text("Project description") })
+                Text("Preferred entry file", style = MaterialTheme.typography.labelMedium)
+                Box {
+                    OutlinedButton(onClick = { filesExpanded = true }, enabled = m.files.isNotEmpty()) {
+                        Text(if (entrypoint.isEmpty()) "Not configured" else entrypoint,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    DropdownMenu(expanded = filesExpanded,
+                        onDismissRequest = { filesExpanded = false }) {
+                        DropdownMenuItem(text = { Text("No preference") }, onClick = {
+                            entrypoint = ""
+                            filesExpanded = false
+                        })
+                        m.files.take(80).forEach { path ->
+                            DropdownMenuItem(text = { Text(path, maxLines = 2) },
+                                onClick = { entrypoint = path; filesExpanded = false })
+                        }
+                    }
+                }
+                Text("This selects a preferred entry file; Run continues to execute the active editor tab.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Settings are kept inside the project and included in ZIP backups.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (entrypoint.isNotEmpty()) TextButton(enabled = !m.busy,
+                    onClick = { m.select(entrypoint); dismiss() }) {
+                    Text("Open entry file")
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = !m.busy, onClick = {
+                m.configureProject(description, entrypoint)
+                dismiss()
+            }) { Text("Save") }
         },
         dismissButton = { TextButton(onClick = dismiss) { Text("Cancel") } })
 }

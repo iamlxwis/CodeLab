@@ -100,6 +100,54 @@ public final class ProjectStore {
         return createProject(name, "JavaScript");
     }
 
+    public static final class ProjectMetadata {
+        public final String template, description, entrypoint;
+        public ProjectMetadata(String template, String description, String entrypoint) {
+            this.template = template;
+            this.description = description;
+            this.entrypoint = entrypoint;
+        }
+    }
+
+    private static ProjectMetadata readMetadata(File dir) throws IOException {
+        File record = new File(dir, ".codelab/project.properties");
+        if (!record.isFile()) return new ProjectMetadata("Imported", "", "");
+        if (record.length() > 8192) throw new IOException("Project settings are too large.");
+        Properties props = new Properties();
+        try (Reader reader = Files.newBufferedReader(record.toPath(), StandardCharsets.UTF_8)) {
+            props.load(reader);
+        }
+        return new ProjectMetadata(props.getProperty("template", "Imported"),
+            props.getProperty("description", ""), props.getProperty("entrypoint", ""));
+    }
+
+    private void writeMetadata(File dir, ProjectMetadata metadata) throws IOException {
+        Properties props = new Properties();
+        props.setProperty("template", metadata.template);
+        props.setProperty("description", metadata.description);
+        props.setProperty("entrypoint", metadata.entrypoint);
+        StringWriter writer = new StringWriter();
+        props.store(writer, "CodeLab project metadata");
+        writeText(new File(dir, ".codelab/project.properties"), writer.toString());
+    }
+
+    public synchronized ProjectMetadata metadata(String projectName) throws IOException {
+        return readMetadata(project(projectName));
+    }
+
+    public synchronized ProjectMetadata configureProject(String projectName,
+            String description, String entrypoint) throws IOException {
+        if (description == null || description.length() > 500)
+            throw new IOException("Description must be 500 characters or fewer.");
+        String target = entrypoint == null ? "" : entrypoint;
+        if (!target.isEmpty() && !files(projectName).contains(target))
+            throw new IOException("Select an existing file as the entrypoint.");
+        ProjectMetadata previous = metadata(projectName);
+        ProjectMetadata updated = new ProjectMetadata(previous.template, description, target);
+        writeMetadata(project(projectName), updated);
+        return updated;
+    }
+
     /** Reuse the bounded and path-validated archive pipeline for a safe project copy. */
     public synchronized void duplicateProject(String from, String to) throws IOException {
         ByteArrayOutputStream archive = new ByteArrayOutputStream();
@@ -204,6 +252,10 @@ public final class ProjectStore {
                     "const name = readLine(\"What is your name? \");\n" +
                     "print(\"Hello, \" + name + \"!\");\n");
             }
+            List<String> sourceFiles = new ArrayList<>();
+            collect(stage, stage, sourceFiles, false);
+            writeMetadata(stage, new ProjectMetadata(template, "",
+                sourceFiles.isEmpty() ? "" : sourceFiles.get(0)));
             moveNew(stage, dest);
             return name;
         } finally { clean(stage); }
@@ -639,6 +691,11 @@ public final class ProjectStore {
         File base = project(project);
         List<String> paths = new ArrayList<>();
         collect(base, base, paths, true);
+        File metadata = new File(base, ".codelab/project.properties");
+        if (metadata.isFile()) {
+            paths.add(".codelab/");
+            paths.add(".codelab/project.properties");
+        }
         if (paths.size() > MAX_ENTRIES) throw new IOException("Export supports up to 1024 entries.");
         long total = 0;
         for (String path : paths) if (!path.endsWith("/")) total += resolve(base, path).length();
