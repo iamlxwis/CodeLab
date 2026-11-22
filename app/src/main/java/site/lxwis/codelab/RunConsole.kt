@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -61,6 +62,12 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     }
     val scroll = rememberScrollState()
     var input by rememberSaveable { mutableStateOf("") }
+    var sentInputs by remember { mutableStateOf(emptyList<String>()) }
+    fun submitInput() {
+        if (!session.waiting) return
+        if (input.isNotBlank()) sentInputs = (listOf(input) + sentInputs).take(20)
+        session.submit(input)
+    }
     LaunchedEffect(scroll.maxValue) { scroll.scrollTo(scroll.maxValue) }
     LaunchedEffect(session.waiting) { if (!session.waiting) input = "" }
     if (showExecutionSettings) AlertDialog(
@@ -207,17 +214,24 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             }
             if (sqlResult != null && tableMode) SqlDataGrid(sqlResult, Modifier.weight(1f).fillMaxWidth())
             else SelectionContainer(Modifier.weight(1f).fillMaxWidth().verticalScroll(scroll)) {
-                Text(displayedOutput.ifEmpty {
+                val textToShow = displayedOutput.ifEmpty {
                     if (showFilter && filterOutput.isNotEmpty()) "No matching lines" else ""
-                }, fontFamily = FontFamily.Monospace, fontSize = consoleFontSize.sp,
+                }
+                val formatted = remember(textToShow, MaterialTheme.colorScheme.onSurface) {
+                    ConsoleAnsi.format(textToShow, MaterialTheme.colorScheme.onSurface)
+                }
+                Text(formatted, fontFamily = FontFamily.Monospace, fontSize = consoleFontSize.sp,
                     lineHeight = (consoleFontSize + 5).sp)
             }
             if (session.waiting) Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(value = input, onValueChange = { input = it.take(4096) }, singleLine = true,
                     modifier = Modifier.weight(1f), placeholder = { Text("Program input") },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { session.submit(input) }))
-                TextButton(onClick = { session.submit(input) }) { Text("Send") }
+                    keyboardActions = KeyboardActions(onSend = { submitInput() }))
+                if (sentInputs.isNotEmpty()) IconButton(onClick = { input = sentInputs.first() }) {
+                    Icon(Icons.Default.History, "Previous standard input")
+                }
+                TextButton(onClick = { submitInput() }) { Text("Send") }
             }
         }
     }
