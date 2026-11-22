@@ -10,9 +10,9 @@ concurrency:
   group: android-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: true
 jobs:
-  debug:
+  release:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -20,31 +20,53 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-      - run: bash gradlew --no-daemon :app:assembleDebug
+      - name: Configure optional stable release signing
+        env:
+          CODELAB_KEYSTORE_B64: ${{ secrets.CODELAB_KEYSTORE_B64 }}
+          CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
+          CODELAB_KEY_ALIAS: ${{ secrets.CODELAB_KEY_ALIAS }}
+          CODELAB_KEY_PASSWORD: ${{ secrets.CODELAB_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "$CODELAB_KEYSTORE_B64" && -n "$CODELAB_KEYSTORE_PASSWORD" && -n "$CODELAB_KEY_ALIAS" && -n "$CODELAB_KEY_PASSWORD" ]]; then
+            echo "$CODELAB_KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/codelab-release.jks"
+            echo "CODELAB_KEYSTORE_FILE=$RUNNER_TEMP/codelab-release.jks" >> "$GITHUB_ENV"
+            echo "CODELAB_SIGNING_MODE=production" >> "$GITHUB_ENV"
+          else
+            echo "CODELAB_SIGNING_MODE=fallback-debug" >> "$GITHUB_ENV"
+          fi
+      - name: Build optimized release and test
+        run: bash gradlew --no-daemon :app:assembleRelease :app:testDebugUnitTest
       - name: Verify APK signature
-        run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk'
+        run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk'
       - uses: actions/upload-artifact@v4
         with:
-          name: CodeLab-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: CodeLab-release
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 90
-      - run: bash gradlew --no-daemon :app:testDebugUnitTest
-      - name: Prepare directly installable APK
+      - name: Prepare installable release APK and checksum
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: |
           mkdir -p release
-          cp app/build/outputs/apk/debug/app-debug.apk release/CodeLab.apk
+          cp app/build/outputs/apk/release/app-release.apk release/CodeLab.apk
           sha256sum release/CodeLab.apk > release/CodeLab.apk.sha256
-      - name: Publish public APK download
+      - name: Publish latest APK
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
           set -euo pipefail
+          if [[ "$CODELAB_SIGNING_MODE" == "production" ]]; then
+            NOTES="Optimized Android release APK signed with the configured stable release key. Android 8.0+. SHA-256 checksum included."
+          else
+            NOTES="Optimized release APK signed with the CI fallback debug key. In-place updates are NOT guaranteed until stable signing secrets are configured. Back up projects before reinstalling. Android 8.0+. SHA-256 checksum included."
+          fi
           if gh release view latest >/dev/null 2>&1; then
             gh release upload latest release/CodeLab.apk release/CodeLab.apk.sha256 --clobber
-            gh release edit latest --latest --title "CodeLab — latest Android APK" --notes "Latest CI-verified Android debug APK from main. Android 8.0+. No signup required. This is an early-access debug build, not a production-signed release. Back up projects before updating. SHA256 provided alongside the APK."
+            gh release edit latest --latest --title "CodeLab — latest Android APK" --notes "$NOTES"
           else
-            gh release create latest release/CodeLab.apk release/CodeLab.apk.sha256 --target "${GITHUB_SHA}" --title "CodeLab — latest Android APK" --notes "Latest CI-verified Android debug APK from main. Android 8.0+. No signup required. This is an early-access debug build, not a production-signed release. Back up projects before updating. SHA256 provided alongside the APK." --latest
+            gh release create latest release/CodeLab.apk release/CodeLab.apk.sha256 --target "$GITHUB_SHA" --title "CodeLab — latest Android APK" --notes "$NOTES" --latest
           fi
