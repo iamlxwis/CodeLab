@@ -337,6 +337,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         onClick = { menu = false; dialog = "accessibility" })
                     DropdownMenuItem(text = { Text("Command palette…") },
                         onClick = { menu = false; dialog = "commands" })
+                    DropdownMenuItem(text = { Text("HTTPS Inspector…") },
+                        onClick = { menu = false; dialog = "httpsinspector" })
                     DropdownMenuItem(text = { Text("Developer tools…") },
                         onClick = { menu = false; dialog = "devtools" })
                     DropdownMenuItem(text = { Text("Performance diagnostics") },
@@ -565,6 +567,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 importTree.launch(null)
             }
         "githubimport" -> GitHubImportDialog(m) { dialog = "" }
+        "httpsinspector" -> HttpInspectorSheet { dialog = "" }
         "devtools" -> DeveloperToolbox { dialog = "" }
         "commands" -> CommandPaletteDialog(m, dismiss = { dialog = "" },
             execute = { action ->
