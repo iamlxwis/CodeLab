@@ -46,3 +46,18 @@ claimed from source extraction alone. Refer to the PR checks for verification.
   visual screenshots from the new branch, 200% text scaling, WCAG palette matrix,
   adaptive device matrix, and the long-form dialog redesign.
 - This is a reviewable first slice, **not** completion of Workstream 2.
+
+## Workstream 3 — phone split and tabs (stacked review)
+
+- First slice adds an **opt-in persisted phone split mode**. Editor stays above
+  console/HTML preview, with a 48dp drag handle, snap positions and a settings
+  slider for keyboard/TalkBack adjustment. Reduced motion requires no animation.
+- File tabs get 48dp close buttons even when inactive; tests cover this and the
+  split toggle, divider semantics and pure split range/snap helpers.
+- Existing tablet side-by-side and phone single-panel modes remain available.
+- Still unverified until its own CI passes: release build, emulator smoke and UI
+  tests. Still pending: preferred run-target picker, tab pin/reorder/overflow,
+  undo snackbar, fuzzy command palette, project replace preview and comprehensive
+  accessibility/200% scaling audits. These are **not claimed implemented**.
+- This PR is stacked on Workstream 2 PR #8 until #8 is merged; do not merge it
+  into main out of order.
