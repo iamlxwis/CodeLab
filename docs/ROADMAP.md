@@ -61,3 +61,13 @@ claimed from source extraction alone. Refer to the PR checks for verification.
   accessibility/200% scaling audits. These are **not claimed implemented**.
 - This PR is stacked on Workstream 2 PR #8 until #8 is merged; do not merge it
   into main out of order.
+
+### Workstream 3 — run targets, pinned tabs and ordering (second slice, in review)
+- The primary Run action resolves a valid project-preferred entry file before the
+  current tab. Run options allow running the current tab or any chosen file.
+  Selecting another target switches editor buffers safely before execution.
+- Pinned tabs are protected from accidental close; tab actions expose Pin/Unpin,
+  Close others, Close all unpinned, Move left/right and Reveal in Explorer.
+  A long-press menu, dedicated drag grip and overflow chooser keep tabs navigable.
+- Still required: toolbar and long-press menu for tab actions, drag affordance,
+  overflow selector, search/replace and destructive-action undo.

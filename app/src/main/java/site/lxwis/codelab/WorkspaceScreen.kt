@@ -35,6 +35,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -190,18 +191,32 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             "Toggle tablet explorer", Modifier.size(19.dp))
                     }
                 }
-                LazyRow(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                val tabScroll = rememberLazyListState()
+                LaunchedEffect(m.active, m.tabs) {
+                    val index = m.tabs.indexOf(m.active)
+                    if (index >= 0) tabScroll.scrollToItem(index)
+                }
+                LazyRow(Modifier.weight(1f), state = tabScroll,
+                    verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
                         WorkspaceTab(path = path, active = m.active == path,
+                            pinned = path in m.pinnedTabs,
+                            dirty = m.isTabDirty(path),
                             motionMillis = motionMillis,
                             onSelect = {
                                 UiLatencyProbe.nextFrame(context, "Switch tab")
                                 if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 m.select(path)
                             },
-                            onClose = { m.closeTab(path) })
+                            onClose = { m.closeTab(path) },
+                            onTogglePin = { m.togglePinnedTab(path) },
+                            onCloseOthers = { m.closeOtherTabs(path) },
+                            onCloseAll = { m.closeOtherTabs(null) },
+                            onMove = { m.reorderTab(path, it) },
+                            onReveal = { selected = path; dialog = "filereveal" })
                     }
                 }
+                if (m.tabs.size > 1) OpenTabsMenu(m.tabs, m.active, m::select)
                 IconButton(onClick = { dialog = "newfile" }) { Icon(Icons.Default.Add, "Add file") }
             }
             BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
@@ -396,7 +411,11 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }) { Text(destination) }
                 }
             } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
-        "files" -> FileExplorerSheet(m, onClose = { dialog = "" }, onNew = { dialog = "newfile" },
+        "files", "filereveal" -> FileExplorerSheet(m,
+            initialDirectory = if (dialog == "filereveal") {
+                selected.substringBeforeLast('/', "").let { if (it.isBlank()) "" else "$it/" }
+            } else "",
+            onClose = { dialog = "" }, onNew = { dialog = "newfile" },
             onOpen = { m.select(it); dialog = "" }, onRename = { selected = it; dialog = "rename" },
             onDelete = { selected = it; dialog = "delete" },
             onRenameFolder = { selected = it; dialog = "renamefolder" },

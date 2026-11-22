@@ -73,6 +73,7 @@ import androidx.lifecycle.ViewModelProvider
 @Composable
 internal fun FileExplorerSheet(
     m: WorkspaceModel,
+    initialDirectory: String = "",
     onClose: () -> Unit,
     onNew: () -> Unit,
     onOpen: (String) -> Unit,
@@ -83,7 +84,9 @@ internal fun FileExplorerSheet(
     onNewFolder: () -> Unit
 ) {
     var search by rememberSaveable(m.project) { mutableStateOf("") }
-    var directory by rememberSaveable(m.project) { mutableStateOf("") }
+    var directory by rememberSaveable(m.project, initialDirectory) {
+        mutableStateOf(initialDirectory)
+    }
     var menuFor by remember { mutableStateOf<String?>(null) }
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val allFiles = m.files
