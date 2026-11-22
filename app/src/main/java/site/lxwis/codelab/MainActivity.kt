@@ -547,16 +547,16 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("High contrast", Modifier.weight(1f))
-                        Switch(checked = m.highContrast, onCheckedChange = m::setHighContrast)
+                        Switch(checked = m.highContrast, onCheckedChange = m::chooseHighContrast)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Larger interface text", Modifier.weight(1f))
                         Switch(checked = m.largeInterfaceText,
-                            onCheckedChange = m::setLargeInterfaceText)
+                            onCheckedChange = m::chooseLargeInterfaceText)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Run-button haptic feedback", Modifier.weight(1f))
-                        Switch(checked = m.touchFeedback, onCheckedChange = m::setTouchFeedback)
+                        Switch(checked = m.touchFeedback, onCheckedChange = m::chooseTouchFeedback)
                     }
                     Text("System font scaling and reduced-motion settings remain supported. These options apply immediately.",
                         style = MaterialTheme.typography.bodySmall,

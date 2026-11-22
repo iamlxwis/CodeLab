@@ -165,19 +165,19 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
     var highContrast by mutableStateOf(preferences.getBoolean("high-contrast", false))
         private set
-    fun setHighContrast(value: Boolean) {
+    fun chooseHighContrast(value: Boolean) {
         highContrast = value
         preferences.edit().putBoolean("high-contrast", value).apply()
     }
     var largeInterfaceText by mutableStateOf(preferences.getBoolean("large-interface-text", false))
         private set
-    fun setLargeInterfaceText(value: Boolean) {
+    fun chooseLargeInterfaceText(value: Boolean) {
         largeInterfaceText = value
         preferences.edit().putBoolean("large-interface-text", value).apply()
     }
     var touchFeedback by mutableStateOf(preferences.getBoolean("touch-feedback", true))
         private set
-    fun setTouchFeedback(value: Boolean) {
+    fun chooseTouchFeedback(value: Boolean) {
         touchFeedback = value
         preferences.edit().putBoolean("touch-feedback", value).apply()
     }
