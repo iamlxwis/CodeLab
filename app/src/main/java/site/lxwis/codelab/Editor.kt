@@ -51,6 +51,7 @@ fun CodeEditor(
     var fontSize by remember { mutableStateOf(preferences.getInt("font-size", 15)) }
     var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", false)) }
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", false)) }
+    var readOnly by remember { mutableStateOf(false) }
     var view by remember { mutableStateOf<SourceView?>(null) }
     var cursor by remember { mutableStateOf("Ln 1 · Col 1") }
     var find by remember { mutableStateOf(false) }
@@ -141,6 +142,11 @@ fun CodeEditor(
                     }
                 }
             }
+            EditorIcon(if (readOnly) Icons.Default.Lock else Icons.Default.LockOpen,
+                if (readOnly) "Disable read-only mode" else "Enable read-only mode", selected = readOnly) {
+                readOnly = !readOnly
+                view?.isEnabled = !readOnly
+            }
             EditorIcon(Icons.Default.Home, "Go to beginning of file") { view?.scrollToStart() }
         }
         if (symbols) {
@@ -197,6 +203,7 @@ fun CodeEditor(
             update = { editor ->
                 editor.appearance(fontSize, foreground, background, secondary, accent, dark)
                 editor.setCodeWrap(wordWrap)
+                editor.isEnabled = !readOnly
                 if (editor.sourceSnapshot != text) editor.replaceSource(text)
             }
         )
@@ -205,7 +212,7 @@ fun CodeEditor(
             horizontalArrangement = Arrangement.SpaceBetween) {
             Text(cursor, style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text((if (wordWrap) "Wrap · " else "") + "UTF-8 · " + filename.substringAfterLast('.', "text").uppercase(),
+            Text((if (readOnly) "READ ONLY · " else "") + (if (wordWrap) "Wrap · " else "") + "UTF-8 · " + filename.substringAfterLast('.', "text").uppercase(),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
