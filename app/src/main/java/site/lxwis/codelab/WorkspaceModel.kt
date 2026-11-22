@@ -136,6 +136,13 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     val runner = RunSession(app)
     var appearance by mutableStateOf(preferences.getString("mode", "Dark") ?: "Dark")
         private set
+    var themePreset by mutableStateOf(preferences.getString("preset", "Obsidian") ?: "Obsidian")
+        private set
+    fun choosePreset(value: String) {
+        if (value !in listOf("Obsidian", "Nocturne", "Paper")) return
+        themePreset = value
+        preferences.edit().putString("preset", value).apply()
+    }
     var accent by mutableStateOf(preferences.getString("accent", "Mint") ?: "Mint")
         private set
     var projects by mutableStateOf(emptyList<String>())

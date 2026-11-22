@@ -64,8 +64,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         model = ViewModelProvider(this)[WorkspaceModel::class.java]
         setContent {
-            val dark = model.appearance == "Dark" || (model.appearance == "System" && isSystemInDarkTheme())
-            val base = if (dark) night else day
+            val dark = if (model.themePreset == "Paper") false else
+                model.appearance == "Dark" || (model.appearance == "System" && isSystemInDarkTheme())
+            val base = when (model.themePreset) {
+                "Nocturne" -> night.copy(
+                    background = Color(0xff0c1020), surface = Color(0xff0c1020),
+                    surfaceContainer = Color(0xff151a2d), surfaceContainerHigh = Color(0xff20263b),
+                    surfaceVariant = Color(0xff222942), outlineVariant = Color(0xff333b55))
+                "Paper" -> day
+                else -> if (dark) night else day
+            }
             val accent = when (model.accent) {
                 "Blue" -> if (dark) Color(0xff8ab7fa) else Color(0xff245eaf)
                 "Violet" -> if (dark) Color(0xffc4b0ff) else Color(0xff6747b7)
@@ -107,6 +115,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var selected by rememberSaveable { mutableStateOf("") }
     var incoming by rememberSaveable { mutableStateOf<String?>(null) }
     var menu by remember { mutableStateOf(false) }
+    var focusMode by rememberSaveable { mutableStateOf(false) }
     var importedFile by rememberSaveable { mutableStateOf<String?>(null) }
     val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) {
         it?.let(m::exportFile)
@@ -127,7 +136,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
 
     Column(modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        if (!focusMode || p == null) Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             if (p == null) Mark(Modifier.padding(horizontal = 8.dp).size(34.dp))
             else IconButton(onClick = { m.home() }, enabled = !m.busy) { Icon(Icons.Default.ArrowBack, "Project library") }
             Column(Modifier.weight(1f).padding(start = 4.dp)) {
@@ -177,6 +186,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 onClick = { menu = false; m.requestCloudRun() })
                         }
                     } else DropdownMenuItem(text = { Text("Import project ZIP") }, onClick = { menu = false; importZip.launch(arrayOf("*/*")) })
+                    if (p != null) DropdownMenuItem(text = { Text(if (focusMode) "Exit Focus Mode" else "Focus Mode") },
+                        onClick = { menu = false; focusMode = !focusMode; m.console = false; m.preview = false })
                     DropdownMenuItem(text = { Text("Languages & Cloud") },
                         onClick = { menu = false; dialog = "languages" })
                     DropdownMenuItem(text = { Text("Appearance") }, onClick = { menu = false; dialog = "appearance" })
@@ -188,7 +199,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 { selected = it; dialog = "renameproject" }, { selected = it; dialog = "deleteproject" })
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!focusMode) Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = { dialog = "files" }) {
                     Icon(Icons.Default.FolderOpen, "Browse files")
                 }
@@ -222,7 +233,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+            if (focusMode) TextButton(onClick = { focusMode = false }, modifier = Modifier.padding(start = 8.dp)) {
+                Icon(Icons.Default.FullscreenExit, null, Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Exit Focus Mode")
+            }
+            if (!focusMode) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 PanelButton("Editor", !m.console && !m.preview) { m.console = false; m.preview = false }
                 PanelButton("Console", m.console) { m.console = true; m.preview = false }
@@ -287,6 +303,14 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             label = { Text(mode) })
                     }
                 }
+                Text("PRESET", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall)
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    listOf("Obsidian", "Nocturne", "Paper").forEach { preset ->
+                        FilterChip(selected = m.themePreset == preset, onClick = { m.choosePreset(preset) },
+                            label = { Text(preset) })
+                    }
+                }
                 Text("ACCENT", color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelSmall)
                 Row(Modifier.horizontalScroll(rememberScrollState()),
@@ -343,6 +367,7 @@ private fun Mark(modifier: Modifier) {
 @Composable
 private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> Unit, rename: (String) -> Unit, delete: (String) -> Unit) {
     var options by remember { mutableStateOf<String?>(null) }
+    var projectSearch by rememberSaveable { mutableStateOf("") }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 22.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
@@ -355,6 +380,11 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
                 OutlinedButton(onClick = importZip, enabled = !m.busy, shape = RoundedCornerShape(10.dp)) { Text("Import ZIP") }
             }
             Spacer(Modifier.height(24.dp))
+            OutlinedTextField(value = projectSearch, onValueChange = { projectSearch = it },
+                modifier = Modifier.fillMaxWidth(), singleLine = true,
+                leadingIcon = { Icon(Icons.Default.Search, null) },
+                placeholder = { Text("Search projects") })
+            Spacer(Modifier.height(16.dp))
             Text("ON THIS DEVICE", fontSize = 11.sp, letterSpacing = 1.6.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (m.projects.isEmpty() && !m.busy) item {
@@ -366,7 +396,7 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
                 }
             }
         }
-        items(m.projects, key = { it }) { name ->
+        items(m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) }, key = { it }) { name ->
             Surface(onClick = { m.openProject(name) }, enabled = !m.busy, shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .65f)) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
