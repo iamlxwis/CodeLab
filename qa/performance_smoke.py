@@ -51,7 +51,9 @@ def main():
         "frames_rendered": frame_total,
         "janky_frames": frame_janky,
         "janky_percentage": (round(100.0 * frame_janky / frame_total, 2)
-                             if frame_total and frame_janky is not None else None),
+                             if frame_total and frame_total >= 20 and frame_janky is not None else None),
+        "frame_sample_quality": ("measured: 20 or more frames" if frame_total and frame_total >= 20
+                                else "insufficient rendered frames for a meaningful jank percentage"),
         "frame_time_percentiles_ms": percentiles,
         "debug_tap_next_frame_samples": tap_latencies[-40:],
         "device": adb("shell", "getprop", "ro.product.model"),

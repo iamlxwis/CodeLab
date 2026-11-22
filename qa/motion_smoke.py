@@ -24,7 +24,7 @@ def main():
     stats = {
         "package": PACKAGE,
         "animation_scale": "1x",
-        "scenario": "three vertical scrolling gestures, emulator at 1x system animations",
+        "scenario": "four real new-project sheet open/close transitions, six scroll swipes, emulator at 1x system animations",
         "frames": None,
         "janky_frames": None,
         "janky_percentage": None,
@@ -34,10 +34,28 @@ def main():
         adb("shell", "am", "force-stop", PACKAGE)
         adb("shell", "am", "start", "-W", "-n", PACKAGE + "/.MainActivity")
         time.sleep(1)
+        # The previous smoke journey finishes in an editor with only a few
+        # lines; swipes alone may produce zero frame samples. Instead exercise
+        # the real project-library sheet transitions at 1x animation.
+        from device_smoke import nodes, tap_node, wait_for
+        for node in nodes():
+            if "Project library" in (
+                node.attrib.get("text", ""), node.attrib.get("content-desc", "")
+            ):
+                tap_node(node)
+                break
+        wait_for("New project", timeout=10)
         adb("shell", "dumpsys", "gfxinfo", PACKAGE, "reset")
+        for _ in range(4):
+            tap_node(wait_for("New project", timeout=10))
+            wait_for("Create project", timeout=10)
+            time.sleep(0.25)
+            adb("shell", "input", "keyevent", "KEYCODE_BACK")
+            wait_for("New project", timeout=10)
+            time.sleep(0.25)
         for _ in range(3):
-            adb("shell", "input", "swipe", "440", "1100", "440", "360", "300")
-            adb("shell", "input", "swipe", "440", "360", "440", "1100", "300")
+            adb("shell", "input", "swipe", "440", "1100", "440", "360", "350")
+            adb("shell", "input", "swipe", "440", "360", "440", "1100", "350")
         time.sleep(1)
         raw = adb("shell", "dumpsys", "gfxinfo", PACKAGE)
         frames = re.search(r"Total frames rendered:\s*(\d+)", raw)
@@ -46,9 +64,11 @@ def main():
             stats["frames"] = int(frames.group(1))
         if jank:
             stats["janky_frames"] = int(jank.group(1))
-        if stats["frames"] and stats["janky_frames"] is not None:
+        if stats["frames"] and stats["frames"] >= 20 and stats["janky_frames"] is not None:
             stats["janky_percentage"] = round(
                 100.0 * stats["janky_frames"] / stats["frames"], 2)
+        else:
+            stats["sample_quality"] = "fewer than 20 rendered frames; no valid jank rate"
         stats["device"] = adb("shell", "getprop", "ro.product.model")
     finally:
         if old in ("null", ""):
