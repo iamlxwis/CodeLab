@@ -368,6 +368,7 @@ private fun Mark(modifier: Modifier) {
 private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> Unit, rename: (String) -> Unit, delete: (String) -> Unit) {
     var options by remember { mutableStateOf<String?>(null) }
     var projectSearch by rememberSaveable { mutableStateOf("") }
+    var projectSort by rememberSaveable { mutableStateOf("Recent") }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 22.dp, vertical = 18.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
@@ -384,6 +385,13 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
                 modifier = Modifier.fillMaxWidth(), singleLine = true,
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 placeholder = { Text("Search projects") })
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("Recent", "A–Z", "Z–A").forEach { option ->
+                    FilterChip(selected = projectSort == option, onClick = { projectSort = option },
+                        label = { Text(option) })
+                }
+            }
             Spacer(Modifier.height(16.dp))
             Text("ON THIS DEVICE", fontSize = 11.sp, letterSpacing = 1.6.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -396,7 +404,13 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
                 }
             }
         }
-        items(m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) }, key = { it }) { name ->
+        items(m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) }.let { visible ->
+            when (projectSort) {
+                "A–Z" -> visible.sortedWith(String.CASE_INSENSITIVE_ORDER)
+                "Z–A" -> visible.sortedWith(String.CASE_INSENSITIVE_ORDER.reversed())
+                else -> visible
+            }
+        }, key = { it }) { name ->
             Surface(onClick = { m.openProject(name) }, enabled = !m.busy, shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .65f)) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
