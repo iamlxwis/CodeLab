@@ -68,7 +68,7 @@ fun CodeEditor(
     val hardwareKeyboard = LocalConfiguration.current.keyboard != Configuration.KEYBOARD_NOKEYS
     val preferences = remember { context.getSharedPreferences("editor", Context.MODE_PRIVATE) }
     var fontSize by remember { mutableStateOf(preferences.getInt("font-size", 15)) }
-    var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", false)) }
+    var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", true)) }
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", false)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
     var shortcutSettings by remember { mutableStateOf(false) }
@@ -269,6 +269,10 @@ fun CodeEditor(
                 view?.onTextContextMenuItem(android.R.id.redo)
             }
             EditorIcon(Icons.Default.Search, "Find and replace", selected = find) { find = !find }
+            EditorIcon(Icons.Default.WrapText, "Toggle line wrapping", selected = wordWrap) {
+                wordWrap = !wordWrap
+                preferences.edit().putBoolean("word-wrap", wordWrap).apply()
+            }
             EditorIcon(if (advancedTools) Icons.Default.ExpandLess else Icons.Default.Tune,
                 if (advancedTools) "Hide advanced editor tools" else "Show advanced editor tools",
                 selected = advancedTools) { advancedTools = !advancedTools }
