@@ -260,6 +260,9 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 menu = false; exportFile.launch(m.active!!.substringAfterLast('/'))
                             })
                         }
+                        DropdownMenuItem(text = { Text("Code Screenshot Studio…") },
+                            enabled = m.active != null,
+                            onClick = { menu = false; dialog = "screenshot" })
                         DropdownMenuItem(text = { Text("File history…") }, enabled = m.active != null,
                             onClick = { menu = false; dialog = "history"; m.refreshHistory() })
                         DropdownMenuItem(text = { Text("File properties") },
@@ -421,6 +424,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
 
     when (dialog) {
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
+        "screenshot" -> CodeScreenshotStudio(m.active.orEmpty(), m.source) { dialog = "" }
         "history" -> FileHistoryDialog(m) { dialog = "" }
         "projectreplace" -> ProjectReplaceDialog(m) { dialog = "" }
         "projectsearch" -> ProjectSearchDialog(m, onDismiss = { dialog = "" }) { path, line ->
