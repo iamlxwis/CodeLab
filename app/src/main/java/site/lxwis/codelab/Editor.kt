@@ -74,6 +74,8 @@ fun CodeEditor(
     var settings by remember { mutableStateOf(false) }
     var toolsMenu by remember { mutableStateOf(false) }
     var snippetsMenu by remember { mutableStateOf(false) }
+    var outlineMenu by remember { mutableStateOf(false) }
+    var bookmarksMenu by remember { mutableStateOf(false) }
     var showLineNumbers by remember { mutableStateOf(preferences.getBoolean("line-numbers", true)) }
     var showActiveLine by remember { mutableStateOf(preferences.getBoolean("active-line", true)) }
     var result by remember { mutableStateOf("") }
@@ -158,6 +160,40 @@ fun CodeEditor(
                 view?.onTextContextMenuItem(android.R.id.redo)
             }
             EditorIcon(Icons.Default.Search, "Find and replace", selected = find) { find = !find }
+            Box {
+                EditorIcon(Icons.Default.List, "File symbol outline") { outlineMenu = true }
+                DropdownMenu(expanded = outlineMenu, onDismissRequest = { outlineMenu = false }) {
+                    val outline = remember(text) {
+                        text.lines().mapIndexedNotNull { index, line ->
+                            val trimmed = line.trimStart()
+                            if (listOf("fun ", "class ", "interface ", "def ", "function ",
+                                    "async function ", "struct ", "enum ", "void ", "public class ")
+                                    .any { trimmed.startsWith(it) }) index + 1 to trimmed.take(70)
+                            else null
+                        }.take(100)
+                    }
+                    if (outline.isEmpty()) DropdownMenuItem(
+                        text = { Text("No symbols detected") }, enabled = false, onClick = {})
+                    outline.forEach { (line, name) ->
+                        DropdownMenuItem(text = { Text("$line · $name", maxLines = 1) },
+                            onClick = {
+                                view?.goToLogicalLine(line)
+                                outlineMenu = false
+                            })
+                    }
+                }
+            }
+            Box {
+                EditorIcon(Icons.Default.Bookmark, "Code bookmarks") { bookmarksMenu = true }
+                DropdownMenu(expanded = bookmarksMenu, onDismissRequest = { bookmarksMenu = false }) {
+                    DropdownMenuItem(text = { Text("Bookmark current line") },
+                        onClick = { view?.toggleBookmark(); bookmarksMenu = false })
+                    view?.bookmarkedLines()?.forEach { line ->
+                        DropdownMenuItem(text = { Text("Line $line") },
+                            onClick = { view?.goToLogicalLine(line); bookmarksMenu = false })
+                    }
+                }
+            }
             EditorIcon(Icons.Default.FormatListNumbered, "Go to line") {
                 lineInput = ""; lineError = false; lineDialog = true
             }
@@ -414,6 +450,25 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     var changed: ((String) -> Unit)? = null
     var selectionChanged: ((Int, Int) -> Unit)? = null
     private var codeWrapped: Boolean? = null
+    private val bookmarks = sortedSetOf<Int>()
+    fun bookmarkedLines(): List<Int> = bookmarks.toList()
+    fun toggleBookmark() {
+        val line = text.substring(0, selectionStart.coerceIn(0, length())).count { it == '\n' } + 1
+        if (!bookmarks.add(line)) bookmarks.remove(line)
+        invalidate()
+    }
+    fun goToLogicalLine(number: Int) {
+        if (number < 1) return
+        val content = text.toString()
+        var position = 0
+        repeat(number - 1) {
+            val next = content.indexOf('\n', position)
+            if (next < 0) return
+            position = next + 1
+        }
+        requestFocus()
+        setSelection(position)
+    }
     private var showNumbers = true
     private var showCurrentLine = true
     fun setGutterOptions(numbers: Boolean, currentLine: Boolean) {
@@ -755,6 +810,12 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             if (!showNumbers) break
             linePaint.color = if (showCurrentLine && line == selected) active else muted
             linePaint.alpha = if (line == selected) 255 else 170
+            if (bookmarks.contains(line + 1)) {
+                fill.color = active
+                canvas.drawCircle((scrollX + dp(7)).toFloat(),
+                    (totalPaddingTop + lines.getLineBaseline(line) - dp(4)).toFloat(),
+                    dp(3).toFloat(), fill)
+            }
             canvas.drawText((line + 1).toString(), (scrollX + gutterWidth - dp(8)).toFloat(),
                 (totalPaddingTop + lines.getLineBaseline(line)).toFloat(), linePaint)
         }
