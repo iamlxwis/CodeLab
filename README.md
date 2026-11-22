@@ -85,6 +85,12 @@ The automated [Android APK](https://github.com/iamlxwis/CodeLab/actions/workflow
 - `qa/` — offline emulator smoke test.
 - `.github/workflows/` — APK and device test pipelines.
 
+## Engineering status and QA
+
+- [Implementation status by category](docs/IMPLEMENTATION_STATUS.md)
+- [Regression and release QA checklist](docs/QA_CHECKLIST.md)
+- [Changelog](CHANGELOG.md)
+
 ## Current limitations
 
 This is not yet a full desktop-class IDE. There is no offline Python interpreter, C/C++ compiler, semantic language-server completion, full PTY shell, remote GitHub push, or full browser development server. Basic local Git repositories, commits and branches are provided through JGit, and public GitHub source snapshots can be imported without Git history. Git runtime support is being validated on Android devices. Editing support for a file extension does not imply runnable support. The Android SQLite engine is included with the OS, and SQL databases are ephemeral per run.

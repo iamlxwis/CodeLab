@@ -25,9 +25,11 @@ class CodeAnalysisTest {
 
     @Test fun findsDeclarationsWithLineNumbers() {
         val result = CodeAnalysis.symbols("val x = 1\nfun hello() {}\nclass User {}")
-        assertEquals(2, result.size)
-        assertEquals(2, result[0].line)
-        assertEquals("fun hello", result[0].title)
+        assertEquals(3, result.size)
+        assertEquals(1, result[0].line)
+        assertEquals("val x", result[0].title)
+        assertEquals(2, result[1].line)
+        assertEquals("fun hello", result[1].title)
     }
 
     @Test fun reportsUnclosedBraces() {
