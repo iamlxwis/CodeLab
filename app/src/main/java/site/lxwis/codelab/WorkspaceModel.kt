@@ -427,6 +427,20 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun importPublicGitHub(slug: String, targetProject: String) {
+        work {
+            GitHubSnapshotImporter.importPublic(store, slug, targetProject)
+            val names = store.projects()
+            val opened = persist(load(targetProject, emptyList(), null, allowUnavailable = true))
+            val commit: () -> Unit = {
+                projects = names
+                apply(opened)
+                console = false
+            }
+            commit
+        }
+    }
+
     fun duplicateProject(from: String, to: String) {
         work {
             store.duplicateProject(from, to)

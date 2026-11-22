@@ -307,7 +307,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             DropdownMenuItem(text = { Text("Run via cloud…") },
                                 onClick = { menu = false; m.requestCloudRun() })
                         }
-                    } else DropdownMenuItem(text = { Text("Import project ZIP") }, onClick = { menu = false; importZip.launch(arrayOf("*/*")) })
+                    } else {
+                        DropdownMenuItem(text = { Text("Import project ZIP") },
+                            onClick = { menu = false; importZip.launch(arrayOf("*/*")) })
+                        DropdownMenuItem(text = { Text("Import public GitHub project…") },
+                            onClick = { menu = false; dialog = "githubimport" })
+                    }
                     DropdownMenuItem(text = { Text("Recently deleted…") },
                         onClick = { menu = false; dialog = "trash" })
                     if (p != null) DropdownMenuItem(text = { Text(if (focusMode) "Exit Focus Mode" else "Focus Mode") },
@@ -327,7 +332,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }
         }
         if (p == null) {
-            ProjectLibrary(m, motionMillis, { dialog = "newproject" }, { importZip.launch(arrayOf("*/*")) },
+            ProjectLibrary(m, motionMillis, { dialog = "newproject" },
+                { importZip.launch(arrayOf("*/*")) }, { dialog = "githubimport" },
                 { selected = it; dialog = "renameproject" },
                 { selected = it; dialog = "deleteproject" },
                 { selected = it; dialog = "duplicateproject" })
@@ -532,6 +538,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             text = { Text("Delete $selected and all its files from this device?") },
             confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
+        "githubimport" -> GitHubImportDialog(m) { dialog = "" }
         "devtools" -> DeveloperToolbox { dialog = "" }
         "commands" -> CommandPaletteDialog(m, dismiss = { dialog = "" },
             execute = { action ->
@@ -712,7 +719,7 @@ private fun DashboardMetric(value: String, label: String,
 
 @Composable
 private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit,
-    importZip: () -> Unit,
+    importZip: () -> Unit, importGitHub: () -> Unit,
     rename: (String) -> Unit, delete: (String) -> Unit, duplicate: (String) -> Unit) {
     var options by remember { mutableStateOf<String?>(null) }
     var projectSearch by rememberSaveable { mutableStateOf("") }
@@ -743,7 +750,9 @@ private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit
                 Button(onClick = new, enabled = !m.busy, shape = RoundedCornerShape(10.dp)) {
                     Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Spacer(Modifier.width(5.dp)); Text("New project")
                 }
-                OutlinedButton(onClick = importZip, enabled = !m.busy, shape = RoundedCornerShape(10.dp)) { Text("Import ZIP") }
+                OutlinedButton(onClick = importZip, enabled = !m.busy,
+                    shape = RoundedCornerShape(10.dp)) { Text("Import ZIP") }
+                TextButton(onClick = importGitHub, enabled = !m.busy) { Text("GitHub") }
             }
             Spacer(Modifier.height(24.dp))
             OutlinedTextField(value = projectSearch, onValueChange = { projectSearch = it },
@@ -1393,4 +1402,35 @@ private fun CommandPaletteDialog(m: WorkspaceModel, dismiss: () -> Unit,
             }
         },
         confirmButton = { TextButton(onClick = dismiss) { Text("Close") } })
+}
+
+@Composable
+private fun GitHubImportDialog(m: WorkspaceModel, dismiss: () -> Unit) {
+    var slug by rememberSaveable { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf("") }
+    AlertDialog(onDismissRequest = dismiss,
+        title = { Text("Import public GitHub project") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(slug, { slug = it.take(190) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("owner/repository or GitHub URL") },
+                    placeholder = { Text("owner/example") }, singleLine = true)
+                OutlinedTextField(name, { name = it.take(100) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Local project name") }, singleLine = true)
+                Text("Requires internet. Imports a source snapshot from a public GitHub repository, not commit history. " +
+                    "Project size and file safety limits apply. No token or account is needed.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = slug.isNotBlank() && name.isNotBlank() && !m.busy,
+                onClick = {
+                    m.importPublicGitHub(slug, name)
+                    dismiss()
+                }) { Text("Import") }
+        },
+        dismissButton = { TextButton(onClick = dismiss) { Text("Cancel") } })
 }
