@@ -190,7 +190,13 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             "Toggle tablet explorer", Modifier.size(19.dp))
                     }
                 }
-                LazyRow(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                val tabScroll = rememberLazyListState()
+                LaunchedEffect(m.active, m.tabs) {
+                    val index = m.tabs.indexOf(m.active)
+                    if (index >= 0) tabScroll.scrollToItem(index)
+                }
+                LazyRow(Modifier.weight(1f), state = tabScroll,
+                    verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
                         WorkspaceTab(path = path, active = m.active == path,
                             pinned = path in m.pinnedTabs,
