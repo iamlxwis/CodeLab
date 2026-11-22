@@ -1,7 +1,6 @@
 package site.lxwis.codelab
 
 import android.graphics.Color
-import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
