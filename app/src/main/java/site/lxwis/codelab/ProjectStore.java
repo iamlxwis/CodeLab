@@ -18,16 +18,19 @@ public final class ProjectStore {
     private final File projects;
     private final File scratch;
     private final File trash;
+    private final File history;
     private final File session;
 
     public ProjectStore(File root) {
         projects = new File(root, "projects");
         scratch = new File(root, "pending");
         trash = new File(root, "trash");
+        history = new File(root, "history");
         session = new File(root, "session.properties");
         ensureDir(projects);
         ensureDir(scratch);
         ensureDir(trash);
+        ensureDir(history);
     }
 
     private static void ensureDir(File dir) {
@@ -244,9 +247,81 @@ public final class ProjectStore {
         return StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(Files.readAllBytes(target.toPath()))).toString();
     }
 
+    private File historyDirectory(String projectName, String path) throws IOException {
+        resolve(project(projectName), path);
+        try {
+            byte[] key = (projectName + "\u0000" + path).getBytes(StandardCharsets.UTF_8);
+            byte[] digest = java.security.MessageDigest.getInstance("SHA-256").digest(key);
+            StringBuilder hex = new StringBuilder();
+            for (byte part : digest) hex.append(String.format(Locale.ROOT, "%02x", part & 255));
+            return new File(history, hex.toString());
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IOException("Unable to index file history.", e);
+        }
+    }
+
+    public static final class FileVersion {
+        public final String id;
+        public final long savedAt;
+        public final long bytes;
+        public FileVersion(String id, long savedAt, long bytes) {
+            this.id = id;
+            this.savedAt = savedAt;
+            this.bytes = bytes;
+        }
+    }
+
+    public synchronized List<FileVersion> versions(String projectName, String path)
+            throws IOException {
+        File dir = historyDirectory(projectName, path);
+        File[] files = dir.listFiles((base, name) -> name.matches("[0-9]{13}-[a-f0-9-]{36}\\.txt"));
+        List<FileVersion> result = new ArrayList<>();
+        if (files != null) for (File file : files) {
+            result.add(new FileVersion(file.getName(), Long.parseLong(file.getName().substring(0, 13)), file.length()));
+        }
+        result.sort((a, b) -> Long.compare(b.savedAt, a.savedAt));
+        return result;
+    }
+
+    private void snapshot(String projectName, String path, File source, boolean forced)
+            throws IOException {
+        File dir = historyDirectory(projectName, path);
+        List<FileVersion> existing = versions(projectName, path);
+        if (!forced && !existing.isEmpty()
+                && System.currentTimeMillis() - existing.get(0).savedAt < 20000L) return;
+        ensureDir(dir);
+        File snap = new File(dir, System.currentTimeMillis() + "-" + UUID.randomUUID() + ".txt");
+        Files.copy(source.toPath(), snap.toPath());
+        existing = versions(projectName, path);
+        for (int i = 12; i < existing.size(); i++) {
+            if (!new File(dir, existing.get(i).id).delete()) throw new IOException("History cleanup failed.");
+        }
+    }
+
+    public synchronized String readVersion(String projectName, String path, String versionId)
+            throws IOException {
+        if (versionId == null || !versionId.matches("[0-9]{13}-[a-f0-9-]{36}\\.txt"))
+            throw new IOException("Invalid history identifier.");
+        File version = new File(historyDirectory(projectName, path), versionId);
+        if (!version.isFile() || version.length() > MAX_FILE_BYTES)
+            throw new IOException("History snapshot no longer exists.");
+        return StandardCharsets.UTF_8.newDecoder()
+            .decode(ByteBuffer.wrap(Files.readAllBytes(version.toPath()))).toString();
+    }
+
+    public synchronized void restoreVersion(String projectName, String path, String versionId)
+            throws IOException {
+        String previous = readVersion(projectName, path, versionId);
+        File target = resolve(project(projectName), path);
+        snapshot(projectName, path, target, true);
+        writeText(target, previous);
+    }
+
     public synchronized void save(String project, String path, String text) throws IOException {
         File target = resolve(project(project), path);
         if (!target.isFile()) throw new IOException("File does not exist.");
+        if (read(project, path).equals(text)) return;
+        snapshot(project, path, target, false);
         writeText(target, text);
     }
 

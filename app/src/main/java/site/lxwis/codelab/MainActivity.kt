@@ -225,6 +225,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 menu = false; exportFile.launch(m.active!!.substringAfterLast('/'))
                             })
                         }
+                        DropdownMenuItem(text = { Text("File history…") }, enabled = m.active != null,
+                            onClick = { menu = false; dialog = "history"; m.refreshHistory() })
                         DropdownMenuItem(text = { Text("File properties") },
                             enabled = m.active != null, onClick = { menu = false; dialog = "properties" })
                         DropdownMenuItem(text = { Text("Export project ZIP") }, onClick = { menu = false; export.launch("$p.zip") })
@@ -378,6 +380,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
 
     when (dialog) {
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
+        "history" -> FileHistoryDialog(m) { dialog = "" }
         "projectsearch" -> ProjectSearchDialog(m, onDismiss = { dialog = "" }) { path, line ->
             dialog = ""
             m.select(path, goToLine = line)
@@ -926,4 +929,55 @@ private fun TrashDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
             if (m.trashItems.isNotEmpty()) TextButton(enabled = !m.busy,
                 onClick = { confirmEmpty = true }) { Text("Empty trash", color = MaterialTheme.colorScheme.error) }
         })
+}
+
+@Composable
+private fun FileHistoryDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
+    var restoreId by remember { mutableStateOf<String?>(null) }
+    if (restoreId != null) AlertDialog(onDismissRequest = { restoreId = null },
+        title = { Text("Restore this version?") },
+        text = { Text("Your current file will be saved to history before restoration.") },
+        confirmButton = { TextButton(onClick = {
+            restoreId?.let(m::restoreHistory)
+            restoreId = null
+        }) { Text("Restore") } },
+        dismissButton = { TextButton(onClick = { restoreId = null }) { Text("Cancel") } })
+    AlertDialog(onDismissRequest = onDismiss,
+        title = { Text("File history") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Text("Local snapshots are captured during saves, at most once every 20 seconds. Up to 12 versions per file.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (m.fileHistory.isEmpty()) Text(if (m.busy) "Loading…" else "No older versions yet.")
+                LazyColumn(Modifier.heightIn(max = 240.dp)) {
+                    items(m.fileHistory, key = { it.id }) { version ->
+                        Row(Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(java.text.DateFormat.getDateTimeInstance()
+                                    .format(java.util.Date(version.savedAt)),
+                                    style = MaterialTheme.typography.bodyMedium)
+                                Text("${version.bytes} bytes",
+                                    style = MaterialTheme.typography.labelSmall)
+                            }
+                            TextButton(enabled = !m.busy, onClick = {
+                                m.previewHistory(version.id)
+                            }) { Text("View") }
+                            TextButton(enabled = !m.busy, onClick = {
+                                restoreId = version.id
+                            }) { Text("Restore") }
+                        }
+                    }
+                }
+                m.historyPreview?.let { old ->
+                    HorizontalDivider()
+                    Text("Snapshot preview · first 5,000 characters",
+                        style = MaterialTheme.typography.labelSmall)
+                    Text(old, fontFamily = FontFamily.Monospace, maxLines = 10,
+                        style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } })
 }

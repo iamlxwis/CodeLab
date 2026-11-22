@@ -166,6 +166,10 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
     var accent by mutableStateOf(preferences.getString("accent", "Mint") ?: "Mint")
         private set
+    var fileHistory by mutableStateOf(emptyList<ProjectStore.FileVersion>())
+        private set
+    var historyPreview by mutableStateOf<String?>(null)
+        private set
     var trashItems by mutableStateOf(emptyList<ProjectStore.TrashItem>())
         private set
     var searchHits by mutableStateOf(emptyList<ProjectStore.SearchHit>())
@@ -494,6 +498,42 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             val last = imported.last()
             val opened = persist(load(p, tabs + imported, last))
             val commit: () -> Unit = { apply(opened); console = false }
+            commit
+        }
+    }
+
+    fun refreshHistory() {
+        val p = project ?: return
+        val f = active ?: return
+        work {
+            val list = store.versions(p, f)
+            val commit: () -> Unit = { fileHistory = list; historyPreview = null }
+            commit
+        }
+    }
+
+    fun previewHistory(id: String) {
+        val p = project ?: return
+        val f = active ?: return
+        work {
+            val oldText = store.readVersion(p, f, id)
+            val commit: () -> Unit = { historyPreview = oldText.take(5000) }
+            commit
+        }
+    }
+
+    fun restoreHistory(id: String) {
+        val p = project ?: return
+        val f = active ?: return
+        work {
+            store.restoreVersion(p, f, id)
+            val reopened = persist(load(p, tabs, f))
+            val versions = store.versions(p, f)
+            val commit: () -> Unit = {
+                apply(reopened)
+                fileHistory = versions
+                historyPreview = null
+            }
             commit
         }
     }
