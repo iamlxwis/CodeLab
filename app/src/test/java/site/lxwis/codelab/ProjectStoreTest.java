@@ -122,7 +122,7 @@ public class ProjectStoreTest {
         assertEquals(Arrays.asList("index.html", "script.js", "style.css"), store.files("Website"));
         assertTrue(store.read("Website", "index.html").contains("script.js"));
 
-        assertThrows(IllegalArgumentException.class, () -> store.createProject("Invalid", "Python"));
+        assertThrows(IllegalArgumentException.class, () -> store.createProject("Invalid", "Brainfuck"));
         assertFalse(store.projects().contains("Invalid"));
     }
 }
