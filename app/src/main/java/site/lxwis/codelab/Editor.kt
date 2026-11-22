@@ -360,7 +360,7 @@ fun CodeEditor(
                         "Remove duplicate lines", "Remove blank lines", "Join lines",
                         "Split commas", "Indent 2 spaces", "Indent 4 spaces",
                         "Outdent 2 spaces", "Toggle comments", "Move lines up",
-                        "Move lines down").forEachIndexed { index, label ->
+                        "Move lines down", "Normalize LF newlines", "Convert to CRLF").forEachIndexed { index, label ->
                         DropdownMenuItem(text = { Text(label) }, enabled = !readOnly,
                             onClick = { view?.applyCodeTool(index); toolsMenu = false })
                     }
@@ -953,7 +953,18 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
 
     fun applyCodeTool(index: Int) {
-        if (!isEnabled || index !in 0..19) return
+        if (!isEnabled || index !in 0..21) return
+        if (index == 20 || index == 21) {
+            val current = text.toString()
+            val lf = current.replace("\r\n", "\n").replace("\r", "\n")
+            val changed = if (index == 21) lf.replace("\n", "\r\n") else lf
+            if (current != changed) {
+                val caret = selectionStart.coerceIn(0, changed.length)
+                text.replace(0, length(), changed)
+                setSelection(caret)
+            }
+            return
+        }
         val editable = text ?: return
         val source = editable.toString()
         val from = minOf(selectionStart, selectionEnd).coerceIn(0, source.length)

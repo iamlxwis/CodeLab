@@ -331,7 +331,19 @@ public final class ProjectStore {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         transfer(input, output, MAX_FILE_BYTES);
         byte[] bytes = output.toByteArray();
-        String content = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
+        final String content;
+        if (bytes.length >= 2 && (bytes[0] & 255) == 255 && (bytes[1] & 255) == 254) {
+            content = StandardCharsets.UTF_16LE.newDecoder()
+                .decode(ByteBuffer.wrap(bytes, 2, bytes.length - 2)).toString();
+        } else if (bytes.length >= 2 && (bytes[0] & 255) == 254 && (bytes[1] & 255) == 255) {
+            content = StandardCharsets.UTF_16BE.newDecoder()
+                .decode(ByteBuffer.wrap(bytes, 2, bytes.length - 2)).toString();
+        } else {
+            int start = bytes.length >= 3 && (bytes[0] & 255) == 239
+                && (bytes[1] & 255) == 187 && (bytes[2] & 255) == 191 ? 3 : 0;
+            content = StandardCharsets.UTF_8.newDecoder()
+                .decode(ByteBuffer.wrap(bytes, start, bytes.length - start)).toString();
+        }
         writeText(target, content);
     }
 

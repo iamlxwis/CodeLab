@@ -45,6 +45,18 @@ public class ProjectStoreHistoryTest {
         assertFalse(store.versions("Test", "src/notes.txt").isEmpty());
     }
 
+    @Test public void importsUtf16BomAndNormalizesToUtf8() throws Exception {
+        ProjectStore store = new ProjectStore(temp.newFolder("workspace5"));
+        store.createProject("Test", "JavaScript");
+        byte[] text = "hello\r\nworld".getBytes(java.nio.charset.StandardCharsets.UTF_16LE);
+        byte[] withBom = new byte[text.length + 2];
+        withBom[0] = (byte) 0xff;
+        withBom[1] = (byte) 0xfe;
+        System.arraycopy(text, 0, withBom, 2, text.length);
+        store.importSingleFile("Test", "legacy.txt", new java.io.ByteArrayInputStream(withBom));
+        assertEquals("hello\r\nworld", store.read("Test", "legacy.txt"));
+    }
+
     @Test public void projectSearchFindsCorrectLine() throws Exception {
         ProjectStore store = new ProjectStore(temp.newFolder("workspace3"));
         store.createProject("Test", "JavaScript");
