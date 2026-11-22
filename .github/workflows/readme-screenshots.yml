@@ -1,0 +1,36 @@
+name: Import real CodeLab screenshots
+on:
+  push:
+    branches: [docs/readme-refresh]
+    paths:
+      - .github/workflows/readme-screenshots.yml
+permissions:
+  actions: read
+  contents: write
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import screenshots from passing Android emulator run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/codelab-screenshots docs/screenshots
+          gh run download 45018199547 --repo iamlxwis/CodeLab --name device-smoke-evidence --dir /tmp/codelab-screenshots
+          cp /tmp/codelab-screenshots/02-editor.png docs/screenshots/editor.png
+          cp /tmp/codelab-screenshots/07-web-preview.png docs/screenshots/web-preview.png
+          test -s docs/screenshots/editor.png
+          test -s docs/screenshots/web-preview.png
+      - name: Commit actual emulator captures to PR branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/screenshots/editor.png docs/screenshots/web-preview.png
+          if ! git diff --staged --quiet; then
+            git commit -m 'docs: add verified Android emulator screenshots'
+            git push origin HEAD:docs/readme-refresh
+          fi
