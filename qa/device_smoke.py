@@ -91,8 +91,10 @@ def main():
     adb("shell", "input", "text", "answer.js")
     tap("Create")
     wait_for("Close answer.js")
+    snapshot("05-new-file")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", shlex.quote("print(6*7)"))
+    snapshot("06-after-input")
     wait_for("print(6*7)", contains=True)
     tap("Run")
     wait_for("42", contains=True)
@@ -205,5 +207,7 @@ if __name__ == "__main__":
     except Exception:
         OUT.mkdir(exist_ok=True)
         snapshot("failure")
-        (OUT / "logcat.txt").write_text(adb("logcat", "-d", "-t", "2500"))
+        (OUT / "logcat.txt").write_text(adb("logcat", "-d", "-t", "12000"))
+        (OUT / "crash-log.txt").write_text(
+            adb("logcat", "-d", "-b", "crash", "-t", "1000", check=False))
         raise
