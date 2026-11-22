@@ -31,6 +31,6 @@ class WorkspaceShellTest {
         store.createFile("Demo", "hello world.txt", "alpha beta")
         val shell = WorkspaceShell(store, "Demo")
         assertEquals("alpha beta", shell.execute("cat 'hello world.txt'"))
-        assertTrue(shell.execute("help").contains("not", ignoreCase = true))
+        assertTrue(shell.execute("help").contains("No OS shell", ignoreCase = true))
     }
 }
