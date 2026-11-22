@@ -1,0 +1,8 @@
+# Curated startup/editor paths, pending device-recorded profile verification.
+HSPLsite/lxwis/codelab/MainActivity;->onCreate(Landroid/os/Bundle;)V
+HSPLsite/lxwis/codelab/WorkspaceModel;->edit(Ljava/lang/String;)V
+HSPLsite/lxwis/codelab/WorkspaceModel;->select(Ljava/lang/String;ZLjava/lang/Integer;)V
+HSPLsite/lxwis/codelab/WorkspaceModel;->flush()V
+HSPLsite/lxwis/codelab/SourceView;->onDraw(Landroid/graphics/Canvas;)V
+HSPLsite/lxwis/codelab/SourceView;->onSelectionChanged(II)V
+HSPLsite/lxwis/codelab/SourceView;->onTouchEvent(Landroid/view/MotionEvent;)Z

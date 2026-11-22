@@ -10,7 +10,22 @@ Direct public APK download: **no ZIP, GitHub login, API key, or signup required.
 
 The link points to the most recently published GitHub Release. A new APK is published automatically after the `main` branch's APK build, signature verification, and unit tests pass. The [latest release](https://github.com/iamlxwis/CodeLab/releases/tag/latest) includes a SHA-256 checksum. The separate [device smoke workflow](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml) performs emulator tests.
 
-**Early-access warning:** This is a debug-signed APK, not a production release. The GitHub Actions debug signing key may change between builds; Android may reject an update if the signature differs. Back up your projects using **Export project ZIP** before uninstalling or replacing the app. Do not assume an APK can be installed over an older version without losing local app data.
+**Signing and updates:** CI now assembles an optimized `release` variant with R8 code shrinking. For stable Android in-place updates, the maintainer must configure the four release signing secrets listed below. When those secrets are absent, CI signs with the build runner's temporary debug key and explicitly marks the APK as **fallback-signed** in the release notes. That key may change between builds, so Android may reject an in-place update. Until stable signing is configured, **Export project ZIP** before replacing the app; do not uninstall without backing up local projects.
+
+## Editor responsiveness and navigation (performance overhaul branch)
+
+- Optimized `release` build with code/resource shrinking, reflection-safe R8 rules, profile installer and initial startup/editor profile rules.
+- Editing remains responsive during background project I/O. Autosave runs approximately one second after typing stops; explicit Save, lifecycle pauses and project switches request durable writes. Files are atomically replaced.
+- Cancellable viewport-only syntax analysis, asynchronous structural checks and deferred minimap/symbol sampling.
+- Cleaner top bar: **Run · Save · Search · More**; navigation keeps advanced actions discoverable without requiring a row of buttons.
+- Syntax colors and UI presets include Dracula, One Dark, Monokai, GitHub Light and OLED black; motion follows Android system settings and the app's Reduced setting.
+- Editor undo/redo, symbol toolbar, formatting for JS/JSON/HTML/CSS/SQL, and Ctrl+Enter to Run, alongside existing bracket pairing, indentation and pinch-to-zoom support.
+- Starter projects: **To-do app**, **API fetch**, **Algorithms**, **SQL playground**, **Lua game loop**. The API fetch starter fetches its own local `data.json` file inside the offline web preview; no network or account is needed.
+- Debuggable builds log tap-to-next-frame latency in Logcat under `CodeLabLatency`; `qa/performance_smoke.py` records cold start, PSS, frame metrics and sampled input latency for comparison.
+
+**Release signing setup (repository maintainer):** Add a stable Android keystore, encode the keystore file as base64 in the GitHub Actions secret `CODELAB_KEYSTORE_B64`, and set `CODELAB_KEYSTORE_PASSWORD`, `CODELAB_KEY_ALIAS`, and `CODELAB_KEY_PASSWORD`. Keep the same keystore and alias for every subsequent update. A debug-signed APK cannot update directly over a production-signed APK (or vice versa) without uninstalling; back up project data before changing the signature.
+
+**Demo GIF:** Screenshot or recorded demo to be added after device validation.
 
 ## What works
 
@@ -81,14 +96,14 @@ CodeLab imports image and font assets as bytes rather than forcing them through 
 
 ## Project templates and offline web preview
 
-The new-project dialog includes JavaScript, Java beta, Lua, SQLite, and Web starter projects. Web projects contain `index.html`, `style.css`, and `script.js`. Open an HTML file and choose **Preview** to render the page in a restricted embedded WebView. Relative project CSS/JS/text assets load from local app storage; external network resources are blocked. The preview can display browser `console.log` messages and refresh its document.
+The new-project dialog includes JavaScript, Java beta, Lua, SQLite, Web, To-do app, API fetch, Algorithms, SQL playground, and Lua game loop starter projects. Web projects contain `index.html`, `style.css`, and `script.js`. Open an HTML file and choose **Preview** to render the page in a restricted embedded WebView. Relative project CSS/JS/text assets load from local app storage; external network resources are blocked. The preview can display browser `console.log` messages and refresh its document.
 
 ## Build locally
 
 Use Android Studio with JDK 17 and Android SDK Platform 35. From the repository root:
 
 ```bash
-./gradlew :app:assembleDebug
+./gradlew :app:assembleRelease
 ./gradlew :app:testDebugUnitTest
 ```
 

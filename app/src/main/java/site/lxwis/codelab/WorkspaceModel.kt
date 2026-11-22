@@ -140,7 +140,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     var themePreset by mutableStateOf(preferences.getString("preset", "Obsidian") ?: "Obsidian")
         private set
     fun choosePreset(value: String) {
-        if (value !in listOf("Obsidian", "Nocturne", "Paper")) return
+        if (value !in listOf("Obsidian", "Nocturne", "Paper",
+                "Dracula", "One Dark", "Monokai", "GitHub Light", "OLED")) return
         themePreset = value
         preferences.edit().putString("preset", value).apply()
     }
@@ -331,7 +332,21 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     var preview by mutableStateOf(false)
     var error by mutableStateOf<String?>(null)
     private var revision = 0L
-    private val autoSave = Runnable { flush() }
+    private val autoSave = Runnable { saveAsync(durable = false) }
+    private val openBuffers = mutableMapOf<String, String>()
+    private val unsavedBuffers = mutableSetOf<String>()
+    private var pendingOperations = 0
+    private var navigationVersion = 0L
+    private fun bufferKey(p: String, f: String) = "$p/$f"
+    private fun beginOperation() { pendingOperations++; busy = true }
+    private fun endOperation() { pendingOperations = (pendingOperations - 1).coerceAtLeast(0); busy = pendingOperations > 0 }
+    private fun markSaved(p: String, f: String, text: String) {
+        val key = bufferKey(p, f)
+        if (openBuffers[key] == text) {
+            unsavedBuffers.remove(key)
+            if (project == p && active == f) dirty = false
+        }
+    }
 
     init {
         updateNetwork()
@@ -393,8 +408,11 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         projectMetadata = open.metadata
         tabs = open.tabs
         active = open.file
-        source = open.text
-        dirty = false
+        val key = open.file?.let { bufferKey(open.project, it) }
+        val keepEdits = key != null && key in unsavedBuffers
+        source = if (keepEdits) openBuffers[key] ?: open.text else open.text
+        dirty = keepEdits
+        if (key != null) openBuffers[key] = source
         preview = false
         revision++
     }
@@ -404,27 +422,31 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         return open
     }
 
-    // Serialize saves and navigation. A failed write keeps the current buffer available.
+    // All I/O is serialized. The main-thread editor never waits for a disk operation.
+    // A versioned, per-file buffer prevents slow callbacks from overwriting newer typing.
     private fun work(task: () -> (() -> Unit)) {
-        if (busy) return
         main.removeCallbacks(autoSave)
         val p = project
         val f = active
-        val text = source
+        val captured = source
         val mustSave = dirty
-        busy = true
+        val requestVersion = revision
+        beginOperation()
         io.execute {
             val started = android.os.SystemClock.elapsedRealtime()
             try {
-                if (mustSave && p != null && f != null) store.save(p, f, text)
+                if (mustSave && p != null && f != null) store.save(p, f, captured, true)
                 val commit = task()
                 val elapsed = android.os.SystemClock.elapsedRealtime() - started
                 main.post {
-                    dirty = false
+                    if (mustSave && p != null && f != null) markSaved(p, f, captured)
+                    // A callback can arrive after a newer edit or navigation.
+                    if (revision == requestVersion && project == p && active == f && mustSave)
+                        dirty = false
                     commit()
                     lastOperationMillis = elapsed
                     lastOperationName = "Workspace I/O"
-                    busy = false
+                    endOperation()
                 }
             } catch (e: Exception) {
                 val elapsed = android.os.SystemClock.elapsedRealtime() - started
@@ -432,47 +454,80 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                     lastOperationMillis = elapsed
                     lastOperationName = "Failed workspace I/O"
                     error = e.localizedMessage ?: "Workspace operation failed"
-                    busy = false
+                    endOperation()
                 }
             }
         }
     }
 
     fun edit(value: String) {
-        if (busy || value == source) return
+        if (value == source) return
         source = value
+        project?.let { p -> active?.let { f ->
+            val key = bufferKey(p, f)
+            openBuffers[key] = value
+            unsavedBuffers.add(key)
+        } }
         dirty = true
         revision++
         main.removeCallbacks(autoSave)
-        main.postDelayed(autoSave, 350)
+        main.postDelayed(autoSave, 1000)
     }
 
-    fun flush() {
-        if (!dirty || busy) return
+    private fun saveAsync(durable: Boolean) {
         main.removeCallbacks(autoSave)
         val p = project ?: return
         val f = active ?: return
+        if (!dirty && !durable) return
         val version = revision
-        val text = source
+        val content = source
+        beginOperation()
         io.execute {
             val started = android.os.SystemClock.elapsedRealtime()
             try {
-                store.save(p, f, text)
+                store.save(p, f, content, durable)
                 val elapsed = android.os.SystemClock.elapsedRealtime() - started
                 main.post {
                     lastSaveMillis = elapsed
-                    if (revision == version) dirty = false
+                    markSaved(p, f, content)
+                    if (revision == version && project == p && active == f) dirty = false
+                    endOperation()
                 }
-            } catch (e: Exception) { main.post { if (revision == version) error = "Save failed: ${e.localizedMessage}" } }
+            } catch (e: Exception) {
+                main.post {
+                    if (project == p && active == f && revision == version)
+                        error = "Save failed: " + e.localizedMessage
+                    endOperation()
+                }
+            }
         }
     }
 
+    // Explicit Save, lifecycle flush and project switches make the rename durable.
+    fun flush() = saveAsync(durable = true)
+
     fun openProject(name: String, create: Boolean = false, template: String = "JavaScript") {
+        flush()
+        val nav = ++navigationVersion
+        project = name
+        files = emptyList()
+        tabs = emptyList()
+        active = null
+        source = ""
+        dirty = false
+        revision++
         work {
             if (create) store.createProject(name, template)
             val opened = persist(load(name, emptyList(), null, allowUnavailable = true))
             val names = store.projects()
-            val commit: () -> Unit = { runner.stop(); console = false; projects = names; apply(opened) }
+            val commit: () -> Unit = {
+                projects = names
+                if (nav == navigationVersion && project == name) {
+                    runner.stop()
+                    console = false
+                    apply(opened)
+                }
+            }
             commit
         }
     }
@@ -532,37 +587,76 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun home() {
+        flush()
+        val nav = ++navigationVersion
+        runner.stop()
+        project = null
+        active = null
+        files = emptyList()
+        folders = emptyList()
+        tabs = emptyList()
+        source = ""
+        dirty = false
+        console = false
+        preview = false
+        revision++
         work {
             store.remember(null, emptyList(), null)
             val names = store.projects()
-            val commit: () -> Unit = {
-                runner.stop(); projects = names; project = null; active = null
-                files = emptyList(); folders = emptyList(); tabs = emptyList()
-                source = ""; console = false; preview = false; revision++
-            }
+            val commit: () -> Unit = { if (nav == navigationVersion) projects = names }
             commit
         }
     }
 
     fun moveActiveTab(offset: Int) {
         val index = tabs.indexOf(active)
-        if (busy || index < 0) return
+        if (index < 0) return
         val target = (index + offset).coerceIn(0, tabs.lastIndex)
         if (target != index) select(tabs[target])
     }
 
     fun select(path: String, create: Boolean = false, goToLine: Int? = null) {
         val p = project ?: return
-        val wanted = tabs + path
-        work {
-            if (create) store.createFile(p, path)
-            val opened = persist(load(p, wanted, path))
-            val commit: () -> Unit = {
-                apply(opened)
-                pendingLine = goToLine
-                console = false
+        if (!create && path !in files) return
+        val fromFile = active
+        val fromText = source
+        val savePrevious = dirty && fromFile != null
+        main.removeCallbacks(autoSave)
+        val nav = ++navigationVersion
+        val wanted = (tabs + path).distinct()
+        tabs = wanted
+        active = path
+        val targetKey = bufferKey(p, path)
+        source = openBuffers[targetKey].orEmpty()
+        dirty = targetKey in unsavedBuffers
+        revision++
+        pendingLine = goToLine
+        console = false
+        preview = false
+        beginOperation()
+        io.execute {
+            val started = android.os.SystemClock.elapsedRealtime()
+            try {
+                if (savePrevious) store.save(p, requireNotNull(fromFile), fromText, true)
+                if (create) store.createFile(p, path)
+                val opened = persist(load(p, wanted, path))
+                val elapsed = android.os.SystemClock.elapsedRealtime() - started
+                main.post {
+                    if (savePrevious) markSaved(p, requireNotNull(fromFile), fromText)
+                    if (nav == navigationVersion && project == p && active == path) {
+                        apply(opened)
+                        pendingLine = goToLine
+                    }
+                    lastOperationMillis = elapsed
+                    lastOperationName = "Switch file"
+                    endOperation()
+                }
+            } catch (e: Exception) {
+                main.post {
+                    error = e.localizedMessage ?: "Could not open file"
+                    endOperation()
+                }
             }
-            commit
         }
     }
 

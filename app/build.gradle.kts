@@ -1,8 +1,18 @@
+import java.io.File
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+val keyFile = System.getenv("CODELAB_KEYSTORE_FILE")
+val keyPassword = System.getenv("CODELAB_KEYSTORE_PASSWORD")
+val keyAlias = System.getenv("CODELAB_KEY_ALIAS")
+val keyEntryPassword = System.getenv("CODELAB_KEY_PASSWORD")
+val hasReleaseSigning = !keyFile.isNullOrBlank() &&
+    !keyPassword.isNullOrBlank() && !keyAlias.isNullOrBlank() &&
+    !keyEntryPassword.isNullOrBlank() && File(keyFile).isFile
 
 android {
     namespace = "site.lxwis.codelab"
@@ -11,8 +21,8 @@ android {
         applicationId = "site.lxwis.codelab"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.3.0-alpha"
+        versionCode = 4
+        versionName = "0.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true }
@@ -21,6 +31,27 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("production") {
+                storeFile = File(requireNotNull(keyFile))
+                storePassword = keyPassword
+                keyAlias = keyAlias
+                keyPassword = keyEntryPassword
+            }
+        }
+    }
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // A valid, stable release key is required for in-place updates across CI runs.
+            // No secrets: keep PR/CI builds installable without claiming stable update signing.
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("production")
+                else signingConfigs.getByName("debug")
+        }
+    }
 }
 
 dependencies {
@@ -32,6 +63,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation("androidx.profileinstaller:profileinstaller:1.4.1")
     implementation("org.mozilla:rhino:1.7.15.1")
     implementation("org.luaj:luaj-jse:3.0.1")
     implementation("io.github.beanshell:bsh:2.1.1")
