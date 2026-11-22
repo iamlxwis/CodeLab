@@ -21,7 +21,7 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.core.spring
 import android.provider.Settings
 import android.view.View
-import android.view.WindowInsets
+import android.view.WindowInsets as PlatformWindowInsets
 import android.os.Build
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -159,7 +159,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         if (focusMode) {
             if (Build.VERSION.SDK_INT >= 30) {
                 window?.insetsController?.hide(
-                    WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                    PlatformWindowInsets.Type.statusBars() or PlatformWindowInsets.Type.navigationBars())
                 window?.insetsController?.systemBarsBehavior =
                     android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             } else {
@@ -171,7 +171,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         onDispose {
             if (Build.VERSION.SDK_INT >= 30) {
                 window?.insetsController?.show(
-                    WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                    PlatformWindowInsets.Type.statusBars() or PlatformWindowInsets.Type.navigationBars())
             } else window?.decorView?.systemUiVisibility = previousFlags
         }
     }
