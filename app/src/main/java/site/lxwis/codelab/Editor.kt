@@ -59,7 +59,8 @@ fun CodeEditor(
     onJumpHandled: () -> Unit = {},
     onSave: () -> Unit = {},
     onPreviousTab: () -> Unit = {},
-    onNextTab: () -> Unit = {}
+    onNextTab: () -> Unit = {},
+    onOpenCommands: () -> Unit = {}
 ) = key(fileKey) {
     val context = LocalContext.current
     val hardwareKeyboard = LocalConfiguration.current.keyboard != Configuration.KEYBOARD_NOKEYS
@@ -692,6 +693,7 @@ fun CodeEditor(
                 editor.lineShortcut = { lineInput = ""; lineDialog = true }
                 editor.bookmarkShortcut = { editor.toggleBookmark() }
                 editor.saveShortcut = onSave
+                editor.commandShortcut = onOpenCommands
                 editor.zoomShortcut = { delta ->
                     fontSize = (fontSize + delta).coerceIn(10, 28)
                     preferences.edit().putInt("font-size", fontSize).apply()
@@ -828,6 +830,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     var lineShortcut: (() -> Unit)? = null
     var bookmarkShortcut: (() -> Unit)? = null
     var saveShortcut: (() -> Unit)? = null
+    var commandShortcut: (() -> Unit)? = null
     var zoomShortcut: ((Int) -> Unit)? = null
     private val zoomDetector = ScaleGestureDetector(context,
         object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
@@ -1241,6 +1244,11 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (event.isCtrlPressed && event.isShiftPressed &&
+            keyCode == KeyEvent.KEYCODE_P) {
+            commandShortcut?.invoke()
+            return true
+        }
         if (event.isCtrlPressed && !event.isAltPressed) {
             when (keyCode) {
                 KeyEvent.KEYCODE_S -> { saveShortcut?.invoke(); return true }

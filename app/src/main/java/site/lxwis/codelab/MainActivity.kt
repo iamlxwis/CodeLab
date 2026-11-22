@@ -225,13 +225,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         else if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
     }
 
-    Column(modifier.fillMaxSize().onPreviewKeyEvent { key ->
-        if (key.type == KeyEventType.KeyDown && key.isCtrlPressed && key.isShiftPressed &&
-            key.key == android.view.KeyEvent.KEYCODE_P) {
-            dialog = "commands"
-            true
-        } else false
-    }) {
+    Column(modifier.fillMaxSize()) {
         if (!focusMode || p == null) Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             if (p == null) Mark(Modifier.padding(horizontal = 8.dp).size(34.dp))
             else IconButton(onClick = { m.home() }, enabled = !m.busy) { Icon(Icons.Default.ArrowBack, "Project library") }
@@ -430,6 +424,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 onJumpHandled = m::consumeJump, onSave = m::flush,
                                 onPreviousTab = { m.moveActiveTab(-1) },
                                 onNextTab = { m.moveActiveTab(1) },
+                                onOpenCommands = { dialog = "commands" },
                                 modifier = Modifier.fillMaxSize())
                         } else TextButton(onClick = { dialog = "files" }, modifier = Modifier.align(Alignment.Center)) { Text("Open a file") }
                     }
