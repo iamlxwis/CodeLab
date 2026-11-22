@@ -55,6 +55,7 @@ fun CodeEditor(
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", false)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
     var shortcutSettings by remember { mutableStateOf(false) }
+    var syntaxPalette by remember { mutableStateOf(preferences.getString("syntax-palette", "Classic") ?: "Classic") }
     var indentWidth by remember { mutableStateOf(preferences.getInt("indent-width", 4)) }
     var useTabs by remember { mutableStateOf(preferences.getBoolean("indent-tabs", false)) }
     var completionMenu by remember { mutableStateOf(false) }
@@ -274,6 +275,15 @@ fun CodeEditor(
                             preferences.edit().putBoolean("active-line", showActiveLine).apply()
                             settings = false })
                     HorizontalDivider()
+                    listOf("Classic", "Neon", "Monochrome").forEach { palette ->
+                        DropdownMenuItem(text = { Text("Syntax colors · " + palette) },
+                            onClick = {
+                                syntaxPalette = palette
+                                preferences.edit().putString("syntax-palette", palette).apply()
+                                settings = false
+                            })
+                    }
+                    HorizontalDivider()
                     listOf(2, 4, 8).forEach { width ->
                         DropdownMenuItem(text = { Text("Indent width · $width") },
                             onClick = {
@@ -487,6 +497,7 @@ fun CodeEditor(
                 editor.setCodeWrap(wordWrap)
                 editor.setGutterOptions(showLineNumbers, showActiveLine)
                 editor.setIndentPolicy(indentWidth, useTabs)
+                editor.setSyntaxPalette(syntaxPalette)
                 editor.findShortcut = { find = true }
                 editor.lineShortcut = { lineInput = ""; lineDialog = true }
                 editor.bookmarkShortcut = { editor.toggleBookmark() }
@@ -597,6 +608,13 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     private var paper = 0
     private var active = 0
     private var darkMode = true
+    private var syntaxPalette = "Classic"
+    fun setSyntaxPalette(value: String) {
+        if (syntaxPalette != value) {
+            syntaxPalette = value
+            scheduleHighlight(true)
+        }
+    }
     private var lastAppearance: List<Any> = emptyList()
     private var ready = false
     private val language = filename.substringAfterLast('.', "").lowercase()
@@ -973,7 +991,11 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         source.getSpans(0, source.length, SyntaxInk::class.java).forEach(source::removeSpan)
         if (language !in supportedExtensions || start >= end) return
         val snippet = source.subSequence(start, end).toString()
-        val colors = if (darkMode) darkInk else lightInk
+        val colors = when (syntaxPalette) {
+            "Neon" -> if (darkMode) neonDarkInk else neonLightInk
+            "Monochrome" -> if (darkMode) monoDarkInk else monoLightInk
+            else -> if (darkMode) darkInk else lightInk
+        }
         if (language == "html" || language == "htm") {
             htmlTags.findAll(snippet).forEach { tag ->
                 val value = tag.value
@@ -1034,5 +1056,9 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         private val keywords = "async await break case catch class const continue debugger default delete do else export extends false finally for from function if import in instanceof interface let new null of return static super switch this throw true try typeof undefined var void while with yield def elif except lambda pass none print console log select where insert create table into values order by join update set delete and or end local then repeat until fun val object when package public private int char float double struct bool return func println puts echo using namespace string cout std printf include int main fn mut impl enum trait pub use mod async await go defer chan type map nil var let class struct self this try catch else if do end".split(' ').toSet()
         private val darkInk = intArrayOf(0xff91a09d.toInt(),0xffa9dda4.toInt(),0xffe7b381.toInt(),0xffb8acff.toInt())
         private val lightInk = intArrayOf(0xff58675e.toInt(),0xff246632.toInt(),0xff8b501b.toInt(),0xff64449b.toInt())
+        private val neonDarkInk = intArrayOf(0xff768597.toInt(),0xff6ee7b7.toInt(),0xfff9a8d4.toInt(),0xff93c5fd.toInt())
+        private val neonLightInk = intArrayOf(0xff637084.toInt(),0xff107353.toInt(),0xffa72f71.toInt(),0xff295ca6.toInt())
+        private val monoDarkInk = intArrayOf(0xff808b96.toInt(),0xffbfcbd5.toInt(),0xffdce3e9.toInt(),0xff9aaabb.toInt())
+        private val monoLightInk = intArrayOf(0xff687580.toInt(),0xff485663.toInt(),0xff303b45.toInt(),0xff566575.toInt())
     }
 }

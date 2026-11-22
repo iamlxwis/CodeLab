@@ -151,6 +151,12 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         motionPreference = value
         preferences.edit().putString("motion", value).apply()
     }
+    var motionIntensity by mutableIntStateOf(preferences.getInt("motion-intensity", 100))
+        private set
+    fun chooseMotionIntensity(value: Int) {
+        motionIntensity = value.coerceIn(0, 100)
+        preferences.edit().putInt("motion-intensity", motionIntensity).apply()
+    }
     var interfaceDensity by mutableStateOf(preferences.getString("density", "Comfortable") ?: "Comfortable")
         private set
     fun chooseDensity(value: String) {

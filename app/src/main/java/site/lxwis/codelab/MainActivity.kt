@@ -16,6 +16,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.core.spring
 import android.provider.Settings
 import androidx.compose.foundation.*
@@ -136,7 +138,17 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var menu by remember { mutableStateOf(false) }
     var focusMode by rememberSaveable { mutableStateOf(false) }
     var explorerPinned by rememberSaveable { mutableStateOf(true) }
-    val motionEnabled = m.motionPreference != "Reduced"
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val systemMotionEnabled = remember(context) {
+        Settings.Global.getFloat(context.contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
+    }
+    val motionEnabled = when (m.motionPreference) {
+        "Full" -> true
+        "Reduced" -> false
+        else -> systemMotionEnabled
+    }
+    val motionMillis = if (motionEnabled) m.motionIntensity * 2 else 0
     var importedFile by rememberSaveable { mutableStateOf<String?>(null) }
     val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) {
         it?.let(m::exportFile)
@@ -232,7 +244,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }
         }
         if (p == null) {
-            ProjectLibrary(m, { dialog = "newproject" }, { importZip.launch(arrayOf("*/*")) },
+            ProjectLibrary(m, motionMillis, { dialog = "newproject" }, { importZip.launch(arrayOf("*/*")) },
                 { selected = it; dialog = "renameproject" },
                 { selected = it; dialog = "deleteproject" },
                 { selected = it; dialog = "duplicateproject" })
@@ -252,8 +264,11 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 LazyRow(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
                         val active = m.active == path
+                        val tabColor by animateColorAsState(
+                            if (active) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent,
+                            animationSpec = tween(motionMillis), label = "tab-color")
                         Row(Modifier.padding(end = 2.dp)
-                            .background(if (active) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent,
+                            .background(tabColor,
                                 RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp)), verticalAlignment = Alignment.CenterVertically) {
                             Text(path.substringAfterLast('/'), Modifier.clickable { if (!m.busy) m.select(path) }
                                 .padding(horizontal = 8.dp, vertical = 8.dp),
@@ -268,7 +283,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 val wide = maxWidth >= 820.dp
                 val showSidebar = wide && explorerPinned && !focusMode
                 Row(Modifier.fillMaxSize()) {
-                    if (showSidebar) {
+                    AnimatedVisibility(visible = showSidebar,
+                        enter = expandHorizontally(animationSpec = tween(motionMillis)) +
+                            fadeIn(animationSpec = tween(motionMillis)),
+                        exit = shrinkHorizontally(animationSpec = tween(motionMillis)) +
+                            fadeOut(animationSpec = tween(motionMillis))) {
+                        Row {
                         Surface(Modifier.width(224.dp).fillMaxHeight(),
                             color = MaterialTheme.colorScheme.surfaceContainer) {
                             Column(Modifier.fillMaxSize().padding(10.dp)) {
@@ -305,6 +325,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             }
                         }
                         VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        }
                     }
                     if ((!m.console && !m.preview) || wide) Box(Modifier.weight(1f).fillMaxHeight()) {
                         val file = m.active
@@ -344,8 +365,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }
         }
         AnimatedVisibility(m.busy,
-            enter = fadeIn(tween(if (motionEnabled) 180 else 0)),
-            exit = fadeOut(tween(if (motionEnabled) 180 else 0))) {
+            enter = fadeIn(tween(motionMillis)),
+            exit = fadeOut(tween(motionMillis))) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
@@ -420,7 +441,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         "appearance" -> AlertDialog(onDismissRequest = { dialog = "" },
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             title = { Text("Appearance") },
-            text = { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            text = { Column(Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text("THEME", color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelSmall)
                 Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -455,6 +477,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             onClick = { m.chooseMotion(mode) }, label = { Text(mode) })
                     }
                 }
+                Text("Motion intensity · " + m.motionIntensity + "%",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Slider(value = m.motionIntensity.toFloat(),
+                    onValueChange = { m.chooseMotionIntensity(it.toInt()) },
+                    valueRange = 0f..100f)
                 Text("INTERFACE DENSITY", color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelSmall)
                 Row(Modifier.horizontalScroll(rememberScrollState()),
@@ -525,7 +553,8 @@ private fun DashboardMetric(value: String, label: String,
 }
 
 @Composable
-private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> Unit,
+private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit,
+    importZip: () -> Unit,
     rename: (String) -> Unit, delete: (String) -> Unit, duplicate: (String) -> Unit) {
     var options by remember { mutableStateOf<String?>(null) }
     var projectSearch by rememberSaveable { mutableStateOf("") }
@@ -609,6 +638,7 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
             }
         }, key = { it }) { name ->
             Surface(onClick = { m.openProject(name) }, enabled = !m.busy,
+                modifier = Modifier.animateContentSize(animationSpec = tween(motionMillis)),
                 shape = RoundedCornerShape(16.dp), tonalElevation = 1.dp,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
