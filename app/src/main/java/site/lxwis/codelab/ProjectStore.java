@@ -291,6 +291,10 @@ public final class ProjectStore {
     }
 
     private void writeText(File target, String text) throws IOException {
+        writeText(target, text, false);
+    }
+
+    private void writeText(File target, String text, boolean durable) throws IOException {
         byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
         if (bytes.length > MAX_FILE_BYTES) throw new IOException("Editor files are limited to 256 KiB.");
         ensureDir(target.getParentFile());
@@ -298,7 +302,7 @@ public final class ProjectStore {
         try {
             try (FileOutputStream out = new FileOutputStream(tmp)) {
                 out.write(bytes);
-                out.getFD().sync();
+                if (durable) out.getFD().sync();
             }
             Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } finally { tmp.delete(); }
@@ -415,11 +419,22 @@ public final class ProjectStore {
     }
 
     public synchronized void save(String project, String path, String text) throws IOException {
+        save(project, path, text, false);
+    }
+
+    public synchronized void save(String project, String path, String text, boolean durable) throws IOException {
         File target = resolve(project(project), path);
         if (!target.isFile()) throw new IOException("File does not exist.");
-        if (read(project, path).equals(text)) return;
+        if (read(project, path).equals(text)) {
+            // Autosave can have renamed the file without fsync. A lifecycle/explicit
+            // flush must still durably sync that previously written content.
+            if (durable) {
+                try (RandomAccessFile fd = new RandomAccessFile(target, "rw")) { fd.getFD().sync(); }
+            }
+            return;
+        }
         snapshot(project, path, target, false);
-        writeText(target, text);
+        writeText(target, text, durable);
     }
 
     public synchronized void importSingleFile(String project, String path, InputStream input) throws IOException {
