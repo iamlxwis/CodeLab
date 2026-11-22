@@ -48,6 +48,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.ViewModelProvider
 
@@ -215,7 +221,13 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         else if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
     }
 
-    Column(modifier.fillMaxSize()) {
+    Column(modifier.fillMaxSize().onPreviewKeyEvent { key ->
+        if (key.type == KeyEventType.KeyDown && key.isCtrlPressed && key.isShiftPressed &&
+            key.key == Key.P) {
+            dialog = "commands"
+            true
+        } else false
+    }) {
         if (!focusMode || p == null) Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             if (p == null) Mark(Modifier.padding(horizontal = 8.dp).size(34.dp))
             else IconButton(onClick = { m.home() }, enabled = !m.busy) { Icon(Icons.Default.ArrowBack, "Project library") }
@@ -304,6 +316,10 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         onClick = { menu = false; dialog = "languages" })
                     DropdownMenuItem(text = { Text("Accessibility") },
                         onClick = { menu = false; dialog = "accessibility" })
+                    DropdownMenuItem(text = { Text("Command palette…") },
+                        onClick = { menu = false; dialog = "commands" })
+                    DropdownMenuItem(text = { Text("Developer tools…") },
+                        onClick = { menu = false; dialog = "devtools" })
                     DropdownMenuItem(text = { Text("Performance diagnostics") },
                         onClick = { menu = false; dialog = "performance" })
                     DropdownMenuItem(text = { Text("Appearance") }, onClick = { menu = false; dialog = "appearance" })
@@ -516,6 +532,15 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             text = { Text("Delete $selected and all its files from this device?") },
             confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
+        "devtools" -> DeveloperToolbox { dialog = "" }
+        "commands" -> CommandPaletteDialog(m, dismiss = { dialog = "" },
+            execute = { action ->
+                dialog = action
+                when (action) {
+                    "git" -> m.gitRefresh()
+                    "history" -> m.refreshHistory()
+                }
+            })
         "accessibility" -> AlertDialog(onDismissRequest = { dialog = "" },
             title = { Text("Accessibility") },
             text = {
@@ -1319,4 +1344,53 @@ private fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
             }
         },
         confirmButton = { TextButton(onClick = dismiss) { Text("Done") } })
+}
+
+@Composable
+private fun CommandPaletteDialog(m: WorkspaceModel, dismiss: () -> Unit,
+    execute: (String) -> Unit) {
+    var query by rememberSaveable { mutableStateOf("") }
+    val actions = listOf(
+        "newproject" to "Create project",
+        "newfile" to "Create file",
+        "newfolder" to "Create folder",
+        "files" to "Browse files",
+        "projectsearch" to "Search project",
+        "projectreplace" to "Replace across project",
+        "screenshot" to "Code Screenshot Studio",
+        "history" to "File history",
+        "git" to "Git version control",
+        "devtools" to "Developer tools",
+        "languages" to "Language manager",
+        "appearance" to "Appearance",
+        "accessibility" to "Accessibility",
+        "performance" to "Performance diagnostics",
+        "panels" to "Panel layout"
+    )
+    AlertDialog(onDismissRequest = dismiss,
+        title = { Text("Command palette") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                OutlinedTextField(query, { query = it },
+                    modifier = Modifier.fillMaxWidth(), singleLine = true,
+                    placeholder = { Text("Search actions") })
+                LazyColumn(Modifier.heightIn(max = 340.dp)) {
+                    items(actions.filter { it.second.contains(query, ignoreCase = true) }) { item ->
+                        val requiresFile = item.first in setOf("screenshot", "history")
+                        val requiresProject = item.first in setOf("newfile", "newfolder", "files",
+                            "projectsearch", "projectreplace", "screenshot", "history", "git", "panels")
+                        TextButton(enabled = !m.busy && (!requiresProject || m.project != null) &&
+                            (!requiresFile || m.active != null),
+                            modifier = Modifier.fillMaxWidth(), onClick = { execute(item.first) }) {
+                            Text(item.second, modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Start)
+                        }
+                    }
+                }
+                Text("Tip: Ctrl+Shift+P with a hardware keyboard",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+        confirmButton = { TextButton(onClick = dismiss) { Text("Close") } })
 }
