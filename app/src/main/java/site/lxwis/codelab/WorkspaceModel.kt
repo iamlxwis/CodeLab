@@ -479,6 +479,13 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun moveActiveTab(offset: Int) {
+        val index = tabs.indexOf(active)
+        if (busy || index < 0) return
+        val target = (index + offset).coerceIn(0, tabs.lastIndex)
+        if (target != index) select(tabs[target])
+    }
+
     fun select(path: String, create: Boolean = false, goToLine: Int? = null) {
         val p = project ?: return
         val wanted = tabs + path

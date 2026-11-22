@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -56,7 +57,9 @@ fun CodeEditor(
     modifier: Modifier = Modifier,
     jumpLine: Int? = null,
     onJumpHandled: () -> Unit = {},
-    onSave: () -> Unit = {}
+    onSave: () -> Unit = {},
+    onPreviousTab: () -> Unit = {},
+    onNextTab: () -> Unit = {}
 ) = key(fileKey) {
     val context = LocalContext.current
     val hardwareKeyboard = LocalConfiguration.current.keyboard != Configuration.KEYBOARD_NOKEYS
@@ -66,6 +69,15 @@ fun CodeEditor(
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", false)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
     var shortcutSettings by remember { mutableStateOf(false) }
+    var customizeShortcuts by remember { mutableStateOf(false) }
+    val availableShortcuts = listOf("Tab", "Esc", "←", "→", "↑", "↓", "{", "}",
+        "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">")
+    var customShortcuts by remember {
+        mutableStateOf(preferences.getString("custom-shortcuts", "Tab { } ( ) ;")
+            ?.split(" ")?.filter { it in availableShortcuts }?.distinct()
+            ?: listOf("Tab", "{", "}", "(", ")", ";"))
+    }
+    var draftShortcuts by remember { mutableStateOf(customShortcuts) }
     var hideToolbarOnHardware by remember {
         mutableStateOf(preferences.getBoolean("auto-hide-hardware-toolbar", false))
     }
@@ -110,6 +122,33 @@ fun CodeEditor(
     var showLineNumbers by remember { mutableStateOf(preferences.getBoolean("line-numbers", true)) }
     var showActiveLine by remember { mutableStateOf(preferences.getBoolean("active-line", true)) }
     var result by remember { mutableStateOf("") }
+    if (customizeShortcuts) AlertDialog(onDismissRequest = { customizeShortcuts = false },
+        title = { Text("Customize mobile shortcuts") },
+        text = {
+            Column(Modifier.heightIn(max = 340.dp).verticalScroll(rememberScrollState())) {
+                availableShortcuts.forEach { symbol ->
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = symbol in draftShortcuts, onCheckedChange = { enabled ->
+                            draftShortcuts = if (enabled) (draftShortcuts + symbol).distinct()
+                                else draftShortcuts - symbol
+                        })
+                        Text(symbol, fontFamily = FontFamily.Monospace)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = draftShortcuts.isNotEmpty(), onClick = {
+                customShortcuts = availableShortcuts.filter { it in draftShortcuts }
+                preferences.edit().putString("custom-shortcuts", customShortcuts.joinToString(" ")).apply()
+                shortcutLayout = "Custom"
+                preferences.edit().putString("shortcut-layout", "Custom").apply()
+                symbols = true
+                preferences.edit().putBoolean("symbol-toolbar", true).apply()
+                customizeShortcuts = false
+            }) { Text("Save shortcuts") }
+        },
+        dismissButton = { TextButton(onClick = { customizeShortcuts = false }) { Text("Cancel") } })
     val changes by rememberUpdatedState(onTextChange)
     if (renameDialog) AlertDialog(onDismissRequest = { renameDialog = false },
         title = { Text("Rename identifier in this file") },
@@ -342,7 +381,13 @@ fun CodeEditor(
                             shortcutSettings = false
                         })
                     HorizontalDivider()
-                    listOf("Standard", "Brackets", "Navigation", "Selection", "Minimal").forEach { layout ->
+                    DropdownMenuItem(text = { Text("Customize toolbar…") }, onClick = {
+                        shortcutSettings = false
+                        draftShortcuts = customShortcuts
+                        customizeShortcuts = true
+                    })
+                    HorizontalDivider()
+                    listOf("Standard", "Brackets", "Navigation", "Selection", "Minimal", "Custom").forEach { layout ->
                         DropdownMenuItem(text = { Text(layout) },
                             leadingIcon = {
                                 if (shortcutLayout == layout) Icon(Icons.Default.Check, null)
@@ -507,12 +552,12 @@ fun CodeEditor(
         if (symbols && !(hardwareKeyboard && hideToolbarOnHardware)) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically) {
-                if (shortcutLayout != "Minimal") EditorAction("Tab") { if (!readOnly) view?.indentSelection() }
-                if (shortcutLayout != "Minimal") EditorAction("Outdent") { if (!readOnly) view?.outdentSelection() }
-                if (shortcutLayout != "Brackets") EditorAction("←") { view?.let { editor ->
+                if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") EditorAction("Tab") { if (!readOnly) view?.indentSelection() }
+                if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") EditorAction("Outdent") { if (!readOnly) view?.outdentSelection() }
+                if (shortcutLayout != "Brackets" && shortcutLayout != "Custom") EditorAction("←") { view?.let { editor ->
                     editor.setSelection((editor.selectionStart - 1).coerceAtLeast(0))
                 } }
-                if (shortcutLayout != "Brackets") EditorAction("→") { view?.let { editor ->
+                if (shortcutLayout != "Brackets" && shortcutLayout != "Custom") EditorAction("→") { view?.let { editor ->
                     editor.setSelection((editor.selectionEnd + 1).coerceAtMost(editor.length()))
                 } }
                 if (shortcutLayout == "Selection") {
@@ -535,11 +580,28 @@ fun CodeEditor(
                     "Brackets" -> listOf("{", "}", "(", ")", "[", "]", "<", ">", "'", "\"")
                     "Navigation" -> listOf("{", "}", "(", ")", ";")
                     "Selection" -> emptyList()
+                    "Custom" -> emptyList()
                     "Minimal" -> listOf("{", "}", "(", ")", ";")
                     else -> listOf("{", "}", "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">")
                 }
                 shortcutSymbols.forEach { symbol ->
                     EditorAction(symbol) { if (!readOnly) view?.insertAtSelection(symbol) }
+                }
+                if (shortcutLayout == "Custom") {
+                    customShortcuts.forEach { symbol ->
+                        EditorAction(symbol) {
+                            val editor = view
+                            if (editor != null) when (symbol) {
+                                "Tab" -> if (!readOnly) editor.indentSelection()
+                                "Esc" -> editor.hideKeyboard()
+                                "←" -> editor.setSelection((editor.selectionStart - 1).coerceAtLeast(0))
+                                "→" -> editor.setSelection((editor.selectionEnd + 1).coerceAtMost(editor.length()))
+                                "↑" -> editor.moveCursorLine(-1)
+                                "↓" -> editor.moveCursorLine(1)
+                                else -> if (!readOnly) editor.insertAtSelection(symbol)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -642,7 +704,20 @@ fun CodeEditor(
             view?.goToLogicalLine(line)
         })
         }
-        Row(Modifier.fillMaxWidth().height(28.dp).padding(horizontal = 12.dp),
+        var tabSwipe by remember { mutableFloatStateOf(0f) }
+        Row(Modifier.fillMaxWidth().height(38.dp)
+            .pointerInput(fileKey) {
+                detectHorizontalDragGestures(onDragStart = { tabSwipe = 0f },
+                    onDragEnd = {
+                        if (tabSwipe > 70f) onPreviousTab()
+                        else if (tabSwipe < -70f) onNextTab()
+                        tabSwipe = 0f
+                    }, onHorizontalDrag = { change, amount ->
+                        change.consume()
+                        tabSwipe += amount
+                    })
+            }
+            .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
             Text(cursor + " · " + (view?.text?.count { it == '\n' }?.plus(1) ?: text.count { it == '\n' } + 1) + " lines",
@@ -780,6 +855,12 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         return super.onTouchEvent(event)
     }
 
+    fun hideKeyboard() {
+        val manager = context.getSystemService(Context.INPUT_METHOD_SERVICE)
+            as android.view.inputmethod.InputMethodManager
+        manager.hideSoftInputFromWindow(windowToken, 0)
+        clearFocus()
+    }
     fun selectCurrentLine() {
         val value = text.toString()
         val caret = selectionStart.coerceIn(0, value.length)
