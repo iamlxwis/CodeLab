@@ -63,6 +63,9 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var search by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf("All") }
+    var inspected by remember { mutableStateOf<SupportedLanguage?>(null) }
+    val detected = remember { OfflineRuntimeRegistry.engines()
+        .associateBy({ it.extension }, { OfflineRuntimeRegistry.locallyAvailable(it.extension) }) }
     val filteredLanguages = catalog.filter { language ->
         (language.name.contains(search, ignoreCase = true) ||
             language.extension.contains(search, ignoreCase = true)) &&
@@ -73,6 +76,27 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
         }
     }
 
+    inspected?.let { language ->
+        val engine = OfflineRuntimeRegistry.manifest(language.extension)
+        AlertDialog(onDismissRequest = { inspected = null },
+            title = { Text(language.name + " runtime") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(if (engine == null) "No embedded runtime" else if (detected[language.extension] == true)
+                        "Installed in this APK" else "Runtime unavailable",
+                        style = MaterialTheme.typography.titleMedium)
+                    Text(engine?.engine?.plus(" · ")?.plus(engine.version)
+                        ?: "Editing supported, execution requires a compatible online compiler.")
+                    Text(engine?.capabilities ?: "No offline compiler or interpreter bundled.",
+                        style = MaterialTheme.typography.bodySmall)
+                    Text(engine?.limitations ?: "The Android app does not bundle an offline toolchain for this language.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Offline runtimes are packaged with CodeLab; no runtime download is required.",
+                        style = MaterialTheme.typography.labelSmall)
+                }
+            }, confirmButton = { TextButton(onClick = { inspected = null }) { Text("Close") } })
+    }
     ModalBottomSheet(onDismissRequest = close, sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         dragHandle = { BottomSheetDefaults.DragHandle() }) {
@@ -145,13 +169,19 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
                 }
                 items(filteredLanguages, key = { it.extension }) { language ->
                     val cloud = model.cloudLanguages[language.extension]
-                    Row(Modifier.fillMaxWidth().heightIn(min = 50.dp),
+                    val engine = OfflineRuntimeRegistry.manifest(language.extension)
+                    val localInstalled = engine != null && detected[language.extension] == true
+                    Row(Modifier.fillMaxWidth().heightIn(min = 50.dp)
+                        .clickable { inspected = language },
                         verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(19.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Column(Modifier.weight(1f).padding(start = 12.dp)) {
                             Text(language.name, style = MaterialTheme.typography.bodyMedium)
                             Text(when {
+                                localInstalled && cloud != null -> "Offline · " + engine!!.engine + " " + engine.version + " · Cloud ready"
+                                localInstalled -> "Offline · " + engine!!.engine + " " + engine.version
+                                engine != null -> "Offline runtime unavailable"
                                 language.local != null && cloud != null -> language.local + " · Online ready"
                                 language.local != null -> language.local
                                 cloud != null && model.isOnline -> "Online ready · " + cloud.name
@@ -159,7 +189,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
                                 else -> "Online execution not verified"
                             }, style = MaterialTheme.typography.labelSmall,
                                 maxLines = 2,
-                                color = if (cloud != null || language.local != null)
+                                color = if (cloud != null || localInstalled)
                                     MaterialTheme.colorScheme.primary else
                                     MaterialTheme.colorScheme.onSurfaceVariant)
                         }
