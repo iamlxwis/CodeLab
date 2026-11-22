@@ -105,3 +105,5 @@ claimed from source extraction alone. Refer to the PR checks for verification.
 - Full manual TalkBack navigation/focus order, physical hardware keyboards,
   device-density matrix and every-theme contrast audit are still required.
   Automated smoke evidence must not be called accessibility certification.
+- Multi-file replacement rejects stale previews by comparing a SHA-256
+  fingerprint before any writes. A changed preview must be regenerated.

@@ -97,4 +97,19 @@ public class ProjectStoreHistoryTest {
         assertEquals(2, hits.get(0).line);
         assertEquals("src/util.js", hits.get(0).path);
     }
+    @Test public void refusesStaleReplacePreviewWithoutWriting() throws Exception {
+        ProjectStore store = new ProjectStore(temp.newFolder("replace-stale"));
+        store.createProject("Demo", "JavaScript");
+        store.createFile("Demo", "notes.txt", "old first\\n");
+        java.util.List<String> scope = java.util.Arrays.asList("notes.txt");
+        ProjectStore.ReplacementSummary preview = store.replaceAcrossProject(
+            "Demo", "old", "new", true, false, false, scope);
+        store.save("Demo", "notes.txt", "old modified\\n");
+        java.io.IOException error = assertThrows(java.io.IOException.class, () ->
+            store.replaceAcrossProject("Demo", "old", "new", true, false, true,
+                scope, preview.fingerprint));
+        assertTrue(error.getMessage().contains("Preview again"));
+        assertEquals("old modified\\n", store.read("Demo", "notes.txt"));
+    }
+
 }
