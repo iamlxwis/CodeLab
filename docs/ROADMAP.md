@@ -34,6 +34,8 @@ claimed from source extraction alone. Refer to the PR checks for verification.
 
 - Build a shared spacing, shape and elevation vocabulary and use lightweight
   Material 3 clay surfaces for project cards and empty states.
+- Use file-type icons consistently in the project file explorer and tablet sidebar
+  rather than incorrectly representing every file as a folder.
 - Remove the redundant online/offline project-library metric and correct the
   Favorites sorter to rank rather than filter.
 - Keep the source editor, console, diagnostics and text inputs flat and

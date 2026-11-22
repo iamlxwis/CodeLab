@@ -247,8 +247,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                                 else Color.Transparent) {
                                             Row(Modifier.fillMaxWidth().padding(horizontal = 9.dp, vertical = 11.dp),
                                                 verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(Icons.Default.Description, null, Modifier.size(16.dp),
-                                                    tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                                                FileTypeIcon(file, Modifier.size(16.dp), selected = active)
                                                 Text(file, Modifier.padding(start = 8.dp),
                                                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                                                     fontSize = 12.sp, fontFamily = FontFamily.Monospace,

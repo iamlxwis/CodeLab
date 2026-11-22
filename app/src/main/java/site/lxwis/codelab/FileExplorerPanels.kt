@@ -159,8 +159,7 @@ internal fun FileExplorerSheet(
                 items(visibleFiles, key = { "file:" + it }) { file ->
                     Row(Modifier.fillMaxWidth().heightIn(min = 52.dp),
                         verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.FolderOpen, null, Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        FileTypeIcon(file, Modifier.size(18.dp), selected = file == m.active)
                         Text(if (search.isBlank()) file.removePrefix(directory) else file,
                             Modifier.weight(1f).clickable { onOpen(file) }
                                 .padding(horizontal = 12.dp, vertical = 13.dp),
