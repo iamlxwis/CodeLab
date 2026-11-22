@@ -46,12 +46,13 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     private val cloudIo = Executors.newSingleThreadExecutor()
     private val connectivity = app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val cloudPreferences = app.getSharedPreferences("cloud-runtime", Context.MODE_PRIVATE)
+    private val cloudVault = CloudCredentialVault(cloudPreferences)
     var cloudEndpoint by mutableStateOf(
         cloudPreferences.getString("endpoint", CloudJudge0.DEFAULT_ENDPOINT) ?: CloudJudge0.DEFAULT_ENDPOINT)
         private set
     var cloudHeader by mutableStateOf(cloudPreferences.getString("header", "X-Auth-Token") ?: "X-Auth-Token")
         private set
-    var cloudCredential by mutableStateOf(cloudPreferences.getString("credential", "") ?: "")
+    var cloudCredential by mutableStateOf(runCatching { cloudVault.load() }.getOrDefault(""))
         private set
     var cloudChecking by mutableStateOf(false)
         private set
@@ -117,15 +118,19 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             require(credential.length <= 512 && credential.none { it == '\r' || it == '\n' }) {
                 "Invalid API token"
             }
+            // Never persist API tokens in plaintext SharedPreferences.
+            // Persist first so the UI does not claim success if Keystore fails.
+            cloudVault.save(credential)
             cloudEndpoint = validated
             cloudHeader = header
             cloudCredential = credential
-            cloudPreferences.edit().putString("endpoint", validated).putString("header", header)
-                .putString("credential", credential).apply()
+            cloudPreferences.edit().putString("endpoint", validated).putString("header", header).apply()
             cloudLanguages = emptyMap()
             refreshCloudLanguages()
         } catch (e: IllegalArgumentException) {
             error = e.message ?: "Invalid cloud compiler settings"
+        } catch (_: Exception) {
+            error = "Could not save cloud credentials securely. Check device Keystore availability."
         }
     }
 
