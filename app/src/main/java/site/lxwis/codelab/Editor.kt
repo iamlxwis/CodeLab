@@ -55,6 +55,10 @@ fun CodeEditor(
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", false)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
     var shortcutSettings by remember { mutableStateOf(false) }
+    var indentWidth by remember { mutableStateOf(preferences.getInt("indent-width", 4)) }
+    var useTabs by remember { mutableStateOf(preferences.getBoolean("indent-tabs", false)) }
+    var completionMenu by remember { mutableStateOf(false) }
+    var issuesMenu by remember { mutableStateOf(false) }
     var readOnly by remember { mutableStateOf(false) }
     var view by remember { mutableStateOf<SourceView?>(null) }
     var cursor by remember { mutableStateOf("Ln 1 · Col 1") }
@@ -173,15 +177,7 @@ fun CodeEditor(
             Box {
                 EditorIcon(Icons.Default.List, "File symbol outline") { outlineMenu = true }
                 DropdownMenu(expanded = outlineMenu, onDismissRequest = { outlineMenu = false }) {
-                    val outline = remember(text) {
-                        text.lines().mapIndexedNotNull { index, line ->
-                            val trimmed = line.trimStart()
-                            if (listOf("fun ", "class ", "interface ", "def ", "function ",
-                                    "async function ", "struct ", "enum ", "void ", "public class ")
-                                    .any { trimmed.startsWith(it) }) index + 1 to trimmed.take(70)
-                            else null
-                        }.take(100)
-                    }
+                    val outline = remember(text) { CodeAnalysis.symbols(text) }
                     if (outline.isEmpty()) DropdownMenuItem(
                         text = { Text("No symbols detected") }, enabled = false, onClick = {})
                     outline.forEach { (line, name) ->
@@ -201,6 +197,40 @@ fun CodeEditor(
                     view?.bookmarkedLines()?.forEach { line ->
                         DropdownMenuItem(text = { Text("Line $line") },
                             onClick = { view?.goToLogicalLine(line); bookmarksMenu = false })
+                    }
+                }
+            }
+            EditorIcon(Icons.Default.DataObject, "Jump to matching bracket") {
+                view?.jumpToMatchingBracket()
+            }
+            Box {
+                EditorIcon(Icons.Default.AutoFixHigh, "Complete word from this file") {
+                    completionMenu = true
+                }
+                DropdownMenu(expanded = completionMenu, onDismissRequest = { completionMenu = false }) {
+                    val available = view?.let {
+                        CodeAnalysis.wordCompletions(it.text.toString(), it.selectionStart)
+                    }.orEmpty()
+                    if (available.isEmpty()) DropdownMenuItem(text = { Text("No matching words in this file") },
+                        enabled = false, onClick = {})
+                    available.forEach { suggestion ->
+                        DropdownMenuItem(text = { Text(suggestion, fontFamily = FontFamily.Monospace) },
+                            onClick = {
+                                if (!readOnly) view?.completeCurrentWord(suggestion)
+                                completionMenu = false
+                            })
+                    }
+                }
+            }
+            Box {
+                EditorIcon(Icons.Default.BugReport, "Structural bracket hints") { issuesMenu = true }
+                DropdownMenu(expanded = issuesMenu, onDismissRequest = { issuesMenu = false }) {
+                    val issues = CodeAnalysis.bracketIssues(view?.text?.toString() ?: text)
+                    if (issues.isEmpty()) DropdownMenuItem(text = { Text("No bracket problems detected") },
+                        enabled = false, onClick = {})
+                    issues.forEach { issue ->
+                        DropdownMenuItem(text = { Text("Line ${issue.line}: ${issue.description}") },
+                            onClick = { view?.goToLogicalLine(issue.line); issuesMenu = false })
                     }
                 }
             }
@@ -243,6 +273,21 @@ fun CodeEditor(
                         onClick = { showActiveLine = !showActiveLine
                             preferences.edit().putBoolean("active-line", showActiveLine).apply()
                             settings = false })
+                    HorizontalDivider()
+                    listOf(2, 4, 8).forEach { width ->
+                        DropdownMenuItem(text = { Text("Indent width · $width") },
+                            onClick = {
+                                indentWidth = width
+                                preferences.edit().putInt("indent-width", width).apply()
+                                settings = false
+                            })
+                    }
+                    DropdownMenuItem(text = { Text(if (useTabs) "Use spaces for indentation" else "Use tabs for indentation") },
+                        onClick = {
+                            useTabs = !useTabs
+                            preferences.edit().putBoolean("indent-tabs", useTabs).apply()
+                            settings = false
+                        })
                     HorizontalDivider()
                     listOf(12, 14, 15, 16, 18, 20, 24).forEach {
                         DropdownMenuItem(text = { Text("Font size · ${it}sp") }, onClick = {
@@ -441,6 +486,10 @@ fun CodeEditor(
                 editor.appearance(fontSize, foreground, background, secondary, accent, dark)
                 editor.setCodeWrap(wordWrap)
                 editor.setGutterOptions(showLineNumbers, showActiveLine)
+                editor.setIndentPolicy(indentWidth, useTabs)
+                editor.findShortcut = { find = true }
+                editor.lineShortcut = { lineInput = ""; lineDialog = true }
+                editor.bookmarkShortcut = { editor.toggleBookmark() }
                 editor.isEnabled = !readOnly
                 if (editor.sourceSnapshot != text) editor.replaceSource(text)
             }
@@ -501,6 +550,28 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         }
         requestFocus()
         setSelection(position)
+    }
+    var findShortcut: (() -> Unit)? = null
+    var lineShortcut: (() -> Unit)? = null
+    var bookmarkShortcut: (() -> Unit)? = null
+    private var indentUnit = "    "
+    private var indentSpaces = 4
+    fun setIndentPolicy(width: Int, tabs: Boolean) {
+        indentSpaces = width.coerceIn(2, 8)
+        indentUnit = if (tabs) "\t" else " ".repeat(indentSpaces)
+    }
+    fun completeCurrentWord(suggestion: String) {
+        val end = selectionStart.coerceIn(0, length())
+        var start = end
+        while (start > 0 && (text[start - 1].isLetterOrDigit() || text[start - 1] == '_')) start--
+        text.replace(start, end, suggestion)
+        setSelection(start + suggestion.length)
+    }
+    fun jumpToMatchingBracket() {
+        val pair = CodeAnalysis.matchBracket(text.toString(), selectionStart) ?: return
+        val at = if (selectionStart <= pair.first + 1) pair.second else pair.first
+        requestFocus()
+        setSelection(at)
     }
     private var showNumbers = true
     private var showCurrentLine = true
@@ -667,14 +738,14 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         val from = minOf(selectionStart, selectionEnd).coerceAtLeast(0)
         val to = maxOf(selectionStart, selectionEnd).coerceAtLeast(0)
         if (from == to) {
-            insertAtSelection("    ")
+            insertAtSelection(indentUnit)
             return
         }
         val start = source.lastIndexOf('\n', (from - 1).coerceAtLeast(0)).let {
             if (it < 0) 0 else it + 1
         }
         val chunk = source.subSequence(start, to).toString()
-        val indented = "    " + chunk.replace("\n", "\n    ")
+        val indented = indentUnit + chunk.replace("\n", "\n" + indentUnit)
         source.replace(start, to, indented)
         setSelection(start, start + indented.length)
     }
@@ -688,7 +759,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         }
         val chunk = source.subSequence(start, to).toString()
         val outdented = chunk.split("\n").joinToString("\n") { line ->
-            line.drop(if (line.startsWith("\t")) 1 else line.takeWhile { it == ' ' }.length.coerceAtMost(4))
+            line.drop(if (line.startsWith("\t")) 1 else line.takeWhile { it == ' ' }.length.coerceAtMost(indentSpaces))
         }
         source.replace(start, to, outdented)
         setSelection(start, start + outdented.length)
@@ -789,7 +860,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             while (first > 0 && text[first - 1] != '\n') first--
             var spaces = first
             while (spaces < start && (text[spaces] == ' ' || text[spaces] == '\t')) spaces++
-            val extra = if (start > 0 && text[start - 1] in "{[(:") "    " else ""
+            val extra = if (start > 0 && text[start - 1] in "{[(:") indentUnit else ""
             insertAtSelection("\n" + text.subSequence(first, spaces) + extra)
             return true
         }
@@ -820,8 +891,17 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (event.isCtrlPressed && !event.isAltPressed) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_F -> { findShortcut?.invoke(); return true }
+                KeyEvent.KEYCODE_G -> { lineShortcut?.invoke(); return true }
+                KeyEvent.KEYCODE_B -> { bookmarkShortcut?.invoke(); return true }
+                KeyEvent.KEYCODE_D -> { duplicateCurrentLine(); return true }
+                KeyEvent.KEYCODE_SLASH -> { applyCodeTool(17); return true }
+            }
+        }
         if (keyCode == KeyEvent.KEYCODE_TAB && event.hasNoModifiers()) {
-            insertAtSelection("    ")
+            indentSelection()
             return true
         }
         if (event.hasNoModifiers() || event.isShiftPressed && !event.isCtrlPressed && !event.isAltPressed) {
