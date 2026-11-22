@@ -143,6 +143,10 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                         color = if (session.running) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                if (session.paused) {
+                    TextButton(onClick = { session.debugAction(false) }) { Text("Continue") }
+                    TextButton(onClick = { session.debugAction(true) }) { Text("Step") }
+                }
                 if (session.running) TextButton(onClick = session::stop) { Text("Stop") }
                 else if (session.canRerun) TextButton(onClick = session::rerun) { Text("Rerun") }
                 FilterChip(selected = showFilter, onClick = { showFilter = !showFilter },

@@ -300,6 +300,9 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 menu = false; exportFile.launch(m.active!!.substringAfterLast('/'))
                             })
                         }
+                        DropdownMenuItem(text = { Text("Debug JavaScript…") },
+                            enabled = m.active?.endsWith(".js", true) == true,
+                            onClick = { menu = false; dialog = "jsdebug" })
                         DropdownMenuItem(text = { Text("Code Screenshot Studio…") },
                             enabled = m.active != null,
                             onClick = { menu = false; dialog = "screenshot" })
@@ -487,6 +490,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
         "switchproject" -> ProjectSwitcher(m) { dialog = "" }
         "screenshot" -> CodeScreenshotStudio(m.active.orEmpty(), m.source) { dialog = "" }
+        "jsdebug" -> JavaScriptDebugDialog(m) { dialog = "" }
         "projectsettings" -> ProjectSettingsDialog(m) { dialog = "" }
         "git" -> GitDialog(m) { dialog = "" }
         "history" -> FileHistoryDialog(m) { dialog = "" }
@@ -1510,4 +1514,37 @@ private fun ProjectSettingsDialog(m: WorkspaceModel, dismiss: () -> Unit) {
             }) { Text("Save") }
         },
         dismissButton = { TextButton(onClick = dismiss) { Text("Cancel") } })
+}
+
+@Composable
+private fun JavaScriptDebugDialog(m: WorkspaceModel, dismiss: () -> Unit) {
+    var breakpointText by rememberSaveable { mutableStateOf("") }
+    val parts = breakpointText.split(',', ' ', ';', '\n')
+        .filter { it.isNotBlank() }
+    val lines = parts.mapNotNull(String::toIntOrNull)
+    val valid = parts.size == lines.size && lines.all { it in 1..100000 } && lines.size <= 80
+    AlertDialog(onDismissRequest = dismiss, title = { Text("JavaScript debugger") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("Execution pauses at the first statement. Use Step or Continue in the console.",
+                    style = MaterialTheme.typography.bodyMedium)
+                OutlinedTextField(breakpointText, { breakpointText = it.take(600) },
+                    label = { Text("Optional breakpoint line numbers") },
+                    placeholder = { Text("4, 8, 15") },
+                    modifier = Modifier.fillMaxWidth(), maxLines = 3)
+                Text("Debugger: Mozilla Rhino, offline. Applies to the active .js file. " +
+                    "JavaScript may continue until the timeout limit while paused.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (!valid) Text("Enter up to 80 positive line numbers.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error)
+            }
+        }, confirmButton = {
+            TextButton(enabled = valid && !m.busy && !m.runner.running,
+                onClick = {
+                    m.debugCurrent(lines)
+                    dismiss()
+                }) { Text("Start debugging") }
+        }, dismissButton = { TextButton(onClick = dismiss) { Text("Cancel") } })
 }

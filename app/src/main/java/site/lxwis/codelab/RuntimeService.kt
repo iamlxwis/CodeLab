@@ -11,6 +11,9 @@ internal const val STOP = 3
 internal const val OUTPUT = 4
 internal const val WAITING = 5
 internal const val FINISH = 6
+internal const val DEBUG_PAUSED = 7
+internal const val DEBUG_RESUME = 8
+internal const val DEBUG_STEP = 9
 internal fun packet(kind: Int, body: String = "", code: Int = 0) =
     Message.obtain(null, kind, code, 0).apply { data = Bundle().apply { putString("body", body) } }
 internal fun Message.body() = data.getString("body").orEmpty()
@@ -19,6 +22,7 @@ open class RuntimeService : Service() {
     private val main = Handler(Looper.getMainLooper())
     private var client: Messenger? = null
     private val input = ArrayBlockingQueue<String>(1)
+    private val debugActions = ArrayBlockingQueue<Boolean>(1)
     private val timeout = Runnable { terminate(124, "Execution timed out") }
     @Volatile private var finished = false
     private val messenger = Messenger(Handler(Looper.getMainLooper()) { message ->
@@ -26,6 +30,8 @@ open class RuntimeService : Service() {
             START -> if (client == null) start(message)
             INPUT -> input.offer(message.body().take(4096))
             STOP -> terminate(130, "Stopped")
+            DEBUG_RESUME -> debugActions.offer(false)
+            DEBUG_STEP -> debugActions.offer(true)
         }
         true
     })
@@ -49,8 +55,12 @@ open class RuntimeService : Service() {
         client = message.replyTo
         finished = false
         input.clear()
+        debugActions.clear()
         val name = message.data.getString("name") ?: "main.js"
         val source = message.body()
+        val debugEnabled = message.data.getBoolean("debug", false) && name.endsWith(".js", true)
+        val breakpoints = message.data.getIntegerArrayList("breakpoints")
+            ?.filter { it in 1..100000 }?.toSet().orEmpty()
         val seconds = message.data.getInt("limit-seconds", 60).coerceIn(10, 60)
         val maximumOutput = message.data.getInt("output-chars", 64000).coerceIn(8000, 64000)
         main.postDelayed(timeout, seconds * 1000L)
@@ -59,6 +69,8 @@ open class RuntimeService : Service() {
             var lines = 0
             val batch = StringBuilder()
             var lastFlush = SystemClock.elapsedRealtime()
+            var breakAtStart = debugEnabled
+            var stepping = false
             fun flush() {
                 if (batch.isNotEmpty()) {
                     emit(OUTPUT, batch.toString())
@@ -67,6 +79,13 @@ open class RuntimeService : Service() {
                 }
             }
             val io = object : JsEngine.Terminal {
+                override fun onLine(lineNumber: Int) {
+                    if (!debugEnabled || !(breakAtStart || stepping || lineNumber in breakpoints)) return
+                    breakAtStart = false
+                    flush()
+                    emit(DEBUG_PAUSED, lineNumber.toString())
+                    stepping = debugActions.take()
+                }
                 override fun checkpoint() {
                     if (SystemClock.elapsedRealtime() - lastFlush >= 40L) flush()
                 }
@@ -93,7 +112,7 @@ open class RuntimeService : Service() {
                     name.endsWith(".sql", true) -> SqlEngine.execute(name, source, io)
                     name.endsWith(".lua", true) -> LuaEngine.execute(name, source, io)
                     name.endsWith(".java", true) -> JavaEngine.execute(name, source, io)
-                    else -> JsEngine.execute(name, source, io)
+                    else -> JsEngine.execute(name, source, io, debugEnabled)
                 }
             }
                 catch (_: OutputLimit) { flush(); emit(OUTPUT, "! Console output limit reached\n"); 1 }

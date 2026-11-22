@@ -793,6 +793,18 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         preferences.edit().putString("accent", value).apply()
     }
 
+    fun debugCurrent(lines: List<Int>) {
+        val filename = active ?: return
+        if (!filename.endsWith(".js", true)) {
+            error = "The line debugger supports JavaScript files only."
+            return
+        }
+        flush()
+        console = true
+        preview = false
+        runner.run(filename, source, debug = true, breakpoints = lines)
+    }
+
     fun run() {
         val filename = active ?: return
         if (filename.endsWith(".html", true) || filename.endsWith(".htm", true)) {

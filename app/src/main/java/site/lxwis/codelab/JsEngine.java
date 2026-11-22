@@ -6,6 +6,9 @@ import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.RhinoException;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+import org.mozilla.javascript.debug.Debugger;
+import org.mozilla.javascript.debug.DebugFrame;
+import org.mozilla.javascript.debug.DebuggableScript;
 
 /** An interpreted ECMAScript runtime with only the host functions declared here. */
 public final class JsEngine {
@@ -13,9 +16,14 @@ public final class JsEngine {
         void write(String text, boolean error);
         String read(String prompt);
         void checkpoint();
+        default void onLine(int lineNumber) {}
     }
 
     public static int execute(String name, String source, Terminal io) {
+        return execute(name, source, io, false);
+    }
+
+    public static int execute(String name, String source, Terminal io, boolean debug) {
         ContextFactory factory = new ContextFactory() {
             @Override protected Context makeContext() {
                 Context cx = super.makeContext();
@@ -23,6 +31,25 @@ public final class JsEngine {
                 cx.setLanguageVersion(Context.VERSION_ES6);
                 cx.setInstructionObserverThreshold(8192);
                 cx.setClassShutter(className -> false);
+                if (debug) {
+                    cx.setGeneratingDebug(true);
+                    cx.setDebugger(new Debugger() {
+                        @Override public DebugFrame getFrame(Context context, DebuggableScript script) {
+                            return new DebugFrame() {
+                                @Override public void onEnter(Context c, Scriptable activation,
+                                        Scriptable thisObj, Object[] args) {}
+                                @Override public void onLineChange(Context c, int line) {
+                                    io.onLine(line);
+                                }
+                                @Override public void onExceptionThrown(Context c, Throwable error) {}
+                                @Override public void onExit(Context c, boolean thrown, Object result) {}
+                                @Override public void onDebuggerStatement(Context c) {}
+                            };
+                        }
+                        @Override public void handleCompilationDone(Context context,
+                                DebuggableScript script, String scriptSource) {}
+                    }, null);
+                }
                 return cx;
             }
             @Override protected void observeInstructionCount(Context cx, int count) {

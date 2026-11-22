@@ -37,11 +37,13 @@ class RunSession(context: Context) {
     private var activeName: String? = null
     private var lastLocalName: String? = null
     private var lastLocalSource: String? = null
+    private var lastDebug = false
+    private var lastBreakpoints: List<Int> = emptyList()
     val canRerun: Boolean get() = !running && lastLocalName != null
     fun rerun() {
         val name = lastLocalName ?: return
         val source = lastLocalSource ?: return
-        run(name, source)
+        run(name, source, lastDebug, lastBreakpoints)
     }
     private var connection: ServiceConnection? = null
     private var worker: Messenger? = null
@@ -53,19 +55,38 @@ class RunSession(context: Context) {
         private set
     var waiting by mutableStateOf(false)
         private set
+    var pausedLine by mutableIntStateOf(0)
+        private set
+    val paused: Boolean get() = pausedLine > 0
+    fun debugAction(step: Boolean) {
+        if (!paused || !running) return
+        try {
+            worker?.send(packet(if (step) DEBUG_STEP else DEBUG_RESUME))
+            pausedLine = 0
+            status = if (step) "Stepping" else "Running"
+        } catch (_: RemoteException) { end("Debugger disconnected") }
+    }
     var transcript by mutableStateOf("")
         private set
     var status by mutableStateOf("Ready")
         private set
 
-    fun run(name: String, source: String) {
+    fun run(name: String, source: String, debug: Boolean = false,
+        breakpoints: List<Int> = emptyList()) {
         if (running) return
         transcript = ""
         if (!name.endsWith(".js", true) && !name.endsWith(".sql", true) && !name.endsWith(".lua", true) && !name.endsWith(".java", true)) { status = "Run a .js, .sql, .lua or .java file"; return }
         if (source.length > 128_000) { status = "Script exceeds 128,000 characters"; return }
+        if (debug && !name.endsWith(".js", true)) {
+            status = "Debugger currently supports JavaScript only"
+            return
+        }
         activeName = name
         lastLocalName = name
         lastLocalSource = source
+        lastDebug = debug
+        lastBreakpoints = breakpoints
+        pausedLine = 0
         running = true
         status = "Starting"
         val token = ++generation
@@ -74,6 +95,10 @@ class RunSession(context: Context) {
                 when (msg.what) {
                     OUTPUT -> transcript = (transcript + msg.body()).takeLast(70_000)
                     WAITING -> { waiting = true; status = "Waiting for input" }
+                    DEBUG_PAUSED -> {
+                        pausedLine = msg.body().toIntOrNull()?.coerceAtLeast(0) ?: 0
+                        status = "Paused at line " + pausedLine
+                    }
                     FINISH -> end(listOf(msg.body(), "Exit ${msg.arg1}").filter { it.isNotEmpty() }.joinToString(" · "))
                 }
             }
@@ -88,6 +113,9 @@ class RunSession(context: Context) {
                     data.putString("name", name)
                     data.putInt("limit-seconds", timeLimitSeconds)
                     data.putInt("output-chars", outputLimitCharacters)
+                    data.putBoolean("debug", debug)
+                    data.putIntegerArrayList("breakpoints",
+                        ArrayList(breakpoints.filter { it in 1..100000 }.distinct().take(80)))
                     replyTo = replies
                 }
                 status = "Running"
@@ -128,6 +156,9 @@ class RunSession(context: Context) {
         activeName = name
         lastLocalName = null
         lastLocalSource = null
+        lastDebug = false
+        lastBreakpoints = emptyList()
+        pausedLine = 0
         running = true
         waiting = false
         status = "Submitting to online compiler…"
@@ -196,6 +227,7 @@ class RunSession(context: Context) {
         status = result
         running = false
         waiting = false
+        pausedLine = 0
         connection?.let { try { app.unbindService(it) } catch (_: IllegalArgumentException) {} }
         connection = null
         worker = null

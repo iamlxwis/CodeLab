@@ -15,6 +15,16 @@ public class JsEngineTest {
         public void checkpoint() { checkpoints++; }
     }
 
+    @Test public void debuggerReportsExecutedSourceLines() {
+        java.util.List<Integer> visited = new java.util.ArrayList<>();
+        Capture trace = new Capture() {
+            @Override public void onLine(int line) { visited.add(line); }
+        };
+        assertEquals(0, JsEngine.execute("trace.js", "let x = 1;\nprint(x);", trace, true));
+        assertTrue("Second line must be traceable", visited.contains(2));
+        assertEquals("1\n", trace.out);
+    }
+
     @Test public void evaluatesExpressionsAndInput() {
         Capture capture = new Capture();
         assertEquals(0, JsEngine.execute("input.js", "let n = readLine('Name?'); print('hello', n); console.log([1,2,3].reduce((a,b)=>a+b,0)); console.error('warning');", capture));
