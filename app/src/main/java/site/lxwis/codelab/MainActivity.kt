@@ -123,7 +123,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (p != null) Text(if (m.dirty) "Saving changes…" else "Local workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (p != null && (m.runner.running || m.active?.endsWith(".js", true) == true || m.active?.endsWith(".sql", true) == true || m.active?.endsWith(".lua", true) == true || m.active?.endsWith(".java", true) == true)) {
+            if (p != null && (m.runner.running || m.active != null)) {
                 Button(
                     onClick = { if (m.runner.running) m.runner.stop() else m.run() },
                     enabled = !m.busy,
@@ -136,7 +136,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                             Icon(if (running) Icons.Default.Stop else Icons.Default.PlayArrow,
                                 contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text(if (running) "Stop" else "Run", fontWeight = FontWeight.SemiBold)
+                            Text(if (running) "Stop" else if (m.active?.endsWith(".html", true) == true) "Preview" else "Run",
+                                fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -147,7 +148,13 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     if (p != null) {
                         DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
                         DropdownMenuItem(text = { Text("Export project ZIP") }, onClick = { menu = false; export.launch("$p.zip") })
+                        if (m.active != null && m.cloudAvailable(m.active!!)) {
+                            DropdownMenuItem(text = { Text("Run via cloud…") },
+                                onClick = { menu = false; m.requestCloudRun() })
+                        }
                     } else DropdownMenuItem(text = { Text("Import project ZIP") }, onClick = { menu = false; importZip.launch(arrayOf("*/*")) })
+                    DropdownMenuItem(text = { Text("Languages & Cloud") },
+                        onClick = { menu = false; dialog = "languages" })
                     DropdownMenuItem(text = { Text("Appearance") }, onClick = { menu = false; dialog = "appearance" })
                 }
             }
@@ -197,7 +204,16 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 PanelButton("Console", m.console) { m.console = true; m.preview = false }
                 if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
                     PanelButton("Preview", m.preview) { m.console = false; m.preview = true }
-                Text(when { m.active?.endsWith(".js",true) == true -> "JavaScript"; m.active?.endsWith(".sql",true) == true -> "SQLite"; m.active?.endsWith(".lua",true) == true -> "Lua"; m.active?.endsWith(".java",true) == true -> "Java · beta"; m.active?.endsWith(".html",true) == true -> "HTML"; else -> "Text" }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(when {
+                    m.active?.endsWith(".js", true) == true -> "JavaScript"
+                    m.active?.endsWith(".sql", true) == true -> "SQLite"
+                    m.active?.endsWith(".lua", true) == true -> "Lua"
+                    m.active?.endsWith(".java", true) == true -> "Java · beta"
+                    m.active?.endsWith(".html", true) == true -> "HTML"
+                    m.active?.let(m::cloudAvailable) == true -> "Cloud available"
+                    else -> "Text · cloud setup"
+                }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         AnimatedVisibility(m.busy, enter = fadeIn(tween(130)), exit = fadeOut(tween(130))) {
@@ -211,6 +227,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
 
     when (dialog) {
+        "languages" -> LanguageManagerSheet(m) { dialog = "" }
         "newproject" -> CreateProjectDialog(cancel = { dialog = "" }) { name, template ->
             m.openProject(name, true, template)
             dialog = ""
@@ -260,6 +277,13 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             } },
             confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
+    }
+    m.cloudPending?.let { filename ->
+        val language = m.cloudLanguages[CloudJudge0.extension(filename)]
+        if (language != null) {
+            OnlineRunConfirmation(filename, m.cloudEndpoint, language.name,
+                cancel = m::cancelCloudRun, start = m::startCloudRun)
+        }
     }
     m.error?.let { issue ->
         AlertDialog(onDismissRequest = { m.error = null }, title = { Text("Workspace error") }, text = { Text(issue) },
@@ -360,11 +384,16 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
                 Spacer(Modifier.height(14.dp))
                 Text("STARTER", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Row(Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("JavaScript", "Java", "Lua", "SQLite", "Web").forEach { option ->
-                        FilterChip(selected = template == option, onClick = { template = option },
-                            label = { Text(option) })
+                Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
+                    listOf(listOf("JavaScript", "Java", "Lua"), listOf("SQLite", "Web")).forEach { row ->
+                        Row(Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            row.forEach { option ->
+                                FilterChip(selected = template == option,
+                                    onClick = { template = option },
+                                    label = { Text(option) })
+                            }
+                        }
                     }
                 }
             }

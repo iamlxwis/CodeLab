@@ -1,6 +1,10 @@
 package site.lxwis.codelab
 
 import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
@@ -13,6 +17,121 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     private val store = ProjectStore(File(app.filesDir, "workspace"))
     private val preferences = app.getSharedPreferences("appearance", 0)
     private val io = Executors.newSingleThreadExecutor()
+    private val cloudIo = Executors.newSingleThreadExecutor()
+    private val connectivity = app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    private val cloudPreferences = app.getSharedPreferences("cloud-runtime", Context.MODE_PRIVATE)
+    var cloudEndpoint by mutableStateOf(
+        cloudPreferences.getString("endpoint", CloudJudge0.DEFAULT_ENDPOINT) ?: CloudJudge0.DEFAULT_ENDPOINT)
+        private set
+    var cloudHeader by mutableStateOf(cloudPreferences.getString("header", "X-Auth-Token") ?: "X-Auth-Token")
+        private set
+    var cloudCredential by mutableStateOf(cloudPreferences.getString("credential", "") ?: "")
+        private set
+    var cloudChecking by mutableStateOf(false)
+        private set
+    var cloudError by mutableStateOf<String?>(null)
+        private set
+    var cloudLanguages by mutableStateOf<Map<String, CloudJudge0.Language>>(emptyMap())
+        private set
+    var cloudPending by mutableStateOf<String?>(null)
+        private set
+    var isOnline by mutableStateOf(false)
+        private set
+    private val connectivityCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) { main.post { updateNetwork() } }
+        override fun onLost(network: Network) { main.post { updateNetwork() } }
+        override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
+            main.post { updateNetwork() }
+        }
+    }
+    private fun updateNetwork() {
+        val network = connectivity.activeNetwork
+        val connected = network != null && connectivity.getNetworkCapabilities(network)
+            ?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true
+        val wasConnected = isOnline
+        isOnline = connected
+        if (!connected) {
+            cloudLanguages = emptyMap()
+            cloudError = "No internet connection"
+            cloudChecking = false
+        } else if (!wasConnected) refreshCloudLanguages()
+    }
+
+    fun refreshCloudLanguages() {
+        if (!isOnline) {
+            cloudLanguages = emptyMap()
+            cloudError = "No internet connection"
+            return
+        }
+        val endpoint = cloudEndpoint
+        val header = cloudHeader
+        val credential = cloudCredential
+        cloudChecking = true
+        cloudError = null
+        cloudIo.execute {
+            val result = runCatching { CloudJudge0.fetchLanguages(endpoint, header, credential) }
+            main.post {
+                if (endpoint != cloudEndpoint || credential != cloudCredential || header != cloudHeader) return@post
+                cloudChecking = false
+                result.onSuccess { cloudLanguages = it; cloudError = null }
+                    .onFailure {
+                        cloudLanguages = emptyMap()
+                        cloudError = it.message ?: "Online compiler unavailable"
+                    }
+            }
+        }
+    }
+
+    fun saveCloudConfig(url: String, header: String, credential: String) {
+        try {
+            val validated = CloudJudge0.validateUrl(url)
+            require(header in listOf("X-Auth-Token", "Authorization", "X-RapidAPI-Key")) {
+                "Choose a supported authentication header"
+            }
+            require(credential.length <= 512 && credential.none { it == '\r' || it == '\n' }) {
+                "Invalid API token"
+            }
+            cloudEndpoint = validated
+            cloudHeader = header
+            cloudCredential = credential
+            cloudPreferences.edit().putString("endpoint", validated).putString("header", header)
+                .putString("credential", credential).apply()
+            cloudLanguages = emptyMap()
+            refreshCloudLanguages()
+        } catch (e: IllegalArgumentException) {
+            error = e.message ?: "Invalid cloud compiler settings"
+        }
+    }
+
+    fun isLocalExecutable(path: String): Boolean =
+        path.endsWith(".js", true) || path.endsWith(".sql", true) ||
+        path.endsWith(".lua", true) || path.endsWith(".java", true)
+
+    fun cloudAvailable(path: String): Boolean =
+        isOnline && cloudLanguages.containsKey(CloudJudge0.extension(path))
+
+    fun requestCloudRun() {
+        val filename = active ?: return
+        if (!cloudAvailable(filename)) {
+            error = "Online execution is unavailable for this language. Check Languages & Cloud."
+            return
+        }
+        cloudPending = filename
+    }
+
+    fun startCloudRun(stdin: String) {
+        val filename = cloudPending ?: return
+        cloudPending = null
+        if (active != filename) { error = "File changed. Select Run again."; return }
+        val language = cloudLanguages[CloudJudge0.extension(filename)]
+        if (!isOnline || language == null) { error = "Online compiler is unavailable"; return }
+        flush()
+        runner.runOnline(filename, source, cloudEndpoint, cloudHeader, cloudCredential, language, stdin.take(4096))
+        console = true
+        preview = false
+    }
+
+    fun cancelCloudRun() { cloudPending = null }
     private val main = Handler(Looper.getMainLooper())
     val runner = RunSession(app)
     var appearance by mutableStateOf(preferences.getString("mode", "Dark") ?: "Dark")
@@ -42,6 +161,9 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     private val autoSave = Runnable { flush() }
 
     init {
+        updateNetwork()
+        try { connectivity.registerDefaultNetworkCallback(connectivityCallback) }
+        catch (_: Exception) { cloudError = "Unable to monitor internet connection" }
         work {
             val names = store.projects()
             val session = store.restore()
@@ -231,16 +353,32 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun run() {
         val filename = active ?: return
-        flush()
-        console = true
-        preview = false
-        runner.run(filename, source)
+        if (filename.endsWith(".html", true) || filename.endsWith(".htm", true)) {
+            flush()
+            preview = true
+            console = false
+            return
+        }
+        if (isLocalExecutable(filename)) {
+            flush()
+            console = true
+            preview = false
+            runner.run(filename, source)
+        } else if (cloudAvailable(filename)) {
+            cloudPending = filename
+        } else {
+            error = if (!isOnline) "This language needs an online compiler. Connect to the internet, then check Languages & Cloud."
+                else if (cloudChecking) "Checking available online languages. Try again shortly."
+                else "No verified online compiler for this file type. Open Languages & Cloud to configure a Judge0 endpoint."
+        }
     }
 
     override fun onCleared() {
         flush()
         main.removeCallbacks(autoSave)
         io.shutdown()
+        cloudIo.shutdownNow()
+        try { connectivity.unregisterNetworkCallback(connectivityCallback) } catch (_: Exception) {}
         runner.close()
         super.onCleared()
     }

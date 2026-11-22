@@ -9,6 +9,7 @@ class RunSession(context: Context) {
     private val main = Handler(Looper.getMainLooper())
     private var connection: ServiceConnection? = null
     private var worker: Messenger? = null
+    private var onlineThread: Thread? = null
     private var generation = 0
     private val watchdog = Runnable { end("Runtime unavailable") }
 
@@ -68,13 +69,47 @@ class RunSession(context: Context) {
         try {
             val sql = name.endsWith(".sql", true)
             val lua = name.endsWith(".lua", true)
-            val java = name.endsWith(".java", true)
-            val intent = Intent(app, when { sql -> SqlRuntimeService::class.java; lua -> LuaRuntimeService::class.java; java -> JavaRuntimeService::class.java; else -> RuntimeService::class.java })
+            val javaMode = name.endsWith(".java", true)
+            val intent = Intent(app, when { sql -> SqlRuntimeService::class.java; lua -> LuaRuntimeService::class.java; javaMode -> JavaRuntimeService::class.java; else -> RuntimeService::class.java })
             val bound = if (Build.VERSION.SDK_INT >= 29 && !sql)
                 app.bindIsolatedService(intent, Context.BIND_AUTO_CREATE, "run${java.util.UUID.randomUUID().toString().replace("-", "")}", app.mainExecutor, listener)
             else app.bindService(intent, listener, Context.BIND_AUTO_CREATE)
             if (bound) main.postDelayed(watchdog, 8000) else end("Unable to start runtime")
         } catch (e: RuntimeException) { end("Unable to start runtime · ${e.javaClass.simpleName}") }
+    }
+
+    /** Cloud runs require an explicit confirmation from the UI before this is called. */
+    fun runOnline(name: String, source: String, endpoint: String, header: String,
+                  credential: String, language: CloudJudge0.Language, stdin: String) {
+        if (running) return
+        transcript = ""
+        if (source.length > 128_000) { status = "Source exceeds 128,000 characters"; return }
+        running = true
+        waiting = false
+        status = "Submitting to online compiler…"
+        val token = ++generation
+        val task = Thread({
+            try {
+                val result = CloudJudge0.execute(endpoint, header, credential, language, source, stdin)
+                main.post {
+                    if (token == generation && running) {
+                        transcript = result.output.takeLast(70_000)
+                        end("Online · " + result.status + " · Exit " + result.exitCode)
+                    }
+                }
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+            } catch (e: Exception) {
+                main.post {
+                    if (token == generation && running) {
+                        transcript = "! " + (e.message ?: "Online compiler unavailable") + "\n"
+                        end("Online execution failed")
+                    }
+                }
+            }
+        }, "CodeLab-CloudCompiler")
+        onlineThread = task
+        task.start()
     }
 
     fun submit(text: String) {
@@ -91,7 +126,9 @@ class RunSession(context: Context) {
     fun stop() {
         if (!running) return
         try { worker?.send(packet(STOP)) } catch (_: RemoteException) {}
-        end("Stopped · Exit 130")
+        val online = onlineThread != null
+        onlineThread?.interrupt()
+        end(if (online) "Stopped monitoring online run" else "Stopped · Exit 130")
     }
 
     fun close() { stop() }
@@ -99,6 +136,7 @@ class RunSession(context: Context) {
     private fun end(result: String) {
         generation++
         main.removeCallbacks(watchdog)
+        onlineThread = null
         status = result
         running = false
         waiting = false
