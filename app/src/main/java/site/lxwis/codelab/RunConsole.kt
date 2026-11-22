@@ -217,8 +217,9 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                 val textToShow = displayedOutput.ifEmpty {
                     if (showFilter && filterOutput.isNotEmpty()) "No matching lines" else ""
                 }
-                val formatted = remember(textToShow, MaterialTheme.colorScheme.onSurface) {
-                    ConsoleAnsi.format(textToShow, MaterialTheme.colorScheme.onSurface)
+                val defaultInk = MaterialTheme.colorScheme.onSurface
+                val formatted = remember(textToShow, defaultInk) {
+                    ConsoleAnsi.format(textToShow, defaultInk)
                 }
                 Text(formatted, fontFamily = FontFamily.Monospace, fontSize = consoleFontSize.sp,
                     lineHeight = (consoleFontSize + 5).sp)
