@@ -4,6 +4,9 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -23,7 +26,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.*
 
 @Composable
-fun RunConsole(session: RunSession, modifier: Modifier = Modifier) {
+fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: String? = null) {
+    var tableMode by rememberSaveable(fileName) { mutableStateOf(true) }
+    val sqlResult = remember(session.transcript, fileName, session.running) {
+        if (!session.running && fileName?.endsWith(".sql", ignoreCase = true) == true)
+            SqlResultParser.parse(session.transcript) else null
+    }
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
     var showActions by remember { mutableStateOf(false) }
@@ -68,7 +76,20 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier) {
                     }
                 }
             }
-            SelectionContainer(Modifier.weight(1f).fillMaxWidth().verticalScroll(scroll)) {
+            if (sqlResult != null) {
+                Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    FilterChip(selected = tableMode, onClick = { tableMode = true },
+                        label = { Text("Results") })
+                    FilterChip(selected = !tableMode, onClick = { tableMode = false },
+                        label = { Text("Output") })
+                    Spacer(Modifier.weight(1f))
+                    Text("${sqlResult.rows.size} rows", Modifier.align(Alignment.CenterVertically),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            if (sqlResult != null && tableMode) SqlDataGrid(sqlResult, Modifier.weight(1f).fillMaxWidth())
+            else SelectionContainer(Modifier.weight(1f).fillMaxWidth().verticalScroll(scroll)) {
                 Text(session.transcript, fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 18.sp)
             }
             if (session.waiting) Row(verticalAlignment = Alignment.CenterVertically) {
@@ -77,6 +98,38 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier) {
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { session.submit(input) }))
                 TextButton(onClick = { session.submit(input) }) { Text("Send") }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun SqlDataGrid(table: SqlTable, modifier: Modifier = Modifier) {
+    val horizontal = rememberScrollState()
+    val borderColor = MaterialTheme.colorScheme.outlineVariant
+    Column(modifier.horizontalScroll(horizontal)) {
+        Row {
+            table.columns.forEach { column ->
+                Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .65f),
+                    modifier = Modifier.widthIn(min = 110.dp, max = 200.dp).width(146.dp)) {
+                    Text(column, Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                        fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1)
+                }
+            }
+        }
+        HorizontalDivider(color = borderColor)
+        LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
+            itemsIndexed(table.rows) { index, row ->
+                Row {
+                    row.forEach { cell ->
+                        Text(cell, Modifier.width(146.dp).padding(horizontal = 12.dp, vertical = 11.dp),
+                            fontFamily = FontFamily.Monospace, fontSize = 12.sp,
+                            maxLines = 3, color = MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+                HorizontalDivider(color = borderColor.copy(alpha = .55f))
             }
         }
     }

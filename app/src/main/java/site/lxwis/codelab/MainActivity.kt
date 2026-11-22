@@ -8,6 +8,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontFamily
@@ -37,14 +44,18 @@ private val night = darkColorScheme(
     primaryContainer = Color(0xff1d3c35), onPrimaryContainer = Color(0xffadf4df),
     surface = Color(0xff101517), background = Color(0xff101517),
     surfaceVariant = Color(0xff20292d), onSurfaceVariant = Color(0xffacbbbd),
-    onSurface = Color(0xffe6eeed), outlineVariant = Color(0xff364145)
+    onSurface = Color(0xffe6eeed), outlineVariant = Color(0xff364145),
+    surfaceContainer = Color(0xff191f22), surfaceContainerHigh = Color(0xff222a2d),
+    surfaceContainerHighest = Color(0xff2b3436), surfaceBright = Color(0xff263033)
 )
 private val day = lightColorScheme(
     primary = Color(0xff006b57), onPrimary = Color.White,
     primaryContainer = Color(0xffc2efdf), onPrimaryContainer = Color(0xff103c32),
     surface = Color(0xfff5f8f7), background = Color(0xfff5f8f7),
     surfaceVariant = Color(0xffe2eae7), onSurfaceVariant = Color(0xff495852),
-    onSurface = Color(0xff152322), outlineVariant = Color(0xffbdcbc5)
+    onSurface = Color(0xff152322), outlineVariant = Color(0xffbdcbc5),
+    surfaceContainer = Color(0xffebf1ef), surfaceContainerHigh = Color(0xffe3ece9),
+    surfaceContainerHighest = Color(0xffdce6e3)
 )
 
 class MainActivity : ComponentActivity() {
@@ -54,7 +65,17 @@ class MainActivity : ComponentActivity() {
         model = ViewModelProvider(this)[WorkspaceModel::class.java]
         setContent {
             val dark = model.appearance == "Dark" || (model.appearance == "System" && isSystemInDarkTheme())
-            val scheme = if (dark) night else day
+            val base = if (dark) night else day
+            val accent = when (model.accent) {
+                "Blue" -> if (dark) Color(0xff8ab7fa) else Color(0xff245eaf)
+                "Violet" -> if (dark) Color(0xffc4b0ff) else Color(0xff6747b7)
+                "Amber" -> if (dark) Color(0xffffc978) else Color(0xff936000)
+                else -> base.primary
+            }
+            val scheme = base.copy(primary = accent, onPrimary = if (dark) Color(0xff101517) else Color.White,
+                primaryContainer = if (dark) accent.copy(alpha = .15f).compositeOver(base.surface)
+                    else accent.copy(alpha = .15f).compositeOver(base.surface),
+                onPrimaryContainer = accent)
             SideEffect {
                 @Suppress("DEPRECATION")
                 window.statusBarColor = scheme.surface.toArgb()
@@ -103,10 +124,21 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 if (p != null) Text(if (m.dirty) "Saving changes…" else "Local workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (p != null && (m.runner.running || m.active?.endsWith(".js", true) == true || m.active?.endsWith(".sql", true) == true)) {
-                FilledTonalButton(onClick = { if (m.runner.running) m.runner.stop() else m.run() }, enabled = !m.busy,
-                    contentPadding = PaddingValues(horizontal = 14.dp), colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
-                    if (!m.runner.running) Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp))
-                    Text(if (m.runner.running) "Stop" else "Run")
+                Button(
+                    onClick = { if (m.runner.running) m.runner.stop() else m.run() },
+                    enabled = !m.busy,
+                    shape = RoundedCornerShape(11.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                ) {
+                    AnimatedContent(targetState = m.runner.running, label = "execution-state") { running ->
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                            Icon(if (running) Icons.Default.Stop else Icons.Default.PlayArrow,
+                                contentDescription = null, modifier = Modifier.size(18.dp))
+                            Text(if (running) "Stop" else "Run", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
                 }
             }
             Box {
@@ -126,12 +158,17 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { dialog = "files" }) { Icon(Icons.Default.Menu, "Browse files") }
+                IconButton(onClick = { dialog = "files" }) {
+                    Icon(Icons.Default.FolderOpen, "Browse files")
+                }
                 LazyRow(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
                         val active = m.active == path
-                        Row(Modifier.padding(end = 3.dp).background(if (active) MaterialTheme.colorScheme.surfaceVariant else Color.Transparent, RoundedCornerShape(7.dp)), verticalAlignment = Alignment.CenterVertically) {
-                            Text(path.substringAfterLast('/'), Modifier.clickable { if (!m.busy) m.select(path) }.padding(horizontal = 10.dp, vertical = 10.dp),
+                        Row(Modifier.padding(end = 2.dp)
+                            .background(if (active) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent,
+                                RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp)), verticalAlignment = Alignment.CenterVertically) {
+                            Text(path.substringAfterLast('/'), Modifier.clickable { if (!m.busy) m.select(path) }
+                                .padding(horizontal = 8.dp, vertical = 8.dp),
                                 color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
                             if (active) IconButton(onClick = { m.closeTab(path) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.Close, "Close $path", Modifier.size(16.dp)) }
                         }
@@ -148,13 +185,14 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             CodeEditor(fileKey = "$p/$file", filename = file, text = m.source, onTextChange = m::edit, modifier = Modifier.fillMaxSize())
                         } else TextButton(onClick = { dialog = "files" }, modifier = Modifier.align(Alignment.Center)) { Text("Open a file") }
                     }
-                    if (m.console) RunConsole(m.runner, Modifier.weight(if (wide) 0.7f else 1f).fillMaxHeight())
+                    if (m.console) RunConsole(m.runner, Modifier.weight(if (wide) 0.7f else 1f).fillMaxHeight(), m.active)
                     else if (m.preview && m.active != null) HtmlPreview(p, m.active!!, m.source,
                         Modifier.weight(if (wide) 0.8f else 1f).fillMaxHeight())
                 }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+                .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 PanelButton("Editor", !m.console && !m.preview) { m.console = false; m.preview = false }
                 PanelButton("Console", m.console) { m.console = true; m.preview = false }
                 if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
@@ -162,7 +200,14 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Text(when { m.active?.endsWith(".js",true) == true -> "JavaScript"; m.active?.endsWith(".sql",true) == true -> "SQLite"; m.active?.endsWith(".html",true) == true -> "HTML"; else -> "Text" }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        AnimatedVisibility(m.busy) { LinearProgressIndicator(modifier = Modifier.fillMaxWidth().height(2.dp)) }
+        AnimatedVisibility(m.busy, enter = fadeIn(tween(130)), exit = fadeOut(tween(130))) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+                Text("Updating local workspace…", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
     }
 
     when (dialog) {
@@ -179,8 +224,9 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 dialog = ""
             }
         }
-        "files" -> FilePicker(m, onClose = { dialog = "" }, onNew = { dialog = "newfile" },
-            onOpen = { m.select(it); dialog = "" }, onRename = { selected = it; dialog = "rename" }, onDelete = { selected = it; dialog = "delete" })
+        "files" -> FileExplorerSheet(m, onClose = { dialog = "" }, onNew = { dialog = "newfile" },
+            onOpen = { m.select(it); dialog = "" }, onRename = { selected = it; dialog = "rename" },
+            onDelete = { selected = it; dialog = "delete" })
         "delete" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Delete file?") },
             text = { Text(selected) }, confirmButton = { TextButton(onClick = { m.changeFile(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
@@ -188,13 +234,32 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             text = { Text("Delete $selected and all its files from this device?") },
             confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
-        "appearance" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Appearance") },
-            text = { Column { listOf("Dark", "Light", "System").forEach { mode ->
-                Row(Modifier.fillMaxWidth().clickable { m.setMode(mode) }.heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(m.appearance == mode, onClick = null)
-                    Text(mode, Modifier.padding(start = 14.dp))
+        "appearance" -> AlertDialog(onDismissRequest = { dialog = "" },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            title = { Text("Appearance") },
+            text = { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("THEME", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall)
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    listOf("Dark", "Light", "System").forEach { mode ->
+                        FilterChip(selected = m.appearance == mode, onClick = { m.setMode(mode) },
+                            label = { Text(mode) })
+                    }
                 }
-            } } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
+                Text("ACCENT", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall)
+                Row(Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("Mint", "Blue", "Violet", "Amber").forEach { accent ->
+                        FilterChip(selected = m.accent == accent, onClick = { m.setAccent(accent) },
+                            label = { Text(accent) })
+                    }
+                }
+                Text("More editor preferences are available from the editor toolbar.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } },
+            confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
     }
     m.error?.let { issue ->
         AlertDialog(onDismissRequest = { m.error = null }, title = { Text("Workspace error") }, text = { Text(issue) },
@@ -204,8 +269,13 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
 
 @Composable
 private fun PanelButton(text: String, active: Boolean, click: () -> Unit) {
-    TextButton(onClick = click, colors = ButtonDefaults.textButtonColors(contentColor = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)) {
-        Text(text, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
+    val target = if (active) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+    val background by animateColorAsState(target, animationSpec = tween(170), label = "panel-selection")
+    Surface(onClick = click, color = background, shape = RoundedCornerShape(10.dp)) {
+        Text(text, Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            style = MaterialTheme.typography.labelLarge,
+            color = if (active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium)
     }
 }
 
@@ -305,30 +375,108 @@ private fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> 
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FilePicker(m: WorkspaceModel, onClose: () -> Unit, onNew: () -> Unit, onOpen: (String) -> Unit, onRename: (String) -> Unit, onDelete: (String) -> Unit) {
-    var query by rememberSaveable { mutableStateOf("") }
-    var options by remember { mutableStateOf<String?>(null) }
-    AlertDialog(onDismissRequest = onClose, title = { Text("Project files") },
-        text = { Column {
-            OutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Find file") }, singleLine = true)
-            Spacer(Modifier.height(8.dp))
-            val results = m.files.filter { it.contains(query, ignoreCase = true) }
-            LazyColumn(Modifier.heightIn(max = 330.dp)) {
-                items(results, key = { it }) { path ->
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Text(path, Modifier.weight(1f).clickable { onOpen(path) }.padding(vertical = 14.dp), fontSize = 13.sp, fontFamily = FontFamily.Monospace,
-                            color = if (path == m.active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-                        Box {
-                            IconButton(onClick = { options = path }) { Icon(Icons.Default.MoreVert, "Manage $path") }
-                            DropdownMenu(expanded = options == path, onDismissRequest = { options = null }) {
-                                DropdownMenuItem(text = { Text("Rename or move") }, onClick = { options = null; onRename(path) })
-                                DropdownMenuItem(text = { Text("Delete") }, onClick = { options = null; onDelete(path) })
-                            }
+private fun FileExplorerSheet(
+    m: WorkspaceModel,
+    onClose: () -> Unit,
+    onNew: () -> Unit,
+    onOpen: (String) -> Unit,
+    onRename: (String) -> Unit,
+    onDelete: (String) -> Unit
+) {
+    var search by rememberSaveable(m.project) { mutableStateOf("") }
+    var directory by rememberSaveable(m.project) { mutableStateOf("") }
+    var menuFor by remember { mutableStateOf<String?>(null) }
+    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val allFiles = m.files
+    val matching = if (search.isBlank()) allFiles.filter { it.startsWith(directory) }
+        else allFiles.filter { it.contains(search, ignoreCase = true) }
+    val folders = if (search.isNotBlank()) emptyList() else matching.mapNotNull {
+        val next = it.removePrefix(directory).substringBefore('/', "")
+        if (next.isEmpty()) null else directory + next + "/"
+    }.distinct().sorted()
+    val visibleFiles = if (search.isBlank()) matching.filter {
+        !it.removePrefix(directory).contains('/')
+    } else matching
+
+    ModalBottomSheet(onDismissRequest = onClose, sheetState = state,
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        dragHandle = { BottomSheetDefaults.DragHandle() }) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(.85f)
+            .padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Explorer", style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.SemiBold)
+                    Text(m.project.orEmpty() + " · " + allFiles.size + " files",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                FilledTonalButton(onClick = onNew, shape = RoundedCornerShape(11.dp)) {
+                    Icon(Icons.Default.Add, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("File")
+                }
+            }
+            OutlinedTextField(search, { search = it }, Modifier.fillMaxWidth(),
+                singleLine = true, label = { Text("Search files") },
+                shape = RoundedCornerShape(12.dp))
+            if (directory.isNotEmpty() && search.isBlank()) {
+                TextButton(onClick = {
+                    directory = directory.removeSuffix("/").substringBeforeLast('/', "")
+                        .let { if (it.isEmpty()) "" else it + "/" }
+                }) { Icon(Icons.Default.ArrowBack, null, Modifier.size(18.dp)); Text("Parent folder") }
+            }
+            LazyColumn(Modifier.fillMaxWidth().weight(1f),
+                verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                items(folders, key = { "folder:" + it }) { folder ->
+                    Surface(onClick = { directory = folder },
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = RoundedCornerShape(11.dp)) {
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.FolderOpen, null, Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary)
+                            Text(folder.removeSuffix("/").substringAfterLast('/'),
+                                Modifier.weight(1f).padding(start = 12.dp),
+                                fontWeight = FontWeight.Medium)
+                            Text("Open", style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
-                if (results.isEmpty()) item { Text("No files found", Modifier.padding(vertical = 12.dp)) }
+                items(visibleFiles, key = { "file:" + it }) { file ->
+                    Row(Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.FolderOpen, null, Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if (search.isBlank()) file.removePrefix(directory) else file,
+                            Modifier.weight(1f).clickable { onOpen(file) }
+                                .padding(horizontal = 12.dp, vertical = 13.dp),
+                            color = if (file == m.active) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = FontFamily.Monospace)
+                        Box {
+                            IconButton(onClick = { menuFor = file }) {
+                                Icon(Icons.Default.MoreVert, "Actions for " + file)
+                            }
+                            DropdownMenu(expanded = menuFor == file, onDismissRequest = { menuFor = null }) {
+                                DropdownMenuItem(text = { Text("Rename / move") },
+                                    onClick = { menuFor = null; onRename(file) })
+                                DropdownMenuItem(text = { Text("Delete") },
+                                    onClick = { menuFor = null; onDelete(file) })
+                            }
+                        }
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
+                }
+                if (folders.isEmpty() && visibleFiles.isEmpty()) item {
+                    Text("No matching files", Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
-        } }, confirmButton = { TextButton(onClick = onNew) { Text("New file") } }, dismissButton = { TextButton(onClick = onClose) { Text("Close") } })
+        }
+    }
 }

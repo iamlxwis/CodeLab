@@ -17,6 +17,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     val runner = RunSession(app)
     var appearance by mutableStateOf(preferences.getString("mode", "Dark") ?: "Dark")
         private set
+    var accent by mutableStateOf(preferences.getString("accent", "Mint") ?: "Mint")
+        private set
     var projects by mutableStateOf(emptyList<String>())
         private set
     var project by mutableStateOf<String?>(null)
@@ -219,6 +221,12 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun setMode(mode: String) {
         appearance = mode
         preferences.edit().putString("mode", mode).apply()
+    }
+
+    fun setAccent(value: String) {
+        if (value !in listOf("Mint", "Blue", "Violet", "Amber")) return
+        accent = value
+        preferences.edit().putString("accent", value).apply()
     }
 
     fun run() {

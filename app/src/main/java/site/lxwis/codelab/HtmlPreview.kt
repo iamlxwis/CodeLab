@@ -1,23 +1,25 @@
 package site.lxwis.codelab
 
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.webkit.ConsoleMessage
+import android.webkit.MimeTypeMap
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.webkit.MimeTypeMap
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
@@ -25,86 +27,127 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.nio.charset.StandardCharsets
 
-private const val VIRTUAL_HOST = "codelab.preview.invalid"
+private const val PREVIEW_HOST = "appassets.androidplatform.net"
+private const val PREVIEW_ROOT = "https://appassets.androidplatform.net/project/"
 
-/** WebView rendering local project HTML/CSS/JS with no external network resources. */
+/** An offline virtual HTTPS origin: project assets never leave the device. */
 @Composable
 fun HtmlPreview(project: String, path: String, source: String, modifier: Modifier = Modifier) {
-    val context = LocalContext.current
+    val context = androidx.compose.ui.platform.LocalContext.current
     val store = remember(project) { ProjectStore(File(context.filesDir, "workspace")) }
-    var webView by remember(project, path) { mutableStateOf<WebView?>(null) }
-    var logs by remember(project, path) { mutableStateOf(emptyList<String>()) }
-    val paper = MaterialTheme.colorScheme.surface.toArgb()
-    val base = remember(path) {
-        "https://" + VIRTUAL_HOST + "/" + android.net.Uri.encode(path, "/")
+    val live = remember(project, path) { PreviewSource(source) }
+    var debounced by remember(project, path) { mutableStateOf(source) }
+    var revision by remember(project, path) { mutableIntStateOf(0) }
+    var loading by remember(project, path) { mutableStateOf(true) }
+    var failure by remember(project, path) { mutableStateOf<String?>(null) }
+    var messages by remember(project, path) { mutableStateOf(emptyList<String>()) }
+    val handler = remember { Handler(Looper.getMainLooper()) }
+    val url = PREVIEW_ROOT + Uri.encode(path, "/") + "?revision=" + revision + "-" + debounced.hashCode()
+
+    LaunchedEffect(source, project, path) {
+        delay(300)
+        debounced = source
     }
     Column(modifier) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Local preview", style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-            IconButton(onClick = {
-                logs = emptyList()
-                webView?.loadDataWithBaseURL(base, source, "text/html", "UTF-8", null)
-            }) { Icon(Icons.Default.Refresh, contentDescription = "Refresh preview") }
+        Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(start = 16.dp, end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Local preview", style = MaterialTheme.typography.titleSmall)
+                Text(if (loading) "Loading…" else if (failure != null) "Preview unavailable" else "Offline · " + path,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            }
+            IconButton(onClick = { revision++; failure = null; messages = emptyList(); loading = true }) {
+                Icon(Icons.Default.Refresh, contentDescription = "Refresh preview")
+            }
         }
+        if (loading) LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
         HorizontalDivider()
-        AndroidView(factory = { ctx ->
-            WebView(ctx).apply {
-                setBackgroundColor(paper)
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                settings.allowFileAccess = false
-                settings.allowContentAccess = false
-                settings.javaScriptCanOpenWindowsAutomatically = false
-                settings.setSupportMultipleWindows(false)
-                webViewClient = object : WebViewClient() {
-                    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest) =
-                        request.url.scheme != "https" || request.url.host != VIRTUAL_HOST
-
-                    override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse {
-                        val uri = request.url
-                        if (uri.scheme != "https" || uri.host != VIRTUAL_HOST)
-                            return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream(byteArrayOf()))
-                        val requested = uri.path.orEmpty().removePrefix("/")
-                        val ext = requested.substringAfterLast('.', "").lowercase()
-                        val type = when (ext) {
-                            "html", "htm" -> "text/html"
-                            "css" -> "text/css"
-                            "js", "mjs" -> "application/javascript"
-                            "svg" -> "image/svg+xml"
-                            "json" -> "application/json"
-                            else -> MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext) ?: "text/plain"
+        AndroidView(
+            factory = { ctx ->
+                WebView(ctx).apply {
+                    setBackgroundColor(android.graphics.Color.WHITE)
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.allowFileAccess = false
+                    settings.allowContentAccess = false
+                    settings.javaScriptCanOpenWindowsAutomatically = false
+                    settings.setSupportMultipleWindows(false)
+                    webViewClient = object : WebViewClient() {
+                        override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+                            return request.url.scheme != "https" || request.url.host != PREVIEW_HOST
                         }
-                        val content = runCatching { store.read(project, requested) }.getOrElse { "" }
-                        return WebResourceResponse(type, "UTF-8",
-                            ByteArrayInputStream(content.toByteArray(StandardCharsets.UTF_8)))
+                        override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse {
+                            val uri = request.url
+                            if (uri.scheme != "https" || uri.host != PREVIEW_HOST ||
+                                !uri.path.orEmpty().startsWith("/project/")) return previewResponse("text/plain", "")
+                            val requested = Uri.decode(uri.encodedPath.orEmpty()).removePrefix("/project/")
+                            val extension = requested.substringAfterLast('.', "").lowercase()
+                            val type = when (extension) {
+                                "html", "htm" -> "text/html"
+                                "css" -> "text/css"
+                                "js", "mjs" -> "application/javascript"
+                                "svg" -> "image/svg+xml"
+                                "json" -> "application/json"
+                                else -> MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "text/plain"
+                            }
+                            val data = if (requested == path) live.text else runCatching {
+                                store.read(project, requested)
+                            }.getOrElse { exception ->
+                                handler.post {
+                                    messages = (messages + "Could not load " + requested +
+                                        ": " + (exception.message ?: "unavailable")).takeLast(20)
+                                }
+                                ""
+                            }
+                            return previewResponse(type, data.take(262144))
+                        }
+                        override fun onPageFinished(view: WebView, url: String) { loading = false }
+                        override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+                            if (request.isForMainFrame) {
+                                loading = false
+                                failure = error.description.toString()
+                            }
+                        }
+                    }
+                    webChromeClient = object : WebChromeClient() {
+                        override fun onConsoleMessage(message: ConsoleMessage): Boolean {
+                            messages = (messages + message.messageLevel().toString() + ": " +
+                                message.message()).takeLast(20)
+                            return true
+                        }
                     }
                 }
-                webChromeClient = object : WebChromeClient() {
-                    override fun onConsoleMessage(message: ConsoleMessage): Boolean {
-                        val line = message.messageLevel().toString() + ": " + message.message()
-                        logs = (logs + line.take(400)).takeLast(30)
-                        return true
-                    }
+            },
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            update = { view ->
+                live.text = debounced
+                if (view.tag != url) {
+                    view.tag = url
+                    loading = true
+                    failure = null
+                    view.loadUrl(url)
                 }
-                webView = this
             }
-        }, modifier = Modifier.weight(1f).fillMaxWidth())
-        if (logs.isNotEmpty()) {
+        )
+        if (failure != null) {
+            Text("Preview error: " + failure, Modifier.padding(12.dp), color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall)
+        }
+        if (messages.isNotEmpty()) {
             HorizontalDivider()
-            Text("BROWSER CONSOLE", Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+            Text("WEB CONSOLE", Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp),
                 style = MaterialTheme.typography.labelSmall)
-            Column(Modifier.fillMaxWidth().heightIn(max = 100.dp)
-                .verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp)) {
-                logs.takeLast(8).forEach { Text(it, style = MaterialTheme.typography.labelSmall) }
+            Column(Modifier.fillMaxWidth().heightIn(max = 112.dp).verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 4.dp)) {
+                messages.takeLast(8).forEach { Text(it, style = MaterialTheme.typography.labelSmall) }
             }
         }
-    }
-    LaunchedEffect(webView, source, base) {
-        delay(250)
-        webView?.loadDataWithBaseURL(base, source, "text/html", "UTF-8", null)
-    }
-    DisposableEffect(webView) {
-        val owned = webView
-        onDispose { owned?.stopLoading(); owned?.destroy() }
     }
 }
+
+private class PreviewSource(@Volatile var text: String)
+
+private fun previewResponse(type: String, text: String) =
+    WebResourceResponse(type, "UTF-8",
+        ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8)))

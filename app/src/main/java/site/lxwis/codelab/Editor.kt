@@ -43,7 +43,10 @@ fun CodeEditor(
     val context = LocalContext.current
     val preferences = remember { context.getSharedPreferences("editor", Context.MODE_PRIVATE) }
     var fontSize by remember { mutableStateOf(preferences.getInt("font-size", 15)) }
+    var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", false)) }
+    var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", false)) }
     var view by remember { mutableStateOf<SourceView?>(null) }
+    var cursor by remember { mutableStateOf("Ln 1 · Col 1") }
     var find by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf("") }
     var replacement by remember { mutableStateOf("") }
@@ -104,7 +107,16 @@ fun CodeEditor(
             EditorAction("Undo") { view?.onTextContextMenuItem(android.R.id.undo) }
             EditorAction("Redo") { view?.onTextContextMenuItem(android.R.id.redo) }
             EditorAction("Find") { find = !find }
-            EditorAction("Line") { lineInput = ""; lineError = false; lineDialog = true }
+            EditorAction("Go to") { lineInput = ""; lineError = false; lineDialog = true }
+            EditorAction(if (wordWrap) "Wrap on" else "Wrap off") {
+                wordWrap = !wordWrap
+                preferences.edit().putBoolean("word-wrap", wordWrap).apply()
+            }
+            EditorAction("Start") { view?.scrollToStart() }
+            EditorAction(if (symbols) "Symbols −" else "Symbols +") {
+                symbols = !symbols
+                preferences.edit().putBoolean("symbol-toolbar", symbols).apply()
+            }
             Box {
                 EditorAction("${fontSize}sp") { settings = true }
                 DropdownMenu(expanded = settings, onDismissRequest = { settings = false }) {
@@ -117,8 +129,13 @@ fun CodeEditor(
                     }
                 }
             }
-            listOf("{", "}", "(", ")", "[", "]", "=", ";", ":").forEach { symbol ->
-                EditorAction(symbol) { view?.insertAtSelection(symbol) }
+        }
+        if (symbols) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                verticalAlignment = Alignment.CenterVertically) {
+                listOf("{", "}", "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">").forEach { symbol ->
+                    EditorAction(symbol) { view?.insertAtSelection(symbol) }
+                }
             }
         }
         if (find) {
@@ -146,15 +163,26 @@ fun CodeEditor(
                     setText(text)
                     restorePosition(fileKey)
                     changed = { source -> changes(source) }
+                    selectionChanged = { line, col -> cursor = "Ln " + line + " · Col " + col }
                     view = this
                 }
             },
             modifier = Modifier.fillMaxWidth().weight(1f),
             update = { editor ->
                 editor.appearance(fontSize, foreground, background, secondary, accent, dark)
+                editor.setCodeWrap(wordWrap)
                 if (editor.sourceSnapshot != text) editor.replaceSource(text)
             }
         )
+        Row(Modifier.fillMaxWidth().height(28.dp).padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(cursor, style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text((if (wordWrap) "Wrap · " else "") + "UTF-8 · " + filename.substringAfterLast('.', "text").uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 
@@ -170,6 +198,8 @@ private class SyntaxInk(color: Int) : ForegroundColorSpan(color)
 
 internal class SourceView(context: Context, filename: String) : EditText(context) {
     var changed: ((String) -> Unit)? = null
+    var selectionChanged: ((Int, Int) -> Unit)? = null
+    private var codeWrapped: Boolean? = null
     var sourceSnapshot = ""
         private set
     private var syncing = false
@@ -241,12 +271,35 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         invalidate()
     }
 
+    fun setCodeWrap(enabled: Boolean) {
+        if (codeWrapped != enabled) {
+            codeWrapped = enabled
+            setHorizontallyScrolling(!enabled)
+            isHorizontalScrollBarEnabled = !enabled
+            if (enabled) scrollTo(0, scrollY)
+        }
+    }
+
+    override fun onSelectionChanged(selStart: Int, selEnd: Int) {
+        super.onSelectionChanged(selStart, selEnd)
+        val current = layout ?: return
+        val line = current.getLineForOffset(selEnd.coerceIn(0, length()))
+        val column = selEnd - current.getLineStart(line) + 1
+        selectionChanged?.invoke(line + 1, column)
+    }
+
+    fun scrollToStart() {
+        setSelection(0)
+        scrollTo(0, 0)
+        requestFocus()
+    }
+
     fun restorePosition(key: String) {
         positionKey = key
         val prefs = context.getSharedPreferences("editor-positions", Context.MODE_PRIVATE)
         setSelection(prefs.getInt("$key|start", 0).coerceIn(0, length()),
             prefs.getInt("$key|end", 0).coerceIn(0, length()))
-        pendingScroll = prefs.getInt("$key|x", 0) to prefs.getInt("$key|y", 0)
+        pendingScroll = 0 to prefs.getInt("$key|y", 0)
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -391,6 +444,37 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         if (language !in supportedExtensions || start >= end) return
         val snippet = source.subSequence(start, end).toString()
         val colors = if (darkMode) darkInk else lightInk
+        if (language == "html" || language == "htm") {
+            htmlTags.findAll(snippet).forEach { tag ->
+                val value = tag.value
+                if (value.startsWith("<!--")) {
+                    source.setSpan(SyntaxInk(colors[0]), start + tag.range.first,
+                        start + tag.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                } else {
+                    val name = htmlTagName.find(value)
+                    if (name != null) source.setSpan(SyntaxInk(colors[3]),
+                        start + tag.range.first + name.range.first,
+                        start + tag.range.first + name.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    htmlAttributes.findAll(value).forEach { attr ->
+                        source.setSpan(SyntaxInk(colors[2]),
+                            start + tag.range.first + attr.range.first,
+                            start + tag.range.first + attr.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
+                    htmlStrings.findAll(value).forEach { quoted ->
+                        source.setSpan(SyntaxInk(colors[1]),
+                            start + tag.range.first + quoted.range.first,
+                            start + tag.range.first + quoted.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
+                }
+            }
+            return
+        }
+        if (language == "css") {
+            cssNames.findAll(snippet).forEach { property ->
+                source.setSpan(SyntaxInk(colors[3]), start + property.range.first,
+                    start + property.range.last + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }
         tokens.findAll(snippet).forEach { token ->
             val value = token.value
             val type = when {
@@ -411,6 +495,11 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         private val closers = pairs.values.toSet()
         private val supportedExtensions = setOf("js","mjs","ts","jsx","tsx","json","py","lua","sql","kt","kts","java","c","h","cpp","css","html","htm","rs","sh")
         private val hashCommentLanguages = setOf("py","sh")
+        private val htmlTags = Regex("""<!--[\s\S]*?-->|</?[a-zA-Z][^>]*?>""")
+        private val htmlTagName = Regex("""</?[a-zA-Z][\w:-]*""")
+        private val htmlAttributes = Regex("""[a-zA-Z_:][\w:.-]*(?=\s*=)""")
+        private val htmlStrings = Regex(""""[^"]*"|'[^']*'""")
+        private val cssNames = Regex("""[a-zA-Z_-][\w-]*(?=\s*:)""")
         private val tokenPattern  = """//[^\n]*|/\*[\s\S]*?(?:\*/|$)|"(?:\\.|[^"\\\n])*+"?|'(?:\\.|[^'\\\n])*+'?|`(?:\\.|[^`\\])*+`?|\b(?:0[xX][0-9a-fA-F]+|\d+(?:\.\d+)?)\b|[a-zA-Z_][a-zA-Z_0-9]*"""
         private val keywords = "async await break case catch class const continue debugger default delete do else export extends false finally for from function if import in instanceof interface let new null of return static super switch this throw true try typeof undefined var void while with yield def elif except lambda pass none print console log select where insert create table into values order by join update set delete and or end local then repeat until fun val object when package public private int char float double struct bool return".split(' ').toSet()
         private val darkInk = intArrayOf(0xff91a09d.toInt(),0xffa9dda4.toInt(),0xffe7b381.toInt(),0xffb8acff.toInt())
