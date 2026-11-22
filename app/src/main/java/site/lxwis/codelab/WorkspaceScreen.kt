@@ -25,6 +25,8 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.core.spring
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import android.provider.Settings
 import android.view.View
 import android.view.WindowInsets as PlatformWindowInsets
@@ -190,30 +192,47 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 }
                 LazyRow(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
-                        val active = m.active == path
-                        val tabColor by animateColorAsState(
-                            if (active) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent,
-                            animationSpec = tween(motionMillis), label = "tab-color")
-                        Row(Modifier.padding(end = 2.dp)
-                            .background(tabColor,
-                                RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp)), verticalAlignment = Alignment.CenterVertically) {
-                            Text(path.substringAfterLast('/'), Modifier.clickable {
+                        WorkspaceTab(path = path, active = m.active == path,
+                            motionMillis = motionMillis,
+                            onSelect = {
                                 UiLatencyProbe.nextFrame(context, "Switch tab")
                                 if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 m.select(path)
-                            }
-                                .padding(horizontal = 8.dp, vertical = 8.dp),
-                                color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
-                            if (active) IconButton(onClick = { m.closeTab(path) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.Close, "Close $path", Modifier.size(16.dp)) }
-                        }
+                            },
+                            onClose = { m.closeTab(path) })
                     }
                 }
                 IconButton(onClick = { dialog = "newfile" }) { Icon(Icons.Default.Add, "Add file") }
             }
             BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
                 val wide = maxWidth >= 820.dp
-                val showSidebar = wide && explorerPinned && !focusMode
-                Row(Modifier.fillMaxSize()) {
+                val phoneSplit = !wide && m.phoneSplitEnabled &&
+                    (m.console || m.preview) && !focusMode
+                val editorPane: @Composable (Modifier) -> Unit = { pane ->
+                    WorkspaceEditorPane(m, p, pane,
+                        onFiles = { dialog = "files" },
+                        onScreenshot = { dialog = "screenshot" },
+                        onCommands = { dialog = "commands" },
+                        onSelection = { text, line ->
+                            selectedSnippet = text
+                            selectedSnippetLine = line
+                        })
+                }
+                val outputPane: @Composable (Modifier) -> Unit = { pane ->
+                    if (m.console) RunConsole(m.runner, pane, m.active)
+                    else if (m.preview && m.active != null)
+                        HtmlPreview(p, m.active!!, m.source, pane)
+                }
+                if (phoneSplit) {
+                    val heightPx = with(LocalDensity.current) { maxHeight.toPx() }
+                    Column(Modifier.fillMaxSize()) {
+                        editorPane(Modifier.weight(m.phoneSplitPercent.toFloat()).fillMaxWidth())
+                        PhonePanelDivider(m.phoneSplitPercent, heightPx, m::setPhoneSplitPercent)
+                        outputPane(Modifier.weight((100 - m.phoneSplitPercent).toFloat()).fillMaxWidth())
+                    }
+                } else {
+                    val showSidebar = wide && explorerPinned && !focusMode
+                    Row(Modifier.fillMaxSize()) {
                     AnimatedVisibility(visible = showSidebar,
                         enter = expandHorizontally(animationSpec = tween(motionMillis)) +
                             fadeIn(animationSpec = tween(motionMillis)),
@@ -261,31 +280,15 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         }
                     }
-                    if ((!m.console && !m.preview) || wide) Box(Modifier.weight(
-                        if (wide && (m.console || m.preview)) m.panelSplitPercent / 100f else 1f
-                    ).fillMaxHeight()) {
-                        val file = m.active
-                        if (file != null) key(p, file) {
-                            CodeEditor(fileKey = "$p/$file", filename = file, text = m.source,
-                                onTextChange = m::edit, jumpLine = m.pendingLine,
-                                onJumpHandled = m::consumeJump, onSave = m::flush, onRun = m::run,
-                                onShare = { dialog = "screenshot" },
-                                onPreviousTab = { m.moveActiveTab(-1) },
-                                onNextTab = { m.moveActiveTab(1) },
-                                onOpenCommands = { dialog = "commands" },
-                                onSelectionChange = { snippet, line ->
-                                    selectedSnippet = snippet
-                                    selectedSnippetLine = line
-                                },
-                                modifier = Modifier.fillMaxSize())
-                        } else TextButton(onClick = { dialog = "files" }, modifier = Modifier.align(Alignment.Center)) { Text("Open a file") }
+                        if ((!m.console && !m.preview) || wide)
+                            editorPane(Modifier.weight(
+                                if (wide && (m.console || m.preview)) m.panelSplitPercent / 100f else 1f
+                            ).fillMaxHeight())
+                        if (m.console || m.preview)
+                            outputPane(Modifier.weight(
+                                if (wide) (100 - m.panelSplitPercent) / 100f else 1f
+                            ).fillMaxHeight())
                     }
-                    if (m.console) RunConsole(m.runner,
-                        Modifier.weight(if (wide) (100 - m.panelSplitPercent) / 100f else 1f)
-                            .fillMaxHeight(), m.active)
-                    else if (m.preview && m.active != null) HtmlPreview(p, m.active!!, m.source,
-                        Modifier.weight(if (wide) (100 - m.panelSplitPercent) / 100f else 1f)
-                            .fillMaxHeight())
                 }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -298,6 +301,14 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 PanelButton("Editor", !m.console && !m.preview) { m.console = false; m.preview = false }
                 PanelButton("Console", m.console) { m.console = true; m.preview = false }
+                if (LocalConfiguration.current.screenWidthDp < 820) {
+                    PhoneSplitToggle(m.phoneSplitEnabled) {
+                        val next = !m.phoneSplitEnabled
+                        m.setPhoneSplitEnabled(next)
+                        if (next && !m.console && !m.preview) m.console = true
+                        if (!next) { m.console = false; m.preview = false }
+                    }
+                }
                 if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
                     PanelButton("Preview", m.preview) { m.console = false; m.preview = true }
                 Text(when {
@@ -463,11 +474,15 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             title = { Text("Workspace panels") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Editor width · ${m.panelSplitPercent}%")
+                    Text("Tablet editor width · ${m.panelSplitPercent}%")
                     Slider(value = m.panelSplitPercent.toFloat(),
                         onValueChange = { m.setPanelSplit(it.toInt()) },
                         valueRange = 35f..80f)
-                    Text("When the console or preview is open on a tablet, the editor and output share the available width.",
+                    Text("Phone editor height · ${m.phoneSplitPercent}%")
+                    Slider(value = m.phoneSplitPercent.toFloat(),
+                        onValueChange = { m.setPhoneSplitPercent(it.toInt()) },
+                        valueRange = 35f..80f)
+                    Text("In Split mode, the editor stays above the console or preview. Drag the divider or use this slider to adjust height.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(verticalAlignment = Alignment.CenterVertically) {

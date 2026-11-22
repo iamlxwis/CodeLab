@@ -152,6 +152,21 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         motionPreference = value
         preferences.edit().putString("motion", value).apply()
     }
+    // Phone editor/console split is opt-in; preferences survive process death.
+    var phoneSplitEnabled by mutableStateOf(preferences.getBoolean("phone-split", false))
+        private set
+    fun setPhoneSplitEnabled(enabled: Boolean) {
+        phoneSplitEnabled = enabled
+        preferences.edit().putBoolean("phone-split", enabled).apply()
+    }
+    var phoneSplitPercent by mutableIntStateOf(
+        clampPhoneSplit(preferences.getInt("phone-split-percent", 60)))
+        private set
+    fun setPhoneSplitPercent(percent: Int) {
+        phoneSplitPercent = clampPhoneSplit(percent)
+        preferences.edit().putInt("phone-split-percent", phoneSplitPercent).apply()
+    }
+
     var panelSplitPercent by mutableIntStateOf(preferences.getInt("panel-split", 60))
         private set
     fun setPanelSplit(value: Int) {
