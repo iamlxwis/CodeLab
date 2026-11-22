@@ -240,6 +240,22 @@ public final class ProjectStore {
         writeText(target, text);
     }
 
+    public synchronized void importSingleFile(String project, String path, InputStream input) throws IOException {
+        File target = resolve(project(project), path);
+        requireNew(target);
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        transfer(input, output, MAX_FILE_BYTES);
+        byte[] bytes = output.toByteArray();
+        String content = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
+        writeText(target, content);
+    }
+
+    public synchronized void exportSingleFile(String project, String path, OutputStream output) throws IOException {
+        File target = resolve(project(project), path);
+        if (!target.isFile()) throw new IOException("File does not exist.");
+        Files.copy(target.toPath(), output);
+    }
+
     public synchronized void renameFile(String project, String from, String to) throws IOException {
         File dir = project(project);
         File source = resolve(dir, from);

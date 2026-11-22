@@ -107,6 +107,16 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var selected by rememberSaveable { mutableStateOf("") }
     var incoming by rememberSaveable { mutableStateOf<String?>(null) }
     var menu by remember { mutableStateOf(false) }
+    var importedFile by rememberSaveable { mutableStateOf<String?>(null) }
+    val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) {
+        it?.let(m::exportFile)
+    }
+    val importFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
+        if (it != null) {
+            importedFile = it.toString()
+            dialog = "importfile"
+        }
+    }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { it?.let(m::export) }
     val importZip = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
         if (it != null) { incoming = it.toString(); dialog = "import" }
@@ -149,6 +159,15 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     if (p != null) {
                         DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
+                        DropdownMenuItem(text = { Text("Import file…") }, onClick = { menu = false; importFile.launch(arrayOf("*/*")) })
+                        if (m.active != null) {
+                            DropdownMenuItem(text = { Text("Rename current file…") }, onClick = {
+                                menu = false; selected = m.active!!; dialog = "rename"
+                            })
+                            DropdownMenuItem(text = { Text("Export current file…") }, onClick = {
+                                menu = false; exportFile.launch(m.active!!.substringAfterLast('/'))
+                            })
+                        }
                         DropdownMenuItem(text = { Text("Export project ZIP") }, onClick = { menu = false; export.launch("$p.zip") })
                         if (m.active != null && m.cloudAvailable(m.active!!)) {
                             DropdownMenuItem(text = { Text("Run via cloud…") },
@@ -234,12 +253,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             m.openProject(name, true, template)
             dialog = ""
         }
-        "newfile", "rename", "renameproject", "import" -> {
-            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; else -> "Import project" }
-            val file = dialog == "newfile" || dialog == "rename"
+        "newfile", "rename", "renameproject", "import", "importfile" -> {
+            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; "importfile" -> "Import file"; else -> "Import project" }
+            val file = dialog == "newfile" || dialog == "rename" || dialog == "importfile"
             NameDialog(title, if (dialog.startsWith("rename")) selected else "", if (file) "File path" else "Project name",
                 if (file) "e.g. src/helpers.js" else "e.g. Playground", { dialog = "" }) { name ->
-                when (dialog) { "renameproject" -> m.manageProject(selected, name); "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) } }
+                when (dialog) { "renameproject" -> m.manageProject(selected, name); "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) }; "importfile" -> importedFile?.let { m.importFile(Uri.parse(it), name) } }
                 dialog = ""
             }
         }

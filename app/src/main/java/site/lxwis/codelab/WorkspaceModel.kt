@@ -329,6 +329,30 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun exportFile(uri: Uri) {
+        val p = project ?: return
+        val path = active ?: return
+        work {
+            val resolver = getApplication<Application>().contentResolver
+            requireNotNull(resolver.openOutputStream(uri, "wt")) { "Cannot open destination" }
+                .use { store.exportSingleFile(p, path, it) }
+            val commit: () -> Unit = {}
+            commit
+        }
+    }
+
+    fun importFile(uri: Uri, name: String) {
+        val p = project ?: return
+        work {
+            val resolver = getApplication<Application>().contentResolver
+            requireNotNull(resolver.openInputStream(uri)) { "Cannot open source file" }
+                .use { store.importSingleFile(p, name, it) }
+            val opened = persist(load(p, tabs + name, name))
+            val commit: () -> Unit = { apply(opened); console = false }
+            commit
+        }
+    }
+
     fun importArchive(name: String, uri: Uri) {
         work {
             val resolver = getApplication<Application>().contentResolver
