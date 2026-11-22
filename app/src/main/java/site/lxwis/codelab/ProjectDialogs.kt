@@ -293,7 +293,7 @@ internal fun ProjectSettingsDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                         }
                     }
                 }
-                Text("This selects a preferred entry file; Run continues to execute the active editor tab.",
+                Text("Run uses this entry file when available. Use the Run arrow to run another file.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("Settings are kept inside the project and included in ZIP backups.",
