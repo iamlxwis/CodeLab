@@ -43,7 +43,19 @@ private val catalog = listOf(
     SupportedLanguage("Scala", "scala"),
     SupportedLanguage("Perl", "pl"),
     SupportedLanguage("Haskell", "hs"),
-    SupportedLanguage("R", "r")
+    SupportedLanguage("R", "r"),
+    SupportedLanguage("Elixir", "ex"),
+    SupportedLanguage("Erlang", "erl"),
+    SupportedLanguage("OCaml", "ml"),
+    SupportedLanguage("Fortran", "f90"),
+    SupportedLanguage("COBOL", "cob"),
+    SupportedLanguage("Pascal", "pas"),
+    SupportedLanguage("Assembly", "asm"),
+    SupportedLanguage("Objective-C", "m"),
+    SupportedLanguage("Groovy", "groovy"),
+    SupportedLanguage("F#", "fs"),
+    SupportedLanguage("Visual Basic .NET", "vb"),
+    SupportedLanguage("Prolog", "plg")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)

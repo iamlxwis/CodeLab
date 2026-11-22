@@ -80,6 +80,18 @@ public final class CloudJudge0 {
         if (n.startsWith("perl")) return "pl";
         if (n.startsWith("haskell")) return "hs";
         if (n.startsWith("lua")) return "lua";
+        if (n.startsWith("elixir")) return "ex";
+        if (n.startsWith("erlang")) return "erl";
+        if (n.startsWith("ocaml")) return "ml";
+        if (n.startsWith("fortran")) return "f90";
+        if (n.startsWith("cobol")) return "cob";
+        if (n.startsWith("pascal")) return "pas";
+        if (n.startsWith("assembly")) return "asm";
+        if (n.startsWith("objective-c")) return "m";
+        if (n.startsWith("groovy")) return "groovy";
+        if (n.startsWith("f#")) return "fs";
+        if (n.startsWith("visual basic")) return "vb";
+        if (n.startsWith("prolog")) return "plg";
         if (n.startsWith("r (") || n.equals("r")) return "r";
         return null;
     }
