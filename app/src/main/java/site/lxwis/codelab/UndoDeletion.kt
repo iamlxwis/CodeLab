@@ -1,6 +1,6 @@
 package site.lxwis.codelab
 
-internal data class UndoDeletion(val id: String, val label: String)
+data class UndoDeletion(val id: String, val label: String)
 
 /**
  * Identify only the trash record created by the current operation.
