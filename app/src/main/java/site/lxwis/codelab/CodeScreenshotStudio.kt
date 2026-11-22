@@ -41,7 +41,10 @@ fun CodeScreenshotStudio(
     val snippetMode = useSelection && selection.isNotEmpty()
     val renderSource = if (snippetMode) selection else source
     val firstLine = if (snippetMode) 1 else (start.toIntOrNull() ?: 1).coerceIn(1, 100000)
-    val requestedLines = if (snippetMode) renderSource.lines().size.coerceIn(1, 40)
+    val selectedLineCount = if (snippetMode) renderSource.lines().size else 0
+    val visibleSelectionLines = minOf(selectedLineCount,
+        ScreenshotRenderer.lineCapacity(aspect), 40)
+    val requestedLines = if (snippetMode) visibleSelectionLines.coerceAtLeast(1)
         else count.toInt()
     val options = ScreenshotOptions(
         palette = preset, aspect = aspect, background = background,
@@ -143,8 +146,8 @@ fun CodeScreenshotStudio(
                 " · " + ScreenshotRenderer.lineCapacity(aspect) + " fit in this layout",
                 style = MaterialTheme.typography.labelSmall)
             Slider(value = count, onValueChange = { count = it }, valueRange = 1f..40f)
-            } else if (renderSource.lines().size > 40) {
-                Text("Showing the first 40 selected lines. For longer selections, choose a smaller range.",
+            } else if (selectedLineCount > visibleSelectionLines) {
+                Text("This image fits $visibleSelectionLines of $selectedLineCount selected lines. Select a smaller range to include everything.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
