@@ -47,6 +47,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.ViewModelProvider
 
 private val night = darkColorScheme(
@@ -91,11 +93,19 @@ class MainActivity : ComponentActivity() {
                 else -> base.primary
             }
             val accentContainer = accent.copy(alpha = .15f).compositeOver(base.surface)
-            val scheme = base.copy(primary = accent,
+            val schemeNormal = base.copy(primary = accent,
                 onPrimary = if (dark) Color(0xff101517) else Color.White,
                 primaryContainer = accentContainer, onPrimaryContainer = accent,
                 secondary = accent, onSecondary = if (dark) Color(0xff101517) else Color.White,
                 secondaryContainer = accentContainer, onSecondaryContainer = accent)
+            val scheme = if (model.highContrast) schemeNormal.copy(
+                onSurface = if (dark) Color.White else Color.Black,
+                onSurfaceVariant = if (dark) Color(0xffe3eceb) else Color(0xff243331),
+                outline = if (dark) Color.White else Color.Black,
+                outlineVariant = if (dark) Color(0xffaabbb5) else Color(0xff536960),
+                primary = if (dark) Color(0xffbaffd7) else Color(0xff005b46),
+                onPrimaryContainer = if (dark) Color.White else Color.Black
+            ) else schemeNormal
             SideEffect {
                 @Suppress("DEPRECATION")
                 window.statusBarColor = scheme.surface.toArgb()
@@ -106,13 +116,19 @@ class MainActivity : ComponentActivity() {
                     window.insetsController?.setSystemBarsAppearance(if (dark) 0 else mask, mask)
                 }
             }
+            val textScale = if (model.largeInterfaceText) 1.16f else 1f
             val typography = Typography(
                 headlineLarge = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-                headlineSmall = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-                titleLarge = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                titleMedium = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                bodyMedium = MaterialTheme.typography.bodyMedium,
-                labelSmall = MaterialTheme.typography.labelSmall.copy(letterSpacing = .3.sp)
+                headlineSmall = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold,
+                    fontSize = MaterialTheme.typography.headlineSmall.fontSize * textScale),
+                titleLarge = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold,
+                    fontSize = MaterialTheme.typography.titleLarge.fontSize * textScale),
+                titleMedium = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold,
+                    fontSize = MaterialTheme.typography.titleMedium.fontSize * textScale),
+                bodyMedium = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = MaterialTheme.typography.bodyMedium.fontSize * textScale),
+                labelSmall = MaterialTheme.typography.labelSmall.copy(letterSpacing = .3.sp,
+                    fontSize = MaterialTheme.typography.labelSmall.fontSize * textScale)
             )
             MaterialTheme(colorScheme = scheme, typography = typography, shapes = Shapes(
                 extraSmall = RoundedCornerShape(7.dp),
@@ -142,6 +158,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var focusMode by rememberSaveable { mutableStateOf(false) }
     var explorerPinned by rememberSaveable { mutableStateOf(true) }
     val context = androidx.compose.ui.platform.LocalContext.current
+    val haptics = LocalHapticFeedback.current
     val systemMotionEnabled = remember(context) {
         Settings.Global.getFloat(context.contentResolver,
             Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
@@ -210,7 +227,10 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }
             if (p != null && (m.runner.running || m.active != null)) {
                 Button(
-                    onClick = { if (m.runner.running) m.runner.stop() else m.run() },
+                    onClick = {
+                        if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (m.runner.running) m.runner.stop() else m.run()
+                    },
                     enabled = !m.busy,
                     shape = RoundedCornerShape(11.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -282,6 +302,10 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         onClick = { menu = false; focusMode = !focusMode; m.console = false; m.preview = false })
                     DropdownMenuItem(text = { Text("Languages & Cloud") },
                         onClick = { menu = false; dialog = "languages" })
+                    DropdownMenuItem(text = { Text("Accessibility") },
+                        onClick = { menu = false; dialog = "accessibility" })
+                    DropdownMenuItem(text = { Text("Performance diagnostics") },
+                        onClick = { menu = false; dialog = "performance" })
                     DropdownMenuItem(text = { Text("Appearance") }, onClick = { menu = false; dialog = "appearance" })
                 }
             }
@@ -492,6 +516,43 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             text = { Text("Delete $selected and all its files from this device?") },
             confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
+        "accessibility" -> AlertDialog(onDismissRequest = { dialog = "" },
+            title = { Text("Accessibility") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("High contrast", Modifier.weight(1f))
+                        Switch(checked = m.highContrast, onCheckedChange = m::setHighContrast)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Larger interface text", Modifier.weight(1f))
+                        Switch(checked = m.largeInterfaceText,
+                            onCheckedChange = m::setLargeInterfaceText)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Run-button haptic feedback", Modifier.weight(1f))
+                        Switch(checked = m.touchFeedback, onCheckedChange = m::setTouchFeedback)
+                    }
+                    Text("System font scaling and reduced-motion settings remain supported. These options apply immediately.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
+        "performance" -> AlertDialog(onDismissRequest = { dialog = "" },
+            title = { Text("Performance diagnostics") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Last workspace I/O: " + m.lastOperationName)
+                    Text(m.lastOperationMillis.toString() + " ms", fontFamily = FontFamily.Monospace)
+                    Text("Last local save: " + m.lastSaveMillis + " ms",
+                        fontFamily = FontFamily.Monospace)
+                    Text("Editor buffer: " + m.source.toByteArray(Charsets.UTF_8).size + " bytes")
+                    Text("Project files: " + m.files.size)
+                    Text("Numbers are captured from actual local operations on this device. Not synthetic benchmarks.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
         "panels" -> AlertDialog(onDismissRequest = { dialog = "" },
             title = { Text("Workspace panels") },
             text = {

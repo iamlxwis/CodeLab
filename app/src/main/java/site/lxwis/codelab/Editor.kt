@@ -659,7 +659,7 @@ fun CodeEditor(
 private fun EditorIcon(icon: ImageVector, description: String, selected: Boolean = false,
                        onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    IconButton(onClick = onClick, modifier = Modifier.size(41.dp)
+    IconButton(onClick = onClick, modifier = Modifier.size(48.dp)
         .background(if (selected) colors.primaryContainer else Color.Transparent, RoundedCornerShape(10.dp))) {
         Icon(icon, contentDescription = description, modifier = Modifier.size(20.dp),
             tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant)

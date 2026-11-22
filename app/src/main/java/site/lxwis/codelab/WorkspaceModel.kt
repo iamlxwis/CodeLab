@@ -163,6 +163,30 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         motionIntensity = value.coerceIn(0, 100)
         preferences.edit().putInt("motion-intensity", motionIntensity).apply()
     }
+    var highContrast by mutableStateOf(preferences.getBoolean("high-contrast", false))
+        private set
+    fun setHighContrast(value: Boolean) {
+        highContrast = value
+        preferences.edit().putBoolean("high-contrast", value).apply()
+    }
+    var largeInterfaceText by mutableStateOf(preferences.getBoolean("large-interface-text", false))
+        private set
+    fun setLargeInterfaceText(value: Boolean) {
+        largeInterfaceText = value
+        preferences.edit().putBoolean("large-interface-text", value).apply()
+    }
+    var touchFeedback by mutableStateOf(preferences.getBoolean("touch-feedback", true))
+        private set
+    fun setTouchFeedback(value: Boolean) {
+        touchFeedback = value
+        preferences.edit().putBoolean("touch-feedback", value).apply()
+    }
+    var lastOperationMillis by mutableLongStateOf(0L)
+        private set
+    var lastSaveMillis by mutableLongStateOf(0L)
+        private set
+    var lastOperationName by mutableStateOf("Not measured")
+        private set
     var interfaceDensity by mutableStateOf(preferences.getString("density", "Comfortable") ?: "Comfortable")
         private set
     fun chooseDensity(value: String) {
@@ -340,12 +364,26 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val mustSave = dirty
         busy = true
         io.execute {
+            val started = android.os.SystemClock.elapsedRealtime()
             try {
                 if (mustSave && p != null && f != null) store.save(p, f, text)
                 val commit = task()
-                main.post { dirty = false; commit(); busy = false }
+                val elapsed = android.os.SystemClock.elapsedRealtime() - started
+                main.post {
+                    dirty = false
+                    commit()
+                    lastOperationMillis = elapsed
+                    lastOperationName = "Workspace I/O"
+                    busy = false
+                }
             } catch (e: Exception) {
-                main.post { error = e.localizedMessage ?: "Workspace operation failed"; busy = false }
+                val elapsed = android.os.SystemClock.elapsedRealtime() - started
+                main.post {
+                    lastOperationMillis = elapsed
+                    lastOperationName = "Failed workspace I/O"
+                    error = e.localizedMessage ?: "Workspace operation failed"
+                    busy = false
+                }
             }
         }
     }
@@ -367,9 +405,14 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val version = revision
         val text = source
         io.execute {
+            val started = android.os.SystemClock.elapsedRealtime()
             try {
                 store.save(p, f, text)
-                main.post { if (revision == version) dirty = false }
+                val elapsed = android.os.SystemClock.elapsedRealtime() - started
+                main.post {
+                    lastSaveMillis = elapsed
+                    if (revision == version) dirty = false
+                }
             } catch (e: Exception) { main.post { if (revision == version) error = "Save failed: ${e.localizedMessage}" } }
         }
     }
