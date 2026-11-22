@@ -848,7 +848,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             diagnostics = emptySet()
             invalidate()
         } else {
-            hintTask = background.submit(Runnable {
+            hintTask = highlightWorker.submit(Runnable {
                 val issues = CodeAnalysis.bracketIssues(snapshot).map { it.line }.toSet()
                 post(Runnable applyHints@ {
                     if (generation != hintGeneration || snapshot != sourceSnapshot) return@applyHints
@@ -1003,7 +1003,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         "lua", "sql" -> "--[^\n]*|" + tokenPattern
         else -> tokenPattern
     })
-    private val background = Executors.newSingleThreadExecutor { runnable ->
+    private val highlightWorker = Executors.newSingleThreadExecutor { runnable ->
         Thread(runnable, "CodeLab-editor-analysis").apply { isDaemon = true }
     }
     private var highlightTask: Future<*>? = null
@@ -1387,7 +1387,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         ++hintGeneration
         highlightTask?.cancel(true)
         hintTask?.cancel(true)
-        background.shutdownNow()
+        highlightWorker.shutdownNow()
         persistBookmarks()
         positionKey?.let { key ->
             context.getSharedPreferences("editor-positions", Context.MODE_PRIVATE).edit()
@@ -1446,7 +1446,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             "GitHub Light" -> lightInk
             else -> if (darkMode) darkInk else lightInk
         }.copyOf()
-        highlightTask = background.submit(Runnable {
+        highlightTask = highlightWorker.submit(Runnable {
             val marks = ArrayList<HighlightMark>()
             fun add(from: Int, to: Int, kind: Int) {
                 if (to > from && marks.size < 3200) marks.add(HighlightMark(start + from, start + to, colors[kind]))
