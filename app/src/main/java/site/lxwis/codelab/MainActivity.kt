@@ -393,7 +393,14 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
                 }
             }
             Spacer(Modifier.height(16.dp))
-            Text("ON THIS DEVICE", fontSize = 11.sp, letterSpacing = 1.6.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            val visibleCount = m.projects.count { it.contains(projectSearch.trim(), ignoreCase = true) }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically) {
+                Text("ON THIS DEVICE", fontSize = 11.sp, letterSpacing = 1.6.sp,
+                    fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("$visibleCount / ${m.projects.size}", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
         if (m.projects.isEmpty() && !m.busy) item {
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .65f), shape = RoundedCornerShape(14.dp)) {
@@ -401,6 +408,18 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
                     Text("No projects yet", fontWeight = FontWeight.Medium)
                     Spacer(Modifier.height(6.dp))
                     Text("Create a project or import a project ZIP.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        if (projectSearch.isNotBlank() && m.projects.none { it.contains(projectSearch.trim(), ignoreCase = true) }) item {
+            Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(14.dp)) {
+                Column(Modifier.fillMaxWidth().padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.SearchOff, null, Modifier.size(26.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(8.dp))
+                    Text("No matching projects", fontWeight = FontWeight.Medium)
+                    TextButton(onClick = { projectSearch = "" }) { Text("Clear search") }
                 }
             }
         }
