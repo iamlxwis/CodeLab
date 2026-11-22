@@ -1,9 +1,9 @@
 package site.lxwis.codelab
 
 /** Language names and file extensions are editor capabilities, not bundled runtime promises. */
-internal data class SupportedLanguage(val name: String, val extension: String, val local: String? = null)
+data class SupportedLanguage(val name: String, val extension: String, val local: String? = null)
 
-internal object LanguageCatalog {
+object LanguageCatalog {
     val entries: List<SupportedLanguage> = listOf(
         SupportedLanguage("JavaScript", "js", "Offline"),
         SupportedLanguage("Lua", "lua", "Offline"),
