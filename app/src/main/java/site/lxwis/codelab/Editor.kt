@@ -182,6 +182,12 @@ fun CodeEditor(
                 readOnly = !readOnly
                 view?.isEnabled = !readOnly
             }
+            EditorIcon(Icons.Default.ContentCopy, "Duplicate current line") {
+                if (!readOnly) view?.duplicateCurrentLine()
+            }
+            EditorIcon(Icons.Default.DeleteSweep, "Delete current line") {
+                if (!readOnly) view?.deleteCurrentLine()
+            }
             EditorIcon(Icons.Default.SelectAll, "Select all code") {
                 view?.let { editor -> editor.requestFocus(); editor.selectAll() }
             }
@@ -193,7 +199,8 @@ fun CodeEditor(
         if (symbols) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically) {
-                EditorAction("Tab") { if (!readOnly) view?.insertAtSelection("    ") }
+                EditorAction("Tab") { if (!readOnly) view?.indentSelection() }
+                EditorAction("Outdent") { if (!readOnly) view?.outdentSelection() }
                 EditorAction("←") { view?.let { editor ->
                     editor.setSelection((editor.selectionStart - 1).coerceAtLeast(0))
                 } }
@@ -446,6 +453,66 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         } finally {
             syncing = false
         }
+    }
+
+    fun duplicateCurrentLine() {
+        val source = text ?: return
+        val position = selectionStart.coerceIn(0, source.length)
+        val start = source.lastIndexOf('\n', (position - 1).coerceAtLeast(0)).let {
+            if (it < 0) 0 else it + 1
+        }
+        val lineEnd = source.indexOf('\n', position).let { if (it < 0) source.length else it }
+        val line = source.subSequence(start, lineEnd).toString()
+        source.insert(lineEnd, "\n" + line)
+        setSelection((position + line.length + 1).coerceAtMost(source.length))
+    }
+
+    fun deleteCurrentLine() {
+        val source = text ?: return
+        if (source.isEmpty()) return
+        val position = selectionStart.coerceIn(0, source.length)
+        val start = source.lastIndexOf('\n', (position - 1).coerceAtLeast(0)).let {
+            if (it < 0) 0 else it + 1
+        }
+        val end = source.indexOf('\n', position).let {
+            if (it < 0) source.length else it + 1
+        }
+        if (start == 0 && end == source.length) source.clear()
+        else if (end == source.length && start > 0) source.delete(start - 1, end)
+        else source.delete(start, end)
+        setSelection(start.coerceAtMost(source.length))
+    }
+
+    fun indentSelection() {
+        val source = text ?: return
+        val from = minOf(selectionStart, selectionEnd).coerceAtLeast(0)
+        val to = maxOf(selectionStart, selectionEnd).coerceAtLeast(0)
+        if (from == to) {
+            insertAtSelection("    ")
+            return
+        }
+        val start = source.lastIndexOf('\n', (from - 1).coerceAtLeast(0)).let {
+            if (it < 0) 0 else it + 1
+        }
+        val chunk = source.subSequence(start, to).toString()
+        val indented = "    " + chunk.replace("\n", "\n    ")
+        source.replace(start, to, indented)
+        setSelection(start, start + indented.length)
+    }
+
+    fun outdentSelection() {
+        val source = text ?: return
+        val from = minOf(selectionStart, selectionEnd).coerceAtLeast(0)
+        val to = maxOf(selectionStart, selectionEnd).coerceAtLeast(0)
+        val start = source.lastIndexOf('\n', (from - 1).coerceAtLeast(0)).let {
+            if (it < 0) 0 else it + 1
+        }
+        val chunk = source.subSequence(start, to).toString()
+        val outdented = chunk.split("\n").joinToString("\n") { line ->
+            line.drop(if (line.startsWith("\t")) 1 else line.takeWhile { it == ' ' }.length.coerceAtMost(4))
+        }
+        source.replace(start, to, outdented)
+        setSelection(start, start + outdented.length)
     }
 
     fun selectedSource(): String {
