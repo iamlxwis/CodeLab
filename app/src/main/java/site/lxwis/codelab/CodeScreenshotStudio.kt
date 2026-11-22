@@ -22,9 +22,14 @@ import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CodeScreenshotStudio(filename: String, source: String, close: () -> Unit) {
+fun CodeScreenshotStudio(
+    filename: String, source: String, selection: String,
+    selectionFirstLine: Int, close: () -> Unit
+) {
     val context = LocalContext.current
     var preset by rememberSaveable { mutableStateOf("Obsidian") }
+    var useSelection by rememberSaveable { mutableStateOf(selection.isNotEmpty()) }
+    var advanced by rememberSaveable { mutableStateOf(false) }
     var aspect by rememberSaveable { mutableStateOf(ScreenshotAspect.SQUARE) }
     var background by rememberSaveable { mutableStateOf("Gradient") }
     var lineNumbers by rememberSaveable { mutableStateOf(true) }
@@ -33,14 +38,19 @@ fun CodeScreenshotStudio(filename: String, source: String, close: () -> Unit) {
     var title by rememberSaveable { mutableStateOf("") }
     var footer by rememberSaveable { mutableStateOf("") }
     var highlight by rememberSaveable { mutableStateOf("") }
-    val firstLine = (start.toIntOrNull() ?: 1).coerceIn(1, 100000)
+    val snippetMode = useSelection && selection.isNotEmpty()
+    val renderSource = if (snippetMode) selection else source
+    val firstLine = if (snippetMode) 1 else (start.toIntOrNull() ?: 1).coerceIn(1, 100000)
+    val requestedLines = if (snippetMode) renderSource.lines().size.coerceIn(1, 40)
+        else count.toInt()
     val options = ScreenshotOptions(
         palette = preset, aspect = aspect, background = background,
         lineNumbers = lineNumbers, firstLine = firstLine,
-        selectedLines = count.toInt(), title = title, footer = footer,
-        highlightLine = highlight.toIntOrNull()?.coerceAtLeast(0) ?: 0)
-    val preview = remember(filename, source, options) {
-        ScreenshotRenderer.render(filename, source, options)
+        selectedLines = requestedLines, title = title, footer = footer,
+        highlightLine = if (snippetMode) 0 else
+            (highlight.toIntOrNull()?.coerceAtLeast(0) ?: 0))
+    val preview = remember(filename, renderSource, options) {
+        ScreenshotRenderer.render(filename, renderSource, options)
     }
     val export = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("image/png")
@@ -66,6 +76,23 @@ fun CodeScreenshotStudio(filename: String, source: String, close: () -> Unit) {
             Text("Syntax-colored code cards, rendered locally without internet.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("CODE SOURCE", style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = !snippetMode, onClick = { useSelection = false },
+                    label = { Text("File lines") })
+                FilterChip(selected = snippetMode, enabled = selection.isNotBlank(),
+                    onClick = { useSelection = true },
+                    label = { Text("Selected text") })
+            }
+            if (snippetMode) Text(
+                "Only your selected code will appear · selection starts at line " + selectionFirstLine,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            else if (selection.isBlank()) Text(
+                "Select text in the editor before opening this tool to capture just those words or lines.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("Theme", style = MaterialTheme.typography.labelMedium)
             Row(Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -82,6 +109,10 @@ fun CodeScreenshotStudio(filename: String, source: String, close: () -> Unit) {
                         label = { Text(value.label) })
                 }
             }
+            TextButton(onClick = { advanced = !advanced }) {
+                Text(if (advanced) "Hide appearance options" else "More appearance options")
+            }
+            if (advanced) {
             Text("Background", style = MaterialTheme.typography.labelMedium)
             Row(Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -98,6 +129,8 @@ fun CodeScreenshotStudio(filename: String, source: String, close: () -> Unit) {
                 Text("Line numbers", Modifier.weight(1f))
                 Switch(checked = lineNumbers, onCheckedChange = { lineNumbers = it })
             }
+            }
+            if (!snippetMode) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(start, { start = it.filter(Char::isDigit).take(6) },
                     modifier = Modifier.weight(1f), singleLine = true,
@@ -110,6 +143,11 @@ fun CodeScreenshotStudio(filename: String, source: String, close: () -> Unit) {
                 " · " + ScreenshotRenderer.lineCapacity(aspect) + " fit in this layout",
                 style = MaterialTheme.typography.labelSmall)
             Slider(value = count, onValueChange = { count = it }, valueRange = 1f..40f)
+            } else if (renderSource.lines().size > 40) {
+                Text("Showing the first 40 selected lines. For longer selections, choose a smaller range.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 1.dp) {
                 Image(preview.asImageBitmap(), contentDescription = "Code screenshot preview",
                     modifier = Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
