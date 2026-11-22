@@ -707,7 +707,7 @@ public final class ProjectStore {
     }
 
     private static String diffExcerpt(String content) {
-        String escaped = content.replace("\\r", "\\\\r").replace("\\n", "\\\\n");
+        String escaped = content.replace("\r", "\\r").replace("\n", "\\n");
         return escaped.length() > 160 ? escaped.substring(0, 160) + "…" : escaped;
     }
 
@@ -734,7 +734,7 @@ public final class ProjectStore {
             java.util.regex.Matcher matcher = pattern.matcher(content);
             int line = 1, position = 0;
             while (matcher.find()) {
-                while (position < matcher.start()) if (content.charAt(position++) == '\\n') line++;
+                while (position < matcher.start()) if (content.charAt(position++) == '\n') line++;
                 hits.add(new ReplaceHit(path, line, diffExcerpt(matcher.group()),
                     diffExcerpt(replacement)));
                 if (hits.size() >= 100) return hits;
