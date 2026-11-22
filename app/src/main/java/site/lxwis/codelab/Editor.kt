@@ -58,6 +58,16 @@ fun CodeEditor(
     var search by remember { mutableStateOf("") }
     var replacement by remember { mutableStateOf("") }
     var replaceMode by remember { mutableStateOf(false) }
+    var matchCase by remember { mutableStateOf(false) }
+    var regexMode by remember { mutableStateOf(false) }
+    var searchError by remember { mutableStateOf("") }
+    fun searchRegex(): Regex? = try {
+        Regex(if (regexMode) search else Regex.escape(search),
+            if (matchCase) emptySet() else setOf(RegexOption.IGNORE_CASE))
+    } catch (e: IllegalArgumentException) {
+        searchError = "Invalid regular expression"
+        null
+    }
     var lineDialog by remember { mutableStateOf(false) }
     var lineInput by remember { mutableStateOf("") }
     var lineError by remember { mutableStateOf(false) }
@@ -74,12 +84,14 @@ fun CodeEditor(
         val editor = view ?: return
         if (search.isEmpty()) return
         val source = editor.text.toString()
-        var location = source.indexOf(search, editor.selectionEnd.coerceAtLeast(0), ignoreCase = true)
-        if (location == -1) location = source.indexOf(search, ignoreCase = true)
-        if (location >= 0) {
+        val pattern = searchRegex() ?: return
+        val start = editor.selectionEnd.coerceAtLeast(0)
+        val match = pattern.find(source, start) ?: pattern.find(source)
+        if (match != null) {
             editor.requestFocus()
-            editor.setSelection(location, location + search.length)
+            editor.setSelection(match.range.first, match.range.last + 1)
             result = ""
+            searchError = ""
         } else result = "No matches"
     }
     if (lineDialog) AlertDialog(
@@ -147,7 +159,13 @@ fun CodeEditor(
                 readOnly = !readOnly
                 view?.isEnabled = !readOnly
             }
+            EditorIcon(Icons.Default.SelectAll, "Select all code") {
+                view?.let { editor -> editor.requestFocus(); editor.selectAll() }
+            }
             EditorIcon(Icons.Default.Home, "Go to beginning of file") { view?.scrollToStart() }
+            EditorIcon(Icons.Default.VerticalAlignBottom, "Go to end of file") {
+                view?.let { editor -> editor.requestFocus(); editor.setSelection(editor.length()) }
+            }
         }
         if (symbols) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -165,28 +183,45 @@ fun CodeEditor(
                 EditorAction("Next") { selectMatch() }
                 EditorAction(if (replaceMode) "Hide" else "Edit") { replaceMode = !replaceMode }
             }
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+                .padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                FilterChip(selected = matchCase, onClick = { matchCase = !matchCase },
+                    label = { Text("Aa") })
+                Spacer(Modifier.width(6.dp))
+                FilterChip(selected = regexMode, onClick = { regexMode = !regexMode },
+                    label = { Text(".*") })
+                Spacer(Modifier.width(8.dp))
+                Text(if (matchCase) "Case-sensitive" else "Ignore case",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             if (replaceMode) Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(replacement, { replacement = it }, Modifier.weight(1f), singleLine = true, label = { Text("Replace with") })
                 EditorAction("All") {
                     val editor = view
                     if (editor != null && search.isNotEmpty()) {
                         val original = editor.text.toString()
-                        val regex = Regex(Regex.escape(search), RegexOption.IGNORE_CASE)
-                        val count = regex.findAll(original).count()
-                        if (count > 0) {
-                            editor.replaceSource(regex.replace(original) { replacement })
-                            result = "$count replacements"
-                        } else result = "No matches"
+                        val pattern = searchRegex()
+                        if (pattern != null) {
+                            val count = pattern.findAll(original).count()
+                            if (count > 0) {
+                                editor.replaceSource(pattern.replace(original) { replacement })
+                                result = "$count replacements"
+                            } else result = "No matches"
+                        }
                     }
                 }
                 EditorAction("Replace") {
                     val editor = view
-                    if (editor != null && search.isNotEmpty() && editor.selectedSource().equals(search, true)) {
+                    if (editor != null && search.isNotEmpty() &&
+                        searchRegex()?.matches(editor.selectedSource()) == true) {
                         editor.insertAtSelection(replacement)
                     }
                     selectMatch()
                 }
             }
+            if (searchError.isNotEmpty()) Text(searchError, Modifier.padding(horizontal = 12.dp),
+                color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
             if (result.isNotEmpty()) Text(result, Modifier.padding(horizontal = 12.dp), style = MaterialTheme.typography.labelSmall)
         }
         AndroidView(
