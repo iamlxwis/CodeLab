@@ -367,8 +367,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         if (wanted.size == tabs.size) return
         val target = active?.takeIf { it in wanted } ?: wanted.lastOrNull()
         work {
-            val opened = if (wanted.isEmpty()) Open(p, store.files(p), emptyList(), null, "")
-                else load(p, wanted, target, autoOpen = false)
+            val opened = load(p, wanted, target,
+                autoOpen = false, allowUnavailable = true)
             persist(opened)
             val commit: () -> Unit = { apply(opened) }
             commit
@@ -570,6 +570,9 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun openProject(name: String, create: Boolean = false, template: String = "JavaScript") {
         flush()
         val nav = ++navigationVersion
+        // openProject sets project optimistically before apply(Open); restore pins now.
+        pinnedTabs = preferences.getStringSet("pinned:$name", emptySet())?.toSet()
+            ?: emptySet()
         project = name
         files = emptyList()
         tabs = emptyList()
@@ -652,6 +655,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val nav = ++navigationVersion
         runner.stop()
         project = null
+        pinnedTabs = emptySet()
         active = null
         files = emptyList()
         folders = emptyList()
@@ -735,6 +739,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun changeFolder(path: String, replacement: String?) {
         val p = project ?: return
+        val remappedPins = remapPinnedPaths(pinnedTabs, path, replacement, directory = true)
         val prefix = path.removeSuffix("/") + "/"
         val wanted = tabs.mapNotNull { name ->
             if (name.startsWith(prefix)) replacement?.removeSuffix("/")?.plus("/")?.plus(name.removePrefix(prefix))
@@ -749,7 +754,12 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             else store.renameFile(p, path.removeSuffix("/"), replacement.removeSuffix("/"))
             val opened = persist(load(p, wanted, target, allowUnavailable = true))
             val deleted = store.trashItems()
-            val commit: () -> Unit = { apply(opened); trashItems = deleted }
+            val commit: () -> Unit = {
+                apply(opened)
+                pinnedTabs = remappedPins.intersect(files.toSet())
+                preferences.edit().putStringSet("pinned:$p", pinnedTabs).apply()
+                trashItems = deleted
+            }
             commit
         }
     }
@@ -775,13 +785,19 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun changeFile(path: String, replacement: String?) {
         val p = project ?: return
+        val remappedPins = remapPinnedPaths(pinnedTabs, path, replacement)
         val wanted = tabs.mapNotNull { if (it == path) replacement else it }
         val target = if (active == path) replacement else active
         work {
             if (replacement == null) store.deleteFile(p, path) else store.renameFile(p, path, replacement)
             val deleted = store.trashItems()
             val opened = persist(load(p, wanted, target))
-            val commit: () -> Unit = { apply(opened); trashItems = deleted }
+            val commit: () -> Unit = {
+                apply(opened)
+                pinnedTabs = remappedPins.intersect(files.toSet())
+                preferences.edit().putStringSet("pinned:$p", pinnedTabs).apply()
+                trashItems = deleted
+            }
             commit
         }
     }
@@ -792,7 +808,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val wanted = tabs - path
         val target = if (active == path) wanted.lastOrNull() else active
         work {
-            val opened = if (wanted.isEmpty()) Open(p, store.files(p), emptyList(), null, "") else load(p, wanted, target)
+            val opened = load(p, wanted, target,
+                autoOpen = false, allowUnavailable = true)
             persist(opened)
             val commit: () -> Unit = { apply(opened) }
             commit

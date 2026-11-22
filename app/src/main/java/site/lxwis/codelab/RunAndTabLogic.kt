@@ -16,3 +16,20 @@ internal fun reorderOpenTab(tabs: List<String>, path: String, offset: Int): List
     if (from == to) return tabs
     return tabs.toMutableList().apply { removeAt(from); add(to, path) }
 }
+
+/** Keep pinned paths attached to their files when renaming or moving. */
+internal fun remapPinnedPaths(
+    pinned: Set<String>,
+    oldPath: String,
+    replacement: String?,
+    directory: Boolean = false
+): Set<String> {
+    val old = oldPath.removeSuffix("/")
+    val next = replacement?.removeSuffix("/")
+    return pinned.mapNotNull { path ->
+        if (directory && path.startsWith("$old/")) {
+            next?.let { "$it/" + path.removePrefix("$old/") }
+        } else if (!directory && path == oldPath) replacement
+        else path
+    }.toSet()
+}
