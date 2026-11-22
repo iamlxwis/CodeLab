@@ -934,7 +934,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun previewReplaceAcrossFiles(query: String, replacement: String,
+    internal fun previewReplaceAcrossFiles(query: String, replacement: String,
         matchCase: Boolean, regex: Boolean, folder: String = "",
         kind: ProjectFileKind? = null) {
         val p = project ?: return
@@ -951,7 +951,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun replaceAcrossFiles(query: String, replacement: String,
+    internal fun replaceAcrossFiles(query: String, replacement: String,
         matchCase: Boolean, regex: Boolean, folder: String = "",
         kind: ProjectFileKind? = null) {
         val p = project ?: return
@@ -971,7 +971,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun searchProject(query: String, caseSensitive: Boolean,
+    internal fun searchProject(query: String, caseSensitive: Boolean,
         folder: String = "", kind: ProjectFileKind? = null) {
         val p = project ?: return
         val allowed = scopedProjectFiles(files, folder, kind)

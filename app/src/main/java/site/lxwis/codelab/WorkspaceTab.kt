@@ -47,6 +47,7 @@ internal fun WorkspaceTab(
         label = "tab-selection"
     )
     val moveThreshold = with(LocalDensity.current) { 32.dp.toPx() }
+    var dragX by remember(path) { mutableFloatStateOf(0f) }
     Row(
         Modifier.padding(end = 2.dp)
             .background(background, RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp)),
@@ -67,9 +68,20 @@ internal fun WorkspaceTab(
             overflow = TextOverflow.Ellipsis
         )
         Box {
-            IconButton(onClick = { menu = true }, modifier = Modifier.size(48.dp)) {
+            // Combined action/grip avoids pushing the active close button off phone screens.
+            IconButton(onClick = { menu = true },
+                modifier = Modifier.size(40.dp).pointerInput(path, moveThreshold) {
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = { dragX = 0f },
+                        onDragEnd = {
+                            if (abs(dragX) > moveThreshold) onMove(if (dragX > 0f) 1 else -1)
+                        },
+                        onDrag = { change, delta -> change.consume(); dragX += delta.x }
+                    )
+                }) {
                 Icon(if (pinned) Icons.Default.PushPin else Icons.Default.MoreVert,
-                    "Tab actions for $path", Modifier.size(16.dp))
+                    "Tab actions for $path",
+                    Modifier.size(18.dp))
             }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(text = { Text(if (pinned) "Unpin tab" else "Pin tab") },
@@ -89,19 +101,6 @@ internal fun WorkspaceTab(
         if (!pinned) IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
             Icon(Icons.Default.Close, "Close $path", Modifier.size(16.dp))
         }
-        // This grip never hijacks the horizontal tab scroll: drag begins after a hold.
-        var dragX by remember(path) { mutableFloatStateOf(0f) }
-        Icon(Icons.Default.DragIndicator, "Hold and drag to reorder $path",
-            modifier = Modifier.size(36.dp)
-                .pointerInput(path, moveThreshold) {
-                    detectDragGesturesAfterLongPress(
-                        onDragStart = { dragX = 0f },
-                        onDragEnd = {
-                            if (abs(dragX) > moveThreshold) onMove(if (dragX > 0f) 1 else -1)
-                        },
-                        onDrag = { change, delta -> change.consume(); dragX += delta.x }
-                    )
-                })
     }
 }
 
