@@ -17,14 +17,17 @@ public final class ProjectStore {
     private static final int MAX_ENTRIES = 1024;
     private final File projects;
     private final File scratch;
+    private final File trash;
     private final File session;
 
     public ProjectStore(File root) {
         projects = new File(root, "projects");
         scratch = new File(root, "pending");
+        trash = new File(root, "trash");
         session = new File(root, "session.properties");
         ensureDir(projects);
         ensureDir(scratch);
+        ensureDir(trash);
     }
 
     private static void ensureDir(File dir) {
@@ -308,15 +311,127 @@ public final class ProjectStore {
         clean(pending);
     }
 
+    /** Soft-delete without overwriting. Items are available for manual recovery. */
+    private void moveToTrash(File source, String projectName, String path, boolean entireProject) throws IOException {
+        if (!source.exists()) throw new IOException("Item no longer exists.");
+        String id = UUID.randomUUID().toString();
+        Properties metadata = new Properties();
+        metadata.setProperty("project", projectName);
+        metadata.setProperty("path", path);
+        metadata.setProperty("kind", entireProject ? "project" : source.isDirectory() ? "folder" : "file");
+        metadata.setProperty("deleted", Long.toString(System.currentTimeMillis()));
+        File record = new File(trash, id + ".properties");
+        File payload = new File(trash, id + ".data");
+        StringWriter writer = new StringWriter();
+        metadata.store(writer, null);
+        writeText(record, writer.toString());
+        try { moveNew(source, payload); }
+        catch (IOException ex) { record.delete(); throw ex; }
+    }
+
+    public static final class TrashItem {
+        public final String id, project, path, kind;
+        public final long deletedAt;
+        public TrashItem(String id, String project, String path, String kind, long deletedAt) {
+            this.id = id;
+            this.project = project;
+            this.path = path;
+            this.kind = kind;
+            this.deletedAt = deletedAt;
+        }
+    }
+
+    public synchronized List<TrashItem> trashItems() {
+        List<TrashItem> items = new ArrayList<>();
+        File[] records = trash.listFiles((dir, name) -> name.endsWith(".properties"));
+        if (records == null) return items;
+        for (File record : records) {
+            String id = record.getName().replace(".properties", "");
+            if (!new File(trash, id + ".data").exists()) continue;
+            Properties props = new Properties();
+            try (Reader reader = Files.newBufferedReader(record.toPath(), StandardCharsets.UTF_8)) {
+                props.load(reader);
+                items.add(new TrashItem(id, props.getProperty("project", ""),
+                    props.getProperty("path", ""), props.getProperty("kind", "file"),
+                    Long.parseLong(props.getProperty("deleted", "0"))));
+            } catch (IOException | NumberFormatException ignored) {}
+        }
+        items.sort((a, b) -> Long.compare(b.deletedAt, a.deletedAt));
+        return items;
+    }
+
+    public synchronized void restoreTrash(String id) throws IOException {
+        TrashItem found = null;
+        for (TrashItem item : trashItems()) if (item.id.equals(id)) { found = item; break; }
+        if (found == null) throw new IOException("Deleted item not found.");
+        File destination = "project".equals(found.kind)
+            ? new File(projects, segment(found.project))
+            : resolve(project(found.project), found.path);
+        moveNew(new File(trash, id + ".data"), destination);
+        new File(trash, id + ".properties").delete();
+    }
+
+    public synchronized void emptyTrash() throws IOException {
+        for (TrashItem item : trashItems()) {
+            discard(new File(trash, item.id + ".data"));
+            if (!new File(trash, item.id + ".properties").delete())
+                throw new IOException("Unable to remove trash metadata.");
+        }
+    }
+
+    public static final class SearchHit {
+        public final String path, preview;
+        public final int line;
+        public SearchHit(String path, int line, String preview) {
+            this.path = path;
+            this.line = line;
+            this.preview = preview;
+        }
+    }
+
+    /** Bounded, offline project-wide literal search. Invalid/binary files are skipped. */
+    public synchronized List<SearchHit> searchText(String projectName, String query, boolean caseSensitive)
+            throws IOException {
+        if (query == null || query.isBlank() || query.length() > 200)
+            throw new IOException("Enter a search phrase (up to 200 characters).");
+        List<SearchHit> hits = new ArrayList<>();
+        List<String> paths = files(projectName);
+        String needle = caseSensitive ? query : query.toLowerCase(Locale.ROOT);
+        for (String path : paths) {
+            String content;
+            try { content = read(projectName, path); }
+            catch (IOException ignored) { continue; }
+            String[] lines = content.split("\\n", -1);
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i];
+                if ((caseSensitive ? line : line.toLowerCase(Locale.ROOT)).contains(needle)) {
+                    hits.add(new SearchHit(path, i + 1, line.trim().substring(0, Math.min(160, line.trim().length()))));
+                    if (hits.size() >= 200) return hits;
+                }
+            }
+        }
+        return hits;
+    }
+
+    public synchronized List<String> folders(String projectName) throws IOException {
+        List<String> paths = new ArrayList<>();
+        File dir = project(projectName);
+        collect(dir, dir, paths, true);
+        paths.removeIf(path -> !path.endsWith("/"));
+        return paths;
+    }
+
     public synchronized void deleteFile(String project, String path) throws IOException {
-        discard(resolve(project(project), path));
+        moveToTrash(resolve(project(project), path), project, path, false);
     }
 
     public synchronized void renameProject(String from, String to) throws IOException {
         moveNew(project(from), new File(projects, segment(to)));
     }
 
-    public synchronized void deleteProject(String name) throws IOException { discard(project(name)); }
+    public synchronized void deleteProject(String name) throws IOException {
+        moveToTrash(project(name), name, "", true);
+    }
 
     public synchronized void remember(String project, List<String> tabs, String active) throws IOException {
         Properties props = new Properties();

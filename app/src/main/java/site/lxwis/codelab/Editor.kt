@@ -44,7 +44,9 @@ fun CodeEditor(
     filename: String,
     text: String,
     onTextChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    jumpLine: Int? = null,
+    onJumpHandled: () -> Unit = {}
 ) = key(fileKey) {
     val context = LocalContext.current
     val preferences = remember { context.getSharedPreferences("editor", Context.MODE_PRIVATE) }
@@ -82,6 +84,12 @@ fun CodeEditor(
     var showActiveLine by remember { mutableStateOf(preferences.getBoolean("active-line", true)) }
     var result by remember { mutableStateOf("") }
     val changes by rememberUpdatedState(onTextChange)
+    LaunchedEffect(jumpLine, view) {
+        if (jumpLine != null && view != null) {
+            view?.goToLogicalLine(jumpLine)
+            onJumpHandled()
+        }
+    }
     val palette = MaterialTheme.colorScheme
     val foreground = palette.onSurface.toArgb()
     val background = palette.surface.toArgb()

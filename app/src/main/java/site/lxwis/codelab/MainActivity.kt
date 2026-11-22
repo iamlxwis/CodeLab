@@ -193,6 +193,10 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     if (p != null) {
                         DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
                         DropdownMenuItem(text = { Text("Import file…") }, onClick = { menu = false; importFile.launch(arrayOf("*/*")) })
+                        DropdownMenuItem(text = { Text("Search across files…") },
+                            onClick = { menu = false; dialog = "projectsearch" })
+                        DropdownMenuItem(text = { Text("Recently deleted…") },
+                            onClick = { menu = false; dialog = "trash" })
                         DropdownMenuItem(text = { Text("New folder…") },
                             onClick = { menu = false; dialog = "newfolder" })
                         DropdownMenuItem(text = { Text("Copy file to another project…") },
@@ -303,7 +307,9 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     if ((!m.console && !m.preview) || wide) Box(Modifier.weight(1f).fillMaxHeight()) {
                         val file = m.active
                         if (file != null) key(p, file) {
-                            CodeEditor(fileKey = "$p/$file", filename = file, text = m.source, onTextChange = m::edit, modifier = Modifier.fillMaxSize())
+                            CodeEditor(fileKey = "$p/$file", filename = file, text = m.source,
+                                onTextChange = m::edit, jumpLine = m.pendingLine,
+                                onJumpHandled = m::consumeJump, modifier = Modifier.fillMaxSize())
                         } else TextButton(onClick = { dialog = "files" }, modifier = Modifier.align(Alignment.Center)) { Text("Open a file") }
                     }
                     if (m.console) RunConsole(m.runner, Modifier.weight(if (wide) 0.7f else 1f).fillMaxHeight(), m.active)
@@ -349,6 +355,11 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
 
     when (dialog) {
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
+        "projectsearch" -> ProjectSearchDialog(m, onDismiss = { dialog = "" }) { path, line ->
+            dialog = ""
+            m.select(path, goToLine = line)
+        }
+        "trash" -> TrashDialog(m) { dialog = "" }
         "properties" -> AlertDialog(onDismissRequest = { dialog = "" },
             title = { Text("File properties") },
             text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -690,10 +701,13 @@ private fun FileExplorerSheet(
     val allFiles = m.files
     val matching = if (search.isBlank()) allFiles.filter { it.startsWith(directory) }
         else allFiles.filter { it.contains(search, ignoreCase = true) }
-    val folders = if (search.isNotBlank()) emptyList() else matching.mapNotNull {
+    val folders = if (search.isNotBlank()) emptyList() else (matching.mapNotNull {
         val next = it.removePrefix(directory).substringBefore('/', "")
         if (next.isEmpty()) null else directory + next + "/"
-    }.distinct().sorted()
+    } + m.folders.filter { it.startsWith(directory) }.mapNotNull {
+        val next = it.removePrefix(directory).substringBefore('/', "")
+        if (next.isEmpty()) null else directory + next + "/"
+    }).distinct().sorted()
     val visibleFiles = if (search.isBlank()) matching.filter {
         !it.removePrefix(directory).contains('/')
     } else matching
@@ -777,4 +791,75 @@ private fun FileExplorerSheet(
             }
         }
     }
+}
+
+@Composable
+private fun ProjectSearchDialog(m: WorkspaceModel, onDismiss: () -> Unit,
+    onHit: (String, Int) -> Unit) {
+    var query by rememberSaveable { mutableStateOf("") }
+    var matchCase by rememberSaveable { mutableStateOf(false) }
+    AlertDialog(onDismissRequest = onDismiss, title = { Text("Search project") },
+        text = {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(),
+                    singleLine = true, label = { Text("Find text in all files") })
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = matchCase, onCheckedChange = { matchCase = it })
+                    Text("Match case")
+                    Spacer(Modifier.weight(1f))
+                    FilledTonalButton(enabled = query.isNotBlank() && !m.busy,
+                        onClick = { m.searchProject(query, matchCase) }) { Text("Search") }
+                }
+                Text("${m.searchHits.size} results · first 200 matches",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                LazyColumn(Modifier.heightIn(max = 340.dp)) {
+                    items(m.searchHits) { hit ->
+                        Column(Modifier.fillMaxWidth().clickable { onHit(hit.path, hit.line) }
+                            .padding(vertical = 9.dp)) {
+                            Text("${hit.path}:${hit.line}", fontFamily = FontFamily.Monospace,
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.labelMedium)
+                            Text(hit.preview, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.bodySmall)
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+                }
+            }
+        }, confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } })
+}
+
+@Composable
+private fun TrashDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
+    AlertDialog(onDismissRequest = onDismiss, title = { Text("Recently deleted") },
+        text = {
+            Column {
+                Text("Deleted projects and files remain on this device until emptied.",
+                    style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.height(12.dp))
+                LazyColumn(Modifier.heightIn(max = 320.dp)) {
+                    items(m.trashItems, key = { it.id }) { item ->
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(if (item.kind == "project") item.project else item.path,
+                                    maxLines = 2, style = MaterialTheme.typography.bodyMedium)
+                                Text(item.kind + " · " + item.project,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            TextButton(enabled = !m.busy, onClick = { m.restoreTrash(item.id) }) {
+                                Text("Restore")
+                            }
+                        }
+                    }
+                }
+                if (m.trashItems.isEmpty()) Text("Trash is empty.")
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
+        dismissButton = {
+            if (m.trashItems.isNotEmpty()) TextButton(enabled = !m.busy,
+                onClick = m::emptyTrash) { Text("Empty trash", color = MaterialTheme.colorScheme.error) }
+        })
 }

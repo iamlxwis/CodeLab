@@ -160,6 +160,15 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
     var accent by mutableStateOf(preferences.getString("accent", "Mint") ?: "Mint")
         private set
+    var trashItems by mutableStateOf(emptyList<ProjectStore.TrashItem>())
+        private set
+    var searchHits by mutableStateOf(emptyList<ProjectStore.SearchHit>())
+        private set
+    var pendingLine by mutableStateOf<Int?>(null)
+        private set
+    fun consumeJump() { pendingLine = null }
+    var folders by mutableStateOf(emptyList<String>())
+        private set
     var projects by mutableStateOf(emptyList<String>())
         private set
     var project by mutableStateOf<String?>(null)
@@ -188,15 +197,22 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         catch (_: Exception) { cloudError = "Unable to monitor internet connection" }
         work {
             val names = store.projects()
+            val deleted = store.trashItems()
             val session = store.restore()
             val selected = session.project?.takeIf { it in names }
             val open = selected?.let { load(it, session.tabs, session.active, autoOpen = false, allowUnavailable = true) }
-            val commit: () -> Unit = { projects = names; if (open != null) apply(open) }
+            val commit: () -> Unit = {
+                projects = names
+                trashItems = deleted
+                if (open != null) apply(open)
+            }
             commit
         }
     }
 
-    private data class Open(val project: String, val files: List<String>, val tabs: List<String>, val file: String?, val text: String)
+    private data class Open(val project: String, val files: List<String>,
+        val tabs: List<String>, val file: String?, val text: String,
+        val folders: List<String> = emptyList())
 
     private fun load(
         name: String, wanted: List<String>, target: String?,
@@ -210,14 +226,15 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             file?.let { store.read(name, it) }.orEmpty()
         } catch (e: java.io.IOException) {
             if (!allowUnavailable) throw e
-            return Open(name, all, available - listOfNotNull(file).toSet(), null, "")
+            return Open(name, all, available - listOfNotNull(file).toSet(), null, "", store.folders(name))
         }
-        return Open(name, all, (available + listOfNotNull(file)).distinct(), file, text)
+        return Open(name, all, (available + listOfNotNull(file)).distinct(), file, text, store.folders(name))
     }
 
     private fun apply(open: Open) {
         project = open.project
         files = open.files
+        folders = open.folders
         tabs = open.tabs
         active = open.file
         source = open.text
@@ -289,7 +306,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         work {
             if (replacement == null) store.deleteProject(name) else store.renameProject(name, replacement)
             val names = store.projects()
-            val commit: () -> Unit = { projects = names }
+            val deleted = store.trashItems()
+            val commit: () -> Unit = { projects = names; trashItems = deleted }
             commit
         }
     }
@@ -300,19 +318,24 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             val names = store.projects()
             val commit: () -> Unit = {
                 runner.stop(); projects = names; project = null; active = null
-                files = emptyList(); tabs = emptyList(); source = ""; console = false; preview = false; revision++
+                files = emptyList(); folders = emptyList(); tabs = emptyList()
+                source = ""; console = false; preview = false; revision++
             }
             commit
         }
     }
 
-    fun select(path: String, create: Boolean = false) {
+    fun select(path: String, create: Boolean = false, goToLine: Int? = null) {
         val p = project ?: return
         val wanted = tabs + path
         work {
             if (create) store.createFile(p, path)
             val opened = persist(load(p, wanted, path))
-            val commit: () -> Unit = { apply(opened); console = false }
+            val commit: () -> Unit = {
+                apply(opened)
+                pendingLine = goToLine
+                console = false
+            }
             commit
         }
     }
@@ -352,8 +375,9 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val target = if (active == path) replacement else active
         work {
             if (replacement == null) store.deleteFile(p, path) else store.renameFile(p, path, replacement)
+            val deleted = store.trashItems()
             val opened = persist(load(p, wanted, target))
-            val commit: () -> Unit = { apply(opened) }
+            val commit: () -> Unit = { apply(opened); trashItems = deleted }
             commit
         }
     }
@@ -434,6 +458,41 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             val last = imported.last()
             val opened = persist(load(p, tabs + imported, last))
             val commit: () -> Unit = { apply(opened); console = false }
+            commit
+        }
+    }
+
+    fun searchProject(query: String, caseSensitive: Boolean) {
+        val p = project ?: return
+        work {
+            val found = store.searchText(p, query, caseSensitive)
+            val commit: () -> Unit = { searchHits = found }
+            commit
+        }
+    }
+
+    fun restoreTrash(id: String) {
+        val current = project
+        work {
+            store.restoreTrash(id)
+            val names = store.projects()
+            val deleted = store.trashItems()
+            val opened = current?.takeIf { it in names }?.let {
+                persist(load(it, tabs, active, allowUnavailable = true))
+            }
+            val commit: () -> Unit = {
+                projects = names
+                trashItems = deleted
+                if (opened != null) apply(opened)
+            }
+            commit
+        }
+    }
+
+    fun emptyTrash() {
+        work {
+            store.emptyTrash()
+            val commit: () -> Unit = { trashItems = emptyList() }
             commit
         }
     }
