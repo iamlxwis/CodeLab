@@ -61,7 +61,8 @@ fun CodeEditor(
     onSave: () -> Unit = {},
     onPreviousTab: () -> Unit = {},
     onNextTab: () -> Unit = {},
-    onOpenCommands: () -> Unit = {}
+    onOpenCommands: () -> Unit = {},
+    onSelectionChange: (String, Int) -> Unit = { _, _ -> }
 ) = key(fileKey) {
     val context = LocalContext.current
     val hardwareKeyboard = LocalConfiguration.current.keyboard != Configuration.KEYBOARD_NOKEYS
@@ -96,6 +97,7 @@ fun CodeEditor(
     var view by remember { mutableStateOf<SourceView?>(null) }
     var cursor by remember { mutableStateOf("Ln 1 · Col 1") }
     var find by remember { mutableStateOf(false) }
+    var advancedTools by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf("") }
     var replacement by remember { mutableStateOf("") }
     var replaceMode by remember { mutableStateOf(false) }
@@ -267,6 +269,15 @@ fun CodeEditor(
                 view?.onTextContextMenuItem(android.R.id.redo)
             }
             EditorIcon(Icons.Default.Search, "Find and replace", selected = find) { find = !find }
+            EditorIcon(if (advancedTools) Icons.Default.ExpandLess else Icons.Default.Tune,
+                if (advancedTools) "Hide advanced editor tools" else "Show advanced editor tools",
+                selected = advancedTools) { advancedTools = !advancedTools }
+        }
+        AnimatedVisibility(visible = advancedTools) {
+            Row(Modifier.fillMaxWidth().height(48.dp).horizontalScroll(rememberScrollState())
+                .padding(horizontal = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             Box {
                 EditorIcon(Icons.Default.List, "File symbol outline") { outlineMenu = true }
                 DropdownMenu(expanded = outlineMenu, onDismissRequest = { outlineMenu = false }) {
@@ -550,6 +561,7 @@ fun CodeEditor(
             EditorIcon(Icons.Default.VerticalAlignBottom, "Go to end of file") {
                 view?.let { editor -> editor.requestFocus(); editor.setSelection(editor.length()) }
             }
+            }
         }
         if (symbols && !(hardwareKeyboard && hideToolbarOnHardware)) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -678,7 +690,12 @@ fun CodeEditor(
                     setText(text)
                     restorePosition(fileKey)
                     changed = { source -> changes(source) }
-                    selectionChanged = { line, col -> cursor = "Ln " + line + " · Col " + col }
+                    selectionChanged = { line, col ->
+                        cursor = "Ln " + line + " · Col " + col
+                        val first = minOf(selectionStart, selectionEnd).coerceIn(0, length())
+                        val firstLine = text.subSequence(0, first).count { it == '\n' } + 1
+                        onSelectionChange(selectedSource().take(24000), firstLine)
+                    }
                     view = this
                 }
             },
