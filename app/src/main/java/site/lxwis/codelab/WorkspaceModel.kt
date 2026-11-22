@@ -140,7 +140,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     var themePreset by mutableStateOf(preferences.getString("preset", "Obsidian") ?: "Obsidian")
         private set
     fun choosePreset(value: String) {
-        if (value !in listOf("Obsidian", "Nocturne", "Paper")) return
+        if (value !in listOf("Obsidian", "Nocturne", "Paper",
+                "Dracula", "One Dark", "Monokai", "GitHub Light", "OLED")) return
         themePreset = value
         preferences.edit().putString("preset", value).apply()
     }

@@ -9,9 +9,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -88,14 +94,28 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         model = ViewModelProvider(this)[WorkspaceModel::class.java]
         setContent {
-            val dark = if (model.themePreset == "Paper") false else
+            val dark = if (model.themePreset in listOf("Paper", "GitHub Light")) false
+                else if (model.themePreset in listOf("Dracula", "One Dark", "Monokai", "OLED")) true else
                 model.appearance == "Dark" || (model.appearance == "System" && isSystemInDarkTheme())
             val base = when (model.themePreset) {
                 "Nocturne" -> night.copy(
                     background = Color(0xff0c1020), surface = Color(0xff0c1020),
                     surfaceContainer = Color(0xff151a2d), surfaceContainerHigh = Color(0xff20263b),
                     surfaceVariant = Color(0xff222942), outlineVariant = Color(0xff333b55))
-                "Paper" -> day
+                "Paper", "GitHub Light" -> day
+                "Dracula" -> night.copy(
+                    background = Color(0xff282a36), surface = Color(0xff282a36),
+                    surfaceContainer = Color(0xff323442), surfaceContainerHigh = Color(0xff414356))
+                "One Dark" -> night.copy(
+                    background = Color(0xff282c34), surface = Color(0xff282c34),
+                    surfaceContainer = Color(0xff30353e), surfaceContainerHigh = Color(0xff3c424c))
+                "Monokai" -> night.copy(
+                    background = Color(0xff272822), surface = Color(0xff272822),
+                    surfaceContainer = Color(0xff33352c), surfaceContainerHigh = Color(0xff3e4135))
+                "OLED" -> night.copy(
+                    background = Color.Black, surface = Color.Black,
+                    surfaceContainer = Color(0xff101010), surfaceContainerHigh = Color(0xff1b1b1b),
+                    surfaceVariant = Color(0xff191919), outlineVariant = Color(0xff303030))
                 else -> if (dark) night else day
             }
             val accent = when (model.accent) {
@@ -155,9 +175,84 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    override fun onStop() {
+    override fun onPause() {
         model.flush()
+        super.onPause()
+    }
+
+    override fun onStop() {
+        if (model.dirty) model.flush()
         super.onStop()
+    }
+}
+
+@Composable
+private fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (String) -> Unit) {
+    val haptics = LocalHapticFeedback.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val systemMotion = remember(context) {
+        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
+    }
+    val duration = if (m.motionPreference == "Reduced" ||
+        (m.motionPreference == "System" && !systemMotion)) 0 else 170
+    val scale by animateFloatAsState(if (pressed) .97f else 1f,
+        animationSpec = tween(duration, easing = FastOutSlowInEasing), label = "run-press")
+    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically) {
+        if (project == null) Mark(Modifier.padding(horizontal = 8.dp).size(34.dp))
+        else IconButton(onClick = { UiLatencyProbe.nextFrame(context, "Home"); m.home() }) {
+            Icon(Icons.Default.ArrowBack, "Project library")
+        }
+        Column(Modifier.weight(1f).padding(start = 4.dp)
+            .clickable(enabled = project != null) { onAction("switchproject") }) {
+            Text(project ?: "CodeLab", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (project != null) Text(if (m.dirty) "Saving changes…" else "Local workspace",
+                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        if (project != null && (m.runner.running || m.active != null)) {
+            Button(
+                onClick = {
+                    UiLatencyProbe.nextFrame(context, "Run")
+                    if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (m.runner.running) m.runner.stop() else m.run()
+                },
+                interactionSource = interaction,
+                modifier = Modifier.graphicsLayer { scaleX = scale; scaleY = scale },
+                shape = RoundedCornerShape(11.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+            ) {
+                AnimatedContent(targetState = m.runner.running,
+                    transitionSpec = { fadeIn(tween(duration)) togetherWith fadeOut(tween(duration)) },
+                    label = "execution-state") { running ->
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Icon(if (running) Icons.Default.Stop else Icons.Default.PlayArrow,
+                            contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(if (running) "Stop" else if (m.active?.endsWith(".html", true) == true)
+                            "Preview" else "Run", fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+        }
+        if (project != null) {
+            IconButton(onClick = {
+                UiLatencyProbe.nextFrame(context, "Save")
+                if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                m.flush()
+            }) { Icon(Icons.Default.Save, "Save file") }
+            IconButton(onClick = { onAction("projectsearch") }) {
+                Icon(Icons.Default.Search, "Search project")
+            }
+        }
+        IconButton(onClick = { onAction("actions") }) {
+            Icon(Icons.Default.MoreVert, "More tools and settings")
+        }
     }
 }
 
@@ -181,7 +276,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         "Reduced" -> false
         else -> systemMotionEnabled
     }
-    val motionMillis = if (motionEnabled) m.motionIntensity * 2 else 0
+    val motionMillis = if (motionEnabled) (150 + m.motionIntensity / 2).coerceIn(150, 200) else 0
     val activity = context as? ComponentActivity
     DisposableEffect(activity, focusMode) {
         val window = activity?.window
@@ -260,41 +355,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
 
     Column(modifier.fillMaxSize()) {
-        if (!focusMode || p == null) Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (p == null) Mark(Modifier.padding(horizontal = 8.dp).size(34.dp))
-            else IconButton(onClick = { m.home() }, enabled = !m.busy) { Icon(Icons.Default.ArrowBack, "Project library") }
-            Column(Modifier.weight(1f).padding(start = 4.dp)
-                .clickable(enabled = p != null && !m.busy) { dialog = "switchproject" }) {
-                Text(if (p == null) "CodeLab" else p, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (p != null) Text(if (m.dirty) "Saving changes…" else "Local workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (p != null && (m.runner.running || m.active != null)) {
-                Button(
-                    onClick = {
-                        if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        if (m.runner.running) m.runner.stop() else m.run()
-                    },
-                    enabled = !m.busy,
-                    shape = RoundedCornerShape(11.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
-                ) {
-                    AnimatedContent(targetState = m.runner.running, label = "execution-state") { running ->
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                            Icon(if (running) Icons.Default.Stop else Icons.Default.PlayArrow,
-                                contentDescription = null, modifier = Modifier.size(18.dp))
-                            Text(if (running) "Stop" else if (m.active?.endsWith(".html", true) == true) "Preview" else "Run",
-                                fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                }
-            }
-            IconButton(onClick = { dialog = "actions" }) {
-                Icon(Icons.Default.MoreVert, "Browse workspace actions")
-            }
-        }
+        if (!focusMode || p == null) WorkspaceTopBar(m, p) { dialog = it }
         if (p == null) {
             ProjectLibrary(m, motionMillis, { dialog = "newproject" },
                 { importZip.launch(arrayOf("*/*")) }, { dialog = "githubimport" },
@@ -323,7 +384,11 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         Row(Modifier.padding(end = 2.dp)
                             .background(tabColor,
                                 RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp)), verticalAlignment = Alignment.CenterVertically) {
-                            Text(path.substringAfterLast('/'), Modifier.clickable { if (!m.busy) m.select(path) }
+                            Text(path.substringAfterLast('/'), Modifier.clickable {
+                                UiLatencyProbe.nextFrame(context, "Switch tab")
+                                if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                m.select(path)
+                            }
                                 .padding(horizontal = 8.dp, vertical = 8.dp),
                                 color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
                             if (active) IconButton(onClick = { m.closeTab(path) }, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.Close, "Close $path", Modifier.size(16.dp)) }
@@ -359,7 +424,11 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                     items(m.files, key = { it }) { file ->
                                         val active = file == m.active
-                                        Surface(onClick = { if (!m.busy) m.select(file) },
+                                        Surface(onClick = {
+                                            UiLatencyProbe.nextFrame(context, "Explorer select")
+                                            if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            m.select(file)
+                                        },
                                             shape = RoundedCornerShape(9.dp),
                                             color = if (active) MaterialTheme.colorScheme.primaryContainer
                                                 else Color.Transparent) {
@@ -611,7 +680,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Text("PRESET", color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelSmall)
                 Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    listOf("Obsidian", "Nocturne", "Paper").forEach { preset ->
+                    listOf("Obsidian", "Nocturne", "Paper", "Dracula", "One Dark", "Monokai", "GitHub Light", "OLED").forEach { preset ->
                         FilterChip(selected = m.themePreset == preset, onClick = { m.choosePreset(preset) },
                             label = { Text(preset) })
                     }
@@ -739,12 +808,12 @@ private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit
             }
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = new, enabled = !m.busy, shape = RoundedCornerShape(10.dp)) {
+                Button(onClick = new, enabled = true, shape = RoundedCornerShape(10.dp)) {
                     Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Spacer(Modifier.width(5.dp)); Text("New project")
                 }
-                OutlinedButton(onClick = importZip, enabled = !m.busy,
+                OutlinedButton(onClick = importZip, enabled = true,
                     shape = RoundedCornerShape(10.dp)) { Text("Import ZIP") }
-                TextButton(onClick = importGitHub, enabled = !m.busy) { Text("GitHub") }
+                TextButton(onClick = importGitHub, enabled = true) { Text("GitHub") }
             }
             Spacer(Modifier.height(24.dp))
             OutlinedTextField(value = projectSearch, onValueChange = { projectSearch = it },
@@ -768,7 +837,7 @@ private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        if (m.projects.isEmpty() && !m.busy) item {
+        if (m.projects.isEmpty()) item {
             Surface(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .65f), shape = RoundedCornerShape(14.dp)) {
                 Column(Modifier.fillMaxWidth().padding(20.dp)) {
                     Text("No projects yet", fontWeight = FontWeight.Medium)
@@ -798,7 +867,7 @@ private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit
                     .thenBy { m.projects.indexOf(it) })
             }
         }, key = { it }) { name ->
-            Surface(onClick = { m.openProject(name) }, enabled = !m.busy,
+            Surface(onClick = { m.openProject(name) }, enabled = true,
                 modifier = Modifier.animateContentSize(animationSpec = tween(motionMillis)),
                 shape = RoundedCornerShape(16.dp), tonalElevation = 1.dp,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh) {
@@ -1014,7 +1083,7 @@ private fun FileExplorerSheet(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                TextButton(onClick = onNewFolder, enabled = !m.busy) { Text("Folder") }
+                TextButton(onClick = onNewFolder, enabled = true) { Text("Folder") }
                 FilledTonalButton(onClick = onNew, shape = RoundedCornerShape(11.dp)) {
                     Icon(Icons.Default.Add, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(4.dp))
@@ -1106,7 +1175,7 @@ private fun ProjectSearchDialog(m: WorkspaceModel, onDismiss: () -> Unit,
                     Checkbox(checked = matchCase, onCheckedChange = { matchCase = it })
                     Text("Match case")
                     Spacer(Modifier.weight(1f))
-                    FilledTonalButton(enabled = query.isNotBlank() && !m.busy,
+                    FilledTonalButton(enabled = query.isNotBlank(),
                         onClick = { m.searchProject(query, matchCase) }) { Text("Search") }
                 }
                 Text("${m.searchHits.size} results · first 200 matches",
@@ -1154,7 +1223,7 @@ private fun TrashDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            TextButton(enabled = !m.busy, onClick = { m.restoreTrash(item.id) }) {
+                            TextButton(enabled = true, onClick = { m.restoreTrash(item.id) }) {
                                 Text("Restore")
                             }
                         }
@@ -1165,7 +1234,7 @@ private fun TrashDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } },
         dismissButton = {
-            if (m.trashItems.isNotEmpty()) TextButton(enabled = !m.busy,
+            if (m.trashItems.isNotEmpty()) TextButton(enabled = true,
                 onClick = { confirmEmpty = true }) { Text("Empty trash", color = MaterialTheme.colorScheme.error) }
         })
 }
@@ -1200,10 +1269,10 @@ private fun FileHistoryDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
                                 Text("${version.bytes} bytes",
                                     style = MaterialTheme.typography.labelSmall)
                             }
-                            TextButton(enabled = !m.busy, onClick = {
+                            TextButton(enabled = true, onClick = {
                                 m.previewHistory(version.id)
                             }) { Text("View") }
-                            TextButton(enabled = !m.busy, onClick = {
+                            TextButton(enabled = true, onClick = {
                                 restoreId = version.id
                             }) { Text("Restore") }
                         }
@@ -1287,7 +1356,7 @@ private fun ProjectReplaceDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
                     })
                     Text("Regex", style = MaterialTheme.typography.labelMedium)
                 }
-                Button(enabled = query.isNotBlank() && !m.busy,
+                Button(enabled = query.isNotBlank(),
                     onClick = { m.previewReplaceAcrossFiles(query, replacement, matchCase, regex) },
                     modifier = Modifier.fillMaxWidth()) { Text("Preview changes") }
                 m.replaceSummary?.let { summary ->
@@ -1304,7 +1373,7 @@ private fun ProjectReplaceDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(enabled = (m.replaceSummary?.matches ?: 0) > 0 && !m.busy,
+            TextButton(enabled = (m.replaceSummary?.matches ?: 0) > 0,
                 onClick = { confirm = true }) { Text("Apply previewed changes") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } })
@@ -1329,7 +1398,7 @@ private fun ProjectSwitcher(m: WorkspaceModel, dismiss: () -> Unit) {
                             if (name in m.favorites)
                                 Icon(Icons.Default.Star, null, Modifier.size(18.dp),
                                     tint = MaterialTheme.colorScheme.primary)
-                            TextButton(enabled = !m.busy, modifier = Modifier.weight(1f),
+                            TextButton(enabled = true, modifier = Modifier.weight(1f),
                                 onClick = { m.openProject(name); dismiss() }) {
                                 Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             }
@@ -1359,21 +1428,21 @@ private fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                 if (state == null) Text("Loading repository status…")
                 else if (!state.initialized) {
                     Text("No repository in this project.")
-                    Button(enabled = !m.busy, onClick = m::gitInit) { Text("Initialize Git") }
+                    Button(enabled = true, onClick = m::gitInit) { Text("Initialize Git") }
                 } else {
                     Text("Branch · " + state.branch, fontFamily = FontFamily.Monospace,
                         style = MaterialTheme.typography.titleSmall)
                     Row(Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(enabled = !m.busy, onClick = m::gitRefresh) { Text("Refresh") }
+                        OutlinedButton(enabled = true, onClick = m::gitRefresh) { Text("Refresh") }
                         state.branches.forEach { name ->
-                            FilterChip(selected = name == state.branch, enabled = !m.busy,
+                            FilterChip(selected = name == state.branch, enabled = true,
                                 onClick = { m.gitCheckout(name) }, label = { Text(name) })
                         }
                     }
                     OutlinedTextField(branch, { branch = it }, modifier = Modifier.fillMaxWidth(),
                         label = { Text("New branch") }, singleLine = true)
-                    TextButton(enabled = branch.isNotBlank() && !m.busy, onClick = {
+                    TextButton(enabled = branch.isNotBlank(), onClick = {
                         m.gitBranch(branch)
                         branch = ""
                     }) { Text("Create and switch branch") }
@@ -1397,7 +1466,7 @@ private fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                     OutlinedTextField(email, { email = it.take(200) },
                         modifier = Modifier.fillMaxWidth(), label = { Text("Author email") },
                         singleLine = true)
-                    Button(enabled = !m.busy && message.isNotBlank()
+                    Button(enabled = message.isNotBlank()
                         && author.isNotBlank() && email.contains('@') && state.changes.isNotEmpty(),
                         onClick = {
                             prefs.edit().putString("author", author).putString("email", email).apply()
@@ -1449,11 +1518,11 @@ private fun CommandPaletteDialog(m: WorkspaceModel, dismiss: () -> Unit,
                     modifier = Modifier.fillMaxWidth(), singleLine = true,
                     placeholder = { Text("Search actions") })
                 LazyColumn(Modifier.heightIn(max = 340.dp)) {
-                    items(actions.filter { it.second.contains(query, ignoreCase = true) }) { item ->
+                    items(actions.filter { it.second.contains(query, ignoreCase = true) }, key = { it.first }) { item ->
                         val requiresFile = item.first in setOf("screenshot", "history")
                         val requiresProject = item.first in setOf("newfile", "newfolder", "files",
                             "projectsearch", "projectreplace", "screenshot", "history", "git", "panels")
-                        TextButton(enabled = !m.busy && (!requiresProject || m.project != null) &&
+                        TextButton(enabled = (!requiresProject || m.project != null) &&
                             (!requiresFile || m.active != null),
                             modifier = Modifier.fillMaxWidth(), onClick = { execute(item.first) }) {
                             Text(item.second, modifier = Modifier.fillMaxWidth(),
@@ -1491,7 +1560,7 @@ private fun GitHubImportDialog(m: WorkspaceModel, dismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(enabled = slug.isNotBlank() && name.isNotBlank() && !m.busy,
+            TextButton(enabled = slug.isNotBlank() && name.isNotBlank(),
                 onClick = {
                     m.importPublicGitHub(slug, name)
                     dismiss()
@@ -1540,14 +1609,14 @@ private fun ProjectSettingsDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                 Text("Settings are kept inside the project and included in ZIP backups.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (entrypoint.isNotEmpty()) TextButton(enabled = !m.busy,
+                if (entrypoint.isNotEmpty()) TextButton(enabled = true,
                     onClick = { m.select(entrypoint); dismiss() }) {
                     Text("Open entry file")
                 }
             }
         },
         confirmButton = {
-            TextButton(enabled = !m.busy, onClick = {
+            TextButton(enabled = true, onClick = {
                 m.configureProject(description, entrypoint)
                 dismiss()
             }) { Text("Save") }
@@ -1580,7 +1649,7 @@ private fun JavaScriptDebugDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                     color = MaterialTheme.colorScheme.error)
             }
         }, confirmButton = {
-            TextButton(enabled = valid && !m.busy && !m.runner.running,
+            TextButton(enabled = valid && !m.runner.running,
                 onClick = {
                     m.debugCurrent(lines)
                     dismiss()
