@@ -19,4 +19,12 @@ class RunTargetAndTabOrderTest {
         assertEquals(tabs, reorderOpenTab(tabs, "missing", 1))
         assertEquals(tabs, reorderOpenTab(tabs, "a", -1))
     }
+    @Test fun renamedPinnedFileAndFolderKeepThePin() {
+        assertEquals(setOf("lib/core.kt"),
+            remapPinnedPaths(setOf("src/core.kt"), "src", "lib", directory = true))
+        assertEquals(setOf("entry.ts"),
+            remapPinnedPaths(setOf("main.js"), "main.js", "entry.ts"))
+        assertEquals(emptySet<String>(),
+            remapPinnedPaths(setOf("entry.ts"), "entry.ts", null))
+    }
 }
