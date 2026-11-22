@@ -27,7 +27,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.*
 
 @Composable
-fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: String? = null) {
+fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: String? = null,
+    knownFiles: List<String> = emptyList(),
+    onOpenError: (String, Int) -> Unit = { _, _ -> }) {
     var tableMode by rememberSaveable(fileName) { mutableStateOf(true) }
     val sqlResult = remember(session.transcript, fileName, session.running) {
         if (!session.running && fileName?.endsWith(".sql", ignoreCase = true) == true)
@@ -44,6 +46,9 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     val consolePreferences = remember { context.getSharedPreferences("console-settings", android.content.Context.MODE_PRIVATE) }
     var consoleFontSize by remember {
         mutableIntStateOf(consolePreferences.getInt("font-size", 13))
+    }
+    val errorLinks = remember(session.transcript, fileName, knownFiles) {
+        parseErrorLocations(session.transcript, fileName, knownFiles)
     }
     val displayedOutput = remember(session.transcript, filterOutput, showFilter) {
         if (showFilter && filterOutput.isNotBlank())
@@ -216,6 +221,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+            RunErrorLinks(errorLinks, onOpenError)
             if (sqlResult != null && tableMode) SqlDataGrid(sqlResult, Modifier.weight(1f).fillMaxWidth())
             else SelectionContainer(Modifier.weight(1f).fillMaxWidth().verticalScroll(scroll)) {
                 val textToShow = displayedOutput.ifEmpty {

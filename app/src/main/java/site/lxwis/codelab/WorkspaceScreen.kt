@@ -247,7 +247,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         })
                 }
                 val outputPane: @Composable (Modifier) -> Unit = { pane ->
-                    if (m.console) RunConsole(m.runner, pane, m.active)
+                    if (m.console) RunConsole(m.runner, pane, m.active, m.files) { path, line ->
+                        m.select(path, goToLine = line)
+                    }
                     else if (m.preview && m.active != null)
                         HtmlPreview(p, m.active!!, m.source, pane)
                 }

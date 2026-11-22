@@ -96,3 +96,12 @@ claimed from source extraction alone. Refer to the PR checks for verification.
 - Search within the Settings action category remains scoped to settings.
 - An empty editor provides a contextual file-opening hint.
 - Manual TalkBack, large-font and keyboard-only audits remain outstanding.
+
+### Workstream 3 — error navigation and large-font evidence (sixth slice)
+- Recognizes bounded source file/line references from local console traces.
+  Source-location chips are tappable and switch to the exact editor line.
+- Adds a real 200% font-scale emulator screenshot and hierarchy check to CI.
+  The existing hierarchy audit continues to report possibly small/unlabeled targets.
+- Full manual TalkBack navigation/focus order, physical hardware keyboards,
+  device-density matrix and every-theme contrast audit are still required.
+  Automated smoke evidence must not be called accessibility certification.
