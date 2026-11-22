@@ -771,4 +771,3 @@ fun CodeEditor(
     }
 }
 
-@Stable

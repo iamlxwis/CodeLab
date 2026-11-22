@@ -55,6 +55,7 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
+@Stable
 internal class EditorCursorStatus {
     var label by mutableStateOf("Ln 1 · Col 1")
 }

@@ -79,6 +79,7 @@ internal fun NameDialog(title: String, initial: String, label: String, example: 
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) -> Unit) {
     val keyboard = LocalSoftwareKeyboardController.current
