@@ -250,7 +250,7 @@ public final class ProjectStore {
     private File historyDirectory(String projectName, String path) throws IOException {
         resolve(project(projectName), path);
         try {
-            byte[] key = (projectName + "\u0000" + path).getBytes(StandardCharsets.UTF_8);
+            byte[] key = (projectName + (char) 0 + path).getBytes(StandardCharsets.UTF_8);
             byte[] digest = java.security.MessageDigest.getInstance("SHA-256").digest(key);
             StringBuilder hex = new StringBuilder();
             for (byte part : digest) hex.append(String.format(Locale.ROOT, "%02x", part & 255));
@@ -485,7 +485,7 @@ public final class ProjectStore {
     public synchronized ReplacementSummary replaceAcrossProject(
             String projectName, String query, String replacement, boolean caseSensitive,
             boolean regex, boolean apply) throws IOException {
-        if (query == null || query.isBlank() || query.length() > 200)
+        if (query == null || query.trim().isEmpty() || query.length() > 200)
             throw new IOException("Enter a search phrase up to 200 characters.");
         if (replacement == null || replacement.length() > 2000)
             throw new IOException("Replacement is limited to 2000 characters.");
@@ -548,7 +548,7 @@ public final class ProjectStore {
     /** Bounded, offline project-wide literal search. Invalid/binary files are skipped. */
     public synchronized List<SearchHit> searchText(String projectName, String query, boolean caseSensitive)
             throws IOException {
-        if (query == null || query.isBlank() || query.length() > 200)
+        if (query == null || query.trim().isEmpty() || query.length() > 200)
             throw new IOException("Enter a search phrase (up to 200 characters).");
         List<SearchHit> hits = new ArrayList<>();
         List<String> paths = files(projectName);
