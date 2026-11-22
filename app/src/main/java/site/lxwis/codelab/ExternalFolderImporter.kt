@@ -16,7 +16,6 @@ import java.util.zip.ZipOutputStream
 internal object ExternalFolderImporter {
     private const val MAX_FILES = 1024
     private const val MAX_TOTAL = 16 * 1024 * 1024
-    private const val MAX_SINGLE = 256 * 1024
     private const val MAX_DEPTH = 16
 
     fun validSegment(name: String): Boolean = name.isNotBlank() && name.length <= 100 &&
@@ -49,8 +48,9 @@ internal object ExternalFolderImporter {
                         zip.closeEntry()
                         visit(child, path + "/", depth + 1)
                     } else if (child.isFile) {
-                        if (child.length() > MAX_SINGLE)
-                            throw IOException("File exceeds 256 KiB: " + path)
+                        val maxFileSize = ProjectStore.importLimitFor(path)
+                        if (child.length() > maxFileSize)
+                            throw IOException("File exceeds its supported size: " + path)
                         zip.putNextEntry(ZipEntry(path))
                         val stream = context.contentResolver.openInputStream(child.uri)
                             ?: throw IOException("Cannot read " + path)
@@ -62,7 +62,7 @@ internal object ExternalFolderImporter {
                                 if (size < 0) break
                                 length += size
                                 expanded += size
-                                if (length > MAX_SINGLE || expanded > MAX_TOTAL)
+                                if (length > maxFileSize || expanded > MAX_TOTAL)
                                     throw IOException("Folder exceeds import size limits.")
                                 zip.write(buffer, 0, size)
                             }

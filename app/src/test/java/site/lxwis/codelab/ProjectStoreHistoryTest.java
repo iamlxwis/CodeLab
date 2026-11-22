@@ -35,6 +35,23 @@ public class ProjectStoreHistoryTest {
         assertEquals("A small example", store.metadata("Imported").description);
     }
 
+    @Test public void importsAndExportsBinaryWebAssets() throws Exception {
+        ProjectStore store = new ProjectStore(temp.newFolder("binary-root"));
+        store.createProject("WebAssets", "Web");
+        byte[] png = java.util.Base64.getDecoder().decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/jXsAAAAASUVORK5CYII=");
+        store.importSingleFile("WebAssets", "pixel.png", new java.io.ByteArrayInputStream(png));
+        assertArrayEquals(png, store.readAsset("WebAssets", "pixel.png"));
+        store.duplicateFile("WebAssets", "pixel.png", "copy.png");
+        assertArrayEquals(png, store.readAsset("WebAssets", "copy.png"));
+        assertThrows(java.io.IOException.class, () -> store.read("WebAssets", "pixel.png"));
+        java.io.ByteArrayOutputStream zip = new java.io.ByteArrayOutputStream();
+        store.exportZip("WebAssets", zip);
+        store.importZip("RestoredAssets", new java.io.ByteArrayInputStream(zip.toByteArray()));
+        assertArrayEquals(png, store.readAsset("RestoredAssets", "pixel.png"));
+        assertEquals(2 * 1024 * 1024, ProjectStore.importLimitFor("image.png"));
+    }
+
     @Test public void deletedFileCanBeRecovered() throws Exception {
         ProjectStore store = new ProjectStore(temp.newFolder("workspace2"));
         store.createProject("Test", "JavaScript");

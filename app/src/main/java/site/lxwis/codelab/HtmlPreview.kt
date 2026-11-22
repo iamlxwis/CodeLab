@@ -116,18 +116,22 @@ fun HtmlPreview(project: String, path: String, source: String, modifier: Modifie
                                 "js", "mjs" -> "application/javascript"
                                 "svg" -> "image/svg+xml"
                                 "json" -> "application/json"
+                                "woff" -> "font/woff"
+                                "woff2" -> "font/woff2"
+                                "ttf" -> "font/ttf"
+                                "otf" -> "font/otf"
                                 else -> MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension) ?: "text/plain"
                             }
-                            val data = if (requested == path) live.text else runCatching {
-                                store.read(project, requested)
-                            }.getOrElse { exception ->
-                                handler.post {
-                                    messages = (messages + "Could not load " + requested +
-                                        ": " + (exception.message ?: "unavailable")).takeLast(20)
+                            val data = if (requested == path) live.text.toByteArray(StandardCharsets.UTF_8)
+                            else runCatching { store.readAsset(project, requested) }
+                                .getOrElse { exception ->
+                                    handler.post {
+                                        messages = (messages + "Could not load " + requested +
+                                            ": " + (exception.message ?: "unavailable")).takeLast(20)
+                                    }
+                                    byteArrayOf()
                                 }
-                                ""
-                            }
-                            return previewResponse(type, data.take(262144))
+                            return previewResponse(type, data)
                         }
                         override fun onPageFinished(view: WebView, url: String) { loading = false }
                         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
@@ -177,5 +181,10 @@ fun HtmlPreview(project: String, path: String, source: String, modifier: Modifie
 private class PreviewSource(@Volatile var text: String)
 
 private fun previewResponse(type: String, text: String) =
-    WebResourceResponse(type, "UTF-8",
-        ByteArrayInputStream(text.toByteArray(StandardCharsets.UTF_8)))
+    previewResponse(type, text.toByteArray(StandardCharsets.UTF_8))
+
+private fun previewResponse(type: String, bytes: ByteArray) =
+    WebResourceResponse(type,
+        if (type.startsWith("image/") || type.startsWith("font/") ||
+            type.startsWith("audio/") || type.startsWith("video/")) null else "UTF-8",
+        ByteArrayInputStream(bytes))

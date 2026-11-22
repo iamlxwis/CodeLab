@@ -13,6 +13,19 @@ import java.util.zip.ZipOutputStream;
 /** App-private UTF-8 projects. Operations publish complete files or directories via rename. */
 public final class ProjectStore {
     private static final int MAX_FILE_BYTES = 256 * 1024;
+    private static final int MAX_ASSET_BYTES = 2 * 1024 * 1024;
+    private static final Set<String> BINARY_EXTENSIONS = new HashSet<>(Arrays.asList(
+        "png", "jpg", "jpeg", "gif", "webp", "ico", "bmp", "avif",
+        "woff", "woff2", "ttf", "otf", "mp3", "ogg", "wav", "mp4", "webm"));
+
+    public static boolean isBinaryAsset(String path) {
+        String extension = path.substring(path.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
+        return BINARY_EXTENSIONS.contains(extension);
+    }
+
+    public static int importLimitFor(String path) {
+        return isBinaryAsset(path) ? MAX_ASSET_BYTES : MAX_FILE_BYTES;
+    }
     private static final int MAX_ARCHIVE_BYTES = 16 * 1024 * 1024;
     private static final int MAX_ENTRIES = 1024;
     private final File projects;
@@ -295,9 +308,32 @@ public final class ProjectStore {
         writeText(target, content);
     }
 
+    private void writeBytes(File target, byte[] bytes, int limit) throws IOException {
+        if (bytes.length > limit) throw new IOException("Imported asset is too large.");
+        ensureDir(target.getParentFile());
+        File tmp = File.createTempFile("asset-", ".tmp", scratch);
+        try {
+            try (FileOutputStream out = new FileOutputStream(tmp)) {
+                out.write(bytes);
+                out.getFD().sync();
+            }
+            Files.move(tmp.toPath(), target.toPath(),
+                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } finally { tmp.delete(); }
+    }
+
+    public synchronized byte[] readAsset(String projectName, String path) throws IOException {
+        File target = resolve(project(projectName), path);
+        if (!target.isFile()) throw new IOException("Asset does not exist.");
+        if (target.length() > importLimitFor(path))
+            throw new IOException("Asset exceeds its supported size.");
+        return Files.readAllBytes(target.toPath());
+    }
+
     public synchronized String read(String project, String path) throws IOException {
         File target = resolve(project(project), path);
         if (!target.isFile()) throw new IOException("File does not exist.");
+        if (isBinaryAsset(path)) throw new IOException("Binary assets cannot be edited as text.");
         if (target.length() > MAX_FILE_BYTES) throw new IOException("Editor files are limited to 256 KiB.");
         return StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(Files.readAllBytes(target.toPath()))).toString();
     }
@@ -384,8 +420,12 @@ public final class ProjectStore {
         File target = resolve(project(project), path);
         requireNew(target);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        transfer(input, output, MAX_FILE_BYTES);
+        transfer(input, output, importLimitFor(path));
         byte[] bytes = output.toByteArray();
+        if (isBinaryAsset(path)) {
+            writeBytes(target, bytes, MAX_ASSET_BYTES);
+            return;
+        }
         final String content;
         if (bytes.length >= 2 && (bytes[0] & 255) == 255 && (bytes[1] & 255) == 254) {
             content = StandardCharsets.UTF_16LE.newDecoder()
@@ -426,7 +466,7 @@ public final class ProjectStore {
                                             String toProject, String destination) throws IOException {
         File target = resolve(project(toProject), destination);
         requireNew(target);
-        writeText(target, read(fromProject, path));
+        writeBytes(target, readAsset(fromProject, path), importLimitFor(destination));
     }
 
     public synchronized void duplicateFile(String project, String from, String to) throws IOException {
@@ -435,7 +475,7 @@ public final class ProjectStore {
         File destination = resolve(base, to);
         if (!source.isFile()) throw new IOException("Source file does not exist.");
         requireNew(destination);
-        writeText(destination, read(project, from));
+        writeBytes(destination, readAsset(project, from), importLimitFor(to));
     }
 
     public synchronized void renameFile(String project, String from, String to) throws IOException {
@@ -744,7 +784,7 @@ public final class ProjectStore {
                     ensureDir(file.getParentFile());
                     try (InputStream in = zip.getInputStream(entry); FileOutputStream out = new FileOutputStream(file)) {
                         java.util.zip.CheckedInputStream verified = new java.util.zip.CheckedInputStream(in, new java.util.zip.CRC32());
-                        int size = transfer(verified, out, Math.min(MAX_FILE_BYTES, left));
+                        int size = transfer(verified, out, Math.min(importLimitFor(path), left));
                         if (size != entry.getSize() || verified.getChecksum().getValue() != entry.getCrc())
                             throw new IOException("Damaged archive entry.");
                         left -= size;

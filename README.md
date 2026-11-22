@@ -70,6 +70,10 @@ Online submissions use Judge0's token-based asynchronous API and poll until exec
 
 **Privacy:** No source files are uploaded automatically. Only a confirmed cloud run sends the current source and its provided input. The default public compiler endpoint is configured in the app; users do not need credentials. Do not include secrets in code submitted to public compiler services. The cloud server may retain execution data or impose quotas according to its own policies. Offline preview remains restricted to local project assets.
 
+## Imported binary web assets
+
+CodeLab imports image and font assets as bytes rather than forcing them through UTF-8 text decoding. Local web previews can load project-relative PNG/JPEG/WebP/GIF, fonts and other supported assets from the offline virtual origin. Editor text files remain limited to 256 KiB, while supported binary assets can be up to 2 MiB each, within the 16 MiB project import ceiling. This does not add a binary image editor.
+
 ## Project templates and offline web preview
 
 The new-project dialog includes JavaScript, Java beta, Lua, SQLite, and Web starter projects. Web projects contain `index.html`, `style.css`, and `script.js`. Open an HTML file and choose **Preview** to render the page in a restricted embedded WebView. Relative project CSS/JS/text assets load from local app storage; external network resources are blocked. The preview can display browser `console.log` messages and refresh its document.
