@@ -101,7 +101,9 @@ def main():
     adb("shell", "input", "text", shlex.quote("print(6*7)"))
     snapshot("06-after-input")
     wait_for("print(6*7)", contains=True)
-    tap("Run")
+    # Primary Run honors the preferred entry file; explicitly choose this tab.
+    tap("Choose run target")
+    tap("Run active · answer.js")
     wait_for("42", contains=True)
     wait_for("Exit 0", contains=True)
     tap("Editor")
