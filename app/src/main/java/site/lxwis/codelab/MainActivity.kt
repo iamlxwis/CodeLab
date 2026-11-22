@@ -1032,10 +1032,32 @@ private fun FileHistoryDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
                 }
                 m.historyPreview?.let { old ->
                     HorizontalDivider()
-                    Text("Snapshot preview · first 5,000 characters",
+                    Text("Snapshot vs current · + added, − removed",
                         style = MaterialTheme.typography.labelSmall)
-                    Text(old, fontFamily = FontFamily.Monospace, maxLines = 10,
-                        style = MaterialTheme.typography.bodySmall)
+                    val rows = remember(old, m.source) {
+                        LineDiff.compare(old, m.source.take(5000))
+                            .filter { it.kind != LineDiff.Kind.SAME }
+                            .take(120)
+                    }
+                    Column(Modifier.heightIn(max = 220.dp).verticalScroll(rememberScrollState())
+                        .padding(6.dp)) {
+                        if (rows.isEmpty()) Text("No changes in displayed excerpt.")
+                        rows.forEach { entry ->
+                            val marker = when (entry.kind) {
+                                LineDiff.Kind.ADDED -> "+ "
+                                LineDiff.Kind.REMOVED -> "− "
+                                LineDiff.Kind.SAME -> "  "
+                            }
+                            Text(marker + entry.text,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = FontFamily.Monospace,
+                                color = when (entry.kind) {
+                                    LineDiff.Kind.ADDED -> Color(0xff48b981)
+                                    LineDiff.Kind.REMOVED -> Color(0xffef7a7a)
+                                    LineDiff.Kind.SAME -> MaterialTheme.colorScheme.onSurface
+                                })
+                        }
+                    }
                 }
             }
         },
