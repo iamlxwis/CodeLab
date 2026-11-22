@@ -71,3 +71,10 @@ claimed from source extraction alone. Refer to the PR checks for verification.
   A long-press menu, dedicated drag grip and overflow chooser keep tabs navigable.
 - Still required: toolbar and long-press menu for tab actions, drag affordance,
   overflow selector, search/replace and destructive-action undo.
+
+### Workstream 3 — destructive-action recovery (third slice, in review)
+- File, folder and project deletes surface **Undo** only after a matching unique
+  trash record exists; the snackbar action restores that exact item asynchronously.
+- Existing Recently Deleted remains the fallback after snackbar expiry.
+- No permanent deletion undo is claimed. Tests cover identity matching and a
+  tappable semantic snackbar action.
