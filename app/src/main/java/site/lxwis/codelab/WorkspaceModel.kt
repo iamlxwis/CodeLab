@@ -143,6 +143,13 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         themePreset = value
         preferences.edit().putString("preset", value).apply()
     }
+    var interfaceDensity by mutableStateOf(preferences.getString("density", "Comfortable") ?: "Comfortable")
+        private set
+    fun chooseDensity(value: String) {
+        if (value !in listOf("Compact", "Comfortable", "Spacious")) return
+        interfaceDensity = value
+        preferences.edit().putString("density", value).apply()
+    }
     var accent by mutableStateOf(preferences.getString("accent", "Mint") ?: "Mint")
         private set
     var projects by mutableStateOf(emptyList<String>())

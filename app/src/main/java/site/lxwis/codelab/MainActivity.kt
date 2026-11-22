@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.ViewModelProvider
 
 private val night = darkColorScheme(
@@ -96,7 +97,21 @@ class MainActivity : ComponentActivity() {
                     window.insetsController?.setSystemBarsAppearance(if (dark) 0 else mask, mask)
                 }
             }
-            MaterialTheme(colorScheme = scheme) {
+            val typography = Typography(
+                headlineLarge = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+                headlineSmall = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
+                titleLarge = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                titleMedium = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                bodyMedium = MaterialTheme.typography.bodyMedium,
+                labelSmall = MaterialTheme.typography.labelSmall.copy(letterSpacing = .3.sp)
+            )
+            MaterialTheme(colorScheme = scheme, typography = typography, shapes = Shapes(
+                extraSmall = RoundedCornerShape(7.dp),
+                small = RoundedCornerShape(11.dp),
+                medium = RoundedCornerShape(15.dp),
+                large = RoundedCornerShape(20.dp),
+                extraLarge = RoundedCornerShape(28.dp)
+            )) {
                 Surface(Modifier.fillMaxSize()) {
                     Studio(model, Modifier.windowInsetsPadding(WindowInsets.safeDrawing).imePadding())
                 }
@@ -116,6 +131,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var incoming by rememberSaveable { mutableStateOf<String?>(null) }
     var menu by remember { mutableStateOf(false) }
     var focusMode by rememberSaveable { mutableStateOf(false) }
+    var explorerPinned by rememberSaveable { mutableStateOf(true) }
     var importedFile by rememberSaveable { mutableStateOf<String?>(null) }
     val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) {
         it?.let(m::exportFile)
@@ -203,6 +219,13 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 IconButton(onClick = { dialog = "files" }) {
                     Icon(Icons.Default.FolderOpen, "Browse files")
                 }
+                if (m.files.isNotEmpty()) {
+                    IconButton(onClick = { explorerPinned = !explorerPinned },
+                        modifier = Modifier.size(38.dp)) {
+                        Icon(if (explorerPinned) Icons.Default.VerticalSplit else Icons.Default.ViewSidebar,
+                            "Toggle tablet explorer", Modifier.size(19.dp))
+                    }
+                }
                 LazyRow(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
                         val active = m.active == path
@@ -220,7 +243,46 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }
             BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
                 val wide = maxWidth >= 820.dp
+                val showSidebar = wide && explorerPinned && !focusMode
                 Row(Modifier.fillMaxSize()) {
+                    if (showSidebar) {
+                        Surface(Modifier.width(224.dp).fillMaxHeight(),
+                            color = MaterialTheme.colorScheme.surfaceContainer) {
+                            Column(Modifier.fillMaxSize().padding(10.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.AccountTree, null, Modifier.size(17.dp),
+                                        tint = MaterialTheme.colorScheme.primary)
+                                    Text("EXPLORER", Modifier.weight(1f).padding(start = 9.dp),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold)
+                                    IconButton(onClick = { dialog = "files" }, Modifier.size(36.dp)) {
+                                        Icon(Icons.Default.OpenInFull, "Open file explorer", Modifier.size(17.dp))
+                                    }
+                                }
+                                HorizontalDivider()
+                                LazyColumn(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    items(m.files, key = { it }) { file ->
+                                        val active = file == m.active
+                                        Surface(onClick = { if (!m.busy) m.select(file) },
+                                            shape = RoundedCornerShape(9.dp),
+                                            color = if (active) MaterialTheme.colorScheme.primaryContainer
+                                                else Color.Transparent) {
+                                            Row(Modifier.fillMaxWidth().padding(horizontal = 9.dp, vertical = 11.dp),
+                                                verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(Icons.Default.Description, null, Modifier.size(16.dp),
+                                                    tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                                                Text(file, Modifier.padding(start = 8.dp),
+                                                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                                    fontSize = 12.sp, fontFamily = FontFamily.Monospace,
+                                                    color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
                     if ((!m.console && !m.preview) || wide) Box(Modifier.weight(1f).fillMaxHeight()) {
                         val file = m.active
                         if (file != null) key(p, file) {
@@ -320,6 +382,16 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             label = { Text(accent) })
                     }
                 }
+                Text("INTERFACE DENSITY", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall)
+                Row(Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    listOf("Compact", "Comfortable", "Spacious").forEach { density ->
+                        FilterChip(selected = m.interfaceDensity == density,
+                            onClick = { m.chooseDensity(density) },
+                            label = { Text(density) })
+                    }
+                }
                 Text("More editor preferences are available from the editor toolbar.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -365,14 +437,46 @@ private fun Mark(modifier: Modifier) {
 }
 
 @Composable
+private fun DashboardMetric(value: String, label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier = Modifier) {
+    Surface(modifier, color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(16.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            Icon(icon, null, Modifier.size(19.dp), tint = MaterialTheme.colorScheme.primary)
+            Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
+                maxLines = 1)
+            Text(label, style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
 private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> Unit, rename: (String) -> Unit, delete: (String) -> Unit) {
     var options by remember { mutableStateOf<String?>(null) }
     var projectSearch by rememberSaveable { mutableStateOf("") }
     var projectSort by rememberSaveable { mutableStateOf("Recent") }
+    val spacing = when (m.interfaceDensity) {
+        "Compact" -> 8.dp
+        "Spacious" -> 18.dp
+        else -> 12.dp
+    }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 22.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        verticalArrangement = Arrangement.spacedBy(spacing)) {
         item {
-            Text("Projects", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
+            Text("WORKSPACE", fontSize = 11.sp, letterSpacing = 2.sp,
+                fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.height(8.dp))
+            Text("Projects", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+            Text("Local development, organized.", style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(18.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                DashboardMetric("${m.projects.size}", "Projects", Icons.Default.Folder,
+                    Modifier.weight(1f))
+                DashboardMetric(if (m.isOnline) "Online" else "Offline", "Connection",
+                    Icons.Default.Wifi, Modifier.weight(1f))
+            }
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = new, enabled = !m.busy, shape = RoundedCornerShape(10.dp)) {
@@ -430,10 +534,15 @@ private fun ProjectLibrary(m: WorkspaceModel, new: () -> Unit, importZip: () -> 
                 else -> visible
             }
         }, key = { it }) { name ->
-            Surface(onClick = { m.openProject(name) }, enabled = !m.busy, shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .65f)) {
+            Surface(onClick = { m.openProject(name) }, enabled = !m.busy,
+                shape = RoundedCornerShape(16.dp), tonalElevation = 1.dp,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Mark(Modifier.size(34.dp))
+                    Surface(shape = RoundedCornerShape(11.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer) {
+                        Icon(Icons.Default.Folder, null, Modifier.padding(10.dp).size(22.dp),
+                            tint = MaterialTheme.colorScheme.primary)
+                    }
                     Text(name, Modifier.weight(1f).padding(start = 14.dp), maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Medium)
                     Box {
                         IconButton(onClick = { options = name }) { Icon(Icons.Default.MoreVert, "Manage $name") }
