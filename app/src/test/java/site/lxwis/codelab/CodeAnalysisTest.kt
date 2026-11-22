@@ -13,6 +13,16 @@ class CodeAnalysisTest {
         assertNull(CodeAnalysis.matchBracket(content, 10))
     }
 
+    @Test fun findsAndRenamesIdentifierWithoutTouchingComments() {
+        val text = "fun calculate() {\n val amount = 2 // amount\n print(amount)\n}"
+        val found = CodeAnalysis.references(text, "amount")
+        assertEquals(2, found.size)
+        assertEquals(2, CodeAnalysis.definition(text, "amount")?.line)
+        val renamed = CodeAnalysis.lexicalRename(text, "amount", "total")
+        assertTrue(renamed.contains("val total = 2 // amount"))
+        assertTrue(renamed.contains("print(total)"))
+    }
+
     @Test fun findsDeclarationsWithLineNumbers() {
         val result = CodeAnalysis.symbols("val x = 1\nfun hello() {}\nclass User {}")
         assertEquals(2, result.size)

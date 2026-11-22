@@ -7,10 +7,11 @@ package site.lxwis.codelab
 internal object CodeAnalysis {
     data class Symbol(val line: Int, val title: String)
     data class Issue(val line: Int, val description: String)
+    data class Reference(val index: Int, val line: Int, val preview: String)
 
     private val declarations = Regex(
         """^(?:export\s+|default\s+|public\s+|private\s+|protected\s+|static\s+|async\s+|internal\s+|open\s+)*""" +
-        """(class|interface|object|enum|struct|trait|fun|function|def|type)\s+([A-Za-z_][A-Za-z_0-9]*)"""
+        """(class|interface|object|enum|struct|trait|fun|function|def|type|val|var|let|const)\s+([A-Za-z_][A-Za-z_0-9]*)"""
     )
 
     fun symbols(source: String): List<Symbol> =
@@ -18,6 +19,65 @@ internal object CodeAnalysis {
             val match = declarations.find(line.trimStart()) ?: return@mapIndexedNotNull null
             Symbol(index + 1, match.groupValues[1] + " " + match.groupValues[2])
         }.take(120).toList()
+
+    fun identifierAt(source: String, caret: Int): String? {
+        if (source.isEmpty()) return null
+        val position = caret.coerceIn(0, source.length)
+        val at = listOf(position, position - 1).firstOrNull {
+            it in source.indices && (source[it].isLetterOrDigit() || source[it] == '_')
+        } ?: return null
+        var first = at
+        var last = at + 1
+        while (first > 0 && (source[first - 1].isLetterOrDigit() || source[first - 1] == '_')) first--
+        while (last < source.length && (source[last].isLetterOrDigit() || source[last] == '_')) last++
+        return source.substring(first, last).takeIf {
+            it.isNotEmpty() && (it[0].isLetter() || it[0] == '_')
+        }
+    }
+
+    /** Searches only visible lexical occurrences in this buffer, not semantic references. */
+    fun references(source: String, identifier: String, cap: Int = 120): List<Reference> {
+        if (!identifier.matches(Regex("[A-Za-z_][A-Za-z_0-9]*"))) return emptyList()
+        val allowed = visibleCode(source)
+        val pattern = Regex("(?<![A-Za-z_0-9])" + Regex.escape(identifier) + "(?![A-Za-z_0-9])")
+        return pattern.findAll(source).filter { allowed[it.range.first] }
+            .take(cap.coerceIn(1, 500)).map { match ->
+                val before = source.lastIndexOf('\n', (match.range.first - 1).coerceAtLeast(0)) + 1
+                val next = source.indexOf('\n', match.range.last).let {
+                    if (it < 0) source.length else it
+                }
+                Reference(match.range.first, source.take(before).count { it == '\n' } + 1,
+                    source.substring(before, next).trim().take(100))
+            }.toList()
+    }
+
+    fun definition(source: String, identifier: String): Reference? {
+        for (symbol in symbols(source)) {
+            if (symbol.title.substringAfter(' ') == identifier) {
+                val at = source.lineSequence().take(symbol.line - 1).sumOf { it.length + 1 }
+                return Reference(at, symbol.line, symbol.title)
+            }
+        }
+        return null
+    }
+
+    /**
+     * Lexical rename: skips strings/comments. Does not resolve scopes or imports.
+     * Intended as a transparent file-local edit rather than LSP rename.
+     */
+    fun lexicalRename(source: String, old: String, replacement: String): String {
+        require(replacement.matches(Regex("[A-Za-z_][A-Za-z_0-9]*"))) {
+            "New name must be a valid identifier."
+        }
+        if (old == replacement) return source
+        val spots = references(source, old, 500)
+        if (spots.isEmpty()) return source
+        val builder = StringBuilder(source)
+        for (position in spots.asReversed()) {
+            builder.replace(position.index, position.index + old.length, replacement)
+        }
+        return builder.toString()
+    }
 
     private fun visibleCode(source: String): BooleanArray {
         val allowed = BooleanArray(source.length)

@@ -102,11 +102,44 @@ fun CodeEditor(
     var toolsMenu by remember { mutableStateOf(false) }
     var snippetsMenu by remember { mutableStateOf(false) }
     var outlineMenu by remember { mutableStateOf(false) }
+    var referenceMenu by remember { mutableStateOf(false) }
+    var renameDialog by remember { mutableStateOf(false) }
+    var renameValue by remember { mutableStateOf("") }
+    var renameError by remember { mutableStateOf("") }
     var bookmarksMenu by remember { mutableStateOf(false) }
     var showLineNumbers by remember { mutableStateOf(preferences.getBoolean("line-numbers", true)) }
     var showActiveLine by remember { mutableStateOf(preferences.getBoolean("active-line", true)) }
     var result by remember { mutableStateOf("") }
     val changes by rememberUpdatedState(onTextChange)
+    if (renameDialog) AlertDialog(onDismissRequest = { renameDialog = false },
+        title = { Text("Rename identifier in this file") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Text("Textual rename only; scopes, imports and external files are not analyzed.",
+                    style = MaterialTheme.typography.bodySmall)
+                OutlinedTextField(renameValue, { renameValue = it; renameError = "" },
+                    label = { Text("New identifier") }, singleLine = true)
+                if (renameError.isNotBlank())
+                    Text(renameError, color = MaterialTheme.colorScheme.error)
+            }
+        },
+        confirmButton = { TextButton(onClick = {
+            val editor = view
+            if (editor != null) {
+                val oldName = CodeAnalysis.identifierAt(
+                    editor.text.toString(), editor.selectionStart)
+                if (oldName == null) renameError = "No identifier at cursor."
+                else try {
+                    editor.replaceSource(CodeAnalysis.lexicalRename(
+                        editor.text.toString(), oldName, renameValue))
+                    renameDialog = false
+                } catch (ex: IllegalArgumentException) {
+                    renameError = ex.message.orEmpty()
+                }
+            }
+        }) { Text("Rename") } },
+        dismissButton = { TextButton(onClick = { renameDialog = false }) { Text("Cancel") } })
+
     LaunchedEffect(jumpLine, view) {
         if (jumpLine != null && view != null) {
             view?.goToLogicalLine(jumpLine)
@@ -218,6 +251,44 @@ fun CodeEditor(
                             onClick = { view?.goToLogicalLine(line); bookmarksMenu = false })
                     }
                 }
+            }
+            EditorIcon(Icons.Default.NearMe, "Go to same-file definition") {
+                val editor = view
+                if (editor != null) {
+                    val source = editor.text.toString()
+                    val identifier = CodeAnalysis.identifierAt(source, editor.selectionStart)
+                    identifier?.let { CodeAnalysis.definition(source, it) }
+                        ?.let { editor.goToLogicalLine(it.line) }
+                }
+            }
+            Box {
+                EditorIcon(Icons.Default.ManageSearch, "Find identifier in current file") {
+                    referenceMenu = true
+                }
+                DropdownMenu(expanded = referenceMenu,
+                    onDismissRequest = { referenceMenu = false }) {
+                    val editor = view
+                    val source = editor?.text?.toString().orEmpty()
+                    val name = editor?.let { CodeAnalysis.identifierAt(source, it.selectionStart) }
+                    val refs = name?.let { CodeAnalysis.references(source, it) }.orEmpty()
+                    if (refs.isEmpty()) DropdownMenuItem(text = { Text("Place cursor on an identifier") },
+                        enabled = false, onClick = {})
+                    refs.forEach { ref ->
+                        DropdownMenuItem(text = { Text("Line " + ref.line + " · " + ref.preview,
+                            maxLines = 2) }, onClick = {
+                            editor?.goToLogicalLine(ref.line)
+                            referenceMenu = false
+                        })
+                    }
+                }
+            }
+            EditorIcon(Icons.Default.DriveFileRenameOutline,
+                "Rename identifier in current file") {
+                val editor = view
+                val source = editor?.text?.toString().orEmpty()
+                renameValue = editor?.let { CodeAnalysis.identifierAt(source, it.selectionStart) }.orEmpty()
+                renameError = ""
+                renameDialog = renameValue.isNotBlank() && !readOnly
             }
             EditorIcon(Icons.Default.DataObject, "Jump to matching bracket") {
                 view?.jumpToMatchingBracket()
