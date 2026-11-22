@@ -172,6 +172,9 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         private set
     var trashItems by mutableStateOf(emptyList<ProjectStore.TrashItem>())
         private set
+    var replaceSummary by mutableStateOf<ProjectStore.ReplacementSummary?>(null)
+        private set
+    fun clearReplaceSummary() { replaceSummary = null }
     var searchHits by mutableStateOf(emptyList<ProjectStore.SearchHit>())
         private set
     var pendingLine by mutableStateOf<Int?>(null)
@@ -533,6 +536,30 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                 apply(reopened)
                 fileHistory = versions
                 historyPreview = null
+            }
+            commit
+        }
+    }
+
+    fun previewReplaceAcrossFiles(query: String, replacement: String,
+        matchCase: Boolean, regex: Boolean) {
+        val p = project ?: return
+        work {
+            val summary = store.replaceAcrossProject(p, query, replacement, matchCase, regex, false)
+            val commit: () -> Unit = { replaceSummary = summary }
+            commit
+        }
+    }
+
+    fun replaceAcrossFiles(query: String, replacement: String,
+        matchCase: Boolean, regex: Boolean) {
+        val p = project ?: return
+        work {
+            val summary = store.replaceAcrossProject(p, query, replacement, matchCase, regex, true)
+            val opened = persist(load(p, tabs, active, allowUnavailable = true))
+            val commit: () -> Unit = {
+                apply(opened)
+                replaceSummary = summary
             }
             commit
         }

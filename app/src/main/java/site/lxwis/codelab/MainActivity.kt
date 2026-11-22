@@ -205,6 +205,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     if (p != null) {
                         DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
                         DropdownMenuItem(text = { Text("Import file…") }, onClick = { menu = false; importFile.launch(arrayOf("*/*")) })
+                        DropdownMenuItem(text = { Text("Replace across files…") },
+                            onClick = {
+                                menu = false
+                                m.clearReplaceSummary()
+                                dialog = "projectreplace"
+                            })
                         DropdownMenuItem(text = { Text("Search across files…") },
                             onClick = { menu = false; dialog = "projectsearch" })
                         DropdownMenuItem(text = { Text("New folder…") },
@@ -382,6 +388,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     when (dialog) {
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
         "history" -> FileHistoryDialog(m) { dialog = "" }
+        "projectreplace" -> ProjectReplaceDialog(m) { dialog = "" }
         "projectsearch" -> ProjectSearchDialog(m, onDismiss = { dialog = "" }) { path, line ->
             dialog = ""
             m.select(path, goToLine = line)
@@ -981,4 +988,71 @@ private fun FileHistoryDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } })
+}
+
+@Composable
+private fun ProjectReplaceDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
+    var query by rememberSaveable { mutableStateOf("") }
+    var replacement by rememberSaveable { mutableStateOf("") }
+    var matchCase by rememberSaveable { mutableStateOf(false) }
+    var regex by rememberSaveable { mutableStateOf(false) }
+    var confirm by remember { mutableStateOf(false) }
+    if (confirm) AlertDialog(onDismissRequest = { confirm = false },
+        title = { Text("Replace in multiple files?") },
+        text = { Text("Replace " + (m.replaceSummary?.matches ?: 0) + " matches in " +
+            (m.replaceSummary?.files ?: 0) + " files? Previous versions can be restored from file history.") },
+        confirmButton = { TextButton(onClick = {
+            m.replaceAcrossFiles(query, replacement, matchCase, regex)
+            confirm = false
+            onDismiss()
+        }) { Text("Replace all") } },
+        dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } })
+    AlertDialog(onDismissRequest = onDismiss,
+        title = { Text("Replace across project") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                OutlinedTextField(query, {
+                    query = it
+                    m.clearReplaceSummary()
+                }, modifier = Modifier.fillMaxWidth(),
+                    singleLine = true, label = { Text("Find") })
+                OutlinedTextField(replacement, {
+                    replacement = it
+                    m.clearReplaceSummary()
+                }, modifier = Modifier.fillMaxWidth(),
+                    singleLine = true, label = { Text("Replace with") })
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(matchCase, onCheckedChange = {
+                        matchCase = it
+                        m.clearReplaceSummary()
+                    })
+                    Text("Aa", style = MaterialTheme.typography.labelMedium)
+                    Checkbox(regex, onCheckedChange = {
+                        regex = it
+                        m.clearReplaceSummary()
+                    })
+                    Text("Regex", style = MaterialTheme.typography.labelMedium)
+                }
+                Button(enabled = query.isNotBlank() && !m.busy,
+                    onClick = { m.previewReplaceAcrossFiles(query, replacement, matchCase, regex) },
+                    modifier = Modifier.fillMaxWidth()) { Text("Preview changes") }
+                m.replaceSummary?.let { summary ->
+                    Text("${summary.matches} matches in ${summary.files} files",
+                        fontWeight = FontWeight.SemiBold)
+                    summary.paths.take(12).forEach { path ->
+                        Text(path, fontFamily = FontFamily.Monospace,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    if (summary.paths.size > 12)
+                        Text("… and ${summary.paths.size - 12} more files")
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = (m.replaceSummary?.matches ?: 0) > 0 && !m.busy,
+                onClick = { confirm = true }) { Text("Apply previewed changes") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } })
 }

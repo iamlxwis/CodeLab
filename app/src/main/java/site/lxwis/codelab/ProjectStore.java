@@ -471,6 +471,80 @@ public final class ProjectStore {
         }
     }
 
+    public static final class ReplacementSummary {
+        public final int files, matches;
+        public final List<String> paths;
+        public ReplacementSummary(int files, int matches, List<String> paths) {
+            this.files = files;
+            this.matches = matches;
+            this.paths = Collections.unmodifiableList(new ArrayList<>(paths));
+        }
+    }
+
+    /** Preflight all edits before writing. Replacement text is always literal. */
+    public synchronized ReplacementSummary replaceAcrossProject(
+            String projectName, String query, String replacement, boolean caseSensitive,
+            boolean regex, boolean apply) throws IOException {
+        if (query == null || query.isBlank() || query.length() > 200)
+            throw new IOException("Enter a search phrase up to 200 characters.");
+        if (replacement == null || replacement.length() > 2000)
+            throw new IOException("Replacement is limited to 2000 characters.");
+        java.util.regex.Pattern pattern;
+        try {
+            pattern = java.util.regex.Pattern.compile(regex ? query : java.util.regex.Pattern.quote(query),
+                caseSensitive ? 0 : java.util.regex.Pattern.CASE_INSENSITIVE |
+                    java.util.regex.Pattern.UNICODE_CASE);
+        } catch (java.util.regex.PatternSyntaxException e) {
+            throw new IOException("Invalid search pattern: " + e.getDescription());
+        }
+        if (pattern.matcher("").find())
+            throw new IOException("Search patterns matching empty text are unsupported.");
+
+        LinkedHashMap<String, String> original = new LinkedHashMap<>();
+        LinkedHashMap<String, String> modified = new LinkedHashMap<>();
+        int totalMatches = 0;
+        for (String path : files(projectName)) {
+            String content;
+            try { content = read(projectName, path); }
+            catch (IOException e) { continue; }
+            java.util.regex.Matcher matcher = pattern.matcher(content);
+            StringBuffer output = new StringBuffer();
+            int count = 0;
+            while (matcher.find()) {
+                if (++count > 5000 || ++totalMatches > 50000)
+                    throw new IOException("Too many matches to replace safely.");
+                matcher.appendReplacement(output,
+                    java.util.regex.Matcher.quoteReplacement(replacement));
+            }
+            if (count == 0) continue;
+            matcher.appendTail(output);
+            String changed = output.toString();
+            if (changed.getBytes(StandardCharsets.UTF_8).length > MAX_FILE_BYTES)
+                throw new IOException("Replacement would exceed the file limit in " + path);
+            original.put(path, content);
+            modified.put(path, changed);
+        }
+
+        if (apply) {
+            List<String> completed = new ArrayList<>();
+            try {
+                for (Map.Entry<String, String> entry : modified.entrySet()) {
+                    save(projectName, entry.getKey(), entry.getValue());
+                    completed.add(entry.getKey());
+                }
+            } catch (IOException error) {
+                for (int i = completed.size() - 1; i >= 0; i--) {
+                    String path = completed.get(i);
+                    try { writeText(resolve(project(projectName), path), original.get(path)); }
+                    catch (IOException rollback) { error.addSuppressed(rollback); }
+                }
+                throw error;
+            }
+        }
+        return new ReplacementSummary(modified.size(), totalMatches,
+            new ArrayList<>(modified.keySet()));
+    }
+
     /** Bounded, offline project-wide literal search. Invalid/binary files are skipped. */
     public synchronized List<SearchHit> searchText(String projectName, String query, boolean caseSensitive)
             throws IOException {

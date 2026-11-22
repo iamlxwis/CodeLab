@@ -31,6 +31,20 @@ public class ProjectStoreHistoryTest {
         assertEquals("let x = 1;\n", store.read("Test", "src/util.js"));
     }
 
+    @Test public void previewReplaceDoesNotEditFilesAndApplyKeepsHistory() throws Exception {
+        ProjectStore store = new ProjectStore(temp.newFolder("workspace4"));
+        store.createProject("Test", "JavaScript");
+        store.createFile("Test", "src/notes.txt", "Hello there\nHello again\n");
+        ProjectStore.ReplacementSummary preview =
+            store.replaceAcrossProject("Test", "Hello", "Hi", true, false, false);
+        assertEquals(2, preview.matches);
+        assertEquals(1, preview.files);
+        assertTrue(store.read("Test", "src/notes.txt").contains("Hello"));
+        store.replaceAcrossProject("Test", "Hello", "Hi", true, false, true);
+        assertEquals("Hi there\nHi again\n", store.read("Test", "src/notes.txt"));
+        assertFalse(store.versions("Test", "src/notes.txt").isEmpty());
+    }
+
     @Test public void projectSearchFindsCorrectLine() throws Exception {
         ProjectStore store = new ProjectStore(temp.newFolder("workspace3"));
         store.createProject("Test", "JavaScript");
