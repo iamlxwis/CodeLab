@@ -82,7 +82,10 @@ fun CodeEditor(
     val dark = android.graphics.Color.luminance(background) < .35f
     fun matchCount(): Int {
         if (search.isEmpty()) return 0
-        val pattern = searchRegex() ?: return 0
+        val pattern = try {
+            Regex(if (regexMode) search else Regex.escape(search),
+                if (matchCase) emptySet() else setOf(RegexOption.IGNORE_CASE))
+        } catch (_: IllegalArgumentException) { return 0 }
         return pattern.findAll(view?.text?.toString() ?: text).count()
     }
     fun previousMatch() {
@@ -287,7 +290,7 @@ fun CodeEditor(
         Row(Modifier.fillMaxWidth().height(28.dp).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(cursor + " · " + (view?.text?.count { it == '\\n' }?.plus(1) ?: text.count { it == '\\n' } + 1) + " lines",
+            Text(cursor + " · " + (view?.text?.count { it == '\n' }?.plus(1) ?: text.count { it == '\n' } + 1) + " lines",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text((if (readOnly) "READ ONLY · " else "") + (if (wordWrap) "Wrap · " else "") + "UTF-8 · " + filename.substringAfterLast('.', "text").uppercase(),
