@@ -457,6 +457,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             CodeEditor(fileKey = "$p/$file", filename = file, text = m.source,
                                 onTextChange = m::edit, jumpLine = m.pendingLine,
                                 onJumpHandled = m::consumeJump, onSave = m::flush, onRun = m::run,
+                                onShare = { dialog = "screenshot" },
                                 onPreviousTab = { m.moveActiveTab(-1) },
                                 onNextTab = { m.moveActiveTab(1) },
                                 onOpenCommands = { dialog = "commands" },
@@ -867,8 +868,17 @@ private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit
                     .thenBy { m.projects.indexOf(it) })
             }
         }, key = { it }) { name ->
-            Surface(onClick = { m.openProject(name) }, enabled = true,
-                modifier = Modifier.animateContentSize(animationSpec = tween(motionMillis)),
+            val pressInteraction = remember(name) { MutableInteractionSource() }
+            val isPressed by pressInteraction.collectIsPressedAsState()
+            val pressScale by animateFloatAsState(
+                if (isPressed) .97f else 1f,
+                animationSpec = tween(motionMillis, easing = FastOutSlowInEasing),
+                label = "project-press")
+            Surface(onClick = { UiLatencyProbe.nextFrame(context, "Open project"); m.openProject(name) },
+                enabled = true,
+                interactionSource = pressInteraction,
+                modifier = Modifier.graphicsLayer { scaleX = pressScale; scaleY = pressScale }
+                    .animateContentSize(animationSpec = tween(motionMillis)),
                 shape = RoundedCornerShape(16.dp), tonalElevation = 1.dp,
                 color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {

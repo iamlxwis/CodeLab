@@ -28,7 +28,7 @@ private data class ActionSection(
 private val sections = listOf(
     ActionSection("Files & projects", "Create, organize and import", Icons.Default.FolderOpen),
     ActionSection("Editor & search", "Find, share and navigate", Icons.Default.Edit),
-    ActionSection("Run & developer tools", "Execution and advanced utilities", Icons.Default.Terminal),
+    ActionSection("More tools", "Advanced execution and optional tools", Icons.Default.Terminal),
     ActionSection("Settings", "Personalize your workspace", Icons.Default.Tune)
 )
 
@@ -56,7 +56,7 @@ internal fun WorkspaceActionsSheet(
         }
         val files = "Files & projects"
         val editor = "Editor & search"
-        val tools = "Run & developer tools"
+        val tools = "More tools"
         val settings = "Settings"
         if (!projectOpen) {
             add("newproject", "New project", "Start a local workspace", files, Icons.Default.Add)
@@ -84,7 +84,7 @@ internal fun WorkspaceActionsSheet(
             add("panels", "Panel layout", "Adjust editor and console sizes", editor, Icons.Default.ViewSidebar)
             add("commands", "Command palette", "Search every workspace action", editor, Icons.Default.ManageSearch)
             if (fileOpen) {
-                add("screenshot", "Code snippet image", "Capture selected code or file lines", editor, Icons.Default.PhotoCamera)
+                add("screenshot", "Code snippet image", "Capture selected code or file lines", tools, Icons.Default.PhotoCamera)
                 add("history", "File history", "Review previous snapshots", editor, Icons.Default.History)
             }
             add("focus", if (focusMode) "Leave focus mode" else "Focus mode",
@@ -101,7 +101,7 @@ internal fun WorkspaceActionsSheet(
         }
         add("trash", "Recently deleted", "Recover removed files and projects", "Files & projects", Icons.Default.RestoreFromTrash)
         if (!projectOpen) add("languages", "Languages", "Explore CodeLab file support",
-            "Run & developer tools", Icons.Default.Code)
+            "More tools", Icons.Default.Code)
         add("appearance", "Appearance", "Theme, accent and motion", "Settings", Icons.Default.Palette)
         add("accessibility", "Accessibility", "Contrast, text and feedback", "Settings", Icons.Default.AccessibilityNew)
     }
@@ -140,7 +140,7 @@ internal fun WorkspaceActionsSheet(
             if (section == null && query.isBlank()) {
                 Text("QUICK ACTIONS", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                val quick = if (projectOpen) listOf("newfile", "files", "projectsearch", "screenshot")
+                val quick = if (projectOpen) listOf("newfile", "files", "projectsearch", "exportcurrent")
                     else listOf("newproject", "importzip", "languages", "appearance")
                 quick.mapNotNull { id -> all.firstOrNull { it.id == id } }.chunked(2).forEach { pair ->
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
