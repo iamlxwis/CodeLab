@@ -167,6 +167,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             "history" -> { m.refreshHistory(); dialog = action }
             "git" -> { m.gitRefresh(); dialog = action }
             "cloudrun" -> m.requestCloudRun()
+            "run-active" -> m.run()
+            "save" -> m.flush()
             "focus" -> {
                 focusMode = !focusMode
                 m.console = false
@@ -347,6 +349,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     else -> "Text · cloud setup"
                 }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall,
                     fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                QuickActionsBar(m.quickEditorActions, onAction = ::openAction)
             }
         }
         AnimatedVisibility(m.busy,
@@ -372,6 +375,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             javascriptFile = m.active?.endsWith(".js", true) == true,
             cloudReady = m.active?.let(m::cloudAvailable) == true,
             focusMode = focusMode,
+            quickActions = if (p != null) m.quickEditorActions else m.quickHomeActions,
+            onToggleQuick = { m.toggleQuickAction(it, p != null) },
             onAction = ::openAction,
             onDismiss = { dialog = "" })
         "languages" -> LanguageManagerSheet(m) { dialog = "" }

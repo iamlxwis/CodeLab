@@ -17,6 +17,31 @@ import java.util.concurrent.Executors
 class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     private val store = ProjectStore(File(app.filesDir, "workspace"))
     private val preferences = app.getSharedPreferences("appearance", 0)
+    var recentCommandIds by mutableStateOf(
+        preferences.getString("recent-commands", "").orEmpty()
+            .split(',').filter { it.isNotBlank() }.take(8))
+        private set
+    fun rememberCommand(id: String) {
+        recentCommandIds = (listOf(id) + recentCommandIds.filterNot { it == id }).take(8)
+        preferences.edit().putString("recent-commands", recentCommandIds.joinToString(",")).apply()
+    }
+    var quickEditorActions by mutableStateOf(
+        preferences.getString("quick-editor", "newfile,files,projectsearch,commands")
+            .orEmpty().split(',').filter { it.isNotBlank() })
+        private set
+    var quickHomeActions by mutableStateOf(
+        preferences.getString("quick-home", "newproject,importzip,languages,appearance")
+            .orEmpty().split(',').filter { it.isNotBlank() })
+        private set
+    fun toggleQuickAction(id: String, projectOpen: Boolean) {
+        if (projectOpen) {
+            quickEditorActions = updatedQuickActionIds(quickEditorActions, id)
+            preferences.edit().putString("quick-editor", quickEditorActions.joinToString(",")).apply()
+        } else {
+            quickHomeActions = updatedQuickActionIds(quickHomeActions, id)
+            preferences.edit().putString("quick-home", quickHomeActions.joinToString(",")).apply()
+        }
+    }
     private val io = Executors.newSingleThreadExecutor()
     private val cloudIo = Executors.newSingleThreadExecutor()
     private val connectivity = app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

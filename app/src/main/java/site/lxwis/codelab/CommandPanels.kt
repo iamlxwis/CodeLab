@@ -73,51 +73,41 @@ import androidx.lifecycle.ViewModelProvider
 internal fun CommandPaletteDialog(m: WorkspaceModel, dismiss: () -> Unit,
     execute: (String) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
-    val actions = listOf(
-        "newproject" to "Create project",
-        "newfile" to "Create file",
-        "newfolder" to "Create folder",
-        "files" to "Browse files",
-        "projectsearch" to "Search project",
-        "projectreplace" to "Replace across project",
-        "screenshot" to "Code Screenshot Studio",
-        "history" to "File history",
-        "git" to "Git version control",
-        "devtools" to "Developer tools",
-        "languages" to "Language manager",
-        "appearance" to "Appearance",
-        "accessibility" to "Accessibility",
-        "performance" to "Performance diagnostics",
-        "panels" to "Panel layout"
-    )
-    AlertDialog(onDismissRequest = dismiss,
-        title = { Text("Command palette") },
+    val choices = rankWorkspaceCommands(query, workspaceCommandCatalog, m.recentCommandIds)
+    AlertDialog(onDismissRequest = dismiss, title = { Text("Command palette") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 OutlinedTextField(query, { query = it },
                     modifier = Modifier.fillMaxWidth(), singleLine = true,
-                    placeholder = { Text("Search actions") })
+                    placeholder = { Text("Search commands") })
+                if (query.isBlank() && m.recentCommandIds.isNotEmpty())
+                    Text("Recent commands first",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 LazyColumn(Modifier.heightIn(max = 340.dp)) {
-                    items(actions.filter { it.second.contains(query, ignoreCase = true) }, key = { it.first }) { item ->
-                        val requiresFile = item.first in setOf("screenshot", "history")
-                        val requiresProject = item.first in setOf("newfile", "newfolder", "files",
-                            "projectsearch", "projectreplace", "screenshot", "history", "git", "panels")
-                        TextButton(enabled = (!requiresProject || m.project != null) &&
-                            (!requiresFile || m.active != null),
-                            modifier = Modifier.fillMaxWidth(), onClick = { execute(item.first) }) {
-                            Text(item.second, modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Start)
+                    items(choices, key = { it.id }) { command ->
+                        TextButton(
+                            enabled = (!command.requiresProject || m.project != null) &&
+                                (!command.requiresFile || m.active != null),
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { m.rememberCommand(command.id); execute(command.id) }
+                        ) {
+                            Column(Modifier.fillMaxWidth()) {
+                                Text(command.label, textAlign = TextAlign.Start)
+                                command.shortcut?.let {
+                                    Text(it, style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
                         }
                     }
                 }
-                Text("Tip: Ctrl+Shift+P with a hardware keyboard",
+                Text("Ctrl+Shift+P opens this palette with a hardware keyboard",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-        },
-        confirmButton = { TextButton(onClick = dismiss) { Text("Close") } })
+        }, confirmButton = { TextButton(onClick = dismiss) { Text("Close") } })
 }
-
 
 @Composable
 internal fun JavaScriptDebugDialog(m: WorkspaceModel, dismiss: () -> Unit) {

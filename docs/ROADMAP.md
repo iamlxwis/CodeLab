@@ -87,6 +87,14 @@ claimed from source extraction alone. Refer to the PR checks for verification.
   through the existing bounded, rollback-capable replace engine.
 - Still requires manual Unicode/very large project validation and exact preflight
   snapshot pinning if the project changes between preview and confirmation.
-- Replacement Apply now requires a SHA-256 fingerprint of the previewed matched
-  file contents to match the fresh preflight. Changed matching files abort without
-  any writes and require a new preview; covered by a JVM regression test.
+
+### Workstream 3 — discoverable commands and quick actions (fifth slice)
+- Fuzzy command ranking and recent history; shortcut hints are shown only for
+  wired hardware commands (Ctrl+S, Ctrl+Enter, Ctrl+Shift+P).
+- Configurable per-context quick actions (up to six) appear in the existing
+  scrollable workspace toolbar and home actions sheet.
+- Search within the Settings action category remains scoped to settings.
+- An empty editor provides a contextual file-opening hint.
+- Manual TalkBack, large-font and keyboard-only audits remain outstanding.
+- Replacement Apply rejects stale preview fingerprints before writes; the
+  safe re-preview requirement remains enforced across stacked UX branches.
