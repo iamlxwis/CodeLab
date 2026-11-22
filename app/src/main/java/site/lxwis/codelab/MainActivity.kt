@@ -783,6 +783,7 @@ private fun DashboardMetric(value: String, label: String,
 private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit,
     importZip: () -> Unit, importGitHub: () -> Unit,
     rename: (String) -> Unit, delete: (String) -> Unit, duplicate: (String) -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     var options by remember { mutableStateOf<String?>(null) }
     var projectSearch by rememberSaveable { mutableStateOf("") }
     var projectSort by rememberSaveable { mutableStateOf("Recent") }
