@@ -188,6 +188,17 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun consumeJump() { pendingLine = null }
     var folders by mutableStateOf(emptyList<String>())
         private set
+    var favorites by mutableStateOf(
+        preferences.getStringSet("favorite-projects", emptySet())?.toSet() ?: emptySet())
+        private set
+    private fun storeFavorites(next: Set<String>) {
+        favorites = next
+        preferences.edit().putStringSet("favorite-projects", next.toSet()).apply()
+    }
+    fun toggleFavoriteProject(name: String) {
+        if (name !in projects) return
+        storeFavorites(if (name in favorites) favorites - name else favorites + name)
+    }
     var projects by mutableStateOf(emptyList<String>())
         private set
     var project by mutableStateOf<String?>(null)
@@ -335,7 +346,13 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             if (replacement == null) store.deleteProject(name) else store.renameProject(name, replacement)
             val names = store.projects()
             val deleted = store.trashItems()
-            val commit: () -> Unit = { projects = names; trashItems = deleted }
+            val newFavorites = if (replacement == null) favorites - name
+                else if (name in favorites) (favorites - name) + replacement else favorites
+            val commit: () -> Unit = {
+                projects = names
+                trashItems = deleted
+                storeFavorites(newFavorites)
+            }
             commit
         }
     }

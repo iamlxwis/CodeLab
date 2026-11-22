@@ -202,7 +202,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         if (!focusMode || p == null) Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             if (p == null) Mark(Modifier.padding(horizontal = 8.dp).size(34.dp))
             else IconButton(onClick = { m.home() }, enabled = !m.busy) { Icon(Icons.Default.ArrowBack, "Project library") }
-            Column(Modifier.weight(1f).padding(start = 4.dp)) {
+            Column(Modifier.weight(1f).padding(start = 4.dp)
+                .clickable(enabled = p != null && !m.busy) { dialog = "switchproject" }) {
                 Text(if (p == null) "CodeLab" else p, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (p != null) Text(if (m.dirty) "Saving changes…" else "Local workspace", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -424,6 +425,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
 
     when (dialog) {
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
+        "switchproject" -> ProjectSwitcher(m) { dialog = "" }
         "screenshot" -> CodeScreenshotStudio(m.active.orEmpty(), m.source) { dialog = "" }
         "history" -> FileHistoryDialog(m) { dialog = "" }
         "projectreplace" -> ProjectReplaceDialog(m) { dialog = "" }
@@ -661,7 +663,7 @@ private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit
                 placeholder = { Text("Search projects") })
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf("Recent", "A–Z", "Z–A").forEach { option ->
+                listOf("Recent", "Favorites", "A–Z", "Z–A").forEach { option ->
                     FilterChip(selected = projectSort == option, onClick = { projectSort = option },
                         label = { Text(option) })
                 }
@@ -699,9 +701,11 @@ private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit
         }
         items(m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) }.let { visible ->
             when (projectSort) {
+                "Favorites" -> visible.filter { it in m.favorites }
                 "A–Z" -> visible.sortedWith(String.CASE_INSENSITIVE_ORDER)
                 "Z–A" -> visible.sortedWith(String.CASE_INSENSITIVE_ORDER.reversed())
-                else -> visible
+                else -> visible.sortedWith(compareBy<String> { it !in m.favorites }
+                    .thenBy { m.projects.indexOf(it) })
             }
         }, key = { it }) { name ->
             Surface(onClick = { m.openProject(name) }, enabled = !m.busy,
@@ -714,10 +718,18 @@ private fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit
                         Icon(Icons.Default.Folder, null, Modifier.padding(10.dp).size(22.dp),
                             tint = MaterialTheme.colorScheme.primary)
                     }
+                    if (name in m.favorites) {
+                        Icon(Icons.Default.Star, "Favorite project",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 10.dp).size(18.dp))
+                    }
                     Text(name, Modifier.weight(1f).padding(start = 14.dp), maxLines = 2, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Medium)
                     Box {
                         IconButton(onClick = { options = name }) { Icon(Icons.Default.MoreVert, "Manage $name") }
                         DropdownMenu(expanded = options == name, onDismissRequest = { options = null }) {
+                            DropdownMenuItem(
+                                text = { Text(if (name in m.favorites) "Remove from favorites" else "Add to favorites") },
+                                onClick = { options = null; m.toggleFavoriteProject(name) })
                             DropdownMenuItem(text = { Text("Duplicate") }, onClick = { options = null; duplicate(name) })
                             DropdownMenuItem(text = { Text("Rename") }, onClick = { options = null; rename(name) })
                             DropdownMenuItem(text = { Text("Delete") }, onClick = { options = null; delete(name) })
@@ -1133,4 +1145,35 @@ private fun ProjectReplaceDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
                 onClick = { confirm = true }) { Text("Apply previewed changes") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } })
+}
+
+@Composable
+private fun ProjectSwitcher(m: WorkspaceModel, dismiss: () -> Unit) {
+    var query by rememberSaveable { mutableStateOf("") }
+    AlertDialog(onDismissRequest = dismiss,
+        title = { Text("Switch workspace") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                OutlinedTextField(query, { query = it }, modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Search projects") }, singleLine = true)
+                val visible = m.projects.filter { it.contains(query, ignoreCase = true) }
+                    .sortedWith(compareBy<String> { it !in m.favorites }
+                        .thenBy { m.projects.indexOf(it) })
+                LazyColumn(Modifier.heightIn(max = 330.dp)) {
+                    items(visible, key = { it }) { name ->
+                        Row(Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            if (name in m.favorites)
+                                Icon(Icons.Default.Star, null, Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.primary)
+                            TextButton(enabled = !m.busy, modifier = Modifier.weight(1f),
+                                onClick = { m.openProject(name); dismiss() }) {
+                                Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = dismiss) { Text("Close") } })
 }
