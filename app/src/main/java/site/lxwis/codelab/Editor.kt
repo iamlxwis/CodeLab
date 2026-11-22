@@ -697,9 +697,17 @@ fun CodeEditor(
                     changed = { source -> changes(source) }
                     selectionChanged = { line, col ->
                         cursor = "Ln " + line + " · Col " + col
-                        val first = minOf(selectionStart, selectionEnd).coerceIn(0, length())
-                        val firstLine = text.subSequence(0, first).count { it == '\n' } + 1
-                        onSelectionChange(selectedSource().take(24000), firstLine)
+                        // Use the live Editable, not the captured Composable text snapshot.
+                        // Android can emit selection span changes while replacing characters.
+                        val live = this.text
+                        val start = minOf(selectionStart, selectionEnd).coerceIn(0, live.length)
+                        val end = maxOf(selectionStart, selectionEnd).coerceIn(0, live.length)
+                        if (start == end) onSelectionChange("", line)
+                        else {
+                            val firstLine = live.subSequence(0, start).count { it == '\n' } + 1
+                            onSelectionChange(live.subSequence(start, end).toString().take(24000),
+                                firstLine)
+                        }
                     }
                     view = this
                 }
@@ -1214,9 +1222,10 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
 
     fun selectedSource(): String {
-        val a = selectionStart.coerceAtLeast(0)
-        val b = selectionEnd.coerceAtLeast(0)
-        return text.subSequence(minOf(a,b), maxOf(a,b)).toString()
+        val live = text
+        val a = minOf(selectionStart, selectionEnd).coerceIn(0, live.length)
+        val b = maxOf(selectionStart, selectionEnd).coerceIn(0, live.length)
+        return live.subSequence(a, b).toString()
     }
 
     fun insertAtSelection(value: String) {
