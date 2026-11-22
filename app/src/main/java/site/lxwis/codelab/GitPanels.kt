@@ -77,6 +77,7 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
     var author by rememberSaveable { mutableStateOf(prefs.getString("author", "") ?: "") }
     var email by rememberSaveable { mutableStateOf(prefs.getString("email", "") ?: "") }
     var branch by rememberSaveable { mutableStateOf("") }
+    val selectedForStage = remember(m.project) { mutableStateListOf<String>() }
     val state = m.gitState
     AlertDialog(onDismissRequest = dismiss,
         title = { Text("Git · local history") },
@@ -108,14 +109,37 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                     HorizontalDivider()
                     Text("Working tree · " + state.changes.size + " entries",
                         style = MaterialTheme.typography.titleSmall)
+                    Text("Staged · " + state.staged.size + " file(s)",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary)
                     state.changes.take(20).forEach { change ->
-                        Text(change.kind + " · " + change.path, fontFamily = FontFamily.Monospace,
-                            style = MaterialTheme.typography.bodySmall, maxLines = 2)
+                        val selectable = change.kind in setOf("Modified", "Deleted", "Untracked")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (selectable) Checkbox(
+                                checked = change.path in selectedForStage,
+                                onCheckedChange = { checked ->
+                                    if (checked && change.path !in selectedForStage)
+                                        selectedForStage.add(change.path)
+                                    else if (!checked) selectedForStage.remove(change.path)
+                                })
+                            Text(change.kind + " · " + change.path,
+                                fontFamily = FontFamily.Monospace,
+                                style = MaterialTheme.typography.bodySmall,
+                                maxLines = 2, modifier = Modifier.weight(1f))
+                        }
                     }
                     if (state.changes.size > 20)
                         Text("Additional entries not shown.", style = MaterialTheme.typography.labelSmall)
+                    Button(
+                        enabled = !m.busy && selectedForStage.isNotEmpty(),
+                        onClick = {
+                            m.gitStage(selectedForStage.toList())
+                            selectedForStage.clear()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Stage selected files") }
                     HorizontalDivider()
-                    Text("Commit all changes", style = MaterialTheme.typography.titleSmall)
+                    Text("Commit staged changes", style = MaterialTheme.typography.titleSmall)
                     OutlinedTextField(message, { message = it.take(500) },
                         modifier = Modifier.fillMaxWidth(), label = { Text("Commit message") },
                         maxLines = 3)
@@ -126,12 +150,12 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(), label = { Text("Author email") },
                         singleLine = true)
                     Button(enabled = message.isNotBlank()
-                        && author.isNotBlank() && email.contains('@') && state.changes.isNotEmpty(),
+                        && author.isNotBlank() && email.contains('@') && state.staged.isNotEmpty() && !m.busy,
                         onClick = {
                             prefs.edit().putString("author", author).putString("email", email).apply()
                             m.gitCommit(message, author, email)
                             message = ""
-                        }, modifier = Modifier.fillMaxWidth()) { Text("Commit locally") }
+                        }, modifier = Modifier.fillMaxWidth()) { Text("Commit staged files") }
                     HorizontalDivider()
                     Text("Recent commits", style = MaterialTheme.typography.titleSmall)
                     if (state.commits.isEmpty()) Text("No commits yet.")
@@ -139,7 +163,7 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                         Text(commit.shortId + " · " + commit.message + " — " + commit.author,
                             style = MaterialTheme.typography.bodySmall, maxLines = 2)
                     }
-                    Text("Git operations work offline. Remote pushes and GitHub authentication are not configured.",
+                    Text("Only explicitly staged paths enter a commit. Git operations work offline; no remote push is configured.",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }

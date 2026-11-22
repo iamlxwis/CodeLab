@@ -19,6 +19,7 @@ class GitWorkspaceAndroidTest {
             val repo = GitWorkspace(folder)
             repo.init()
             File(folder, "main.js").writeText("print(42)\n")
+            repo.stage(listOf("main.js"))
             val id = repo.commit("Initial source", "Test User", "test@example.com")
             assertTrue(id.isNotBlank())
             assertTrue(repo.inspect().changes.isEmpty())

@@ -14,7 +14,7 @@ internal class GitWorkspace(private val folder: File) {
     data class Revision(val shortId: String, val message: String, val author: String)
     data class Snapshot(val initialized: Boolean, val branch: String,
                         val branches: List<String>, val changes: List<Change>,
-                        val commits: List<Revision>)
+                        val commits: List<Revision>, val staged: List<String> = emptyList())
 
     private val gitFolder get() = File(folder, ".git")
 
@@ -51,7 +51,29 @@ internal class GitWorkspace(private val folder: File) {
                 emptyList()
             }
             val names = git.branchList().call().map { it.name.removePrefix("refs/heads/") }.sorted()
-            Snapshot(true, git.repository.branch, names, changes, commits)
+            val staged = (status.added + status.changed + status.removed).sorted()
+            Snapshot(true, git.repository.branch, names, changes, commits, staged)
+        }
+    }
+
+    /**
+     * Stage ONLY explicitly selected paths, never the whole workspace.
+     * The paths must appear in JGit's current unstaged/untracked status.
+     */
+    fun stage(paths: List<String>) {
+        require(paths.isNotEmpty() && paths.size <= 200) { "Select up to 200 changed files." }
+        open { git ->
+            val status = git.status().call()
+            val allowed = status.untracked + status.modified + status.missing
+            val selected = paths.distinct()
+            require(selected.all { it in allowed && it !in status.conflicting }) {
+                "Selected Git files changed. Refresh and select them again."
+            }
+            selected.forEach { path ->
+                val command = git.add().addFilepattern(path)
+                if (path in status.missing) command.setUpdate(true)
+                command.call()
+            }
         }
     }
 
@@ -60,9 +82,10 @@ internal class GitWorkspace(private val folder: File) {
         require(name.isNotBlank() && name.length <= 100) { "Enter an author name." }
         require(email.contains('@') && email.length <= 200) { "Enter an author email address." }
         return open { git ->
-            git.add().addFilepattern(".").call()
-            git.add().setUpdate(true).addFilepattern(".").call()
-            if (git.status().call().isClean) throw IllegalStateException("Nothing changed since the last commit.")
+            val status = git.status().call()
+            if (status.added.isEmpty() && status.changed.isEmpty() && status.removed.isEmpty()) {
+                throw IllegalStateException("Stage files explicitly before committing.")
+            }
             val result = git.commit().setMessage(message.trim()).setAuthor(name.trim(), email.trim())
                 .setCommitter(name.trim(), email.trim()).call()
             result.name.take(10)
