@@ -18,7 +18,7 @@ execution remain unchanged.
 
 ## Workstream 1 current change
 
-- Separate activity, theme, workspace shell, project library, dialogs and native
+- Separate activity, theme, workspace shell, project library, project/file/Git/command dialogs and native
   editor view without changing project or runtime state management.
 - Memoize the theme scheme, typography and shapes; use edge-to-edge APIs rather
   than writing deprecated system-bar colors directly.
