@@ -227,7 +227,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
 
     Column(modifier.fillMaxSize().onPreviewKeyEvent { key ->
         if (key.type == KeyEventType.KeyDown && key.isCtrlPressed && key.isShiftPressed &&
-            key.keyCode == android.view.KeyEvent.KEYCODE_P) {
+            key.key == android.view.KeyEvent.KEYCODE_P) {
             dialog = "commands"
             true
         } else false
