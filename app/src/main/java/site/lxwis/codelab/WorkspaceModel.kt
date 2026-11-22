@@ -6,6 +6,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.os.Handler
 import android.os.Looper
 import androidx.compose.runtime.*
@@ -379,6 +380,40 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             requireNotNull(resolver.openInputStream(uri)) { "Cannot open source file" }
                 .use { store.importSingleFile(p, name, it) }
             val opened = persist(load(p, tabs + name, name))
+            val commit: () -> Unit = { apply(opened); console = false }
+            commit
+        }
+    }
+
+    fun importFiles(uris: List<Uri>) {
+        val p = project ?: return
+        if (uris.isEmpty()) return
+        work {
+            val resolver = getApplication<Application>().contentResolver
+            val existing = store.files(p).toMutableSet()
+            val imported = mutableListOf<String>()
+            uris.forEachIndexed { index, uri ->
+                val display = resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME),
+                    null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) cursor.getString(0) else null
+                } ?: "import-${index + 1}.txt"
+                val sanitized = display.substringAfterLast('/').substringAfterLast('\\')
+                    .replace(Regex("[^A-Za-z0-9._ -]"), "_")
+                    .trim().take(100).ifBlank { "import-${index + 1}.txt" }
+                val stem = sanitized.substringBeforeLast('.', sanitized)
+                val extension = if (sanitized.contains('.')) "." + sanitized.substringAfterLast('.') else ""
+                var name = sanitized
+                var counter = 2
+                while (name in existing) {
+                    name = "${stem}-${counter++}${extension}"
+                }
+                requireNotNull(resolver.openInputStream(uri)) { "Cannot open source file" }
+                    .use { store.importSingleFile(p, name, it) }
+                existing.add(name)
+                imported.add(name)
+            }
+            val last = imported.last()
+            val opened = persist(load(p, tabs + imported, last))
             val commit: () -> Unit = { apply(opened); console = false }
             commit
         }

@@ -141,6 +141,9 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) {
         it?.let(m::exportFile)
     }
+    val importMany = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) m.importFiles(uris)
+    }
     val importFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
         if (it != null) {
             importedFile = it.toString()
@@ -190,6 +193,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     if (p != null) {
                         DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
                         DropdownMenuItem(text = { Text("Import file…") }, onClick = { menu = false; importFile.launch(arrayOf("*/*")) })
+                        DropdownMenuItem(text = { Text("Import multiple files…") },
+                            onClick = { menu = false; importMany.launch(arrayOf("*/*")) })
                         if (m.active != null) {
                             DropdownMenuItem(text = { Text("Rename current file…") }, onClick = {
                                 menu = false; selected = m.active!!; dialog = "rename"
@@ -201,6 +206,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 menu = false; exportFile.launch(m.active!!.substringAfterLast('/'))
                             })
                         }
+                        DropdownMenuItem(text = { Text("File properties") },
+                            enabled = m.active != null, onClick = { menu = false; dialog = "properties" })
                         DropdownMenuItem(text = { Text("Export project ZIP") }, onClick = { menu = false; export.launch("$p.zip") })
                         if (m.active != null && m.cloudAvailable(m.active!!)) {
                             DropdownMenuItem(text = { Text("Run via cloud…") },
@@ -337,6 +344,17 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
 
     when (dialog) {
         "languages" -> LanguageManagerSheet(m) { dialog = "" }
+        "properties" -> AlertDialog(onDismissRequest = { dialog = "" },
+            title = { Text("File properties") },
+            text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Path: " + m.active.orEmpty(), fontFamily = FontFamily.Monospace)
+                Text("Characters: " + m.source.length)
+                Text("Lines: " + (m.source.count { it == '\n' } + 1))
+                Text("UTF-8 bytes: " + m.source.toByteArray(Charsets.UTF_8).size)
+                Text("Encoding: UTF-8")
+                Text("Project: " + m.project.orEmpty())
+            } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Close") } })
+
         "newproject" -> CreateProjectDialog(cancel = { dialog = "" }) { name, template ->
             m.openProject(name, true, template)
             dialog = ""
