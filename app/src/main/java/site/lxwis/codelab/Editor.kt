@@ -58,8 +58,8 @@ fun CodeEditor(
     var search by remember { mutableStateOf("") }
     var replacement by remember { mutableStateOf("") }
     var replaceMode by remember { mutableStateOf(false) }
-    var matchCase by remember { mutableStateOf(false) }
-    var regexMode by remember { mutableStateOf(false) }
+    var matchCase by remember { mutableStateOf(preferences.getBoolean("search-match-case", false)) }
+    var regexMode by remember { mutableStateOf(preferences.getBoolean("search-regex", false)) }
     var searchError by remember { mutableStateOf("") }
     fun searchRegex(): Regex? = try {
         Regex(if (regexMode) search else Regex.escape(search),
@@ -80,6 +80,26 @@ fun CodeEditor(
     val secondary = palette.onSurfaceVariant.toArgb()
     val accent = palette.primary.toArgb()
     val dark = android.graphics.Color.luminance(background) < .35f
+    fun matchCount(): Int {
+        if (search.isEmpty()) return 0
+        val pattern = searchRegex() ?: return 0
+        return pattern.findAll(view?.text?.toString() ?: text).count()
+    }
+    fun previousMatch() {
+        val editor = view ?: return
+        if (search.isEmpty()) return
+        val pattern = searchRegex() ?: return
+        val source = editor.text.toString()
+        val before = editor.selectionStart.coerceAtLeast(0)
+        val match = pattern.findAll(source).lastOrNull { it.range.first < before }
+            ?: pattern.findAll(source).lastOrNull()
+        if (match != null) {
+            editor.requestFocus()
+            editor.setSelection(match.range.first, match.range.last + 1)
+            result = ""
+            searchError = ""
+        } else result = "No matches"
+    }
     fun selectMatch() {
         val editor = view ?: return
         if (search.isEmpty()) return
@@ -170,9 +190,15 @@ fun CodeEditor(
         if (symbols) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically) {
-                EditorAction("Tab") { view?.insertAtSelection("    ") }
+                EditorAction("Tab") { if (!readOnly) view?.insertAtSelection("    ") }
+                EditorAction("←") { view?.let { editor ->
+                    editor.setSelection((editor.selectionStart - 1).coerceAtLeast(0))
+                } }
+                EditorAction("→") { view?.let { editor ->
+                    editor.setSelection((editor.selectionEnd + 1).coerceAtMost(editor.length()))
+                } }
                 listOf("{", "}", "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">").forEach { symbol ->
-                    EditorAction(symbol) { view?.insertAtSelection(symbol) }
+                    EditorAction(symbol) { if (!readOnly) view?.insertAtSelection(symbol) }
                 }
             }
         }
@@ -180,15 +206,24 @@ fun CodeEditor(
             Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(search, { search = it; result = "" }, Modifier.weight(1f),
                     singleLine = true, label = { Text("Find in file") })
+                EditorAction("Prev") { previousMatch() }
                 EditorAction("Next") { selectMatch() }
                 EditorAction(if (replaceMode) "Hide" else "Edit") { replaceMode = !replaceMode }
             }
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                FilterChip(selected = matchCase, onClick = { matchCase = !matchCase },
+                FilterChip(selected = matchCase, onClick = {
+                    matchCase = !matchCase
+                    preferences.edit().putBoolean("search-match-case", matchCase).apply()
+                    searchError = ""
+                },
                     label = { Text("Aa") })
                 Spacer(Modifier.width(6.dp))
-                FilterChip(selected = regexMode, onClick = { regexMode = !regexMode },
+                FilterChip(selected = regexMode, onClick = {
+                    regexMode = !regexMode
+                    preferences.edit().putBoolean("search-regex", regexMode).apply()
+                    searchError = ""
+                },
                     label = { Text(".*") })
                 Spacer(Modifier.width(8.dp))
                 Text(if (matchCase) "Case-sensitive" else "Ignore case",
@@ -198,6 +233,7 @@ fun CodeEditor(
             if (replaceMode) Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(replacement, { replacement = it }, Modifier.weight(1f), singleLine = true, label = { Text("Replace with") })
                 EditorAction("All") {
+                    if (!readOnly) {
                     val editor = view
                     if (editor != null && search.isNotEmpty()) {
                         val original = editor.text.toString()
@@ -210,15 +246,21 @@ fun CodeEditor(
                             } else result = "No matches"
                         }
                     }
+                    }
                 }
                 EditorAction("Replace") {
                     val editor = view
-                    if (editor != null && search.isNotEmpty() &&
+                    if (!readOnly && editor != null && search.isNotEmpty() &&
                         searchRegex()?.matches(editor.selectedSource()) == true) {
                         editor.insertAtSelection(replacement)
                     }
                     selectMatch()
                 }
+            }
+            if (search.isNotEmpty() && searchError.isEmpty()) {
+                Text("${matchCount()} matches", Modifier.padding(horizontal = 12.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (searchError.isNotEmpty()) Text(searchError, Modifier.padding(horizontal = 12.dp),
                 color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
@@ -245,7 +287,8 @@ fun CodeEditor(
         Row(Modifier.fillMaxWidth().height(28.dp).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(cursor, style = MaterialTheme.typography.labelSmall,
+            Text(cursor + " · " + (view?.text?.count { it == '\\n' }?.plus(1) ?: text.count { it == '\\n' } + 1) + " lines",
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text((if (readOnly) "READ ONLY · " else "") + (if (wordWrap) "Wrap · " else "") + "UTF-8 · " + filename.substringAfterLast('.', "text").uppercase(),
                 style = MaterialTheme.typography.labelSmall,
