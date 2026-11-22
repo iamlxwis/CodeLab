@@ -76,6 +76,16 @@ import androidx.lifecycle.ViewModelProvider
 internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var dialog by rememberSaveable { mutableStateOf("") }
     var selected by rememberSaveable { mutableStateOf("") }
+    val snackbarHost = remember { SnackbarHostState() }
+    LaunchedEffect(m.undoDeletion?.id) {
+        val deleted = m.undoDeletion ?: return@LaunchedEffect
+        val result = snackbarHost.showSnackbar(deleted.label,
+            actionLabel = "Undo",
+            withDismissAction = true,
+            duration = SnackbarDuration.Long)
+        if (result == SnackbarResult.ActionPerformed) m.undoDelete(deleted.id)
+        else m.dismissUndo(deleted.id)
+    }
     var incoming by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedSnippet by remember { mutableStateOf("") }
     var selectedSnippetLine by remember { mutableIntStateOf(1) }
@@ -170,7 +180,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         else if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
     }
 
-    Column(modifier.fillMaxSize()) {
+    Box(modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize()) {
         if (!focusMode || p == null) WorkspaceTopBar(m, p) { dialog = it }
         if (p == null) {
             ProjectLibrary(m, motionMillis, { dialog = "newproject" },
@@ -348,6 +359,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        }
+        SnackbarHost(hostState = snackbarHost,
+            modifier = Modifier.align(Alignment.BottomCenter))
     }
 
     when (dialog) {

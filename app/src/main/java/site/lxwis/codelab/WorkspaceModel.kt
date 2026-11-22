@@ -306,6 +306,16 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         private set
     var trashItems by mutableStateOf(emptyList<ProjectStore.TrashItem>())
         private set
+    var undoDeletion by mutableStateOf<UndoDeletion?>(null)
+        private set
+    fun dismissUndo(id: String) {
+        if (undoDeletion?.id == id) undoDeletion = null
+    }
+    fun undoDelete(id: String) {
+        if (undoDeletion?.id != id) return
+        undoDeletion = null
+        restoreTrash(id)
+    }
     var replaceSummary by mutableStateOf<ProjectStore.ReplacementSummary?>(null)
         private set
     fun clearReplaceSummary() { replaceSummary = null }
@@ -570,7 +580,6 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun openProject(name: String, create: Boolean = false, template: String = "JavaScript") {
         flush()
         val nav = ++navigationVersion
-        // openProject sets project optimistically before apply(Open); restore pins now.
         pinnedTabs = preferences.getStringSet("pinned:$name", emptySet())?.toSet()
             ?: emptySet()
         project = name
@@ -636,14 +645,18 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun manageProject(name: String, replacement: String?) {
         work {
+            val previous = if (replacement == null) store.trashItems() else emptyList()
             if (replacement == null) store.deleteProject(name) else store.renameProject(name, replacement)
             val names = store.projects()
             val deleted = store.trashItems()
+            val newlyDeleted = if (replacement == null)
+                newTrashItem(previous, deleted, name, "") else null
             val newFavorites = if (replacement == null) favorites - name
                 else if (name in favorites) (favorites - name) + replacement else favorites
             val commit: () -> Unit = {
                 projects = names
                 trashItems = deleted
+                newlyDeleted?.let { undoDeletion = UndoDeletion(it.id, "Project $name moved to trash") }
                 storeFavorites(newFavorites)
             }
             commit
@@ -750,15 +763,19 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             else name
         }
         work {
+            val previous = if (replacement == null) store.trashItems() else emptyList()
             if (replacement == null) store.deleteFile(p, path.removeSuffix("/"))
             else store.renameFile(p, path.removeSuffix("/"), replacement.removeSuffix("/"))
             val opened = persist(load(p, wanted, target, allowUnavailable = true))
             val deleted = store.trashItems()
+            val newlyDeleted = if (replacement == null)
+                newTrashItem(previous, deleted, p, path.removeSuffix("/")) else null
             val commit: () -> Unit = {
                 apply(opened)
                 pinnedTabs = remappedPins.intersect(files.toSet())
                 preferences.edit().putStringSet("pinned:$p", pinnedTabs).apply()
                 trashItems = deleted
+                newlyDeleted?.let { undoDeletion = UndoDeletion(it.id, "Folder $path moved to trash") }
             }
             commit
         }
@@ -789,14 +806,18 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val wanted = tabs.mapNotNull { if (it == path) replacement else it }
         val target = if (active == path) replacement else active
         work {
+            val previous = if (replacement == null) store.trashItems() else emptyList()
             if (replacement == null) store.deleteFile(p, path) else store.renameFile(p, path, replacement)
             val deleted = store.trashItems()
+            val newlyDeleted = if (replacement == null)
+                newTrashItem(previous, deleted, p, path) else null
             val opened = persist(load(p, wanted, target))
             val commit: () -> Unit = {
                 apply(opened)
                 pinnedTabs = remappedPins.intersect(files.toSet())
                 preferences.edit().putStringSet("pinned:$p", pinnedTabs).apply()
                 trashItems = deleted
+                newlyDeleted?.let { undoDeletion = UndoDeletion(it.id, "File $path moved to trash") }
             }
             commit
         }
