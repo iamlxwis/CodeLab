@@ -227,7 +227,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     val heightPx = with(LocalDensity.current) { maxHeight.toPx() }
                     Column(Modifier.fillMaxSize()) {
                         editorPane(Modifier.weight(m.phoneSplitPercent.toFloat()).fillMaxWidth())
-                        PhonePanelDivider(m.phoneSplitPercent, heightPx, m::setPhoneSplitPercent)
+                        PhonePanelDivider(m.phoneSplitPercent, heightPx, m::choosePhoneSplitPercent)
                         outputPane(Modifier.weight((100 - m.phoneSplitPercent).toFloat()).fillMaxWidth())
                     }
                 } else {
@@ -304,7 +304,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 if (LocalConfiguration.current.screenWidthDp < 820) {
                     PhoneSplitToggle(m.phoneSplitEnabled) {
                         val next = !m.phoneSplitEnabled
-                        m.setPhoneSplitEnabled(next)
+                        m.choosePhoneSplitEnabled(next)
                         if (next && !m.console && !m.preview) m.console = true
                         if (!next) { m.console = false; m.preview = false }
                     }
@@ -480,7 +480,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         valueRange = 35f..80f)
                     Text("Phone editor height · ${m.phoneSplitPercent}%")
                     Slider(value = m.phoneSplitPercent.toFloat(),
-                        onValueChange = { m.setPhoneSplitPercent(it.toInt()) },
+                        onValueChange = { m.choosePhoneSplitPercent(it.toInt()) },
                         valueRange = 35f..80f)
                     Text("In Split mode, the editor stays above the console or preview. Drag the divider or use this slider to adjust height.",
                         style = MaterialTheme.typography.bodySmall,
