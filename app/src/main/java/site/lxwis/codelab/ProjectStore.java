@@ -256,6 +256,15 @@ public final class ProjectStore {
         Files.copy(target.toPath(), output);
     }
 
+    public synchronized void duplicateFile(String project, String from, String to) throws IOException {
+        File base = project(project);
+        File source = resolve(base, from);
+        File destination = resolve(base, to);
+        if (!source.isFile()) throw new IOException("Source file does not exist.");
+        requireNew(destination);
+        writeText(destination, read(project, from));
+    }
+
     public synchronized void renameFile(String project, String from, String to) throws IOException {
         File dir = project(project);
         File source = resolve(dir, from);

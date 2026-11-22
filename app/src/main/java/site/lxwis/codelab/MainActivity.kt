@@ -164,6 +164,9 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             DropdownMenuItem(text = { Text("Rename current file…") }, onClick = {
                                 menu = false; selected = m.active!!; dialog = "rename"
                             })
+                            DropdownMenuItem(text = { Text("Duplicate current file…") }, onClick = {
+                                menu = false; selected = m.active!!; dialog = "duplicate"
+                            })
                             DropdownMenuItem(text = { Text("Export current file…") }, onClick = {
                                 menu = false; exportFile.launch(m.active!!.substringAfterLast('/'))
                             })
@@ -253,12 +256,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             m.openProject(name, true, template)
             dialog = ""
         }
-        "newfile", "rename", "renameproject", "import", "importfile" -> {
-            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; "importfile" -> "Import file"; else -> "Import project" }
-            val file = dialog == "newfile" || dialog == "rename" || dialog == "importfile"
-            NameDialog(title, if (dialog.startsWith("rename")) selected else "", if (file) "File path" else "Project name",
+        "newfile", "rename", "renameproject", "import", "importfile", "duplicate" -> {
+            val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; "importfile" -> "Import file"; "duplicate" -> "Duplicate file"; else -> "Import project" }
+            val file = dialog == "newfile" || dialog == "rename" || dialog == "importfile" || dialog == "duplicate"
+            NameDialog(title, if (dialog.startsWith("rename")) selected else if (dialog == "duplicate") selected.substringBeforeLast(".") + "-copy" + (if (selected.contains(".")) "." + selected.substringAfterLast(".") else "") else "", if (file) "File path" else "Project name",
                 if (file) "e.g. src/helpers.js" else "e.g. Playground", { dialog = "" }) { name ->
-                when (dialog) { "renameproject" -> m.manageProject(selected, name); "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) }; "importfile" -> importedFile?.let { m.importFile(Uri.parse(it), name) } }
+                when (dialog) { "renameproject" -> m.manageProject(selected, name); "newproject" -> m.openProject(name, true); "newfile" -> m.select(name, true); "rename" -> m.changeFile(selected, name); "import" -> incoming?.let { m.importArchive(name, Uri.parse(it)) }; "importfile" -> importedFile?.let { m.importFile(Uri.parse(it), name) }; "duplicate" -> m.duplicateFile(selected, name) }
                 dialog = ""
             }
         }

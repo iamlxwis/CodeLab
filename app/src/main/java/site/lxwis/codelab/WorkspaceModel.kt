@@ -295,6 +295,16 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun duplicateFile(from: String, to: String) {
+        val p = project ?: return
+        work {
+            store.duplicateFile(p, from, to)
+            val opened = persist(load(p, tabs + to, to))
+            val commit: () -> Unit = { apply(opened); console = false }
+            commit
+        }
+    }
+
     fun changeFile(path: String, replacement: String?) {
         val p = project ?: return
         val wanted = tabs.mapNotNull { if (it == path) replacement else it }
