@@ -143,6 +143,13 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         themePreset = value
         preferences.edit().putString("preset", value).apply()
     }
+    var motionPreference by mutableStateOf(preferences.getString("motion", "System") ?: "System")
+        private set
+    fun chooseMotion(value: String) {
+        if (value !in listOf("System", "Full", "Reduced")) return
+        motionPreference = value
+        preferences.edit().putString("motion", value).apply()
+    }
     var interfaceDensity by mutableStateOf(preferences.getString("density", "Comfortable") ?: "Comfortable")
         private set
     fun chooseDensity(value: String) {

@@ -14,6 +14,10 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.spring
+import android.provider.Settings
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -132,6 +136,7 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var menu by remember { mutableStateOf(false) }
     var focusMode by rememberSaveable { mutableStateOf(false) }
     var explorerPinned by rememberSaveable { mutableStateOf(true) }
+    val motionEnabled = m.motionPreference != "Reduced"
     var importedFile by rememberSaveable { mutableStateOf<String?>(null) }
     val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) {
         it?.let(m::exportFile)
@@ -318,7 +323,9 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        AnimatedVisibility(m.busy, enter = fadeIn(tween(130)), exit = fadeOut(tween(130))) {
+        AnimatedVisibility(m.busy,
+            enter = fadeIn(tween(if (motionEnabled) 180 else 0)),
+            exit = fadeOut(tween(if (motionEnabled) 180 else 0))) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
@@ -380,6 +387,15 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     listOf("Mint", "Blue", "Violet", "Amber").forEach { accent ->
                         FilterChip(selected = m.accent == accent, onClick = { m.chooseAccent(accent) },
                             label = { Text(accent) })
+                    }
+                }
+                Text("ANIMATIONS", color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall)
+                Row(Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    listOf("System", "Full", "Reduced").forEach { mode ->
+                        FilterChip(selected = m.motionPreference == mode,
+                            onClick = { m.chooseMotion(mode) }, label = { Text(mode) })
                     }
                 }
                 Text("INTERFACE DENSITY", color = MaterialTheme.colorScheme.onSurfaceVariant,
