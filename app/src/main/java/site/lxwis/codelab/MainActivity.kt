@@ -20,6 +20,9 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.core.spring
 import android.provider.Settings
+import android.view.View
+import android.view.WindowInsets
+import android.os.Build
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -149,6 +152,29 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
         else -> systemMotionEnabled
     }
     val motionMillis = if (motionEnabled) m.motionIntensity * 2 else 0
+    val activity = context as? ComponentActivity
+    DisposableEffect(activity, focusMode) {
+        val window = activity?.window
+        val previousFlags = window?.decorView?.systemUiVisibility ?: 0
+        if (focusMode) {
+            if (Build.VERSION.SDK_INT >= 30) {
+                window?.insetsController?.hide(
+                    WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                window?.insetsController?.systemBarsBehavior =
+                    android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            } else {
+                window?.decorView?.systemUiVisibility = previousFlags or
+                    View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            }
+        }
+        onDispose {
+            if (Build.VERSION.SDK_INT >= 30) {
+                window?.insetsController?.show(
+                    WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+            } else window?.decorView?.systemUiVisibility = previousFlags
+        }
+    }
     var importedFile by rememberSaveable { mutableStateOf<String?>(null) }
     val exportFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) {
         it?.let(m::exportFile)
@@ -168,7 +194,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
     val p = m.project
     BackHandler(enabled = p != null && dialog.isEmpty()) {
-        if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
+        if (focusMode) focusMode = false
+        else if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
     }
 
     Column(modifier.fillMaxSize()) {
@@ -203,6 +230,8 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, "Workspace options") }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     if (p != null) {
+                        DropdownMenuItem(text = { Text("Panel layout…") },
+                            onClick = { menu = false; dialog = "panels" })
                         DropdownMenuItem(text = { Text("New file") }, onClick = { menu = false; dialog = "newfile" })
                         DropdownMenuItem(text = { Text("Import file…") }, onClick = { menu = false; importFile.launch(arrayOf("*/*")) })
                         DropdownMenuItem(text = { Text("Replace across files…") },
@@ -335,7 +364,9 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         }
                     }
-                    if ((!m.console && !m.preview) || wide) Box(Modifier.weight(1f).fillMaxHeight()) {
+                    if ((!m.console && !m.preview) || wide) Box(Modifier.weight(
+                        if (wide && (m.console || m.preview)) m.panelSplitPercent / 100f else 1f
+                    ).fillMaxHeight()) {
                         val file = m.active
                         if (file != null) key(p, file) {
                             CodeEditor(fileKey = "$p/$file", filename = file, text = m.source,
@@ -344,9 +375,12 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
                                 modifier = Modifier.fillMaxSize())
                         } else TextButton(onClick = { dialog = "files" }, modifier = Modifier.align(Alignment.Center)) { Text("Open a file") }
                     }
-                    if (m.console) RunConsole(m.runner, Modifier.weight(if (wide) 0.7f else 1f).fillMaxHeight(), m.active)
+                    if (m.console) RunConsole(m.runner,
+                        Modifier.weight(if (wide) (100 - m.panelSplitPercent) / 100f else 1f)
+                            .fillMaxHeight(), m.active)
                     else if (m.preview && m.active != null) HtmlPreview(p, m.active!!, m.source,
-                        Modifier.weight(if (wide) 0.8f else 1f).fillMaxHeight())
+                        Modifier.weight(if (wide) (100 - m.panelSplitPercent) / 100f else 1f)
+                            .fillMaxHeight())
                 }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -449,6 +483,24 @@ private fun Studio(m: WorkspaceModel, modifier: Modifier) {
             text = { Text("Delete $selected and all its files from this device?") },
             confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
+        "panels" -> AlertDialog(onDismissRequest = { dialog = "" },
+            title = { Text("Workspace panels") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Editor width · ${m.panelSplitPercent}%")
+                    Slider(value = m.panelSplitPercent.toFloat(),
+                        onValueChange = { m.setPanelSplit(it.toInt()) },
+                        valueRange = 35f..80f)
+                    Text("When the console or preview is open on a tablet, the editor and output share the available width.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = explorerPinned,
+                            onCheckedChange = { explorerPinned = it })
+                        Text("Show explorer sidebar on larger screens")
+                    }
+                }
+            }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
         "appearance" -> AlertDialog(onDismissRequest = { dialog = "" },
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             title = { Text("Appearance") },

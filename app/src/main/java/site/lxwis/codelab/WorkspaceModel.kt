@@ -151,6 +151,12 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         motionPreference = value
         preferences.edit().putString("motion", value).apply()
     }
+    var panelSplitPercent by mutableIntStateOf(preferences.getInt("panel-split", 60))
+        private set
+    fun setPanelSplit(value: Int) {
+        panelSplitPercent = value.coerceIn(35, 80)
+        preferences.edit().putInt("panel-split", panelSplitPercent).apply()
+    }
     var motionIntensity by mutableIntStateOf(preferences.getInt("motion-intensity", 100))
         private set
     fun chooseMotionIntensity(value: Int) {
