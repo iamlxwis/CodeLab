@@ -38,6 +38,8 @@ claimed from source extraction alone. Refer to the PR checks for verification.
   rather than incorrectly representing every file as a folder.
 - Remove the redundant online/offline project-library metric and correct the
   Favorites sorter to rank rather than filter.
+- Reduce top-level dashboard actions to New project and Import, with ZIP/GitHub
+  sources available in a focused sheet and covered by an emulator UI test.
 - Keep the source editor, console, diagnostics and text inputs flat and
   high-contrast. Decorative shadows must not encode status or accessibility state.
 - Still unverified: comprehensive semantic color migration, font bundling,

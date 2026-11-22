@@ -159,6 +159,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
     rename: (String) -> Unit, delete: (String) -> Unit, duplicate: (String) -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var options by remember { mutableStateOf<String?>(null) }
+    var importOptions by rememberSaveable { mutableStateOf(false) }
     var projectSearch by rememberSaveable { mutableStateOf("") }
     var projectSort by rememberSaveable { mutableStateOf("Recent") }
     val spacing = CodeLabSpacing.forDensity(m.interfaceDensity)
@@ -173,13 +174,20 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
             Text("Local development, organized.", style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(CodeLabSpacing.large))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = new, enabled = true, shape = RoundedCornerShape(10.dp)) {
-                    Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Spacer(Modifier.width(5.dp)); Text("New project")
+            Row(Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(CodeLabSpacing.small)) {
+                Button(onClick = new, modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)) {
+                    Icon(Icons.Default.Add, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(5.dp))
+                    Text("New project", maxLines = 1)
                 }
-                OutlinedButton(onClick = importZip, enabled = true,
-                    shape = RoundedCornerShape(10.dp)) { Text("Import ZIP") }
-                TextButton(onClick = importGitHub, enabled = true) { Text("GitHub") }
+                OutlinedButton(onClick = { importOptions = true }, modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)) {
+                    Icon(Icons.Default.FileDownload, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(5.dp))
+                    Text("Import", maxLines = 1)
+                }
             }
             Spacer(Modifier.height(24.dp))
             OutlinedTextField(value = projectSearch, onValueChange = { projectSearch = it },
@@ -270,4 +278,9 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
             }
         }
     }
+    if (importOptions) LibraryImportSheet(
+        onDismiss = { importOptions = false },
+        onZip = { importOptions = false; importZip() },
+        onGitHub = { importOptions = false; importGitHub() }
+    )
 }
