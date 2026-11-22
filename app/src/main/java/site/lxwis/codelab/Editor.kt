@@ -51,6 +51,8 @@ fun CodeEditor(
     var fontSize by remember { mutableStateOf(preferences.getInt("font-size", 15)) }
     var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", false)) }
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", false)) }
+    var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
+    var shortcutSettings by remember { mutableStateOf(false) }
     var readOnly by remember { mutableStateOf(false) }
     var view by remember { mutableStateOf<SourceView?>(null) }
     var cursor by remember { mutableStateOf("Ln 1 · Col 1") }
@@ -201,6 +203,23 @@ fun CodeEditor(
                 wordWrap = !wordWrap
                 preferences.edit().putBoolean("word-wrap", wordWrap).apply()
             }
+            Box {
+                EditorIcon(Icons.Default.Keyboard, "Mobile shortcut layout") { shortcutSettings = true }
+                DropdownMenu(expanded = shortcutSettings, onDismissRequest = { shortcutSettings = false }) {
+                    listOf("Standard", "Brackets", "Navigation", "Minimal").forEach { layout ->
+                        DropdownMenuItem(text = { Text(layout) },
+                            leadingIcon = {
+                                if (shortcutLayout == layout) Icon(Icons.Default.Check, null)
+                            }, onClick = {
+                                shortcutLayout = layout
+                                preferences.edit().putString("shortcut-layout", layout).apply()
+                                symbols = true
+                                preferences.edit().putBoolean("symbol-toolbar", true).apply()
+                                shortcutSettings = false
+                            })
+                    }
+                }
+            }
             EditorIcon(Icons.Default.Code, "Show code symbols", selected = symbols) {
                 symbols = !symbols
                 preferences.edit().putBoolean("symbol-toolbar", symbols).apply()
@@ -316,15 +335,21 @@ fun CodeEditor(
         if (symbols) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically) {
-                EditorAction("Tab") { if (!readOnly) view?.indentSelection() }
-                EditorAction("Outdent") { if (!readOnly) view?.outdentSelection() }
-                EditorAction("←") { view?.let { editor ->
+                if (shortcutLayout != "Minimal") EditorAction("Tab") { if (!readOnly) view?.indentSelection() }
+                if (shortcutLayout != "Minimal") EditorAction("Outdent") { if (!readOnly) view?.outdentSelection() }
+                if (shortcutLayout != "Brackets") EditorAction("←") { view?.let { editor ->
                     editor.setSelection((editor.selectionStart - 1).coerceAtLeast(0))
                 } }
-                EditorAction("→") { view?.let { editor ->
+                if (shortcutLayout != "Brackets") EditorAction("→") { view?.let { editor ->
                     editor.setSelection((editor.selectionEnd + 1).coerceAtMost(editor.length()))
                 } }
-                listOf("{", "}", "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">").forEach { symbol ->
+                val shortcutSymbols = when (shortcutLayout) {
+                    "Brackets" -> listOf("{", "}", "(", ")", "[", "]", "<", ">", "'", "\"")
+                    "Navigation" -> listOf("{", "}", "(", ")", ";")
+                    "Minimal" -> listOf("{", "}", "(", ")", ";")
+                    else -> listOf("{", "}", "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">")
+                }
+                shortcutSymbols.forEach { symbol ->
                     EditorAction(symbol) { if (!readOnly) view?.insertAtSelection(symbol) }
                 }
             }
