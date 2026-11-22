@@ -100,7 +100,7 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                 onClick = {
                     UiLatencyProbe.nextFrame(context, "Run")
                     if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    if (m.runner.running) m.runner.stop() else m.run()
+                    if (m.runner.running) m.runner.stop() else m.runPreferred()
                 },
                 interactionSource = interaction,
                 modifier = Modifier.graphicsLayer { scaleX = scale; scaleY = scale },
@@ -122,6 +122,8 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                     }
                 }
             }
+            if (!m.runner.running && m.files.isNotEmpty())
+                RunTargetMenu(m, onProjectSettings = { onAction("projectsettings") })
         }
         if (project != null) {
             IconButton(onClick = {
