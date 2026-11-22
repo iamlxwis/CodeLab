@@ -233,7 +233,27 @@ fun CodeEditor(
                         "SQL · select" to "SELECT id, name\\nFROM items\\nWHERE id = 1\\nORDER BY name ASC;",
                         "Lua · function" to "local function example()\\n    \\nend",
                         "Java · class" to "public class Example {\\n    public static void main(String[] args) {\\n        \\n    }\\n}",
-                        "Shell · script" to "#!/usr/bin/env sh\\nset -eu\\n\\n"
+                        "Shell · script" to "#!/usr/bin/env sh\\nset -eu\\n\\n",
+                        "Kotlin · coroutine" to "suspend fun fetchItems(): List<String> {\n    return emptyList()\n}",
+                        "Kotlin · sealed class" to "sealed class Result {\n    data class Success(val value: String) : Result()\n    data class Error(val message: String) : Result()\n}",
+                        "Kotlin · extension" to "fun String.normalized(): String = trim().lowercase()",
+                        "JavaScript · fetch" to "fetch('/api/items')\n  .then(response => response.json())\n  .then(data => console.log(data))\n  .catch(error => console.error(error));",
+                        "JavaScript · array map" to "const results = items.map(item => item);",
+                        "JavaScript · debounce" to "function debounce(fn, delay) {\n  let timer;\n  return (...args) => {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn(...args), delay);\n  };\n}",
+                        "TypeScript · type alias" to "type Status = 'idle' | 'loading' | 'success' | 'error';",
+                        "TypeScript · generic" to "function identity<T>(value: T): T {\n  return value;\n}",
+                        "Python · list comprehension" to "results = [item for item in items if item]",
+                        "Python · try/except" to "try:\n    pass\nexcept Exception as error:\n    print(error)",
+                        "Python · dataclass" to "from dataclasses import dataclass\n\n@dataclass\nclass Item:\n    id: int\n    name: str",
+                        "HTML · form" to "<form>\n  <label for=\"name\">Name</label>\n  <input id=\"name\" name=\"name\" required>\n  <button type=\"submit\">Submit</button>\n</form>",
+                        "HTML · image" to "<img src=\"image.png\" alt=\"Description\" loading=\"lazy\">",
+                        "CSS · grid" to ".grid {\n  display: grid;\n  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\n  gap: 1rem;\n}",
+                        "CSS · flex" to ".row {\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  gap: 1rem;\n}",
+                        "SQL · insert" to "INSERT INTO items (name) VALUES ('Example');",
+                        "SQL · update" to "UPDATE items SET name = 'Updated' WHERE id = 1;",
+                        "SQL · join" to "SELECT a.id, b.name\nFROM table_a AS a\nINNER JOIN table_b AS b ON b.id = a.id;",
+                        "Lua · table" to "local config = {\n    enabled = true,\n    name = 'Example'\n}",
+                        "Shell · loop" to "for file in *.txt; do\n  printf '%s\\\n' \"$file\"\ndone"
                     ).forEach { (label, snippet) ->
                         DropdownMenuItem(text = { Text(label) }, enabled = !readOnly,
                             onClick = {
