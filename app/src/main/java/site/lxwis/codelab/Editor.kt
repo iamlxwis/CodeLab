@@ -22,7 +22,7 @@ import android.widget.EditText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.background
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Canvas as ComposeCanvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
@@ -609,7 +609,7 @@ private fun EditorMinimap(text: String, onNavigate: (Int) -> Unit) {
     val surface = MaterialTheme.colorScheme.surfaceContainer
     val sample = remember(text) { text.lineSequence().map { it.trimEnd().length }.take(240).toList() }
     val allLines = remember(text) { text.count { it == '\n' } + 1 }
-    Canvas(Modifier.width(34.dp).fillMaxHeight()
+    ComposeCanvas(Modifier.width(34.dp).fillMaxHeight()
         .background(surface)
         .pointerInput(allLines) {
             detectTapGestures { offset ->
