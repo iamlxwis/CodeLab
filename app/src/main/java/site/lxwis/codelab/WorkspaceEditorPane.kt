@@ -41,8 +41,11 @@ internal fun WorkspaceEditorPane(
                 onSelectionChange = onSelection,
                 modifier = Modifier.fillMaxSize()
             )
-        } else TextButton(onClick = onFiles, modifier = Modifier.align(Alignment.Center)) {
-            Text("Open a file")
+        } else Column(Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            TextButton(onClick = onFiles) { Text("Open a file") }
+            Text("Select a file from Explorer or create one.",
+                style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
         }
     }
 }

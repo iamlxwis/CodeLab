@@ -17,6 +17,31 @@ import java.util.concurrent.Executors
 class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     private val store = ProjectStore(File(app.filesDir, "workspace"))
     private val preferences = app.getSharedPreferences("appearance", 0)
+    var recentCommandIds by mutableStateOf(
+        preferences.getString("recent-commands", "").orEmpty()
+            .split(',').filter { it.isNotBlank() }.take(8))
+        private set
+    fun rememberCommand(id: String) {
+        recentCommandIds = (listOf(id) + recentCommandIds.filterNot { it == id }).take(8)
+        preferences.edit().putString("recent-commands", recentCommandIds.joinToString(",")).apply()
+    }
+    var quickEditorActions by mutableStateOf(
+        preferences.getString("quick-editor", "newfile,files,projectsearch,commands")
+            .orEmpty().split(',').filter { it.isNotBlank() })
+        private set
+    var quickHomeActions by mutableStateOf(
+        preferences.getString("quick-home", "newproject,importzip,languages,appearance")
+            .orEmpty().split(',').filter { it.isNotBlank() })
+        private set
+    fun toggleQuickAction(id: String, projectOpen: Boolean) {
+        if (projectOpen) {
+            quickEditorActions = updatedQuickActionIds(quickEditorActions, id)
+            preferences.edit().putString("quick-editor", quickEditorActions.joinToString(",")).apply()
+        } else {
+            quickHomeActions = updatedQuickActionIds(quickHomeActions, id)
+            preferences.edit().putString("quick-home", quickHomeActions.joinToString(",")).apply()
+        }
+    }
     private val io = Executors.newSingleThreadExecutor()
     private val cloudIo = Executors.newSingleThreadExecutor()
     private val connectivity = app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -306,11 +331,24 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         private set
     var trashItems by mutableStateOf(emptyList<ProjectStore.TrashItem>())
         private set
+    var undoDeletion by mutableStateOf<UndoDeletion?>(null)
+        private set
+    fun dismissUndo(id: String) {
+        if (undoDeletion?.id == id) undoDeletion = null
+    }
+    fun undoDelete(id: String) {
+        if (undoDeletion?.id != id) return
+        undoDeletion = null
+        restoreTrash(id)
+    }
     var replaceSummary by mutableStateOf<ProjectStore.ReplacementSummary?>(null)
         private set
-    fun clearReplaceSummary() { replaceSummary = null }
+    var replaceHits by mutableStateOf(emptyList<ProjectStore.ReplaceHit>())
+        private set
+    fun clearReplaceSummary() { replaceSummary = null; replaceHits = emptyList() }
     var searchHits by mutableStateOf(emptyList<ProjectStore.SearchHit>())
         private set
+    fun clearSearchHits() { searchHits = emptyList() }
     var pendingLine by mutableStateOf<Int?>(null)
         private set
     fun consumeJump() { pendingLine = null }
@@ -335,6 +373,46 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         private set
     var tabs by mutableStateOf(emptyList<String>())
         private set
+    var pinnedTabs by mutableStateOf(emptySet<String>())
+        private set
+    var dirtyTabKeys by mutableStateOf(emptySet<String>())
+        private set
+    fun isTabDirty(path: String): Boolean =
+        project?.let { bufferKey(it, path) in dirtyTabKeys } == true
+
+    fun togglePinnedTab(path: String) {
+        val p = project ?: return
+        if (path !in tabs) return
+        pinnedTabs = if (path in pinnedTabs) pinnedTabs - path else pinnedTabs + path
+        preferences.edit().putStringSet("pinned:$p", pinnedTabs).apply()
+    }
+
+    fun reorderTab(path: String, offset: Int) {
+        val p = project ?: return
+        val updated = reorderOpenTab(tabs, path, offset)
+        if (updated == tabs) return
+        tabs = updated
+        val selected = active
+        io.execute {
+            try { store.remember(p, updated, selected) }
+            catch (e: Exception) { main.post { error = e.localizedMessage ?: "Could not remember tab order" } }
+        }
+    }
+
+    fun closeOtherTabs(path: String?) {
+        val p = project ?: return
+        val wanted = tabs.filter { it in pinnedTabs || it == path }
+        if (wanted.size == tabs.size) return
+        val target = active?.takeIf { it in wanted } ?: wanted.lastOrNull()
+        work {
+            val opened = load(p, wanted, target,
+                autoOpen = false, allowUnavailable = true)
+            persist(opened)
+            val commit: () -> Unit = { apply(opened) }
+            commit
+        }
+    }
+
     var active by mutableStateOf<String?>(null)
         private set
     var source by mutableStateOf("")
@@ -359,6 +437,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val key = bufferKey(p, f)
         if (openBuffers[key] == text) {
             unsavedBuffers.remove(key)
+            dirtyTabKeys = dirtyTabKeys - key
             if (project == p && active == f) dirty = false
         }
     }
@@ -417,6 +496,10 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             shellProject = null
             clearWorkspaceTerminal()
         }
+        if (project != open.project)
+            pinnedTabs = preferences.getStringSet("pinned:${open.project}", emptySet())
+                ?.filter { it in open.files }?.toSet() ?: emptySet()
+        else pinnedTabs = pinnedTabs.filter { it in open.files }.toSet()
         project = open.project
         files = open.files
         folders = open.folders
@@ -482,6 +565,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             val key = bufferKey(p, f)
             openBuffers[key] = value
             unsavedBuffers.add(key)
+            dirtyTabKeys = dirtyTabKeys + key
         } }
         dirty = true
         revision++
@@ -524,6 +608,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun openProject(name: String, create: Boolean = false, template: String = "JavaScript") {
         flush()
         val nav = ++navigationVersion
+        pinnedTabs = preferences.getStringSet("pinned:$name", emptySet())?.toSet()
+            ?: emptySet()
         project = name
         files = emptyList()
         tabs = emptyList()
@@ -587,14 +673,18 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun manageProject(name: String, replacement: String?) {
         work {
+            val previous = if (replacement == null) store.trashItems() else emptyList()
             if (replacement == null) store.deleteProject(name) else store.renameProject(name, replacement)
             val names = store.projects()
             val deleted = store.trashItems()
+            val newlyDeleted = if (replacement == null)
+                newTrashItem(previous, deleted, name, "") else null
             val newFavorites = if (replacement == null) favorites - name
                 else if (name in favorites) (favorites - name) + replacement else favorites
             val commit: () -> Unit = {
                 projects = names
                 trashItems = deleted
+                newlyDeleted?.let { undoDeletion = UndoDeletion(it.id, "Project $name moved to trash") }
                 storeFavorites(newFavorites)
             }
             commit
@@ -606,6 +696,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val nav = ++navigationVersion
         runner.stop()
         project = null
+        pinnedTabs = emptySet()
         active = null
         files = emptyList()
         folders = emptyList()
@@ -630,7 +721,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         if (target != index) select(tabs[target])
     }
 
-    fun select(path: String, create: Boolean = false, goToLine: Int? = null) {
+    fun select(path: String, create: Boolean = false, goToLine: Int? = null,
+        runOnOpen: Boolean = false) {
         val p = project ?: return
         if (!create && path !in files) return
         val fromFile = active
@@ -661,6 +753,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                     if (nav == navigationVersion && project == p && active == path) {
                         apply(opened)
                         pendingLine = goToLine
+                        if (runOnOpen) run()
                     }
                     lastOperationMillis = elapsed
                     lastOperationName = "Switch file"
@@ -687,6 +780,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun changeFolder(path: String, replacement: String?) {
         val p = project ?: return
+        val remappedPins = remapPinnedPaths(pinnedTabs, path, replacement, directory = true)
         val prefix = path.removeSuffix("/") + "/"
         val wanted = tabs.mapNotNull { name ->
             if (name.startsWith(prefix)) replacement?.removeSuffix("/")?.plus("/")?.plus(name.removePrefix(prefix))
@@ -697,11 +791,20 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             else name
         }
         work {
+            val previous = if (replacement == null) store.trashItems() else emptyList()
             if (replacement == null) store.deleteFile(p, path.removeSuffix("/"))
             else store.renameFile(p, path.removeSuffix("/"), replacement.removeSuffix("/"))
             val opened = persist(load(p, wanted, target, allowUnavailable = true))
             val deleted = store.trashItems()
-            val commit: () -> Unit = { apply(opened); trashItems = deleted }
+            val newlyDeleted = if (replacement == null)
+                newTrashItem(previous, deleted, p, path.removeSuffix("/")) else null
+            val commit: () -> Unit = {
+                apply(opened)
+                pinnedTabs = remappedPins.intersect(files.toSet())
+                preferences.edit().putStringSet("pinned:$p", pinnedTabs).apply()
+                trashItems = deleted
+                newlyDeleted?.let { undoDeletion = UndoDeletion(it.id, "Folder $path moved to trash") }
+            }
             commit
         }
     }
@@ -727,23 +830,35 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun changeFile(path: String, replacement: String?) {
         val p = project ?: return
+        val remappedPins = remapPinnedPaths(pinnedTabs, path, replacement)
         val wanted = tabs.mapNotNull { if (it == path) replacement else it }
         val target = if (active == path) replacement else active
         work {
+            val previous = if (replacement == null) store.trashItems() else emptyList()
             if (replacement == null) store.deleteFile(p, path) else store.renameFile(p, path, replacement)
             val deleted = store.trashItems()
+            val newlyDeleted = if (replacement == null)
+                newTrashItem(previous, deleted, p, path) else null
             val opened = persist(load(p, wanted, target))
-            val commit: () -> Unit = { apply(opened); trashItems = deleted }
+            val commit: () -> Unit = {
+                apply(opened)
+                pinnedTabs = remappedPins.intersect(files.toSet())
+                preferences.edit().putStringSet("pinned:$p", pinnedTabs).apply()
+                trashItems = deleted
+                newlyDeleted?.let { undoDeletion = UndoDeletion(it.id, "File $path moved to trash") }
+            }
             commit
         }
     }
 
     fun closeTab(path: String) {
         val p = project ?: return
+        if (path in pinnedTabs) return
         val wanted = tabs - path
         val target = if (active == path) wanted.lastOrNull() else active
         work {
-            val opened = if (wanted.isEmpty()) Open(p, store.files(p), emptyList(), null, "") else load(p, wanted, target)
+            val opened = load(p, wanted, target,
+                autoOpen = false, allowUnavailable = true)
             persist(opened)
             val commit: () -> Unit = { apply(opened) }
             commit
@@ -854,35 +969,55 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun previewReplaceAcrossFiles(query: String, replacement: String,
-        matchCase: Boolean, regex: Boolean) {
+    internal fun previewReplaceAcrossFiles(query: String, replacement: String,
+        matchCase: Boolean, regex: Boolean, folder: String = "",
+        kind: ProjectFileKind? = null) {
         val p = project ?: return
+        val allowed = scopedProjectFiles(files, folder, kind)
         work {
-            val summary = store.replaceAcrossProject(p, query, replacement, matchCase, regex, false)
-            val commit: () -> Unit = { replaceSummary = summary }
-            commit
-        }
-    }
-
-    fun replaceAcrossFiles(query: String, replacement: String,
-        matchCase: Boolean, regex: Boolean) {
-        val p = project ?: return
-        work {
-            val summary = store.replaceAcrossProject(p, query, replacement, matchCase, regex, true)
-            val opened = persist(load(p, tabs, active, allowUnavailable = true))
+            val summary = store.replaceAcrossProject(p, query, replacement, matchCase,
+                regex, false, allowed)
+            val hits = store.previewReplaceHits(p, query, replacement, matchCase,
+                regex, allowed)
             val commit: () -> Unit = {
-                apply(opened)
-                replaceSummary = summary
+                if (project == p) { replaceSummary = summary; replaceHits = hits }
             }
             commit
         }
     }
 
-    fun searchProject(query: String, caseSensitive: Boolean) {
+    internal fun replaceAcrossFiles(query: String, replacement: String,
+        matchCase: Boolean, regex: Boolean, folder: String = "",
+        kind: ProjectFileKind? = null) {
         val p = project ?: return
+        val allowed = scopedProjectFiles(files, folder, kind)
+        val expectedFingerprint = replaceSummary?.fingerprint ?: run {
+            error = "Preview changes before applying replacements."
+            return
+        }
         work {
-            val found = store.searchText(p, query, caseSensitive)
-            val commit: () -> Unit = { searchHits = found }
+            val summary = store.replaceAcrossProject(p, query, replacement, matchCase,
+                regex, true, allowed, expectedFingerprint)
+            val opened = persist(load(p, tabs, active, allowUnavailable = true))
+            val commit: () -> Unit = {
+                if (project == p) {
+                    apply(opened)
+                    replaceSummary = summary
+                    replaceHits = emptyList()
+                }
+            }
+            commit
+        }
+    }
+
+    internal fun searchProject(query: String, caseSensitive: Boolean,
+        folder: String = "", kind: ProjectFileKind? = null) {
+        val p = project ?: return
+        val allowed = scopedProjectFiles(files, folder, kind)
+        searchHits = emptyList()
+        work {
+            val found = store.searchText(p, query, caseSensitive, allowed)
+            val commit: () -> Unit = { if (project == p) searchHits = found }
             commit
         }
     }
@@ -945,6 +1080,19 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         console = true
         preview = false
         runner.run(filename, source, debug = true, breakpoints = lines)
+    }
+
+    fun runPreferred() {
+        val target = resolveRunTarget(projectMetadata.entrypoint, active, files)
+        if (target != null) runTarget(target)
+        else error = "Open a file to run"
+    }
+
+    fun runTarget(path: String) {
+        if (runner.running) return
+        if (path !in files) { error = "File no longer exists: $path"; return }
+        if (path == active) run()
+        else select(path, runOnOpen = true)
     }
 
     fun run() {

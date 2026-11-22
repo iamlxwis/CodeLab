@@ -61,3 +61,49 @@ claimed from source extraction alone. Refer to the PR checks for verification.
   accessibility/200% scaling audits. These are **not claimed implemented**.
 - This PR is stacked on Workstream 2 PR #8 until #8 is merged; do not merge it
   into main out of order.
+
+### Workstream 3 — run targets, pinned tabs and ordering (second slice, in review)
+- The primary Run action resolves a valid project-preferred entry file before the
+  current tab. Run options allow running the current tab or any chosen file.
+  Selecting another target switches editor buffers safely before execution.
+- Pinned tabs are protected from accidental close; tab actions expose Pin/Unpin,
+  Close others, Close all unpinned, Move left/right and Reveal in Explorer.
+  A long-press menu, dedicated drag grip and overflow chooser keep tabs navigable.
+- Still required: toolbar and long-press menu for tab actions, drag affordance,
+  overflow selector, search/replace and destructive-action undo.
+
+### Workstream 3 — destructive-action recovery (third slice, in review)
+- File, folder and project deletes surface **Undo** only after a matching unique
+  trash record exists; the snackbar action restores that exact item asynchronously.
+- Existing Recently Deleted remains the fallback after snackbar expiry.
+- No permanent deletion undo is claimed. Tests cover identity matching and a
+  tappable semantic snackbar action.
+
+### Workstream 3 — scoped find and per-match replacement review (fourth slice)
+- Find and Replace both respect selected folder and file-type scope; the 200-hit
+  search bound is now enforced **after scope selection**. Results group by path.
+- Replace preview includes exact matched span and literal substitution for each
+  of the first 100 matches, grouped by file. The confirmation still applies
+  through the existing bounded, rollback-capable replace engine.
+- Still requires manual Unicode/very large project validation and exact preflight
+  snapshot pinning if the project changes between preview and confirmation.
+
+### Workstream 3 — discoverable commands and quick actions (fifth slice)
+- Fuzzy command ranking and recent history; shortcut hints are shown only for
+  wired hardware commands (Ctrl+S, Ctrl+Enter, Ctrl+Shift+P).
+- Configurable per-context quick actions (up to six) appear in the existing
+  scrollable workspace toolbar and home actions sheet.
+- Search within the Settings action category remains scoped to settings.
+- An empty editor provides a contextual file-opening hint.
+- Manual TalkBack, large-font and keyboard-only audits remain outstanding.
+
+### Workstream 3 — error navigation and large-font evidence (sixth slice)
+- Recognizes bounded source file/line references from local console traces.
+  Source-location chips are tappable and switch to the exact editor line.
+- Adds a real 200% font-scale emulator screenshot and hierarchy check to CI.
+  The existing hierarchy audit continues to report possibly small/unlabeled targets.
+- Full manual TalkBack navigation/focus order, physical hardware keyboards,
+  device-density matrix and every-theme contrast audit are still required.
+  Automated smoke evidence must not be called accessibility certification.
+- Multi-file replacement rejects stale previews by comparing a SHA-256
+  fingerprint before any writes. A changed preview must be regenerated.
