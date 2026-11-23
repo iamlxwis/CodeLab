@@ -20,7 +20,7 @@ internal class CloudCredentialVault(
     private val alias: String = "CodeLab.cloud-credential.v1",
     private val encryptedKey: String = "credential-encrypted-v1",
     private val legacyKey: String = "credential"
-)
+) {
 
     fun load(): String {
         val ciphertext = preferences.getString(encryptedKey, null)
