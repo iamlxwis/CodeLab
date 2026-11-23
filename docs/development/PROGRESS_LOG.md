@@ -77,3 +77,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 3:01 AM PHT | Phase 1 / tracker | ACTIVE at committed checkpoint | Replaced ambiguous STOPPED header with explicit last-commit timestamp and separate code-work vs independently running GitHub Actions statuses; full downloadable pack work resumed. |
 
 | Nov 24, 2026, 3:16 AM PHT | CI Option B / Phase 1 | CI source implemented, verification pending; session HANDOFF | ca9b0f51 source-only CI, manual API35 smoke, cancel-in-progress, manual publish gate; cc906c40 independent signed JS/Lua APK project source. [CI](https://github.com/iamlxwis/CodeLab/actions/runs/45247033903) in progress. JS/Lua not yet downloader-routed. |
+
+| Nov 24, 2026, 3:18 AM PHT | Option B / Phase 1 | HANDED OFF; CI queued | Fixed manual workflow_dispatch device release gate (a7c5b5af), corrected offscreen Android smoke assertion (bc9fc2b9). [Latest fast CI 45247505643](https://github.com/iamlxwis/CodeLab/actions/runs/45247505643) queued; previous runs cancelled as requested. Signed JS/Lua APK source exists but UI/routing incomplete. |
