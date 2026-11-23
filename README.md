@@ -27,9 +27,9 @@ Write, run, and manage projects from your phone.
 **Last session change:** November 24, 2026 at 12:20 AM PHT (Philippine time, UTC+8)  
 **When I finish replying:** This status must be changed to **STOPPED — assistant handed off**. GitHub Actions may continue independently, but ChatGPT cannot keep committing after its turn ends.
 
-**3 / 9 completed · 6 remaining · 3 workstreams in progress · 0 blocked**
+**3 / 9 completed · 6 remaining · 4 workstreams in progress · 0 blocked**
 
-**Current task:** T05 Python module tests, T08 resumable 14-topic tutorial, T03 reliability; CI verification pending.
+**Current task:** T05 module lifecycle, T08 tutorial, T07 appearance accessibility, T03 reliability; CI pending.
 
 **Latest verified (2026-11-23):** [Production APK and signed upgrades: Passed Android 13/15](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) · [Device smoke: Passed Android 13/15](https://github.com/iamlxwis/CodeLab/actions/runs/45209632246) · [Download release](https://github.com/iamlxwis/CodeLab/releases/latest)
 
@@ -41,7 +41,7 @@ Write, run, and manage projects from your phone.
 | `T04` Data-preserving signed upgrades | DONE for API 33/35 emulators; physical-device validation remains | Nov 23, 2026 · 11:49 PM |
 | `T05` Python download/install/update | IN PROGRESS — version/downgrade tests + new Android 13/15 missing-module UI flow; CI pending | Nov 24, 2026 · 12:26 AM |
 | `T06` Additional offline modules | QUEUED — feasibility and real runtimes required | Not started |
-| `T07` Five-theme UI/UX refinement | QUEUED | Not started in this session |
+| `T07` Five-theme UI/UX refinement | IN PROGRESS — accessible 48dp accent controls and theme selection states; Android test pending | Nov 24, 2026 · 12:35 AM |
 | `T08` Interactive tutorial and accessibility | IN PROGRESS — saved resume index + JVM tests; actual Android 13/15 process-restart UI smoke added, CI pending | Nov 24, 2026 · 12:32 AM |
 | `T09` Full QA and stable release readiness | QUEUED | Not started in this session |
 
@@ -55,11 +55,12 @@ Write, run, and manage projects from your phone.
 | Nov 24 · 12:23 AM | T05 | Download recovery and safer Python update/reinstall policy added; CI pending |
 | Nov 24 · 12:26 AM | T05 | Added Android 13/15 missing-module navigation smoke; CI pending |
 | Nov 24 · 12:30 AM | T08 | Fixed premature completion; resume index and JVM tests added |
-| Nov 24 · 12:32 AM | T08 | Added Android 13/15 restart-and-resume UI smoke for Try vs intentional Skip; CI pending |
+| Nov 24 · 12:32 AM | T08 | Added Android 13/15 tutorial resume UI smoke; CI pending |
+| Nov 24 · 12:35 AM | T07 | Six color swatches receive names/selection state and 48dp targets; Compose UI test added |
 
 The complete append-only [task audit log](docs/development/PROGRESS_LOG.md) records commits, failures, tests and handoffs. Times are in **Asia/Manila**, written with **AM/PM**, not military time.
 
-**Last audit:** Nov 24, 2026 · 12:32 AM PHT — tutorial restart/resume UI QA added; CI pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** Nov 24, 2026 · 12:35 AM PHT — appearance accessibility implemented; CI pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.

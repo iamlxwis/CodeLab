@@ -1,3 +1,8 @@
+## Nov 24, 2026 · 12:35 AM PHT — appearance accessibility
+
+- [ ] Verify Android API33/API35 Compose AppearanceAccentAccessibilityTest and existing device/theme tests; fix real source issues without weakening assertions.
+- [ ] Test 48dp touch and large-font mode choice with TalkBack and narrow devices; finish all five themes.
+
 ## Nov 24, 2026 · 12:32 AM PHT — verify tutorial lifecycle
 
 - [ ] Watch new Android 13/15 `tutorial_resume_smoke.py` and `missing_python_smoke.py`; fix emulator-specific navigation errors using screenshots/XML, without erasing acceptance conditions.

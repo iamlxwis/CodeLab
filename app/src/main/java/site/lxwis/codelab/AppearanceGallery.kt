@@ -2,6 +2,8 @@ package site.lxwis.codelab
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -40,15 +42,15 @@ private val styles = listOf(
  * about the appearance of the selected theme.
  */
 @Composable
-private fun StyleCard(choice: StyleSample, selected: Boolean, onClick: () -> Unit,
+private fun StyleCard(choice: StyleSample, isSelected: Boolean, onClick: () -> Unit,
     modifier: Modifier, model: WorkspaceModel
 ) {
     Surface(
-        onClick = onClick, modifier = modifier,
+        onClick = onClick, modifier = modifier.semantics { selected = isSelected },
         shape = RoundedCornerShape(18.dp),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceContainerLow,
-        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
     ) {
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.fillMaxWidth().height(119.dp).clip(RoundedCornerShape(12.dp))) {
@@ -93,7 +95,7 @@ private fun StyleCard(choice: StyleSample, selected: Boolean, onClick: () -> Uni
                     Text(choice.summary, style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                if (selected) Icon(Icons.Default.CheckCircle, contentDescription = "Selected",
+                if (isSelected) Icon(Icons.Default.CheckCircle, contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(19.dp))
             }
@@ -112,11 +114,13 @@ private fun SettingChoices(title: String, choices: List<String>, selected: Strin
             choices.forEach { choice ->
                 val active = selected == choice
                 Surface(onClick = { onSelect(choice) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).semantics { selected = active },
                     shape = RoundedCornerShape(12.dp),
                     color = if (active) MaterialTheme.colorScheme.primaryContainer
                         else MaterialTheme.colorScheme.surfaceContainerLow) {
-                    Text(choice, Modifier.padding(vertical = 12.dp, horizontal = 3.dp),
+                    Text(choice, Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                        .wrapContentHeight(align = Alignment.CenterVertically)
+                        .padding(horizontal = 3.dp),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.labelMedium,
                         color = if (active) MaterialTheme.colorScheme.primary
@@ -166,7 +170,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                     items(styles.chunked(2)) { row ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             row.forEach { style ->
-                                StyleCard(style, selected = m.visualStyle == style.name,
+                                StyleCard(style, isSelected = m.visualStyle == style.name,
                                     onClick = { m.chooseVisualStyle(style.name) },
                                     modifier = Modifier.weight(1f), model = m)
                             }
@@ -186,28 +190,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text("ACCENT", style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                listOf(
-                                    "Mint" to Color(0xff83e5ca),
-                                    "Blue" to Color(0xff8ab7fa),
-                                    "Violet" to Color(0xffc4b0ff),
-                                    "Amber" to Color(0xffffc978),
-                                    "Rose" to Color(0xffff92b7),
-                                    "Mono" to Color(0xffaeb8bb)
-                                ).forEach { (name, color) ->
-                                    Surface(onClick = { m.chooseAccent(name) },
-                                        shape = CircleShape,
-                                        color = color,
-                                        border = if (m.accent == name)
-                                            BorderStroke(3.dp, MaterialTheme.colorScheme.onSurface) else null) {
-                                        Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
-                                            if (m.accent == name)
-                                                Icon(Icons.Default.Check, contentDescription = name + " selected",
-                                                    tint = Color(0xff162426), modifier = Modifier.size(20.dp))
-                                        }
-                                    }
-                                }
-                            }
+                            AppearanceAccentSwatches(m.accent, m::chooseAccent)
                             Text("Selected: " + m.accent,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)

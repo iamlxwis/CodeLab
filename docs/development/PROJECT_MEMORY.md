@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 12:35 AM PHT — accessible Appearance palette source committed
+
+T07: Previous unselected accent circles had 40dp touch targets with no spoken name. Implemented labeled 48dp selectable swatches, scrollable for narrow devices; theme cards and color mode options also expose selected semantics, with minimum 48dp mode target height. New AppearanceAccentAccessibilityTest instrumentation verifies six spoken labels and selection change. CI pending; manual TalkBack and complete theme checks remain. T03/T05/T07/T08 active; 3/9 completed. Remember STOPPED state at final reply.
+
 ## Nov 24, 2026 · 12:32 AM PHT — tutorial UI process-restart acceptance test committed
 
 The new `qa/tutorial_resume_smoke.py` is integrated into `.github/workflows/device.yml` after clean install. On a disposable Android 13/15 emulator it goes to topic 2, taps **Try it in CodeLab** to open a real New Project dialog, force-stops and relaunches to assert auto-resume at topic 3; then explicitly skips, force-stops and relaunches to confirm no forced onboarding. Captures evidence. **CI pending, no device success claimed.** After this, `missing_python_smoke.py` resets the test app, then existing full offline smoke runs. T08 and T05 are unfinished and need more accessibility and runtime-install checks. Session must be marked STOPPED at reply.

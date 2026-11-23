@@ -184,3 +184,7 @@ The existing Android device smoke installed Python before app launch, so it coul
 ## KI-043 — tutorial resume process-restart not yet verified (Nov 24, 2026, 12:32 AM PHT)
 
 The saved progress correction for KI-042 needs actual Android process death verification. New API33/API35 device smoke asserts Try-a-feature resumes at next topic after force-stop, whereas deliberate Skip finishes onboarding. This is source QA authored, **CI pending**; don't count as accessible tutorial completion.
+
+## KI-044 — unlabeled small appearance accent circles (Nov 24, 2026 · 12:35 AM PHT)
+
+Unselected color swatches were anonymous clickable 40dp circles; screen readers lacked names. Source fix: named 48dp accents with selected semantics, selection on style/mode choices, Android Compose regression. CI pending; full TalkBack and 5-theme accessibility still open.
