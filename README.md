@@ -37,9 +37,9 @@ Write, run, and manage projects from your phone.
 | --- | --- | --- |
 | `T01` Permanent production APK signing | DONE — actual signer matches permanent key | Nov 23, 2026 · 11:26 PM |
 | `T02` Android 15 online-run smoke | DONE — Android 13/15 device smoke passed | Nov 23, 2026 · 11:49 PM |
-| `T03` App-wide bug audit | IN PROGRESS — current reliability audit, source and regression tests | Nov 24, 2026 · 12:20 AM |
+| `T03` App-wide bug audit | IN PROGRESS — module error/recovery review and regressions | Nov 24, 2026 · 12:23 AM |
 | `T04` Data-preserving signed upgrades | DONE for API 33/35 emulators; physical-device validation remains | Nov 23, 2026 · 11:49 PM |
-| `T05` Python download/install/update | IN PROGRESS — download-state and recovery inspection; full Android verification outstanding | Nov 24, 2026 · 12:20 AM |
+| `T05` Python download/install/update | IN PROGRESS — missing-file recovery, version/downgrade policy and JVM tests committed; CI pending | Nov 24, 2026 · 12:23 AM |
 | `T06` Additional offline modules | QUEUED — feasibility and real runtimes required | Not started |
 | `T07` Five-theme UI/UX refinement | QUEUED | Not started in this session |
 | `T08` Interactive tutorial and accessibility | QUEUED | Not started in this session |
@@ -51,11 +51,12 @@ Write, run, and manage projects from your phone.
 | --- | --- | --- |
 | Nov 23 · 11:49 PM | T02, T04 | Android 13/15 CI passed; signed release published |
 | Nov 24 · 12:18 AM | Session | Resumed after the previous chat reply ended |
-| Nov 24 · 12:20 AM | T03, T05 | Source inspection started; no new fix claimed yet |
+| Nov 24 · 12:20 AM | T03, T05 | Source inspection started |
+| Nov 24 · 12:23 AM | T05 | Download recovery and safer Python update/reinstall version policy added; CI pending |
 
 The complete append-only [task audit log](docs/development/PROGRESS_LOG.md) records commits, failures, tests and handoffs. Times are in **Asia/Manila**, written with **AM/PM**, not military time.
 
-**Last audit:** Nov 24, 2026 · 12:20 AM PHT — assistant resumed; inspecting T03/T05 · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** Nov 24, 2026 · 12:23 AM PHT — T05 code and tests committed, CI pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.

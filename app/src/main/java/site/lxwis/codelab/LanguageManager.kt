@@ -241,14 +241,30 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                                     style = MaterialTheme.typography.bodySmall)
                             }
                             if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED) {
-                                val verification = remember(downloadId, transfer.stage) { module.verify() }
-                                Text(verification ?: "Download complete · signature verified",
+                                val verification = remember(downloadId, transfer.stage, recheck) { module.verify() }
+                                val versionDecision = remember(downloadId, transfer.stage, recheck) {
+                                    module.downloadedVersionDecision()
+                                }
+                                val verifiedDescription = when (versionDecision) {
+                                    PythonModuleVersionPolicy.Decision.UPDATE ->
+                                        "Newer signed Python runtime verified"
+                                    PythonModuleVersionPolicy.Decision.REINSTALL ->
+                                        "Current Python version downloaded; reinstall is optional"
+                                    PythonModuleVersionPolicy.Decision.NEW_INSTALL ->
+                                        "Python download complete · signature verified"
+                                    else -> "Python download verified"
+                                }
+                                Text(verification ?: verifiedDescription,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (verification == null) MaterialTheme.colorScheme.primary
                                         else MaterialTheme.colorScheme.error)
                                 if (verification == null) Button(onClick = {
                                     moduleMessage = module.install()
-                                }) { Text("Install module") }
+                                }) { Text(when (versionDecision) {
+                                    PythonModuleVersionPolicy.Decision.UPDATE -> "Update Python"
+                                    PythonModuleVersionPolicy.Decision.REINSTALL -> "Reinstall Python"
+                                    else -> "Install module"
+                                }) }
                             }
                             Button(onClick = {
                                 moduleMessage = ""
@@ -260,7 +276,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                                     moduleMessage = "Cannot start download: " + e.javaClass.simpleName
                                 }
                             }) {
-                                Text(if (python.ready) "Check for updates" else
+                                Text(if (python.ready) "Download latest Python" else
                                     if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED)
                                         "Download again" else "Download Python")
                             }

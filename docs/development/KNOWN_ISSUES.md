@@ -168,3 +168,7 @@ Actual APK signing blocks for [a11d15e](https://github.com/iamlxwis/CodeLab/acti
 ## KI-038 — source-upload consent revision guard: unit-verified, full end-to-end still open
 
 `ca4ffc9` regression test passed with 12/12 branch coverage for `OnlineRunApproval.matches` and `45209632286` release JVM checks passed. A live external cloud execution test has NOT run; broader audit remains T03.
+
+## KI-040 — Python module downloaded APK version not checked; stale completed-download file (Nov 24, 2026, 12:23 AM PHT)
+
+Source fix authored: prior `Check for updates` actually re-downloaded a full APK and offered installation irrespective of whether the APK version was older than the installed version; DownloadManager could claim successful transfer after the APK file was removed. Introduced signed+same-package APK version comparison, downgrade rejection, explicit update/reinstall labels and local-file missing failure. 5 JVM policy regressions. **CI and true Android download/install not yet verified**; T05 open.

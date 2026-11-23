@@ -1,3 +1,10 @@
+## Nov 24, 2026 · 12:23 AM PHT — module upgrade guard checkpoint
+
+- [ ] Verify new `PythonModuleVersionPolicyTest` and Android signing/install workflows in CI; fix failures without weakening policies.
+- [ ] Device-test download progress/cancel/error, install approval, update/removal and missing-module recovery; JVM version guards are not equivalent to Android installer evidence.
+- [ ] Consider separate release/version discovery rather than downloading a full APK merely to check for updates; current UI truthfully labels that action `Download latest Python`.
+- [ ] Check Android 13/15 companion downgrade behavior and correct messaging on real UI; never fake offline language engines.
+
 ## Nov 24, 2026 — work session and audit timestamps
 
 - [x] README development tracker now distinguishes **WORKING** vs **STOPPED — assistant handed off**, and records task events in **Asia/Manila, 12-hour AM/PM**.

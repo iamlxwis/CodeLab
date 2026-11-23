@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 12:23 AM PHT checkpoint
+
+T05 source now contains `PythonModuleVersionPolicy` and JVM regressions. Prevent Python module downgrade (without changing Android's package signature checks), report completed transfer whose APK disappeared, and label actual full downloads accurately. CI must run before claiming verified. Continue T03 app audit + T05 Android runtime installation lifecycle. Session WORKING only until final turn; mark STOPPED at handoff with AM/PM timestamp.
+
 ## Session and audit protocol (Nov 24, 2026)
 
 This agent operates only during an interactive turn. Before its final chat reply, **update README Session to STOPPED — assistant handed off** with an exact Asia/Manila, 12-hour AM/PM timestamp; do not claim background coding. At the start of a new user-authorized turn, set WORKING and update the per-task timestamp. Log important task actions, CI failures, fixes, and handoff checkpoints in README and `docs/development/PROGRESS_LOG.md` in the same commit. GitHub Actions can continue independently; label CI as pending, not as agent working. Never fabricate progress or completion.

@@ -38,6 +38,25 @@ internal class PythonModuleDownload(private val app: Context) {
 
     fun lastJob(): Long = preferences.getLong("python-id", -1L)
 
+    @Suppress("DEPRECATION")
+    private fun version(info: PackageInfo): Long =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode
+        else info.versionCode.toLong()
+
+    /** State is a display hint; verify() still checks package name and real signer. */
+    fun downloadedVersionDecision(): PythonModuleVersionPolicy.Decision? = runCatching {
+        val archive = file()
+        if (!archive.isFile) return@runCatching null
+        val pm = app.packageManager
+        val candidate = pm.getPackageArchiveInfo(archive.absolutePath, 0)
+            ?: return@runCatching null
+        if (candidate.packageName != PythonModuleLocator.PACKAGE_NAME) return@runCatching null
+        val installed = try {
+            version(pm.getPackageInfo(PythonModuleLocator.PACKAGE_NAME, 0))
+        } catch (_: PackageManager.NameNotFoundException) { null }
+        PythonModuleVersionPolicy.decide(version(candidate), installed)
+    }.getOrNull()
+
     fun begin(): Long {
         val previous = lastJob()
         if (previous > 0L) manager.remove(previous)
@@ -68,6 +87,11 @@ internal class PythonModuleDownload(private val app: Context) {
                     manager.remove(id)
                     return Transfer(Stage.FAILED, received, total,
                         "Module exceeds the 120 MB download safety limit")
+                }
+                if (status == DownloadManager.STATUS_SUCCESSFUL &&
+                    (!file().isFile || file().length() <= 0L)) {
+                    return Transfer(Stage.FAILED, received, total,
+                        "Completed download is missing. Download Python again.")
                 }
                 val stage = when (status) {
                     DownloadManager.STATUS_SUCCESSFUL -> Stage.DOWNLOADED
@@ -120,9 +144,20 @@ internal class PythonModuleDownload(private val app: Context) {
                     info.signingInfo?.apkContentsSigners else info.signatures
                 return signatures?.map { it.toCharsString() }?.toSet().orEmpty()
             }
-            if (certs(host).isEmpty() || certs(host) != certs(packageInfo))
+            if (certs(host).isEmpty() || certs(host) != certs(packageInfo)) {
                 "Module signature differs from CodeLab. Install both from the same release."
-            else null
+            } else {
+                val current = try {
+                    version(pm.getPackageInfo(PythonModuleLocator.PACKAGE_NAME, 0))
+                } catch (_: PackageManager.NameNotFoundException) { null }
+                when (PythonModuleVersionPolicy.decide(version(packageInfo), current)) {
+                    PythonModuleVersionPolicy.Decision.INVALID ->
+                        "Python module has an invalid version. Download it again."
+                    PythonModuleVersionPolicy.Decision.DOWNGRADE ->
+                        "Downloaded Python is older than the installed runtime. Downgrades are blocked."
+                    else -> null
+                }
+            }
         } catch (e: Exception) {
             "Could not verify module: " + e.javaClass.simpleName
         }
