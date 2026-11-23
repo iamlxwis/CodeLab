@@ -200,3 +200,7 @@ CI [45218655670](https://github.com/iamlxwis/CodeLab/actions/runs/45218655670) f
 ## KI-046 partial resolution / KI-047 outdated Python label in existing QA (Nov 24, 2026 · 1:00 AM PHT)
 
 Android15 [run 45220967836](https://github.com/iamlxwis/CodeLab/actions/runs/45220967836) successfully ran the tutorial Try/Skip process-restart smoke and missing-Python recovery smoke; so KI-046 has specific API35 pass evidence. The next old full smoke failed solely at UI label `Check for updates` after the app correctly renamed the button `Download latest Python`. Updated both device smoke and production-signed upgrade smoke expected text; CI rerun pending. T08 and T05 not fully complete.
+
+## KI-048 — signed-upgrade selection assertion tied to removed icon accessibility label (Nov 24, 2026 · 1:02 AM PHT)
+
+[CI 45220967890](https://github.com/iamlxwis/CodeLab/actions/runs/45220967890) failed after actual Android 13 in-place update because QA looked for `Selected` icon description eliminated for accessibility. Screenshot shows Clay selected visually after update (mint border/check). Added contextual spoken `Clay style, selected` and dual-version selection assertion (legacy icon vs current contextual card). Source committed, CI pending; do not claim upgraded test pass until rerun.

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,7 +47,12 @@ private fun StyleCard(choice: StyleSample, isSelected: Boolean, onClick: () -> U
     modifier: Modifier, model: WorkspaceModel
 ) {
     Surface(
-        onClick = onClick, modifier = modifier.semantics { selected = isSelected },
+        onClick = onClick, modifier = modifier.semantics {
+            selected = isSelected
+            // Provide a stable, contextual spoken label independent of decorative icons.
+            contentDescription = if (isSelected) "${choice.name} style, selected"
+                else "${choice.name} style"
+        },
         shape = RoundedCornerShape(18.dp),
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceContainerLow,

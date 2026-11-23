@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 1:02 AM PHT
+
+T07/T04: after real signed upgrade on API33, Clay visibly retained but previous QA assertion relied on icon contentDescription="Selected" removed in accessibility change. The app now exposes stable `Clay style, selected` card label; signed-upgrade QA accepts new contextual or actual legacy icon aligned with Clay. New CI pending. Continue T03/T05/T07/T08; before final chat mark session STOPPED with AM/PM.
+
 ## Nov 24, 2026 · 1:00 AM PHT
 
 API35 device run 45220967836 proved tutorial resume + missing-module recovery test passed, then old smoke expected obsolete `Check for updates` UI text. Actual label `Download latest Python` deliberately reflects full APK retrieval. Updated both old device and signed-upgrade QA scripts. Wait for renewed API33/35 CI before marking overall device/release passes. Mark STOPPED at chat boundary.

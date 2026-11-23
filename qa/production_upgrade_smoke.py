@@ -72,10 +72,17 @@ def point(node):
 
 def verify_clay():
     tree = ui.nodes()
+    # Newer APKs expose a contextual, accessible style/selection label on the
+    # clickable card; the previous production release used a separate check icon.
+    # Verify either representation so the real OLD -> NEW upgrade stays testable.
+    if any(n.attrib.get("content-desc") == "Clay style, selected" for n in tree):
+        assert any(n.attrib.get("text") == "Clay" for n in tree), (
+            "Clay selection label was detached from its visible style")
+        return
     labels = [n for n in tree if n.attrib.get("text") == "Clay"]
-    selected = [n for n in tree if n.attrib.get("content-desc") == "Selected"]
+    old_markers = [n for n in tree if n.attrib.get("content-desc") == "Selected"]
     assert any(abs(point(a)[1] - point(b)[1]) < 80 and point(b)[0] > point(a)[0]
-               for a in labels for b in selected), "Saved Clay appearance was not selected"
+               for a in labels for b in old_markers), "Saved Clay appearance was not selected"
 
 
 def open_workspace_action(name):

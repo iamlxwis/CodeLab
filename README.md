@@ -41,7 +41,7 @@ Write, run, and manage projects from your phone.
 | `T04` Data-preserving signed upgrades | DONE for API 33/35 emulators; physical-device validation remains | Nov 23, 2026 · 11:49 PM |
 | `T05` Python download/install/update | IN PROGRESS — missing-module UI passed API35; legacy QA labels fixed; retest pending | Nov 24, 2026 · 1:00 AM |
 | `T06` Additional offline modules | QUEUED — feasibility and real runtimes required | Not started |
-| `T07` Five-theme UI/UX refinement | IN PROGRESS — fixed Kotlin semantics receiver shadowing after CI compile failure; rerun pending | Nov 24, 2026 · 12:39 AM |
+| `T07` Five-theme UI/UX refinement | IN PROGRESS — contextual selected-style semantics added; old/new upgrade QA assertions aligned, CI pending | Nov 24, 2026 · 1:02 AM |
 | `T08` Interactive tutorial and accessibility | IN PROGRESS — resume/Skip process-restart passed API35, API33/full accessibility pending | Nov 24, 2026 · 1:00 AM |
 | `T09` Full QA and stable release readiness | QUEUED | Not started in this session |
 
@@ -59,11 +59,12 @@ Write, run, and manage projects from your phone.
 | Nov 24 · 12:35 AM | T07 | Six accents labeled with selection semantics and 48dp targets |
 | Nov 24 · 12:39 AM | T07 | CI compiler error from selected-name shadowing diagnosed/fixed |
 | Nov 24 · 12:48 AM | T08 | Fixed Skip persistence by durable preference commit and dismissal check |
-| Nov 24 · 1:00 AM | T08, T05 | API35 tutorial and missing-module journeys passed; old smoke expected renamed Python button and failed; test sync committed |
+| Nov 24 · 1:00 AM | T08, T05 | API35 tutorial/missing-Python tests passed; old Python button assertion updated |
+| Nov 24 · 1:02 AM | T07, T04 | API33 upgrade screenshot confirms Clay persisted; test expected obsolete icon; contextual style semantics and dual-version QA added |
 
 The complete append-only [task audit log](docs/development/PROGRESS_LOG.md) records commits, failures, tests and handoffs. Times are in **Asia/Manila**, written with **AM/PM**, not military time.
 
-**Last audit:** Nov 24, 2026 · 1:00 AM PHT — API35 tutorial and missing-module journeys passed, legacy test label corrected · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** Nov 24, 2026 · 1:02 AM PHT — fixed signed-upgrade style-selection assertion and semantics; CI pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.
