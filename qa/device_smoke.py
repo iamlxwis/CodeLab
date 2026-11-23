@@ -150,7 +150,7 @@ def main():
     # management affordances without downloading on the airplane-mode emulator.
     tap("More tools and settings")
     tap("Languages")
-    wait_for("Languages & file types")
+    wait_for("Language Manager")
     search = wait_for(field=True)
     tap_node(search)
     adb("shell", "input", "text", "Python")

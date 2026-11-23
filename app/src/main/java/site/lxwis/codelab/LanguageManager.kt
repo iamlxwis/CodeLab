@@ -265,7 +265,6 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                             "so it cannot be uninstalled separately."
                         else "No verified downloadable runtime is published for this language.",
                         style = MaterialTheme.typography.labelSmall)
-                        style = MaterialTheme.typography.labelSmall)
                     if (language.name == "Python") {
                         if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
                             transfer.stage == PythonModuleDownload.Stage.PAUSED) {

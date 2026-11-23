@@ -135,7 +135,7 @@ def validate_persistence_and_python():
     ui.tap("Done")
     ui.snapshot("signed-upgrade-after")
     open_workspace_action("Languages")
-    ui.wait_for("Languages & file types")
+    ui.wait_for("Language Manager")
     ui.tap_node(ui.wait_for(field=True))
     ui.adb("shell", "input", "text", "Python")
     ui.adb("shell", "input", "keyevent", "4")
