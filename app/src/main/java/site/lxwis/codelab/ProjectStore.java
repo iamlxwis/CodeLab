@@ -169,6 +169,13 @@ public final class ProjectStore {
     }
 
     public synchronized String createProject(String name, String template) throws IOException {
+        return createProject(name, template, StarterExamples.BEGINNER);
+    }
+
+    public synchronized String createProject(String name, String template, String starterMode) throws IOException {
+        if (!StarterExamples.validMode(starterMode))
+            throw new IllegalArgumentException("Unknown starter mode.");
+
         if (!"Web".equals(template) &&
                 !Arrays.asList("To-do app", "API fetch", "Algorithms", "SQL playground", "Lua game loop").contains(template) &&
                 LanguageCatalog.extensionFor(template) == null)
@@ -177,7 +184,13 @@ public final class ProjectStore {
         requireNew(dest);
         File stage = Files.createTempDirectory(scratch.toPath(), "project-").toFile();
         try {
-            if ("To-do app".equals(template)) {
+            boolean demo = Arrays.asList("To-do app", "API fetch", "Algorithms", "SQL playground", "Lua game loop").contains(template);
+            if (!demo && !StarterExamples.BEGINNER.equals(starterMode)) {
+                String extension = "Web".equals(template) ? "html" : LanguageCatalog.extensionFor(template);
+                if (extension == null) throw new IllegalArgumentException("Unsupported project template.");
+                writeText(new File(stage, StarterExamples.fileName(template, extension)),
+                    StarterExamples.example("Web".equals(template) ? "HTML" : template, starterMode));
+            } else if ("To-do app".equals(template)) {
                 writeText(new File(stage, "main.js"), "const tasks = [\"Write code\", \"Run it offline\", \"Share your result\"];\nfor (let i = 0; i < tasks.length; i++) {\n  print((i + 1) + \". [ ] \" + tasks[i]);\n}\n");
             } else             if ("API fetch".equals(template)) {
                 writeText(new File(stage, "index.html"), "<!doctype html>\n<html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>API fetch starter</title><body><h1>API fetch</h1><pre id=\"result\">Loading…</pre>\n<script>\nconst output = document.querySelector('#result');\nfetch('data.json')\n  .then(response => response.json()).then(data => output.textContent = JSON.stringify(data, null, 2))\n  .catch(() => output.textContent = JSON.stringify({offline: true, title: 'Offline demo'}, null, 2));\n</script></body></html>\n");
@@ -281,9 +294,8 @@ public final class ProjectStore {
                 // File editing is available offline, execution is not implied.
                 String extension = LanguageCatalog.extensionFor(template);
                 if (extension == null) throw new IllegalArgumentException("Unsupported project template.");
-                String fileName = ("Dockerfile".equals(template) || "Makefile".equals(template))
-                    ? template : "main." + extension;
-                writeText(new File(stage, fileName), "");
+                String fileName = StarterExamples.fileName(template, extension);
+                writeText(new File(stage, fileName), StarterExamples.example(template, StarterExamples.BEGINNER));
             }
             List<String> sourceFiles = new ArrayList<>();
             collect(stage, stage, sourceFiles, false);
