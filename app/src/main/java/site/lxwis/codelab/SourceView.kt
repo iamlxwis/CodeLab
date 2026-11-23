@@ -384,35 +384,25 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
 
     fun indentSelection() {
-        val source = text ?: return
         val from = minOf(selectionStart, selectionEnd).coerceAtLeast(0)
         val to = maxOf(selectionStart, selectionEnd).coerceAtLeast(0)
         if (from == to) {
             insertAtSelection(indentUnit)
             return
         }
-        val start = source.lastIndexOf('\n', (from - 1).coerceAtLeast(0)).let {
-            if (it < 0) 0 else it + 1
-        }
-        val chunk = source.subSequence(start, to).toString()
-        val indented = indentUnit + chunk.replace("\n", "\n" + indentUnit)
-        source.replace(start, to, indented)
-        setSelection(start, start + indented.length)
+        updateIndentation(outdent = false)
     }
 
-    fun outdentSelection() {
-        val source = text ?: return
-        val from = minOf(selectionStart, selectionEnd).coerceAtLeast(0)
-        val to = maxOf(selectionStart, selectionEnd).coerceAtLeast(0)
-        val start = source.lastIndexOf('\n', (from - 1).coerceAtLeast(0)).let {
-            if (it < 0) 0 else it + 1
-        }
-        val chunk = source.subSequence(start, to).toString()
-        val outdented = chunk.split("\n").joinToString("\n") { line ->
-            line.drop(if (line.startsWith("\t")) 1 else line.takeWhile { it == ' ' }.length.coerceAtMost(indentSpaces))
-        }
-        source.replace(start, to, outdented)
-        setSelection(start, start + outdented.length)
+    fun outdentSelection() = updateIndentation(outdent = true)
+
+    private fun updateIndentation(outdent: Boolean) {
+        val editable = text ?: return
+        val change = codeIndentationEdit(
+            editable.toString(), selectionStart, selectionEnd, indentUnit, indentSpaces,
+            outdent
+        ) ?: return
+        editable.replace(change.start, change.end, change.replacement)
+        setSelection(change.selectionStart, change.selectionEnd)
     }
 
     fun applyCodeTool(index: Int) {
