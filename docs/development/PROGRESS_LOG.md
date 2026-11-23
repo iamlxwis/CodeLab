@@ -27,3 +27,5 @@ Short, append-only development checkpoints. The [README tracker](../../README.md
 With each meaningful task start, commit checkpoint, failure, retry, or verified completion, append a row with the date, task ID, correct state, actual change and evidence link. Update README task row and counts **in the same commit**, plus `PROJECT_MEMORY.md`. In-progress checkpoints remain In progress until done. If a test fails, preserve Failed/Blocked evidence rather than declaring completion. Keep entries short and factual.
 
 | 2026-11-23 | T02 | In progress | Confirmed API35 failure in [device CI 45191732470](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470): XML shows `Online: source upload needs confirmation`, a valid state. Smoke now accepts all three legitimate status messages; API33/35 rerun pending. 1/9 done, 8 remaining, 1 active, 0 blocked. |
+
+| 2026-11-23 | T04 | In progress | Added pre-publish API33/API35 same-signer production `adb install -r` acceptance: project/theme retention, Python module trust and real execution. CI pending; physical handset unverified. 1/9 done, 8 remaining, 2 active, 0 blocked. |

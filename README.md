@@ -23,9 +23,9 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**1 / 9 completed · 8 remaining · 1 in progress · 0 blocked**
+**1 / 9 completed · 8 remaining · 2 in progress · 0 blocked**
 
-**Current task:** `T02` — Android 15 online-run regression patched; API 33/35 CI pending
+**Current task:** `T04` — Signed upgrade and data-retention emulator gate, awaiting CI
 
 **Latest verified (2026-11-23):** [Production APK: Passed](https://github.com/iamlxwis/CodeLab/actions/runs/45194290919) · [Android 13: Passed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470) · [Android 15: Failed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470)
 
@@ -34,7 +34,7 @@ Write, run, and manage projects from your phone.
 | `T01` Permanent production APK signing | Done |
 | `T02` Fix Android 15 online-run smoke | In progress — test fixed, awaiting CI |
 | `T03` Complete app-wide bug audit | Queued |
-| `T04` Verify production-signed data-preserving upgrades | Queued |
+| `T04` Verify production-signed data-preserving upgrades | In progress — QA gate committed, unverified |
 | `T05` Validate Python module download/install/update | Queued |
 | `T06` Expand optional offline language modules | Queued |
 | `T07` Refine all five themes and app navigation | Queued |

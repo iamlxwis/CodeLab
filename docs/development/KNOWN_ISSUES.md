@@ -136,3 +136,7 @@ One-time keygen, authenticated encrypted artifact and local phone WebCrypto unlo
 ## KI-034 — API35 online availability smoke assertion (2026-11-23)
 
 [Device workflow 45191732470](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470) failed at `qa/device_smoke.py` because the test accepted only offline-provider errors; downloaded `last-window.xml` shows `Online: source upload needs confirmation` after selecting Online. This is a valid no-upload-yet status and not a proven app bug. Source test now accepts all three truthful outcomes. **Await API33/API35 CI rerun before marking fixed.**
+
+## KI-035 — signed release upgrade acceptance pending (2026-11-23)
+
+Production-key-only pre-publication API33/API35 `adb install -r` tests are now authored. They verify project source, Clay preferences and updated same-certificate Python module through real Android UI execution. No passing result is claimed until Actions reports it. Previous signer mismatch is explicitly skipped, not a successful upgrade; physical-device acceptance remains open.
