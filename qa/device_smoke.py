@@ -68,6 +68,17 @@ def tap(*labels):
     tap_node(wait_for(*labels))
 
 
+def choose_language(name):
+    """Choose from the searchable language browser, not an off-screen quick card."""
+    tap("Change")
+    field = wait_for(field=True)
+    tap_node(field)
+    adb("shell", "input", "text", name)
+    tap(name)
+    # Dismiss the search keyboard before interacting with the project name.
+    adb("shell", "input", "keyevent", "4")
+
+
 def main():
     OUT.mkdir(exist_ok=True)
     apk = next(Path("app/build/outputs/apk/debug").glob("*.apk"))
@@ -80,6 +91,22 @@ def main():
     launch()
     wait_for("New project")
     snapshot("01-home")
+    # Python is now a genuine CPython runtime. Run the starter with airplane mode on.
+    tap("Project library")
+    wait_for("New project")
+    tap("New project")
+    choose_language("Python")
+    tap_node(wait_for(field=True))
+    adb("shell", "input", "text", "PySmoke")
+    tap("Create project")
+    wait_for("main.py", contains=True)
+    tap("Run")
+    wait_for("Hello from CodeLab!", contains=True, timeout=40)
+    wait_for("Exit 0", contains=True)
+    snapshot("10-offline-python")
+
+    tap("Project library")
+    wait_for("New project")
     tap("New project")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "Smoke")
@@ -139,7 +166,7 @@ def main():
     tap("Project library")
     wait_for("New project")
     tap("New project")
-    tap("SQLite")
+    choose_language("SQLite")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "SqlSmoke")
     tap("Create project")
@@ -153,7 +180,7 @@ def main():
     tap("Project library")
     wait_for("New project")
     tap("New project")
-    tap("Web")
+    choose_language("Web")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "WebSmoke")
     tap("Create project")
@@ -167,7 +194,7 @@ def main():
     tap("Project library")
     wait_for("New project")
     tap("New project")
-    tap("Lua")
+    choose_language("Lua")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "LuaSmoke")
     tap("Create project")
@@ -184,7 +211,7 @@ def main():
     tap("Project library")
     wait_for("New project")
     tap("New project")
-    tap("Java")
+    choose_language("Java")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "JavaSmoke")
     tap("Create project")
@@ -193,20 +220,6 @@ def main():
     wait_for("Hello from CodeLab!", contains=True)
     wait_for("Exit 0", contains=True)
     snapshot("09-java-beta")
-
-    # Python is now a genuine CPython runtime. Run the starter with airplane mode on.
-    tap("Project library")
-    wait_for("New project")
-    tap("New project")
-    tap("Python")
-    tap_node(wait_for(field=True))
-    adb("shell", "input", "text", "PySmoke")
-    tap("Create project")
-    wait_for("main.py", contains=True)
-    tap("Run")
-    wait_for("Hello from CodeLab!", contains=True, timeout=40)
-    wait_for("Exit 0", contains=True)
-    snapshot("10-offline-python")
 
     (OUT / "result.txt").write_text(
         "Passed: install, create, launch offline JavaScript, interactive input, "
