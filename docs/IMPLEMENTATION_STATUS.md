@@ -1,54 +1,28 @@
-> **Latest evidence:** Signed editor/Python APK build and JVM tests **pass** at [`216a58aa`](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472); emulator device smoke including Python, Web preview, JS, SQL, Lua and Java beta **passes** [here](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400). Historical status rows below may predate this verified milestone. Python is optional companion APK, not bundled. Other engines remain bundled and must be modularized.
+# CodeLab implementation status
 
-> **Current handoff:** Read [docs/development/PROJECT_MEMORY.md](development/PROJECT_MEMORY.md) and [DECISIONS.md](development/DECISIONS.md). Latest approved architecture differs from some earlier plans.
+Updated Nov 24, 2026. This is a source-level feature inventory; **committed code is not proof of a successful build, device test or release**. See the [README tracker](../README.md#development-tracker) for current verification.
 
-# CodeLab 2.0 implementation status
+| Area | Present in source | Remaining or unverified |
+| --- | --- | --- |
+| UI and appearance | Five themes, per-theme accents, saved presets, redesigned project/import surfaces, mobile editor and console | Complete screen-by-screen visual QA, font-scale and TalkBack coverage |
+| Editor | Syntax highlighting, file-local completion/references/rename, regex find/replace, structural diagnostics, snippets, line tools, bookmarks, folding **preview**, Git conflict-marker resolver | Semantic LSP, true inline editable folding, multi-cursor, project-wide semantic rename, large-file stress testing |
+| File and project management | Local autosave, ZIP import/export, SAF snapshot import, templates, favorites, history, recycle bin, session restore | Live SAF folder editing, collaborative projects, broad failure-recovery QA |
+| Languages and runtimes | Bundled Rhino JavaScript, LuaJ Lua, SQLite, limited BeanShell Java beta, HTML preview; optional CPython 3.13 companion APK with in-app download/install controls | Modularize bundled engines; actual offline C/C++, TypeScript, Kotlin, Rust, Go, PHP and other toolchains; Python download/update/remove end-to-end acceptance |
+| Run and debugger | Explicit Offline/Online selection, consent before cloud source transfer, isolated local services, stdin/stdout, timeout/stop, JS breakpoints and Step/Continue, **local variable display in source** | True PTY terminal, multi-language debugger, full stack/variable watches, profiler |
+| API and developer tools | Command palette, JSON/Base64/URL/SHA-256 tools, HTTPS inspector with GET/POST/PUT/DELETE, headers and body in source | Richer API collections, environment variables, multipart/streaming requests, package tooling |
+| Git and GitHub | Local branches/staging/commits, GitHub fetch/fast-forward pull/non-force push, import snapshot, **manual conflict-marker resolution in editor** | Full three-way merge integration, GitHub PR/issue/OAuth workflows, authenticated remote acceptance |
+| Tutorial and accessibility | 14-topic guide with Try/Skip/replay and saved progress, labeled controls, high-contrast palettes | Screen-anchored coach marks and full accessibility/device audit |
+| Screenshot studio | Selection-only capture, syntax-colored image export, palettes, aspect ratios, line highlighting | Advanced layout presets and device QA |
+| Quality and distribution | Android Gradle builds, JVM and instrumented tests, CI, prior production-signed upgrade proof | New feature commits require successful independent verification; physical-device QA remains |
 
-This is a feature-by-feature engineering status, not a claim of completion. A source
-implementation, APK build, Android device test, and production release are distinct.
+## Verification checkpoint
 
-| Category | Implemented work | Still incomplete or unverified |
-|---|---|---|
-| 01 UI, UX and GUI | Native Compose themes, accent colors, dashboard, adaptive tablet sidebar, editor/console/preview, language search, appearance controls | Complete redesign of every screen, all layout variants and comprehensive visual fidelity |
-| 02 Animations | Splash, system-aware motion controller, animated tabs, labels, cards, run feedback and light sidebar transitions | Full navigation choreography, manual reduced-motion and physical-device jank QA |
-| 03 Professional editor | Viewport highlighting, offscreen invalidation optimization, logical-line indent/outdent, IME and near-limit persistence tests, completion, snippets and search | Tree-sitter/LSP, folding, diagnostics, multi-cursor and multi-MiB editing |
-| 04 Mobile coding | Toolbar presets/custom keys, pinch font zoom, hardware shortcuts, input selection tools, status-bar swipe tab navigation | Full one-handed layout, all gestures, per-language keyboard intelligence |
-| 05 File management | Nested folders, ZIP import/export, SAF external folder snapshot import, 2 MiB binary asset imports and offline web preview, multiple imports, GitHub snapshots, cross-project copy, recycle bin, restore, version history, regex search/replace | Live external SAF folder editing, full graphical diff/merge, larger binary files |
-| 06 Projects | Starter templates, local autosave, session restoration, favorites, quick switch, duplicate, rename, ZIP-portable project description and preferred entry file | Advanced project metadata, per-project execution profiles and shared workspaces |
-| 07 Languages | Bundled Rhino JavaScript, LuaJ Lua, Android SQLite, BeanShell Java beta, HTML preview and newly integrated CPython 3.13 (Chaquopy); runtime/version detection | Python device smoke still failing; all optional engines must move to user-installable modules; TypeScript/C/C++/other toolchains not implemented |
-| 08 Execution | Isolated worker services, output/input, stop/timeout, configurable output caps, rerun and local history, JavaScript line breakpoints, Step/Continue | Multi-language debugging, variable inspector, profiler and additional local compilation |
-| 09 Terminal & debugging | Real stdin/stdout/stderr console, ANSI styling, output export/input recall, Rhino JavaScript line debugger, safe offline workspace built-ins | PTY-backed terminal, native shell/process sessions, full variable-aware debugger |
-| 10 Code Screenshot Studio | Offline syntax-colored 1080px PNG, three color palettes, aspect presets, solid/gradient/transparent canvas, highlight line, title/footer and line numbers | Advanced code layout templates, custom image backgrounds, editor selection capture and broad device QA |
-| 11 Developer tools | Command palette, JSON format/minify, Base64, URL encode/decode, SHA-256 and bounded HTTPS GET inspector | POST/body/headers API tester, regex debugger, package tooling and broader transforms |
-| 12 Git & GitHub | JGit stage/commit/branches, opt-in GitHub HTTPS origin, manual token Fetch/FF-only Pull/non-force Push and ZIP snapshot import | Live authenticated network acceptance, OAuth/PR/issue flows and conflict editor |
-| 13 Performance & stability | Viewport highlighting, serialized autosave, near-limit persistence, CI security gate, JaCoCo/lint reports and release-mode emulator motion measurement | Long soak, generated baseline, enforced lint/coverage and real low-end-device results |
-| 14 Accessibility | High-contrast palette, larger UI text, touch feedback controls, screen reader labels and hardware keyboard support | Comprehensive verified TalkBack, font-scale and contrast audit |
-| 15 Distribution & QA | Optimized Gradle APK/signature, unit/instrumented tests, fallback-debug-signed public APK/SHA-256, emulator QA and static security checks | Stable production signing, Play Store listing, enforced lint/coverage baselines and acceptance tests |
+- Previously validated release/device workflows: [APK and signed upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45229584184) and [Android 13/15 device smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45229584342).
+- Current feature source checkpoint: [75c1c051](https://github.com/iamlxwis/CodeLab/commit/75c1c051e77e9ddb0ee565dab0ad6c48fbe61ef4).
+- Current feature verification at this document update: [APK workflow](https://github.com/iamlxwis/CodeLab/actions/runs/45237884590) and [device workflow](https://github.com/iamlxwis/CodeLab/actions/runs/45237884296) **in progress**. Do not count as passed until they complete.
 
-## Verification definitions
+## Cleanup safety
 
-- **Committed:** Source is in GitHub.
-- **APK built:** Gradle assembled and validated its signature.
-- **Unit tested:** JVM unit-test task completed successfully.
-- **Device tested:** The emulator workflow completed its instrumented and UI journey checks.
-- **Release ready:** Appropriate production signing, compatibility and acceptance checks are complete.
+The tracked repository tree was reviewed for generated build directories, committed APKs, temporary archives and caches; none were identified. Shared source helpers were checked for references before deletion, and none were removed speculatively. Redundant explicit imports in the split editor, source view, command panel and console files were removed without changing their runtime logic. Preserve signing identity, Android manifest, runtime engines, user project storage and test fixtures.
 
-The public GitHub APK remains a **debug-signed early-access build**. Users should export
-backups before reinstalling; the CI debug signing key is not guaranteed to remain stable.
-
-## Architecture constraints
-
-C/C++, Rust and most listed languages have editing but **no bundled offline runtimes**. Python 3.13 is now bundled in source, contrary to the user's new optional-module requirement, and is **not verified by the latest failing emulator test**. Cloud execution is optional, separately verified, and requires explicit
-confirmation. Local JGit operations do not upload anything. Public GitHub imports download
-a bounded source snapshot, not Git history.
-
-A full PTY, semantics-based language server, production signing and Play Store compliance
-must not be advertised as implemented until working code and tests exist.
-
-## Architecture workstream (foundation implemented)
-
-Source files are being split into activity, theme, workspace, library, dialogs and
-native editor view units. The theme objects are memoized and edge-to-edge system
-bars use AndroidX APIs. A UI regression test is added, but this is **not** a claim
-of completed architecture cleanup. Business-logic state hoisting, stability
-profiling, and device-layout verification remain pending. See `docs/ROADMAP.md`.
+For prior decisions, open [development memory](development/PROJECT_MEMORY.md) and [idea ledger](development/IDEAS.md). Git history preserves superseded plans; this inventory supersedes contradictory historical status text.

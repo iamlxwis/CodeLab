@@ -24,18 +24,18 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**SESSION: STOPPED — interactive work handed off** · Updated **Nov 24, 2026, 2:11 AM PHT**  
-**Existing stabilization milestones:** 3/9 completed · 6 remaining. **Product feature expansion:** ongoing; not falsely counted as finished.
+**SESSION: STOPPED — handoff after interactive work** · Updated **Nov 24, 2026, 2:27 AM PHT**  
+**This feature pass:** 6 source improvements committed · **Major remaining product areas:** 6 · **Validation:** [APK CI](https://github.com/iamlxwis/CodeLab/actions/runs/45237884590) and [device CI](https://github.com/iamlxwis/CodeLab/actions/runs/45237884296) running at handoff, **not yet verified**.
 
-**Current activity (one entry; replaced on each substantive action):**
+**Current activity (one row, overwritten at each handoff):**
 
 | Updated (Philippine time, AM/PM) | Task | Action / result | Next |
 | --- | --- | --- | --- |
-| Nov 24, 2026 · 2:11 AM | Editor refactoring and safe cleanup | Fixed file-local Rename to update **all** identifier occurrences instead of silently stopping after 500; preserves strings/comments and adds regression tests. No runtime engines or app assets deleted. **Source committed; tests not yet executed.** Session STOPPED at handoff. | Extend editor capabilities and runtime modules; test change and continue safe, evidence-based cleanup. |
+| Nov 24, 2026 · 2:27 AM | Product features + safe cleanup | Added HTTPS request builder, reliable editor autosave for batch edits, visual conflict-marker resolution, JavaScript variable inspection, read-only code folding preview, and faster language-aware analysis. Removed unused imports from split source files; preserved runtime engines, signing and project storage. **Source complete for these changes; build/device results pending. Session STOPPED.** | Confirm compilation/tests; continue real downloadable runtimes, LSP, inline folding, multi-cursor, PTY terminal and tutorial coach marks. |
 
-**Product work still open:** additional real downloadable offline engines; LSP-grade intelligence; code folding/multi-cursor; PTY terminal; advanced debugger; full API request builder; visual Git conflict editor; tutorial coach marks; remaining UI/accessibility validation. Python module manager, Run mode selector, themes and basic editor intelligence already exist.
+**Remaining product gaps:** real downloadable offline runtimes beyond Python; semantic LSP; inline editable folding and multiple carets; PTY-backed terminal; multi-language debugging; screen-anchored tutorial and full accessibility review. These are **not** marked complete. See [feature inventory](docs/IMPLEMENTATION_STATUS.md).
 
-*Only one live activity is shown. Prior actions remain in [development memory](docs/development/PROJECT_MEMORY.md) and Git history. ChatGPT does not keep working after the interactive turn ends.*
+*Historical actions are kept in [development memory](docs/development/PROJECT_MEMORY.md) and Git history. No background coding continues after this chat turn.*
 
 ## Features
 
