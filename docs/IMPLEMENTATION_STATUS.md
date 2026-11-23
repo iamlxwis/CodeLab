@@ -28,3 +28,7 @@ Updated Nov 24, 2026. This is a source-level feature inventory; **committed code
 The tracked repository tree was reviewed for generated build directories, committed APKs, temporary archives and caches; none were identified. Shared source helpers were checked for references before deletion, and none were removed speculatively. Redundant explicit imports in the split editor, source view, command panel and console files were removed without changing their runtime logic. Preserve signing identity, Android manifest, runtime engines, user project storage and test fixtures.
 
 For prior decisions, open [development memory](development/PROJECT_MEMORY.md) and [idea ledger](development/IDEAS.md). Git history preserves superseded plans; this inventory supersedes contradictory historical status text.
+
+### Nov 24, 2026, 3:26 AM PHT — JS/Lua optional pack integration
+
+Source adds signed JS/Lua APK download management and verified IPC routing with bundled fallback; code commits 9c722abe, b19db610, de387a2b, c62c9522. **Verification pending**: fast CI, manual API35 signed pack execution, public release of JS/Lua APKs, real device network download and remove/reinstall. Native compiler packs and TypeScript transpilation remain unshipped. Do not claim full Phase 1 completion.

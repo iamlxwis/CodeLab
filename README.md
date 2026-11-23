@@ -24,21 +24,23 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last committed checkpoint:** Nov 24, 2026, 3:18 AM PHT · **Assistant: HANDED OFF after this checkpoint** · **CI: check live Actions, not this timestamp**
+**Last committed checkpoint:** Nov 24, 2026, 3:26 AM PHT · **Assistant: HANDED OFF at checkpoint** · **CI: see live Actions, not this timestamp**
 
-**Read this first:** This tracker is a **commit log, not a live timer**. A checkpoint timestamp is when the README was last committed. `HANDOFF` means the assistant's current interactive turn ended; GitHub Actions may still run independently. A new chat can resume work from this checkpoint. No automatic assistant work is promised between messages.
+> This is a **commit checkpoint**, not a live clock or background agent. `HANDED OFF` means this interactive turn stopped after committing; independent GitHub Actions may still run. Each subsequent turn can resume from the [project memory](docs/development/PROJECT_MEMORY.md).
 
-| Scope | Done / current state | Still required |
+| Workstream | Verified / implemented | Remaining before completion |
 | --- | --- | --- |
-| **CI Option B — Smart CI** | **Implemented:** source/build/QA/workflow-only triggers, docs-only commits skipped; fast Gradle build/unit/lint/security; manual API 35 device smoke; `cancel-in-progress: true`; explicit manual release publication after same-commit device gate | Confirm current CI build and Android 15 manual smoke; release only after gate |
-| **Phase 1 — Offline modules** | Python optional signed APK already published; JavaScript and Lua companion APK source, isolated services and signing/artifact pipeline added; bundled JS/Lua/Java/SQL preserved | **JS/Lua module downloader, authenticated execution routing, install/reinstall/removal UI, real device tests; TypeScript/native compiler toolchains not packaged** |
-| **Phase 2 — Editor** | Not started | Begin only when agreed Phase 1 acceptance is met |
+| **CI Option B — Smart CI** | Source/build changes trigger fast compile, unit, lint and signed APK artifacts. Docs-only pushes skipped. Manual API 35 device smoke. `cancel-in-progress: true` retained. Manual release publication requires same-commit device success. | Validate full run and manually trigger API 35 smoke |
+| **Phase 1 — Runtime manager** | Python signed optional runtime already published. JavaScript/Lua signed companion APK **source** and authenticated package discovery, per-pack downloads/install/uninstall/cache/Wi-Fi policy, editor IPC routing with bundled fallback, and API 35 QA source committed. | **Fresh CI must pass; JS/Lua release assets not yet published; manual API 35 end-to-end installation/execution and removal QA not passed. TypeScript/C/C++/Rust and other toolchains not shipped.** |
+| **Phase 2 — Editor intelligence** | Not started | Begin only after agreed Phase 1 completion gate |
 
-**Progress:** CI workflow optimization **implemented (verification pending)**. Release gate fixed to recognize manually dispatched device smoke (a7c5b5af); offscreen emulator assertion replaced with visible summary (bc9fc2b9). Phase 1 **partial, not complete**. **Current workstream:** JavaScript/Lua companion packaging, Android 15 QA and downloader/execution integration. **Latest source:** [bc9fc2b9](https://github.com/iamlxwis/CodeLab/commit/bc9fc2b99f4c0e44a1fe4b9ed088352e6487e95e). **Latest fast CI:** [45247505643](https://github.com/iamlxwis/CodeLab/actions/runs/45247505643) queued at checkpoint; earlier runs were cancelled by newer commits as configured. **Next action:** inspect [fast CI run](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml), correct compiler issues, then integrate module discovery/downloading/execution; manually run [API 35 smoke](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml) at the release checkpoint.
+**Current counts:** 3 optional module implementations in source (Python, JavaScript, Lua); **1 confirmed public optional runtime (Python)**; **2 additional runtime APKs pending validated publication**. Other languages retain their existing built-in/edit-only/cloud statuses; no unsupported compiler is falsely described as installed.
 
-**CI policy:** Every meaningful source push gets one fast build; documentation-only commits do not trigger Android CI. Device smoke is manual on Android 15 only. Public `latest` release is updated **only** by a manual `Android APK` workflow dispatch with `publish_release=true`, after same-commit device smoke succeeds. Superseded workflow runs are cancelled.
+**Latest implementation:** [c62c9522](https://github.com/iamlxwis/CodeLab/commit/c62c9522cae7e6236be916702f136df17842b4cd). **Current fast CI:** [Android APK workflow](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml) (superseded runs cancel by design). **Android 15 QA:** [manual workflow](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml). **Release:** [latest published APK](https://github.com/iamlxwis/CodeLab/releases/latest) may predate this implementation.
 
-[Full audit](docs/development/PROGRESS_LOG.md) · [Project memory](docs/development/PROJECT_MEMORY.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md)
+**Next:** fix any compiler/CI failures, run the manual API 35 smoke, publish all three signed runtime APKs through the protected manual release workflow, verify in-app downloads on a networked device. Do not label Phase 1 finished before these gates pass.
+
+[Full audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Project memory](docs/development/PROJECT_MEMORY.md)
 
 ## Features
 
