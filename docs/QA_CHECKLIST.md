@@ -1,3 +1,5 @@
+> **Current CI/architecture notes:** See [development project memory](development/PROJECT_MEMORY.md) and [known issues](development/KNOWN_ISSUES.md).
+
 # QA and regression checklist
 
 ## Build verification
@@ -24,7 +26,7 @@ GitHub Actions:
 2. Create nested folders and text files. Rename, move and copy.
 3. Edit multiple tabs, undo/redo, search/replace and recover state after restart.
 4. Execute JS, Lua, Java beta and SQL with real program output and input.
-5. Confirm never to claim Python or C/C++ can run offline.
+5. Check Python 3.13 isolated worker output/timeout on emulator; latest device smoke FAILED waiting for Hello World. C/C++ remains editing-only. Do not claim Python works on device before a passing emulator journey.
 6. Preview HTML/CSS/JS offline with proper sandboxed asset paths.
 7. Export and import ZIP archives with size and traversal limits.
 8. Import public GitHub sources with bounded ZIP processing.

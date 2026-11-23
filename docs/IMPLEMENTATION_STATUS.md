@@ -1,3 +1,5 @@
+> **Current handoff:** Read [docs/development/PROJECT_MEMORY.md](development/PROJECT_MEMORY.md) and [DECISIONS.md](development/DECISIONS.md). Latest approved architecture differs from some earlier plans.
+
 # CodeLab 2.0 implementation status
 
 This is a feature-by-feature engineering status, not a claim of completion. A source
@@ -11,7 +13,7 @@ implementation, APK build, Android device test, and production release are disti
 | 04 Mobile coding | Toolbar presets/custom keys, pinch font zoom, hardware shortcuts, input selection tools, status-bar swipe tab navigation | Full one-handed layout, all gestures, per-language keyboard intelligence |
 | 05 File management | Nested folders, ZIP import/export, SAF external folder snapshot import, 2 MiB binary asset imports and offline web preview, multiple imports, GitHub snapshots, cross-project copy, recycle bin, restore, version history, regex search/replace | Live external SAF folder editing, full graphical diff/merge, larger binary files |
 | 06 Projects | Starter templates, local autosave, session restoration, favorites, quick switch, duplicate, rename, ZIP-portable project description and preferred entry file | Advanced project metadata, per-project execution profiles and shared workspaces |
-| 07 Languages | Offline Rhino JavaScript, LuaJ Lua, Android SQLite, BeanShell Java beta, offline HTML preview; runtime/version detection | Offline Python 3, TypeScript transpiler, C/C++ compilers and remaining language toolchains |
+| 07 Languages | Bundled Rhino JavaScript, LuaJ Lua, Android SQLite, BeanShell Java beta, HTML preview and newly integrated CPython 3.13 (Chaquopy); runtime/version detection | Python device smoke still failing; all optional engines must move to user-installable modules; TypeScript/C/C++/other toolchains not implemented |
 | 08 Execution | Isolated worker services, output/input, stop/timeout, configurable output caps, rerun and local history, JavaScript line breakpoints, Step/Continue | Multi-language debugging, variable inspector, profiler and additional local compilation |
 | 09 Terminal & debugging | Real stdin/stdout/stderr console, ANSI styling, output export/input recall, Rhino JavaScript line debugger, safe offline workspace built-ins | PTY-backed terminal, native shell/process sessions, full variable-aware debugger |
 | 10 Code Screenshot Studio | Offline syntax-colored 1080px PNG, three color palettes, aspect presets, solid/gradient/transparent canvas, highlight line, title/footer and line numbers | Advanced code layout templates, custom image backgrounds, editor selection capture and broad device QA |
@@ -34,8 +36,7 @@ backups before reinstalling; the CI debug signing key is not guaranteed to remai
 
 ## Architecture constraints
 
-Python, C/C++, Rust and most listed languages have file editing but **no bundled offline
-runtimes**. Cloud execution is optional, separately verified, and requires explicit
+C/C++, Rust and most listed languages have editing but **no bundled offline runtimes**. Python 3.13 is now bundled in source, contrary to the user's new optional-module requirement, and is **not verified by the latest failing emulator test**. Cloud execution is optional, separately verified, and requires explicit
 confirmation. Local JGit operations do not upload anything. Public GitHub imports download
 a bounded source snapshot, not Git history.
 

@@ -1,3 +1,5 @@
+> **Current next-work priorities (superseding the older workstreams below):** [docs/development/ROADMAP.md](development/ROADMAP.md). New product requirement: online/offline user choice and optional install of **all** language runtimes, including Python.
+
 # CodeLab engineering roadmap
 
 This tracks implemented code separately from evidence and unfinished acceptance work.

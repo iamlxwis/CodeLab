@@ -1,12 +1,12 @@
 # CodeLab modular offline execution: engineering contract
 
-Status: **design and capability registry implemented; optional engine APKs NOT released**.
+Status: **design and capability registry implemented; optional engine APKs NOT released**. For the latest user-approved product contract and handoff, see [development decisions](development/DECISIONS.md) and [project memory](development/PROJECT_MEMORY.md).
 
 ## Delivery decisions
 
 - Existing built-in engines: Rhino JavaScript, LuaJ, Android SQLite, BeanShell Java beta and local HTML/CSS/JS preview.
-- Next proposed **core** engines: real CPython and TypeScript-to-JavaScript transpilation. Neither is currently bundled.
-- Optional signed engine packages, in priority order: C/C++, genuine Java/Kotlin compiler, PHP/Ruby, then Go/Rust/C# feasibility work.
+- Existing **bundled** CPython 3.13 was introduced via Chaquopy; it must be migrated to an optional module under the newly agreed architecture. Offline Python device acceptance is still failing/unverified (see development/KNOWN_ISSUES.md). TypeScript transpilation is not implemented.
+- Target: **every optional execution engine is installed only when the user chooses it**, including Python, JavaScript, Lua and other runtimes. Users choose Online (explicit remote-source consent) or Offline (module installed); C/C++, genuine Java/Kotlin compiler, PHP/Ruby then Go/Rust/C# require engineering feasibility and validation.
 - Editing and examples for all catalog entries remain offline, irrespective of engine availability.
 
 ## Why not download ZIP compilers?
@@ -29,4 +29,4 @@ Android 10+ prevents direct execution of arbitrary binaries stored in writable a
 
 Every new engine needs: reproducible build; API 26+ compatibility on supported ABIs; zero-network execution; sandbox/security review; source-file and multi-file tests where promised; output capture and cancellation; performance and install-size measurement; emulator and physical-device coverage.
 
-This document is not a promise that Python or C/C++ currently works offline.
+This document is not a claim that any downloadable language module exists. Python has a bundled implementation but its latest emulator smoke failed; C/C++ toolchains are not implemented.

@@ -1,3 +1,5 @@
+> **Current approved runtime architecture and discrepancies:** [development decisions](development/DECISIONS.md) and [project memory](development/PROJECT_MEMORY.md). Existing bundled engines are legacy implementation, not the modular target.
+
 # CodeLab architecture
 
 CodeLab is a native Kotlin/Jetpack Compose Android app (minSdk 26, targetSdk 35).
