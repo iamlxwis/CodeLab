@@ -37,10 +37,11 @@ def main():
     from device_smoke import wait_for, snapshot
     wait_for("Welcome to CodeLab", timeout=30)
     snapshot("release-clean-install")
+    api = adb("shell", "getprop", "ro.build.version.sdk")
     Path("qa-results/clean-install-result.txt").write_text(
         "Passed: release APK installed as a new Android package and "
-        "launched on API 35 x86_64 emulator. Other Android versions, "
-        "phone firmware and downloaded-asset integrity remain unverified.\n"
+        f"launched on API {api} x86_64 emulator. Phone firmware and "
+        "downloaded-asset integrity remain unverified.\n"
     )
     adb("uninstall", PACKAGE)
 

@@ -104,3 +104,5 @@ KI-022: New appearance editor is not yet device-tested, and entering or editing 
 KI-023: Visible run strip has not been validated at narrow widths or large font sizes; show module/provider statuses accurately and preserve explicit consent.
 
 KI-024: New tutorial and QA script are not emulator verified. True anchored coach-mark highlights are not yet available; interaction is via Try-it shortcuts. Test on Android 13/15.
+
+KI-025: Android 13 and 15 emulator smoke matrix is source-only until workflows complete. No physical-device or TalkBack acceptance; test artifact images must be inspected before visual fidelity claims.

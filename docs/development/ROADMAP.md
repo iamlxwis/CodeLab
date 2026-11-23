@@ -85,3 +85,6 @@ User approved direct commits to `main`. **In the same commit as implementation w
 - [ ] Check Offline/Online chips and Module/Configure actions on emulator. Verify persisted state and Run buttons with 200% font; inspect source upload confirmation.
 
 - [ ] Validate FirstRunTutorial 14 topics, essential dismissal/replay, Try-it actions and font-scale behavior; add anchored highlights if needed.
+
+- [ ] Confirm two-API Android emulator workflow succeeds for API 33 and API 35; inspect actual screenshots separately.
+- [ ] Confirm AppearanceRecipesTest JVM tests pass. Do not mark physical-device acceptance from CI.

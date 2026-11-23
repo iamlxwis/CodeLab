@@ -88,3 +88,5 @@ IDEA-018 editor UI source now implements custom hex, preset CRUD, load and style
 IDEA-019 visible execution-mode controls committed in source; run-mode persistence, consent, missing packs and large-font QA pending.
 
 IDEA-020 now has a 14-topic progressive hands-on guide with action shortcuts in source. Screen-anchored coach-mark highlight overlays and Android acceptance pending.
+
+IDEA-018 regression tests added for preset codec; IDEA-021 two-API emulator matrix requested/added in source, verification pending.

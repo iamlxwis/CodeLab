@@ -61,3 +61,5 @@ New appearance editor controls implemented in source, not verified by Gradle or 
 Source-only: Run mode chips and contextual status added next to editor Run workflow. Device acceptance pending.
 
 Source-only: 14-topic progressive tutorial and corresponding smoke steps; not accepted until CI/emulator passes.
+
+Targeted appearance codec tests and dual-API emulator workflow added in source, not yet executed/verified.

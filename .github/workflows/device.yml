@@ -11,6 +11,10 @@ concurrency:
   cancel-in-progress: true
 jobs:
   offline:
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [33, 35]
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -31,7 +35,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       - uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: ${{ matrix.api-level }}
           arch: x86_64
           target: google_apis
           profile: pixel_2
@@ -47,6 +51,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: device-smoke-evidence
+          name: device-smoke-evidence-api-${{ matrix.api-level }}
           path: qa-results/
           if-no-files-found: warn

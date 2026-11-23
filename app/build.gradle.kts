@@ -77,6 +77,7 @@ dependencies {
     implementation("io.github.beanshell:bsh:2.1.1")
     implementation("org.eclipse.jgit:org.eclipse.jgit:7.6.0.202603022253-r")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.12.01"))
