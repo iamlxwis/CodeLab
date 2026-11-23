@@ -27,7 +27,7 @@ public final class StarterExamples {
         if (!validMode(mode)) throw new IllegalArgumentException("Unknown starter mode: " + mode);
         if (BLANK.equals(mode)) return "";
         if (HELLO.equals(mode)) {
-            switch (language) {
+            String hello = switch (language) {
             case "JavaScript" -> "print(\"Hello, CodeLab!\");\n";
             case "Python" -> "print(\"Hello, CodeLab!\")\n";
             case "TypeScript" -> "console.log(\"Hello, CodeLab!\");\n";
@@ -35,8 +35,9 @@ public final class StarterExamples {
             case "SQLite" -> "SELECT 'Hello, CodeLab!' AS greeting;\n";
             case "Java" -> "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello, CodeLab!\");\n    }\n}\n";
             case "Kotlin" -> "fun main() {\n    println(\"Hello, CodeLab!\")\n}\n";
-                default -> { /* Config/data languages use a meaningful valid example. */ }
-            }
+                default -> null;
+            };
+            if (hello != null) return hello;
         }
         return switch (language) {
             case "JavaScript" -> "function greet(name) {\n  return \"Hello, \" + name + \"!\";\n}\nprint(greet(\"CodeLab\"));\n";
