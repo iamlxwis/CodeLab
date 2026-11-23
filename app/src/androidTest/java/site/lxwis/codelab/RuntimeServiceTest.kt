@@ -88,6 +88,25 @@ class RuntimeServiceTest {
             assertTrue(session.transcript.length < 70_000)
         }
     }
+    @Test fun pythonStartsOfflineAndHandlesStdinAndFailures() {
+        main {
+            session.run("hello.py", "name = input('Name? ')\\nprint(f'Hello, {name}!')".replace("\\n", "\n"))
+        }
+        await { session.waiting }
+        main { session.submit("Ada") }
+        await { !session.running }
+        main {
+            assertEquals("Python transcript: " + session.transcript, "Exit 0", session.status)
+            assertTrue(session.transcript.contains("Hello, Ada!"))
+            session.run("broken.py", "print(missing_value)")
+        }
+        await { !session.running }
+        main {
+            assertEquals("Exit 1", session.status)
+            assertTrue(session.transcript.contains("NameError"))
+        }
+    }
+
     @Test fun sqlRunsCompletelyOffline() {
         main {
             session.run("data.sql", """

@@ -5,11 +5,14 @@ import org.junit.Test
 
 class RuntimePackCatalogTest {
     @Test fun neverAdvertiseUnshippedCoreEngines() {
-        assertEquals(RuntimePackCatalog.State.CORE_PLANNED,
-            RuntimePackCatalog.capability("Python").state)
+        // This JVM test cannot verify native CPython startup; device tests do that.
+        assertNotNull(OfflineRuntimeRegistry.manifest("py"))
+        if (OfflineRuntimeRegistry.locallyAvailable("py")) {
+            assertEquals(RuntimePackCatalog.State.BUNDLED,
+                RuntimePackCatalog.capability("Python").state)
+        }
         assertEquals(RuntimePackCatalog.State.CORE_PLANNED,
             RuntimePackCatalog.capability("TypeScript").state)
-        assertTrue(RuntimePackCatalog.capability("Python").label.contains("not installed"))
     }
 
     @Test fun nativeCompilerPacksRemainPlannedUntilActuallyInstalled() {

@@ -35,7 +35,17 @@ def wait_for(*labels, field=False, contains=False, timeout=28):
     end = time.monotonic() + timeout
     while time.monotonic() < end:
         try:
-            for node in nodes():
+            current = nodes()
+            # Google APIs emulator occasionally displays a Pixel Launcher ANR on cold boot.
+            # It obscures a healthy CodeLab screen and must not be confused with an app crash.
+            if any("Pixel Launcher isn't responding" in n.attrib.get("text", "")
+                   for n in current):
+                dismiss = next((n for n in current if n.attrib.get("text") == "Close app"), None)
+                if dismiss is not None:
+                    tap_node(dismiss)
+                    time.sleep(1)
+                    continue
+            for node in current:
                 attrs = node.attrib
                 if field and attrs.get("class") != "android.widget.EditText":
                     continue
@@ -184,30 +194,25 @@ def main():
     wait_for("Exit 0", contains=True)
     snapshot("09-java-beta")
 
-    # Cloud-only template is editable in airplane mode, but cannot claim to run offline.
+    # Python is now a genuine CPython runtime. Run the starter with airplane mode on.
     tap("Project library")
     wait_for("New project")
     tap("New project")
-    tap_node(wait_for("Browse", contains=True))
-    tap("Search language or extension")
-    adb("shell", "input", "text", "Python")
-    tap("Select Python")
+    tap("Python")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "PySmoke")
-    # Ensure the software keyboard does not obscure the sheet's Create action.
-    adb("shell", "input", "keyevent", "4")
     tap("Create project")
     wait_for("main.py", contains=True)
     tap("Run")
-    wait_for("This language needs an online compiler", contains=True)
-    tap("Close")
-    snapshot("10-online-required")
+    wait_for("Hello from CodeLab!", contains=True, timeout=40)
+    wait_for("Exit 0", contains=True)
+    snapshot("10-offline-python")
 
     (OUT / "result.txt").write_text(
         "Passed: install, create, launch offline JavaScript, interactive input, "
         "computed output, normal exit, file creation, editing, tab switching, autosave, "
         "process restoration, rotation, SQLite execution, rendered HTML preview, offline Lua, " 
-        "Java beta execution, and honest offline behavior for cloud-only Python.\n")
+        "Java beta execution, and real CPython execution in airplane mode.\n")
 
 
 if __name__ == "__main__":
