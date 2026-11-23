@@ -4,6 +4,9 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P0 — build and runtime reliability
 
+- [ ] Verify registry cleanup removes the two Python-as-bundled unit test failures ([45134808317](https://github.com/iamlxwis/CodeLab/actions/runs/45134808317)). Patch committed, CI pending.
+- [ ] Verify searchable Web template unblocks emulator journey ([45133009129](https://github.com/iamlxwis/CodeLab/actions/runs/45133009129)). Patch committed, CI pending.
+
 - [x] APK builds at source SHA `3c37ae8c`; see [build](https://github.com/iamlxwis/CodeLab/actions/runs/45129100978).
 - [x] Diagnose [emulator Python-output timeout](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951). Actual UI trace confirms `Exit 1`: Chaquopy reads SharedPreferences from an isolated process where UserManager is unavailable.
 - [ ] Repair using a properly isolated, signed companion runtime APK (not simply an unisolated service in CodeLab), then demonstrate real offline stdout/stdin/errors.

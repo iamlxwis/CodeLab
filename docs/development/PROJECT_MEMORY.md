@@ -106,3 +106,9 @@ errors; **new CI verification is still required**.
 The language catalog no longer hardcodes Python as bundled offline; JVM tests
 now assert Python is not part of the core runtime registry. Actual installed
 pack availability remains a PackageManager verification on Android devices.
+
+## 2026-11-23 — registry and Web-template regression fixes
+
+- Latest APK CI [45134808317](https://github.com/iamlxwis/CodeLab/actions/runs/45134808317) failed 2 unit tests because `OfflineRuntimeRegistry.kt` still falsely included Python in the **core** after the companion migration. Removed that stale entry, matching the already-correct tests; new CI verification required.
+- Device smoke [45133009129](https://github.com/iamlxwis/CodeLab/actions/runs/45133009129) successfully got through Python, JavaScript, console input, editor operations and SQLite before failing on `Language result Web did not appear`. Device evidence `last-window.xml` shows the `Web` search field but no result, because Web is only a **multi-file project template** and is not an entry in `LanguageCatalog.entries`. Added an explicit Web project result to the language search UI. Do not add a fake executable language to the catalog.
+- **Verification pending on this commit:** APK unit/build pass and Android emulator smoke including Web/Java/Lua. Do not mark complete before both workflows pass for same SHA.

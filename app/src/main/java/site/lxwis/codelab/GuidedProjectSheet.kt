@@ -106,6 +106,30 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                 LazyColumn(Modifier.weight(1f),
                     contentPadding = PaddingValues(bottom = 18.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    // Web is a multi-file project template, not a language-catalog entry.
+                    // It must be discoverable by search as well as through the quick tile.
+                    if ("Web".contains(query, ignoreCase = true)) {
+                        item(key = "web-project") {
+                            Surface(
+                                onClick = { language = "Web"; browsing = false; keyboard?.hide() },
+                                color = if (language == "Web") MaterialTheme.colorScheme.primaryContainer
+                                    else MaterialTheme.colorScheme.surfaceContainerLow,
+                                shape = RoundedCornerShape(14.dp)
+                            ) {
+                                Row(Modifier.fillMaxWidth().padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically) {
+                                    Column(Modifier.weight(1f)) {
+                                        Text("Web", style = MaterialTheme.typography.titleMedium)
+                                        Text("Offline HTML, CSS and JavaScript preview",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Text("index.html", fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        }
+                    }
                     items(results, key = { it.name }) { item ->
                         Surface(
                             onClick = { language = item.name; browsing = false; keyboard?.hide() },

@@ -23,3 +23,8 @@ Core's Python dispatcher now expects an independently installed same-certificate
 Python companion. Early APK releases still included embedded Chaquopy; preserve
 project source/files while testing the migration. CI must build/sign the two
 APKs together, publish them as a pair and verify the runtime device journey.
+
+## 2026-11-23 — further CI evidence / fixes pending retest
+
+- **KI-009 (build):** [45134808317](https://github.com/iamlxwis/CodeLab/actions/runs/45134808317) failed exactly two tests: `OfflineRuntimeRegistryTest.onlyAdvertisesExistingBundledEngines` and `RuntimePackCatalogTest.neverAdvertiseUnshippedCoreEngines`. Root cause: source still advertised embedded Python after the module migration. This commit removes stale registry entry; await next Gradle results.
+- **KI-010 (device):** [45133009129](https://github.com/iamlxwis/CodeLab/actions/runs/45133009129) failed `AssertionError: Language result Web did not appear`. Evidence: `last-window.xml` showed only the search field and filter, since Web is a template missing from `LanguageCatalog.entries`. This commit makes the Web template searchable from the language browser; await device result.

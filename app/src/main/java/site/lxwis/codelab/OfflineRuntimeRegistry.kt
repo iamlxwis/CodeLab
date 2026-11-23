@@ -1,6 +1,6 @@
 package site.lxwis.codelab
 
-/** Local runtime capabilities, backed by libraries bundled inside the APK. */
+/** Local runtime capabilities still bundled in the editor APK. Optional Python lives in a separate verified companion package. */
 internal object OfflineRuntimeRegistry {
     data class Runtime(
         val name: String,
@@ -12,10 +12,6 @@ internal object OfflineRuntimeRegistry {
         val limitations: String
     )
     private val catalog = listOf(
-        Runtime("Python", "py", "CPython via Chaquopy", "3.13",
-            "com.chaquo.python.Python",
-            "Python 3 syntax, standard library where Android-compatible, console I/O",
-            "Isolated worker. No native pip installs at runtime and some OS APIs are unavailable."),
         Runtime("JavaScript", "js", "Mozilla Rhino", "1.7.15.1",
             "org.mozilla.javascript.Context",
             "Statements, functions, interactive readLine and console output",

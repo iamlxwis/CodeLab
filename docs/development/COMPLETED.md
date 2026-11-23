@@ -20,3 +20,9 @@ Evidence:
 - [Device smoke (failure) — source 3c37ae8c](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951)
 
 **Do not mark online/offline user-choice flow, module marketplace, Python module migration, C/C++ or TypeScript offline execution complete.**
+
+## Regression correction awaiting verification
+
+This commit removes Python from the core runtime inventory and restores the
+Web multi-file template to language search. These source fixes are **not yet
+marked verified**; check both build and emulator workflows for the new SHA.

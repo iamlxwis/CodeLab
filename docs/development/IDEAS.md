@@ -28,3 +28,10 @@ Updated: 2026-11-23. **This is the authoritative, durable list of user requests 
 ## Revision history
 
 - 2026-11-23: Created persistent ledger and non-deletion policy after user clarification. Earlier requirements reconstructed from agreed project decisions; if any historical detail differs from original intent, preserve the row and append a correction.
+
+## 2026-11-23 implementation evidence
+
+IDEA-001 / IDEA-010: removed stale bundled Python runtime metadata from the
+core (source patch; unit tests pending). IDEA-003: Web project template is now
+searchable in the guided creation browser (source patch; emulator retest pending).
+No new approved user requirement was dropped or marked complete.
