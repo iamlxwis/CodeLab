@@ -1,0 +1,79 @@
+# One-time explicit Phase 1 acceptance checkpoint. Not a standing source-push device trigger.
+# It runs only on creation/changes to THIS file; routine source pushes remain fast.
+name: Phase 1 release checkpoint
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/phase1-checkpoint.yml'
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: phase1-release-checkpoint
+  cancel-in-progress: true
+jobs:
+  acceptance:
+    if: github.repository == 'iamlxwis/CodeLab'
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    steps:
+      - name: Assert source was not superseded
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          current="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          [[ "$current" == "$GITHUB_SHA" ]] || {
+            echo "::error::Newer changes exist. Restart the acceptance checkpoint against current main."
+            exit 1
+          }
+      - name: Dispatch Android 15 verification for this checkpoint
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: gh workflow run device.yml --ref main
+      - name: Require successful API 35 workflow on the exact commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_id=""
+          for attempt in $(seq 1 210); do
+            data="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/device.yml/runs?event=workflow_dispatch&per_page=30")"
+            chosen="$(echo "$data" | jq -c --arg sha "$GITHUB_SHA" '
+              [.workflow_runs[] | select(.head_sha == $sha and .event == "workflow_dispatch")]
+              | sort_by(.run_number, .run_attempt) | last // null')"
+            if [[ "$chosen" != "null" ]]; then
+              run_id="$(echo "$chosen" | jq -r .id)"
+              status="$(echo "$chosen" | jq -r .status)"
+              conclusion="$(echo "$chosen" | jq -r .conclusion)"
+              echo "API 35 device workflow $run_id: $status / $conclusion"
+              if [[ "$status" == "completed" ]]; then
+                [[ "$conclusion" == "success" ]] || {
+                  echo "::error::Device QA failed. No APK release will be published."
+                  exit 1
+                }
+                echo "Android 15 passed: https://github.com/$GITHUB_REPOSITORY/actions/runs/$run_id"
+                exit 0
+              fi
+            fi
+            sleep 15
+          done
+          echo "::error::Android 15 QA did not pass within the checkpoint timeout."
+          exit 1
+      - name: Dispatch guarded public release (requires same-commit device success)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          current="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq '.object.sha')"
+          [[ "$current" == "$GITHUB_SHA" ]] || {
+            echo "::error::Source changed during QA; do not publish untested code."
+            exit 1
+          }
+          gh workflow run android.yml --ref main -f publish_release=true
+          echo "Manual release workflow dispatched. It independently rechecks same-SHA device success and signing."
