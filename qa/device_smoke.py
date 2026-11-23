@@ -93,8 +93,11 @@ def choose_language(name):
 def main():
     OUT.mkdir(exist_ok=True)
     apk = next(Path("app/build/outputs/apk/debug").glob("*.apk"))
+    companion = next(Path("engine-python/build/outputs/apk/debug").glob("*.apk"))
+    adb("install", "-r", str(companion))
     adb("install", "-r", str(apk))
     adb("shell", "pm", "clear", PACKAGE)
+    assert "site.lxwis.codelab.engine.python" in adb("shell", "pm", "list", "packages")
     adb("shell", "cmd", "connectivity", "airplane-mode", "enable")
     adb("shell", "svc", "wifi", "disable")
     assert adb("shell", "settings", "get", "global", "airplane_mode_on") == "1"

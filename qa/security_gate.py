@@ -38,6 +38,15 @@ def inspect():
         errors.append("Android backup policy unexpectedly relaxed")
     if 'android:isolatedProcess="true"' not in manifest:
         errors.append("Script runtime process isolation unexpectedly removed")
+    python_manifest = (ROOT / "engine-python/src/main/AndroidManifest.xml").read_text()
+    if 'android:permission="site.lxwis.codelab.permission.BIND_ENGINE"' not in python_manifest:
+        errors.append("Python companion must require signature-protected binding")
+    if 'android.permission.INTERNET' in python_manifest:
+        errors.append("Python companion unexpectedly gained INTERNET permission")
+    if 'android:allowBackup="false"' not in python_manifest:
+        errors.append("Python companion must disable Android backup")
+    if 'android:protectionLevel="signature"' not in manifest:
+        errors.append("Core must declare signature-level engine permission")
     return errors
 
 if __name__ == "__main__":

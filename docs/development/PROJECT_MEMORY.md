@@ -67,3 +67,12 @@ signing-certificate match, signature permission and protocol version before
 explicitly binding; a missing or untrusted pack is rejected. Existing
 JavaScript/Lua/Java runtimes remain embedded pending their own migrations.
 **Build and offline-device verification of this integration are outstanding.**
+
+## CI delivery for Python companion (this source commit)
+
+Gradle workflows now build the editor and companion APK together, sign and
+verify both, publish `CodeLab-Python.apk` alongside `CodeLab.apk`,
+and install both before emulator smoke. The pipeline and runtime have not
+yet been proven successful for this SHA; check separate APK and device run
+statuses. Fallback debug signing means users should install both APKs from
+the same release/build.

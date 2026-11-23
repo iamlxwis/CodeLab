@@ -42,7 +42,7 @@ jobs:
       - name: Static security regression gate
         run: python3 qa/security_gate.py
       - name: Build release, test, lint, and coverage report
-        run: bash gradlew --no-daemon :app:assembleRelease :app:testDebugUnitTest :app:debugUnitTestCoverage :app:lintDebug
+        run: bash gradlew --no-daemon :app:assembleRelease :engine-python:assembleRelease :app:testDebugUnitTest :app:debugUnitTestCoverage :app:lintDebug
       - name: Upload quality reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -54,6 +54,14 @@ jobs:
           if-no-files-found: warn
       - name: Verify APK signature
         run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk'
+      - name: Verify Python companion signature
+        run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose engine-python/build/outputs/apk/release/engine-python-release.apk'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CodeLab-Python-module
+          path: engine-python/build/outputs/apk/release/engine-python-release.apk
+          if-no-files-found: error
+          retention-days: 90
       - uses: actions/upload-artifact@v4
         with:
           name: CodeLab-release
@@ -65,7 +73,8 @@ jobs:
         run: |
           mkdir -p release
           cp app/build/outputs/apk/release/app-release.apk release/CodeLab.apk
-          sha256sum release/CodeLab.apk > release/CodeLab.apk.sha256
+          cp engine-python/build/outputs/apk/release/engine-python-release.apk release/CodeLab-Python.apk
+          sha256sum release/CodeLab.apk release/CodeLab-Python.apk > release/CodeLab.apk.sha256
       - name: Publish latest APK
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
@@ -74,13 +83,13 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "$CODELAB_SIGNING_MODE" == "production" ]]; then
-            NOTES="Optimized Android release APK signed with the configured stable release key. Android 8.0+. SHA-256 checksum included."
+            NOTES="Editor APK plus separately installable signed Python module. Install Python only if you need offline Python. Both use the configured stable signing key. Python pack requires a 64-bit device. Android 8.0+. Checksums included."
           else
-            NOTES="Optimized release APK signed with the CI fallback debug key. In-place updates are NOT guaranteed until stable signing secrets are configured. Back up projects before reinstalling. Android 8.0+. SHA-256 checksum included."
+            NOTES="Editor APK plus optional Python module. Both are CI fallback-debug signed and must come from the SAME build; cross-release in-place updates are not guaranteed. Back up projects. Python pack requires arm64 or x86_64. Android 8.0+. Checksums included."
           fi
           if gh release view latest >/dev/null 2>&1; then
-            gh release upload latest release/CodeLab.apk release/CodeLab.apk.sha256 --clobber
+            gh release upload latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab.apk.sha256 --clobber
             gh release edit latest --latest --title "CodeLab — latest Android APK" --notes "$NOTES"
           else
-            gh release create latest release/CodeLab.apk release/CodeLab.apk.sha256 --target "$GITHUB_SHA" --title "CodeLab — latest Android APK" --notes "$NOTES" --latest
+            gh release create latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab.apk.sha256 --target "$GITHUB_SHA" --title "CodeLab — latest Android APK" --notes "$NOTES" --latest
           fi
