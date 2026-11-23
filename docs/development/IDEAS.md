@@ -101,3 +101,5 @@ IDEA-020: aligned motion QA with revised onboarding; pending two-API smoke.
 IDEA-021 evidence: Android 13+15 emulator jobs failed on text visibility after process restart; reproduced native-editor clipping in actual API35 screenshots. Source viewport responsive mitigation and authoritative file-byte QA added. Build retest pending.
 
 | IDEA-022 | 2026-11-23 | Audit app functions for failures/incorrect results, repair Favorites view and other reproducible issues, preserve regression coverage | In progress | Source fixes Favorites/Recent, failed-create recovery and new JVM/emulator tests; CI and broader path coverage pending. |
+
+IDEA-015 revision (2026-11-23): User explicitly wants future CodeLab versions to install as updates without uninstalling. Source now automates editor/Python version codes and guards production signing; permanent owner-managed signing secrets and same-certificate Android 13/15/physical-phone upgrade tests remain open. No tool should ask the user to send a signing key or password in chat.

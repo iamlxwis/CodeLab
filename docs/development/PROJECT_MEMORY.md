@@ -1,3 +1,7 @@
+## 2026-11-23 — release update-signing patch (awaiting CI)
+
+After project library patch `5503cb62`, editor and Python APKs now read an increasing CI release `CODELAB_VERSION_CODE`, defaulting to 6/2 for local builds; GitHub Actions derives it from workflow run number. CI rejects partially configured signing secrets, warns on fallback-debug, blocks accidental replacement of a prior production-signed release with a fallback-debug release, and records version in build info. Owner must generate or reuse stable private keystore and set four GitHub Actions secrets (secure instructions in docs/INSTALLATION.md). Cannot assert update continuity until production-signing builds and physical-device upgrade tests pass. Prior verified APK/device CI `09e94e2c`; new CI status pending. Next: inspect latest jobs, correct failures, then guide owner through secrets.
+
 
 ## 2026-11-23 — defect sweep, source awaiting CI
 

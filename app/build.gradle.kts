@@ -23,8 +23,10 @@ android {
         applicationId = "site.lxwis.codelab"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.5.0-alpha"
+        // CI releases use an increasing run number; local builds use a stable base.
+        versionCode = System.getenv("CODELAB_VERSION_CODE")?.toIntOrNull()
+            ?.takeIf { it >= 6 } ?: 6
+        versionName = "0.5.1-alpha"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true }

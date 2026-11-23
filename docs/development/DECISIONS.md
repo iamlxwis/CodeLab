@@ -26,3 +26,7 @@ Updated 2026-11-23. These are user requirements, not evidence that code already 
 - Built-in SQLite/WebView are Android platform capabilities, not equivalent to a separately downloadable SQL or browser engine. Interpret D-003 as *optional language execution capability*: decide how to expose platform-native functionality without inaccurately claiming that engine binaries were downloaded.
 - Existing bundled engine source should be migrated only after a working opt-in replacement exists, with a supported upgrade path for old projects.
 - If a user changes an architectural decision, revise this file first (or in the same commit) and explicitly note migration impact.
+
+## 2026-11-23 — stable update policy
+
+D-023: A dependable install-over-existing update requires the **same Android signing certificate** and a nondecreasing version code (our release automation increments it); both editor and Python companion must use the same key. Refuse silent fallback to debug publishing after production is established. Signing keys are kept only in owner-managed GitHub Actions secrets and encrypted offline backups; never in source or chat. Initial fallback-to-production migration needs data backup and one-time reinstall.

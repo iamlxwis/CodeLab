@@ -1,3 +1,9 @@
+## 2026-11-23 — update-signing acceptance gate
+
+- [ ] Confirm new APK CI reports increasing `Version code` and correct signing mode; inspect workflow logs for signing audit.
+- [ ] Configure stable production key via four GitHub Actions secrets; retain two secure backups outside repository.
+- [ ] Test production-v1 → production-v2 in-place install for editor and Python on Android 13/15 and a physical phone; verify project data survives. Historical fallback → production needs a one-time backed-up reinstall.
+
 ## 2026-11-23 — active regression audit
 
 - [ ] Verify Favorites-only listing, counts, empty state and unstar behavior on API 33/35 plus JVM tests.

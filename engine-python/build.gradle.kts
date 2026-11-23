@@ -19,8 +19,10 @@ android {
         applicationId = "site.lxwis.codelab.engine.python"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "3.13.0-alpha"
+        // The optional companion must also be upgradable without uninstalling.
+        versionCode = System.getenv("CODELAB_VERSION_CODE")?.toIntOrNull()
+            ?.takeIf { it >= 2 } ?: 2
+        versionName = "3.13.1-alpha"
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
     compileOptions {

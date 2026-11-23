@@ -23,6 +23,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Assign increasing release version code
+        # GitHub workflow run numbers increase on successive builds.
+        run: echo "CODELAB_VERSION_CODE=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
       - name: Configure optional stable release signing
         env:
           CODELAB_KEYSTORE_B64: ${{ secrets.CODELAB_KEYSTORE_B64 }}
@@ -37,6 +40,11 @@ jobs:
             echo "CODELAB_KEYSTORE_FILE=$RUNNER_TEMP/codelab-release.jks" >> "$GITHUB_ENV"
             echo "CODELAB_SIGNING_MODE=production" >> "$GITHUB_ENV"
           else
+            if [[ -n "$CODELAB_KEYSTORE_B64$CODELAB_KEYSTORE_PASSWORD$CODELAB_KEY_ALIAS$CODELAB_KEY_PASSWORD" ]]; then
+              echo "::error::Release signing is partially configured. All four secrets are required."
+              exit 1
+            fi
+            echo "::warning::No stable signing key configured; in-place updates cannot be guaranteed."
             echo "CODELAB_SIGNING_MODE=fallback-debug" >> "$GITHUB_ENV"
           fi
       - name: Static security regression gate
@@ -79,6 +87,69 @@ jobs:
           if gh release view latest >/dev/null 2>&1; then
             mkdir -p prior-apk
             gh release download latest --pattern CodeLab.apk --dir prior-apk
+            gh release download latest --pattern CodeLab-build-info.txt --dir prior-apk || true
+            if [[ "$CODELAB_SIGNING_MODE" != "production" ]] &&
+               grep -q '^Signing mode: production
+            if [[ -n "$prior_cert" && "$prior_cert" == "$editor_cert" ]]; then
+              echo "CODELAB_UPGRADE_COMPATIBILITY=compatible" >> "$GITHUB_ENV"
+              echo "Existing latest release has the same Android signing certificate."
+            else
+              echo "CODELAB_UPGRADE_COMPATIBILITY=signature_changed" >> "$GITHUB_ENV"
+              echo "::warning title=CodeLab upgrade cannot replace prior installation::Signing certificate differs from the previously published APK. Back up projects before uninstalling; configure stable GitHub Actions signing secrets."
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CodeLab-Python-module
+          path: engine-python/build/outputs/apk/release/engine-python-release.apk
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CodeLab-release
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 90
+      - name: Prepare installable release APK and checksum
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: |
+          mkdir -p release
+          cp app/build/outputs/apk/release/app-release.apk release/CodeLab.apk
+          cp engine-python/build/outputs/apk/release/engine-python-release.apk release/CodeLab-Python.apk
+          (cd release && sha256sum CodeLab.apk CodeLab-Python.apk > CodeLab.apk.sha256)
+          printf 'Build commit: %s\nVersion code: %s\nSigning mode: %s\nSigner SHA-256: %s\nUpgrade compatibility: %s\n' \
+            "$GITHUB_SHA" "$CODELAB_VERSION_CODE" "$CODELAB_SIGNING_MODE" \
+            "$CODELAB_SIGNER_SHA256" "$CODELAB_UPGRADE_COMPATIBILITY" > release/CodeLab-build-info.txt
+      - name: Publish latest APK
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$CODELAB_SIGNING_MODE" == "production" ]]; then
+            NOTES="Editor APK plus separately installable signed Python module. Install Python only if you need offline Python. Both use the configured stable signing key. Python pack requires a 64-bit device. Android 8.0+. Checksums included."
+          else
+            NOTES="Editor APK plus optional Python module. Both are CI fallback-debug signed and must come from the SAME build; cross-release in-place updates are not guaranteed. Back up projects. Python pack requires arm64 or x86_64. Android 8.0+. Checksums included."
+          fi
+          NOTES="$NOTES Build commit: $GITHUB_SHA. Download CodeLab.apk for the editor; CodeLab-Python.apk is only the optional Python runtime. See docs/INSTALLATION.md for backup and upgrade instructions."
+          if [[ "$CODELAB_UPGRADE_COMPATIBILITY" == "signature_changed" ]]; then
+            NOTES="$NOTES IMPORTANT: The signing certificate changed since the previous release. Android may reject this APK over an existing CodeLab installation. Export project ZIPs while the old app still works and save them outside the app. Only then uninstall, install CodeLab.apk and import the backups. There is no safe bypass for Android's signature check."
+          fi
+          if gh release view latest >/dev/null 2>&1; then
+            gh release upload latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --clobber
+            gh release edit latest --latest --title "CodeLab — latest Android APK" --notes "$NOTES" --target "$GITHUB_SHA"
+            # The 'latest' release is intentionally mutable; keep its tag
+            # pointing to the source that actually produced the APK assets.
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/latest" \
+              -f sha="$GITHUB_SHA" -F force=true >/dev/null
+          else
+            gh release create latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --target "$GITHUB_SHA" --title "CodeLab — latest Android APK" --notes "$NOTES" --latest
+          fi
+ prior-apk/CodeLab-build-info.txt 2>/dev/null; then
+              echo "::error::Refusing to replace a production-signed release with a fallback-debug APK."
+              exit 1
+            fi
             prior_cert="$(signing_sha256 prior-apk/CodeLab.apk || true)"
             if [[ -n "$prior_cert" && "$prior_cert" == "$editor_cert" ]]; then
               echo "CODELAB_UPGRADE_COMPATIBILITY=compatible" >> "$GITHUB_ENV"

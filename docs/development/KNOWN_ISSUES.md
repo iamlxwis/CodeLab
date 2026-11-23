@@ -120,3 +120,7 @@ Android 13 and Android 15 runs [45171811506](https://github.com/iamlxwis/CodeLab
 
 - KI-028: Favorites used a sorting comparator, not a filter, so nonfavorites appeared. Recent also pushed favorites above truly recent projects. Source fixes both and adds unit/emulator regression; CI pending.
 - KI-029: An optimistic new/open-project navigation could leave an empty editor after an I/O failure. Source restores library when the failing navigation is still current; CI/device regression pending.
+
+### KI-030 — release version/signing continuity (2026-11-23)
+
+Existing editor and Python app codes were static at 5/1, and published CI builds use fallback debug keystores, preventing guaranteed in-place updates. Source now derives release version codes from the increasing APK workflow run number, rejects partial production signing configuration, and prevents falling back to a debug-signed latest after production is established. **CI and owner key configuration pending.** Do not claim this resolves the physical phone's earlier clean-install invalid-package error; it is a distinct unresolved issue.

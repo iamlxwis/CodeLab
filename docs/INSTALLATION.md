@@ -27,3 +27,42 @@ If you have already uninstalled CodeLab and Android reports `App not installed a
 The editor and Python runtime must be signed with the **same Android certificate**. A permanent stable signing key is required for reliable updates and companion verification. Configure the four GitHub Actions secrets named `CODELAB_KEYSTORE_B64`, `CODELAB_KEYSTORE_PASSWORD`, `CODELAB_KEY_ALIAS`, and `CODELAB_KEY_PASSWORD`. Never commit the keystore or passwords. Switching from previously distributed fallback-debug keys to a stable key requires a **one-time backed-up reinstall** because Android cannot migrate package signing identities automatically.
 
 The latest release includes `CodeLab-build-info.txt` (source SHA, signing mode, certificate fingerprint and upgrade compatibility) and `CodeLab.apk.sha256` (checksums for both APK assets).
+
+## Permanent signing from an Android phone (one-time setup)
+
+Reliable install-over-existing updates require the **same private keystore** on
+every release, plus increasing Android version codes. CI now advances version
+codes automatically. If you already have a stable production keystore, reuse
+it; creating a second key makes existing production installs incompatible.
+
+To create a new key entirely on your phone with Termux (not an online key generator):
+
+```sh
+pkg update
+pkg install openjdk-17 coreutils
+keytool -genkeypair -keystore codelab-release.jks -storetype PKCS12 \
+  -alias codelab -keyalg RSA -keysize 4096 -validity 10000
+base64 -w 0 codelab-release.jks > codelab-release.b64
+```
+
+Choose a long unique password when prompted. Keep at least two encrypted backups
+of the **original .jks** (off-device). Losing it permanently prevents signing
+future updates with the same identity. Treat the base64 file as sensitive too;
+never commit it to GitHub, paste it in a chat, or share it publicly.
+
+In your mobile browser open
+**GitHub → CodeLab → Settings → Secrets and variables → Actions → New repository secret**
+(use **Desktop site** if navigation is hidden). Add:
+
+- `CODELAB_KEYSTORE_B64`: full contents of `codelab-release.b64`
+- `CODELAB_KEYSTORE_PASSWORD`: keystore password
+- `CODELAB_KEY_ALIAS`: `codelab` (or your chosen alias)
+- `CODELAB_KEY_PASSWORD`: key-entry password (usually equal to the store password for PKCS12)
+
+Then go to **Actions → Android APK → Run workflow** on `main`. Confirm
+the build passes and the latest release's `CodeLab-build-info.txt` says
+`Signing mode: production`; record the certificate fingerprint. Keep these
+four secrets unchanged in future. A previously fallback-debug-signed install
+requires **one backed-up reinstall** when switching to the permanent key.
+Subsequent APKs signed with that same key and higher version codes can replace
+the old one while preserving app data.

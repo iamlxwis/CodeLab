@@ -75,3 +75,7 @@ Source QA text synchronized with new tutorial and execution selector; no asserti
 ## 2026-11-23 — current source checkpoint (not yet verified)
 
 Project Favorites filtering, Recent sorting, filtered count/empty state and failed-create recovery patched in source with JVM/device regression. Wait for APK and emulator CI before marking verified. Further app bug auditing and permanent release signing remain open.
+
+## 2026-11-23 — signing improvements (source checkpoint, not production verified)
+
+Added CI release versionCode monotonicity for both editor and Python, partially configured signing rejection, production-to-fallback publication protection, version in release manifest and mobile secure-key setup docs. In-place updates are **not yet verified** and continue to require repository-owner signing secrets.
