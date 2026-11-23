@@ -94,3 +94,5 @@ User approved direct commits to `main`. **In the same commit as implementation w
 - [ ] Verify project card file counts, newly created/imported/renamed projects, loading state and large-font card clipping in real emulator screenshots.
 
 - [ ] Retest full motion benchmark after replacing legacy onboarding selectors; no fabricated screen tests.
+
+- [ ] Retest native editor viewport in 280dp or less available height and before/after IME. Verify actual saved file bytes with `run-as` on both API33/API35 and review landscape screenshot.

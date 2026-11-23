@@ -97,3 +97,5 @@ IDEA-016: project card metadata now displays measured template/file count/descri
 
 IDEA-019 polish: eliminated duplicate hidden mode controls; choice remains visible in Run strip.
 IDEA-020: aligned motion QA with revised onboarding; pending two-API smoke.
+
+IDEA-021 evidence: Android 13+15 emulator jobs failed on text visibility after process restart; reproduced native-editor clipping in actual API35 screenshots. Source viewport responsive mitigation and authoritative file-byte QA added. Build retest pending.

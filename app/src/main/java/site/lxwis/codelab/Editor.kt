@@ -263,7 +263,11 @@ fun CodeEditor(
         },
         dismissButton = { TextButton(onClick = { lineDialog = false }) { Text("Cancel") } }
     )
-    Column(modifier) {
+    // Preserve a usable source viewport when the keyboard or landscape reduces height.
+    // Essential editor tools remain in the first row; optional shortcuts collapse.
+    BoxWithConstraints(modifier) {
+    val compactEditor = maxHeight < 280.dp
+    Column(Modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().height(48.dp).horizontalScroll(rememberScrollState())
                 .padding(horizontal = 5.dp),
@@ -707,7 +711,7 @@ fun CodeEditor(
             view?.goToLogicalLine(line)
         })
         }
-        if (symbols && !(hardwareKeyboard && hideToolbarOnHardware)) {
+        if (!compactEditor && symbols && !(hardwareKeyboard && hideToolbarOnHardware)) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically) {
                 if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") EditorAction("Tab") { if (!readOnly) view?.indentSelection() }
@@ -763,11 +767,12 @@ fun CodeEditor(
                 }
             }
         }
-        EditorStatusBar(
+        if (!compactEditor) EditorStatusBar(
             fileKey = fileKey, filename = filename, text = text, status = cursorStatus,
             readOnly = readOnly, wordWrap = wordWrap,
             onPreviousTab = onPreviousTab, onNextTab = onNextTab
         )
+    }
     }
 }
 

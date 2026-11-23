@@ -225,14 +225,22 @@ def main():
     tap("All open tabs")
     tap("answer.js")
     wait_for("Close answer.js")
+    # Read the actual project file, not an accessibility node that can disappear
+    # when the native EditText viewport collapses under IME or rotation.
+    stored = lambda: adb("shell", "run-as", PACKAGE, "cat",
+                         "files/workspace/projects/Smoke/answer.js")
+    assert "print(6*7)" in stored(), "Answer file did not survive tab switching"
+    adb("shell", "settings", "put", "system", "accelerometer_rotation", "0")
+    adb("shell", "settings", "put", "system", "user_rotation", "0")
     adb("shell", "am", "force-stop", PACKAGE)
+    assert "print(6*7)" in stored(), "Edited source was not durably saved"
     launch()
     wait_for("Close answer.js")
     wait_for("print(6*7)", contains=True)
-    adb("shell", "settings", "put", "system", "accelerometer_rotation", "0")
     adb("shell", "settings", "put", "system", "user_rotation", "1")
     time.sleep(1)
-    wait_for("print(6*7)", contains=True)
+    assert "print(6*7)" in stored(), "Rotation modified the saved source"
+    wait_for("Close answer.js")
     snapshot("05-restored-landscape")
 
     # Verify the SQL starter and SQL console through the actual Android UI.

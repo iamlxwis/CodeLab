@@ -69,3 +69,5 @@ Run strip material icon compile correction in source; CI verification pending.
 Source-only: project-card template/file count/description on background storage executor; CI acceptance pending.
 
 Source QA text synchronized with new tutorial and execution selector; no assertion of passing full emulator smoke.
+
+2026-11-23 verified: run 45171811507 passed APK release build, JVM test suite, lint and signature; latest release at 618c123e published. Device suite FAILED API33/API35 due editor viewport / accessibility after restart; responsive viewport and stronger persistence assertions committed, **not yet device-verified**.

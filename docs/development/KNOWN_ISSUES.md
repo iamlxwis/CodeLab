@@ -112,3 +112,6 @@ KI-026: [45170798149](https://github.com/iamlxwis/CodeLab/actions/runs/451707981
 KI-027: New project summary metadata lookup uses background I/O but has not yet been stress-tested on large project libraries; verify counts after modifications and imports.
 
 KI-028: `qa/motion_smoke.py` contained obsolete tutorial selectors (`Start coding`) after 14-topic guide migration. Fixed script; CI pending.
+
+## KI-029 — CI emulator post-restart text visibility / storage uncertainty
+Android 13 and Android 15 runs [45171811506](https://github.com/iamlxwis/CodeLab/actions/runs/45171811506) failed at `qa/device_smoke.py:235`: editor source not located by accessibility after force-stop. API35 screenshot shows near-zero-height source viewport in landscape and during IME; this does NOT yet establish content loss. Mitigation in CodeEditor uses compact-height layout; QA now reads saved file bytes with `run-as` and forces portrait for accessibility. Verify on new CI before closing. Real phone still unverified.
