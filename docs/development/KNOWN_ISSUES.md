@@ -128,3 +128,7 @@ Existing editor and Python app codes were static at 5/1, and published CI builds
 - **KI-031:** Failed duplicate file creation left an optimistic blank/stale editor tab. Source now rejects known collisions before switching and restores the previous tab on I/O failure if no intervening edit/navigation occurred; unit + Android tests added, CI pending.
 
 - **KI-032 (QA regression)**: API35 emulator [run 45181285928](https://github.com/iamlxwis/CodeLab/actions/runs/45181285928) timed out waiting for `Internet connection required`; actual XML showed `No online compiler for this file` for selected Online. Both are valid offline/unconfigured provider states; source fixes QA assertion to accept either, retest needed.
+
+## KI-033 — GitHub Actions key provisioning acceptance (2026-11-23)
+
+One-time keygen, authenticated encrypted artifact and local phone WebCrypto unlocker have been authored. A public repository's workflow artifacts must **never contain the raw JKS or plaintext Base64 key**. User must create the strong generator passphrase as a GitHub Actions repository secret. No production secrets are currently verified configured, and local Android HTML/browser recovery and actual production-signed upgrade are not yet verified. Never solicit secret values in chat or confuse generator workflow with production release.

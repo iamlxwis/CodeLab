@@ -105,3 +105,5 @@ IDEA-021 evidence: Android 13+15 emulator jobs failed on text visibility after p
 IDEA-015 revision (2026-11-23): User explicitly wants future CodeLab versions to install as updates without uninstalling. Source now automates editor/Python version codes and guards production signing; permanent owner-managed signing secrets and same-certificate Android 13/15/physical-phone upgrade tests remain open. No tool should ask the user to send a signing key or password in chat.
 
 IDEA-022 checkpoint: discovered and patched file creation collision corrupting optimistic tab state; added disk non-overwrite unit test and Android UI test. Still requires CI.
+
+| IDEA-023 | 2026-11-23 | User chooses a GitHub Actions-only, Android-phone-friendly signing-key provisioning process; provide a clear step-by-step walkthrough for each GitHub repository secret, without Termux or a PC and without disclosing unencrypted keys in public artifacts | In progress | One-time keytool workflow, authenticated encrypted backup, standalone offline unlock page, full mobile guide authored. GitHub workflow key-generation test + end-user setup required. |

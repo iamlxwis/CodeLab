@@ -1,0 +1,114 @@
+name: Create CodeLab signing key (one time)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  create-encrypted-key:
+    name: Generate an encrypted, recoverable Android keystore
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout recovery page
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Java keytool
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Create and encrypt keystore (never upload raw key)
+        env:
+          CODELAB_KEYGEN_PASSPHRASE: ${{ secrets.CODELAB_KEYGEN_PASSPHRASE }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ${#CODELAB_KEYGEN_PASSPHRASE} -lt 20 ]]; then
+            echo "::error::Add a repository secret CODELAB_KEYGEN_PASSPHRASE (at least 20 characters) before running this workflow."
+            exit 1
+          fi
+          umask 077
+          private_dir="$RUNNER_TEMP/codelab-signing-private"
+          mkdir -p "$private_dir" signing-backup
+          # keytool reads its password directly from the secret environment
+          # variable; it never appears as a command-line argument or in logs.
+          keytool -genkeypair -noprompt \
+            -keystore "$private_dir/codelab-release.jks" -storetype PKCS12 \
+            -alias codelab -keyalg RSA -keysize 4096 -validity 10000 \
+            -dname "CN=CodeLab, OU=Android, O=CodeLab, C=PH" \
+            -storepass:env CODELAB_KEYGEN_PASSPHRASE \
+            -keypass:env CODELAB_KEYGEN_PASSPHRASE
+          keytool -list -keystore "$private_dir/codelab-release.jks" \
+            -storepass:env CODELAB_KEYGEN_PASSPHRASE >/dev/null
+          # AES-256-GCM authenticated encryption, unique salt/nonce and
+          # PBKDF2-HMAC-SHA256: no raw .jks or base64 key in the artifact.
+          node <<'NODE'
+          const fs = require('node:fs');
+          const crypto = require('node:crypto');
+          const path = require('node:path');
+          const passphrase = process.env.CODELAB_KEYGEN_PASSPHRASE;
+          const original = fs.readFileSync(path.join(process.env.RUNNER_TEMP,
+            'codelab-signing-private', 'codelab-release.jks'));
+          const salt = crypto.randomBytes(16);
+          const iv = crypto.randomBytes(12);
+          const iterations = 600000;
+          const key = crypto.pbkdf2Sync(passphrase, salt, iterations, 32, 'sha256');
+          const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+          const ciphertext = Buffer.concat([cipher.update(original), cipher.final(),
+            cipher.getAuthTag()]);
+          const backup = {
+            format: 'codelab-key-backup-v1',
+            kdf: 'PBKDF2-HMAC-SHA256',
+            cipher: 'AES-256-GCM',
+            iterations,
+            salt: salt.toString('base64'),
+            iv: iv.toString('base64'),
+            ciphertext: ciphertext.toString('base64')
+          };
+          fs.writeFileSync('signing-backup/codelab-release.jks.enc.json',
+            JSON.stringify(backup, null, 2) + '\n', {mode: 0o600});
+          // Cross-check decryption with WebCrypto, which is also used by the
+          // local HTML unlocker on Android phones.
+          (async () => {
+            const material = await crypto.webcrypto.subtle.importKey(
+              'raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+            const browserKey = await crypto.webcrypto.subtle.deriveKey(
+              {name: 'PBKDF2', salt, iterations, hash: 'SHA-256'}, material,
+              {name: 'AES-GCM', length: 256}, false, ['decrypt']);
+            const recovered = Buffer.from(await crypto.webcrypto.subtle.decrypt(
+              {name: 'AES-GCM', iv, tagLength: 128}, browserKey, ciphertext));
+            if (!recovered.equals(original)) throw Error('Recovery validation failed');
+            console.log('Encrypted key backup verified with WebCrypto; raw key is not uploaded.');
+          })().catch(error => { console.error(error.message); process.exitCode = 1; });
+          NODE
+          cp tools/signing/unlock.html signing-backup/unlock.html
+          cat > signing-backup/START-HERE.txt <<'TEXT'
+          CODELAB PERMANENT SIGNING IDENTITY — PRIVATE RECOVERY
+
+          1. Extract this ZIP on your Android phone.
+          2. Open unlock.html locally in Chrome.
+          3. Choose codelab-release.jks.enc.json and enter the exact secret
+             CODELAB_KEYGEN_PASSPHRASE you created in GitHub.
+          4. Tap Unlock. Save a secure backup of codelab-release.jks and copy
+             the entire Base64 text to GitHub secret CODELAB_KEYSTORE_B64.
+          5. Set CODELAB_KEYSTORE_PASSWORD and CODELAB_KEY_PASSWORD to that
+             same long passphrase. Set CODELAB_KEY_ALIAS to codelab.
+          6. Keep two private, off-device backups of the .jks file.
+          7. Run the existing Android APK workflow on main.
+
+          IMPORTANT: This public-repository Actions artifact is ENCRYPTED, not
+          private. Never share the passphrase or decrypted files. Do not
+          regenerate this key after production APKs are released with it.
+          Detailed mobile guide: docs/SIGNING_GITHUB_ANDROID.md in CodeLab.
+          TEXT
+      - name: Upload ONLY encrypted backup and local unlock page
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodeLab-encrypted-signing-backup
+          path: signing-backup/
+          if-no-files-found: error
+          retention-days: 7

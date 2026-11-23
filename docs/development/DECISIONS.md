@@ -30,3 +30,7 @@ Updated 2026-11-23. These are user requirements, not evidence that code already 
 ## 2026-11-23 — stable update policy
 
 D-023: A dependable install-over-existing update requires the **same Android signing certificate** and a nondecreasing version code (our release automation increments it); both editor and Python companion must use the same key. Refuse silent fallback to debug publishing after production is established. Signing keys are kept only in owner-managed GitHub Actions secrets and encrypted offline backups; never in source or chat. Initial fallback-to-production migration needs data backup and one-time reinstall.
+
+## 2026-11-23 — GitHub Actions-only signing provisioning
+
+D-024: User explicitly chose GitHub Actions instead of requiring Termux or a PC. Generate a permanent key on a temporary runner only on manual dispatch. Protect the key via an owner-supplied 20+ character `CODELAB_KEYGEN_PASSPHRASE` GitHub **repository secret**, encrypt authenticated key backup before public Actions artifact upload, and supply a local browser-based decryptor. No cleartext keystore or Base64 key is committed, logged, attached or sent in chat. Users own and secure original keystore backups. The four existing production secrets still must be populated by owner.

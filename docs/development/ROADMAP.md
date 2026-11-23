@@ -1,3 +1,10 @@
+## 2026-11-23 — mobile GitHub Actions signing setup
+
+- [ ] Ensure manual signing-key generator workflow is visible and valid after commit; do not manually run it with an unset user passphrase.
+- [ ] Owner creates `CODELAB_KEYGEN_PASSPHRASE` repo secret, runs one-time workflow, locally unlocks encrypted artifact on Android, and saves two secure backups of original .jks.
+- [ ] Owner fills four existing production signing secrets, builds and verifies `Signing mode: production`, never regenerates identity once shipped.
+- [ ] Test a real-phone app-data-preserving in-place update between two production-signed releases; backup project data before the one-time debug→production migration.
+
 - [ ] Regression: creating duplicate file cannot blank an editor tab or overwrite prior bytes. Android 13/15 smoke and JVM test.
 ## 2026-11-23 — update-signing acceptance gate
 

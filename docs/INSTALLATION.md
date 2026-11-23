@@ -28,7 +28,11 @@ The editor and Python runtime must be signed with the **same Android certificate
 
 The latest release includes `CodeLab-build-info.txt` (source SHA, signing mode, certificate fingerprint and upgrade compatibility) and `CodeLab.apk.sha256` (checksums for both APK assets).
 
-## Permanent signing from an Android phone (one-time setup)
+## Permanent signing from Android without Termux
+
+**Preferred phone-only method:** [GitHub Actions signing-key setup](SIGNING_GITHUB_ANDROID.md). It uses a one-time manual workflow, an encrypted-only artifact and a local unlock page; no PC or Termux is needed. The owner's secrets and original key backups are still required.
+
+## Alternative: Termux on an Android phone (one-time setup)
 
 Reliable install-over-existing updates require the **same private keystore** on
 every release, plus increasing Android version codes. CI now advances version

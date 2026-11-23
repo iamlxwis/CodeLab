@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodeLab signing key — private unlock</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, sans-serif; }
+    body { background:#0c0f16; color:#f4f6fa; margin:0; padding:26px 16px 80px; }
+    main { max-width:620px; margin:auto; }
+    h1 { font-size:1.55rem; letter-spacing:-.025em; }
+    p, li { color:#b5c0d1; line-height:1.55; }
+    .panel { border:1px solid #384156; border-radius:15px; padding:19px; background:#151b27; margin-top:18px; }
+    label { display:block; font-weight:600; margin-top:17px; margin-bottom:7px; }
+    input, textarea { box-sizing:border-box; display:block; width:100%; background:#0b101c;
+      color:#fff; padding:13px; border:1px solid #546077; border-radius:9px; font:inherit; }
+    textarea { font: .76rem ui-monospace, monospace; min-height:145px; word-break:break-all; }
+    button { font:inherit; font-weight:650; border:0; border-radius:9px;
+      padding:12px 15px; background:#d8e7ff; color:#10213d; margin-top:16px; }
+    button.secondary { background:#36445b; color:#fff; margin-right:6px; }
+    button:disabled { opacity:.55; }
+    #result { display:none; }
+    #status { min-height:24px; margin-top:15px; overflow-wrap:anywhere; }
+    .warning { border-left:3px solid #f2bd6c; padding-left:12px; color:#e8d0ae; }
+    a { color:#b4d0ff; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Unlock CodeLab's signing key</h1>
+  <p>This recovery page runs on your device. It uses built-in browser cryptography,
+  with no external scripts, uploads, or network requests.</p>
+  <p class="warning">Never share your decrypted keystore, Base64 string, or
+  password. Only unlock the encrypted backup from your own GitHub Actions run.</p>
+  <section class="panel">
+    <label for="backup">1. Encrypted key backup (.enc.json)</label>
+    <input id="backup" type="file" accept=".json,application/json">
+    <label for="password">2. Your CODELAB_KEYGEN_PASSPHRASE</label>
+    <input id="password" type="password" autocomplete="off" spellcheck="false">
+    <button id="unlock" type="button">Unlock locally</button>
+    <p id="status" role="status" aria-live="polite"></p>
+  </section>
+  <section class="panel" id="result">
+    <h2>Key unlocked</h2>
+    <p>First save the original <strong>.jks</strong> in two secure locations off your phone.
+    This original file is needed for signing if GitHub secrets are ever lost.</p>
+    <button id="downloadKey" type="button" class="secondary">Save keystore (.jks)</button>
+    <button id="downloadBase64" type="button" class="secondary">Save Base64 text</button>
+    <label for="base64">3. Copy this entire value into CODELAB_KEYSTORE_B64</label>
+    <textarea id="base64" readonly spellcheck="false"></textarea>
+    <button id="copy" type="button">Copy Base64</button>
+    <p>Use the same passphrase for CODELAB_KEYSTORE_PASSWORD and
+    CODELAB_KEY_PASSWORD. The alias is <code>codelab</code>.</p>
+    <p class="warning">Delete plaintext Base64 from Downloads and clear your
+    clipboard after adding the GitHub secret. Keep encrypted private backups.</p>
+  </section>
+</main>
+<script>
+'use strict';
+const el = id => document.getElementById(id);
+let keyBytes = null;
+let secretBase64 = '';
+const from64 = str => Uint8Array.from(atob(str), c => c.charCodeAt(0));
+function to64(bytes) {
+  let str = '';
+  for (let i = 0; i < bytes.length; i += 8192)
+    str += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+  return btoa(str);
+}
+function save(bytes, name, type) {
+  const url = URL.createObjectURL(new Blob([bytes], {type}));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+el('unlock').addEventListener('click', async () => {
+  el('status').textContent = 'Unlocking…';
+  el('result').style.display = 'none';
+  keyBytes = null;
+  secretBase64 = '';
+  const file = el('backup').files[0];
+  const password = el('password').value;
+  if (!file || !password) {
+    el('status').textContent = 'Select the encrypted JSON file and enter your passphrase.';
+    return;
+  }
+  if (!window.crypto || !window.crypto.subtle) {
+    el('status').textContent = 'This browser cannot perform private decryption. Open unlock.html in Chrome (local file).';
+    return;
+  }
+  try {
+    if (file.size > 1048576) throw Error('Backup file is unexpectedly large.');
+    const data = JSON.parse(await file.text());
+    if (data.format !== 'codelab-key-backup-v1' ||
+        data.kdf !== 'PBKDF2-HMAC-SHA256' ||
+        data.cipher !== 'AES-256-GCM' ||
+        data.iterations !== 600000)
+      throw Error('Unexpected encrypted backup format.');
+    const salt = from64(data.salt);
+    const iv = from64(data.iv);
+    const ciphertext = from64(data.ciphertext);
+    if (salt.length !== 16 || iv.length !== 12 ||
+        ciphertext.length < 17 || ciphertext.length > 1048576)
+      throw Error('Invalid encrypted backup.');
+    const passKey = await crypto.subtle.importKey('raw',
+      new TextEncoder().encode(password), {name:'PBKDF2'}, false, ['deriveKey']);
+    const aesKey = await crypto.subtle.deriveKey(
+      {name:'PBKDF2', salt, iterations:data.iterations, hash:'SHA-256'},
+      passKey, {name:'AES-GCM', length:256}, false, ['decrypt']);
+    keyBytes = new Uint8Array(await crypto.subtle.decrypt(
+      {name:'AES-GCM', iv, tagLength:128}, aesKey, ciphertext));
+    secretBase64 = to64(keyBytes);
+    el('base64').value = secretBase64;
+    el('result').style.display = 'block';
+    el('status').textContent = 'Unlocked successfully. Save your original key now.';
+    el('password').value = '';
+  } catch (error) {
+    keyBytes = null;
+    el('status').textContent = 'Unable to unlock. Check your passphrase and the encrypted file.';
+  }
+});
+el('downloadKey').addEventListener('click', () => {
+  if (keyBytes) save(keyBytes, 'codelab-release.jks', 'application/octet-stream');
+});
+el('downloadBase64').addEventListener('click', () => {
+  if (secretBase64) save([secretBase64 + '\n'], 'codelab-release.b64.txt', 'text/plain');
+});
+el('copy').addEventListener('click', async () => {
+  if (!secretBase64) return;
+  try {
+    await navigator.clipboard.writeText(secretBase64);
+    el('status').textContent = 'Copied. Paste into the GitHub CODELAB_KEYSTORE_B64 secret.';
+  } catch (_) {
+    el('base64').focus();
+    el('base64').select();
+    el('status').textContent = 'Clipboard access unavailable: select all Base64 text and copy it manually.';
+  }
+});
+</script>
+</body>
+</html>
