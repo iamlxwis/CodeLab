@@ -11,6 +11,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
@@ -33,6 +34,9 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var search by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf("Installed") }
+    val languageListState = rememberLazyListState()
+    // Filtered rows have different lengths; always reveal the new section heading.
+    LaunchedEffect(filter, search) { languageListState.scrollToItem(0) }
     var removePythonConfirm by remember { mutableStateOf(false) }
     var optionalInspect by remember { mutableStateOf<OptionalRuntimeLocator.Pack?>(null) }
     var clearCacheConfirm by remember { mutableStateOf(false) }
@@ -153,7 +157,8 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             HorizontalDivider()
-            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(9.dp),
+            LazyColumn(modifier = Modifier.weight(1f), state = languageListState,
+                verticalArrangement = Arrangement.spacedBy(9.dp),
                 contentPadding = PaddingValues(bottom = 28.dp)) {
                 // Separate transfer management from results so installed engines are
                 // immediately visible, even on small Android screens.
