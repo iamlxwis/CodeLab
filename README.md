@@ -24,19 +24,19 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**SESSION: STOPPED — interactive runtime-manager handoff** · Updated **Nov 24, 2026, 2:56 AM PHT**  
-**Phase A checkpoint:** Download manager for real signed Python companion, existing bundled engines preserved. **Optional modules shipped: 1 (Python).** **Remaining runtime work:** publish and verify separate JS/Lua/TypeScript/native toolchains. **Validation:** new [APK CI 45243583986](https://github.com/iamlxwis/CodeLab/actions/runs/45243583986) and [Android 13/15 smoke 45243583725](https://github.com/iamlxwis/CodeLab/actions/runs/45243583725) pending at handoff; no new release claimed until gates pass.
+**Last source update:** Nov 24, 2026, 3:01 AM PHT · **Assistant work state: ACTIVE at last checkpoint** · **CI: independent, see live workflow links**
 
-**Current activity (one row, overwritten at each handoff):**
+> **How to read this:** Timestamps show the last committed checkpoint, **not live activity or a heartbeat**. `ACTIVE` means implementation was in progress when that commit was written. `HANDED OFF` means the interactive session ended after that commit; it does **not** mean GitHub Actions stopped. A workflow can continue after a handoff. Always use the linked Actions runs for live build status. There is no background ChatGPT coding after a reply.
 
-| Updated (Philippine time, AM/PM) | Task | Action / result | Next |
+**Phase 1: Offline runtime modules** — management source partially implemented; Python is a genuine signed optional APK; JS/Lua/Java/SQL remain bundled. **Phase 2 is not started.**
+
+| Checkpoint (PHT) | Work status | Substantive change or verified result | Pending and next |
 | --- | --- | --- | --- |
-| Nov 24, 2026, 2:56 AM | Phase A — offline language downloads | Implemented uncluttered Language Manager Installed/Downloads/Downloadable views, signed Python download status/progress and retry, Wi-Fi transfer policy, APK/cache size, cache clearing, Android-confirmed removal/reinstall path, and source/unit/device regression checks. JS/Lua/Java/SQL remain bundled; other packs not falsely labeled available. **CI pending; session STOPPED.** | Confirm build, signed-upgrade and API33/35 QA; test actual download/installer acceptance on a device; produce safely migratable optional JS/Lua/TypeScript/native runtimes. |
+| Nov 24, 2026, 3:01 AM PHT | **ACTIVE at checkpoint** | Phase 1 resumed. Tracker separated human coding state from asynchronous CI state. Current source and runtime architecture under review. | Add real signed language packs and independent management, test build/device behavior, then write an accurate final handoff with explicit remaining tasks. |
 
-**Remaining product gaps:** modular runtimes beyond Python; semantic LSP; editable inline folding/multi-cursor; PTY terminal; multi-language debugging; screen-anchored tutorial and full accessibility validation. See [implementation status](docs/IMPLEMENTATION_STATUS.md) and [project memory](docs/development/PROJECT_MEMORY.md).
+**Phase 1 acceptance:** signed package available for download, install/reinstall/removal through CodeLab with Android confirmation, persistent progress and storage, verified offline execution on supported Android devices; no source-project deletion or silent uploads. No unshipped engine is shown as installed. **Current count:** 1 optional signed runtime (Python); 2 bundled interpreters (JavaScript/Lua) slated for independent module migration; compiler-pack feasibility and acceptance pending.
 
-*GitHub Actions may continue independently; the assistant does not keep coding after this reply.*
-
+[Live APK build](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml) · [Live Android devices](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml) · [Full progress audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md)
 
 ## Features
 

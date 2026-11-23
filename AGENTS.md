@@ -1,3 +1,7 @@
+## Nov 24, 2026, 3:01 AM PHT: Tracker protocol correction / Phase 1 resumed
+
+User reported misleading STOPPED timestamps. README now explicitly labels the checkpoint as last commit, not a live heartbeat; `ACTIVE at checkpoint` only denotes state at that commit. Before responding at end of turn, write `HANDED OFF` with actual final commit timestamp, keep independent CI status separate. During active work update the row on substantive commits; code execution continues only until actual final reply. Never imply ongoing background work. Phase 1 JS/Lua optional modules and other verified language runtimes are still pending.
+
 ## Nov 24, 2026, 2:56 AM PHT — latest Phase A state
 
 Additional UX commit ca7465f3 splits the download-management status panel into its own Downloads tab, defaults to an immediate Installed list and sends typed searches to All. Test adaptation ed89942c avoids tapping offscreen filter chips. New source pending [APK CI 45243583986](https://github.com/iamlxwis/CodeLab/actions/runs/45243583986) and [device CI 45243583725](https://github.com/iamlxwis/CodeLab/actions/runs/45243583725). Earlier d13de118 build/JVM/lint/signature checks passed before CI cancellation. Current handoff STOPPED; avoid pretending emulator acceptance happened. Public APK may still contain previous UI. Only Python pack is truly downloadable. No other pack migrations completed.

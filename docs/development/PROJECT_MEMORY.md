@@ -1,3 +1,7 @@
+## Nov 24, 2026, 3:01 AM PHT — Phase 1 resumed; tracker transparency fix
+
+Explicit user request: fix confusing README stopped state (2:52 timestamp while another interactive turn continued), and complete remaining downloadable runtime scope. Implemented new checkpoint semantics: last source update, assistant state at that source update, separate CI links, explicit warning timestamps are not live. User prioritizes Phase 1 before Phase 2. Resume building real packs; preserve working core until replacements tested. Session ACTIVE at last checkpoint; final interaction requires HANDED OFF state and accurate remaining.
+
 ## Nov 24, 2026, 2:56 AM PHT — UI refinement and final new CI gate; session STOPPED
 
 The initial runtime-manager implementation was refined in ca7465f3 to separate **Downloads** progress/storage controls from **Installed** and **Downloadable** lists; default Installed shows engines immediately rather than hiding first result beneath a tall status panel. Search automatically switches to All. ed89942c updates Android smoke to use the auto-expanding search rather than tapping an off-screen All filter chip. Existing code, user project data, Python APK, signing configuration and bundled engines preserved. Source from d13de118 had passed Gradle APK assembly on API33/35, JVM compilation, release lint and signing checks, but its emulator acceptance was interrupted by subsequent commits, so NOT a verified release.
