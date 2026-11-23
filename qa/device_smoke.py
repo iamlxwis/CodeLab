@@ -92,8 +92,6 @@ def main():
     wait_for("New project")
     snapshot("01-home")
     # Python is now a genuine CPython runtime. Run the starter with airplane mode on.
-    tap("Project library")
-    wait_for("New project")
     tap("New project")
     choose_language("Python")
     tap_node(wait_for(field=True))
