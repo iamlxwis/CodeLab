@@ -1,3 +1,11 @@
+## Nov 24, 2026, 4:04 AM PHT — TypeScript test mismatch repair and SQLite source checkpoint
+
+TypeScript source at 89b3ed700 passed source compilation/most tests but [Android APK CI 45254495018](https://github.com/iamlxwis/CodeLab/actions/runs/45254495018) failed **RuntimePackCatalogTest:15** because it still expected TypeScript not downloadable while new module catalog includes it. Updated the negative set to C++/Rust, preserving catalog verification. Added separately signed SQLite companion source using Android platform SQLite with package discovery/manager/CI/release and built-in SQL fallback. No TypeScript or SQLite device validation/publishing yet. Latest CI must run again. Session WORKING at checkpoint.
+
+## Nov 24, 2026, 4:01 AM PHT — optional SQLite module source (unverified)
+
+Added engine-sql companion using Android SQLite in own signed package/UID, code-only Messenger interface, exact package verification and runtime routing, module manager downloads and CI/release/signing setup. Retains built-in SQLite for existing users. SQLite is supplied by Android platform (not downloaded native sqlite binary). TypeScript CI pending; SQL requires build and device acceptance. No APK release claimed. Session WORKING at source checkpoint.
+
 ## Nov 24, 2026, 3:54 AM PHT — Phase 1 TypeScript optional offline engine integration
 
 Unverified full-source implementation on top of prior Java beta: independent engine-ts signed APK using official TypeScript 5.9.3 npm WebJar copied into assets, offline network-disabled WebView single-file transpileModule to ES5, then Rhino execution over the existing bounded Messenger protocol; .ts editor run routing, signed module discovery/download/install/uninstall UI, Android package visibility, CI build/certificate/checksum/release assets, Android15 smoke test with real TypeScript starter and airplane mode, capability tests/security scans. **This is transpile-only, no TS semantic type checking/import resolution; unsupported APIs remain unavailable.** Not yet build tested/published. User handles physical device tests. Preserve all prior fallback engines and permanent signer. Other language packs pending. Session WORKING at source checkpoint.

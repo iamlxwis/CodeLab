@@ -90,6 +90,8 @@ class RunSession(context: Context) {
                 OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.JAVA)
             name.endsWith(".ts", true) ->
                 OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.TYPESCRIPT)
+            name.endsWith(".sql", true) ->
+                OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.SQLITE)
             else -> null
         }
         if (name.endsWith(".py", true) && pythonPack == null) {

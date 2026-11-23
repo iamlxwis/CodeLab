@@ -111,13 +111,13 @@ def main():
     adb("install", "-r", str(companion))
     # Both optional interpreters must be installed before CodeLab so that
     # Android verifies their signature-permission IPC on a real API 35 device.
-    for engine in ("engine-js", "engine-lua", "engine-java", "engine-ts"):
+    for engine in ("engine-js", "engine-lua", "engine-java", "engine-ts", "engine-sql"):
         pack = next(Path(engine, "build/outputs/apk/debug").glob("*.apk"))
         adb("install", "-r", str(pack))
     adb("install", "-r", str(apk))
     adb("shell", "pm", "clear", PACKAGE)
     packages = adb("shell", "pm", "list", "packages")
-    for engine in ("python", "js", "lua", "java", "ts"):
+    for engine in ("python", "js", "lua", "java", "ts", "sql"):
         assert f"site.lxwis.codelab.engine.{engine}" in packages
     adb("shell", "cmd", "connectivity", "airplane-mode", "enable")
     adb("shell", "svc", "wifi", "disable")

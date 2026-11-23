@@ -11,7 +11,8 @@ internal object OptionalRuntimeLocator {
         JAVASCRIPT("JavaScript", "JavaScript", "js", "JsRuntimeService"),
         LUA("Lua", "Lua", "lua", "LuaRuntimeService"),
         JAVA("Java", "Java", "java", "JavaRuntimeService"),
-        TYPESCRIPT("TypeScript", "TypeScript", "ts", "TsRuntimeService");
+        TYPESCRIPT("TypeScript", "TypeScript", "ts", "TsRuntimeService"),
+        SQLITE("SQLite", "SQLite", "sql", "SqlRuntimeService");
         val packageName get() = "site.lxwis.codelab.engine." + extension
         val serviceClass get() = packageName + "." + serviceName
         val downloadUrl get() =
@@ -24,7 +25,8 @@ internal object OptionalRuntimeLocator {
             pm.getPackageInfo(pack.packageName, 0)
         } catch (_: PackageManager.NameNotFoundException) {
             return PythonModuleLocator.Status(PythonModuleLocator.State.NOT_INSTALLED,
-                pack.label + " optional runtime not installed; bundled engine remains available")
+                pack.label + " optional runtime not installed" +
+                    if (pack == Pack.TYPESCRIPT) "; install the module to run offline" else "; built-in engine remains available")
         } catch (_: RuntimeException) {
             return PythonModuleLocator.Status(PythonModuleLocator.State.INCOMPATIBLE,
                 "Unable to inspect " + pack.label + " runtime")

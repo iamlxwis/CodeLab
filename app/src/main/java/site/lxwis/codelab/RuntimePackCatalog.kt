@@ -28,7 +28,7 @@ internal object RuntimePackCatalog {
     )
 
     /** Only signed release module sources belong in Downloadable; listing is not proof of public release availability. */
-    fun downloadableLanguages(): Set<String> = setOf("Python", "JavaScript", "Lua", "Java", "TypeScript")
+    fun downloadableLanguages(): Set<String> = setOf("Python", "JavaScript", "Lua", "Java", "TypeScript", "SQLite")
 
     fun isDownloadable(language: String): Boolean = language in downloadableLanguages()
 

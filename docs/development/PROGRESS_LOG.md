@@ -89,3 +89,7 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 3:49 AM PHT | Phase 1 / IDEA-011, IDEA-026 | Source improved, CI pending | Fixed JS/Lua/Java optional download progress refresh, small-screen manager scrolling, and extended companion manifest security gate. Full Phase 1 not done. |
 
 | Nov 24, 2026, 3:54 AM PHT | Phase 1 / IDEA-009, IDEA-026 | TypeScript source integrated; CI pending | New TS 5.9 WebJar/WebView/Rhino APK, .ts signed Run routing, manager and CI/release QA. Single-file transpilation only, no type checking or imports; not published or device accepted. |
+
+| Nov 24, 2026, 4:01 AM PHT | Phase 1 / IDEA-001, IDEA-026 | SQLite source in progress, CI pending | Added optional SQLite companion based on Android platform SQLite, signed IPC/pack manager and CI/release wiring; preserves bundled engine. No extra compiler/device pass claimed. |
+
+| Nov 24, 2026, 4:04 AM PHT | Phase 1 / IDEA-026, IDEA-028 | Source fix; CI rerun pending | Examined [Android APK CI 45254495018](https://github.com/iamlxwis/CodeLab/actions/runs/45254495018); exact failure was obsolete TypeScript-is-unavailable assertion at RuntimePackCatalogTest:15, not compilation. Updated test expectation and integrated optional SQLite Android-platform companion with signed CI/release. |

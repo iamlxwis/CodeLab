@@ -77,7 +77,7 @@ jobs:
           CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
           CODELAB_KEY_ALIAS: ${{ secrets.CODELAB_KEY_ALIAS }}
           CODELAB_KEY_PASSWORD: ${{ secrets.CODELAB_KEY_PASSWORD }}
-        run: bash gradlew --no-daemon :app:assembleRelease :engine-python:assembleRelease :engine-js:assembleRelease :engine-lua:assembleRelease :engine-java:assembleRelease :engine-ts:assembleRelease :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin :app:lintDebug
+        run: bash gradlew --no-daemon :app:assembleRelease :engine-python:assembleRelease :engine-js:assembleRelease :engine-lua:assembleRelease :engine-java:assembleRelease :engine-ts:assembleRelease :engine-sql:assembleRelease :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin :app:lintDebug
       - name: Upload quality reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -91,7 +91,7 @@ jobs:
         run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk'
       - name: Verify all optional runtime signatures
         run: |
-          for apk in engine-python engine-js engine-lua engine-java engine-ts; do
+          for apk in engine-python engine-js engine-lua engine-java engine-ts engine-sql; do
             "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$apk/build/outputs/apk/release/$apk-release.apk"
           done
       - name: Enforce actual production signing certificate
@@ -111,7 +111,7 @@ jobs:
             signer="$ANDROID_HOME/build-tools/35.0.0/apksigner"
             actual_editor="$("$signer" verify --print-certs app/build/outputs/apk/release/app-release.apk |
               sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1)"
-            for pack in engine-python engine-js engine-lua engine-java engine-ts; do
+            for pack in engine-python engine-js engine-lua engine-java engine-ts engine-sql; do
               actual_pack="$("$signer" verify --print-certs "$pack/build/outputs/apk/release/$pack-release.apk" |
                 sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1)"
               if [[ -z "$expected" || "$actual_editor" != "$expected" || "$actual_pack" != "$expected" ]]; then
@@ -139,7 +139,7 @@ jobs:
               sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1
           }
           editor_cert="$(signing_sha256 app/build/outputs/apk/release/app-release.apk)"
-          for pack in engine-python engine-js engine-lua engine-java engine-ts; do
+          for pack in engine-python engine-js engine-lua engine-java engine-ts engine-sql; do
             pack_cert="$(signing_sha256 "$pack/build/outputs/apk/release/$pack-release.apk")"
             if [[ -z "$editor_cert" || "$editor_cert" != "$pack_cert" ]]; then
               echo "::error::CodeLab and $pack APKs must use the same signer."; exit 1
@@ -208,6 +208,12 @@ jobs:
           retention-days: 90
       - uses: actions/upload-artifact@v4
         with:
+          name: CodeLab-SQLite-module
+          path: engine-sql/build/outputs/apk/release/engine-sql-release.apk
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
           name: CodeLab-Python-module
           path: engine-python/build/outputs/apk/release/engine-python-release.apk
           if-no-files-found: error
@@ -228,7 +234,8 @@ jobs:
           cp engine-lua/build/outputs/apk/release/engine-lua-release.apk release/CodeLab-Lua.apk
           cp engine-java/build/outputs/apk/release/engine-java-release.apk release/CodeLab-Java.apk
           cp engine-ts/build/outputs/apk/release/engine-ts-release.apk release/CodeLab-TypeScript.apk
-          (cd release && sha256sum CodeLab.apk CodeLab-Python.apk CodeLab-JavaScript.apk CodeLab-Lua.apk CodeLab-Java.apk CodeLab-TypeScript.apk > CodeLab.apk.sha256)
+          cp engine-sql/build/outputs/apk/release/engine-sql-release.apk release/CodeLab-SQLite.apk
+          (cd release && sha256sum CodeLab.apk CodeLab-Python.apk CodeLab-JavaScript.apk CodeLab-Lua.apk CodeLab-Java.apk CodeLab-TypeScript.apk CodeLab-SQLite.apk > CodeLab.apk.sha256)
           printf 'Build commit: %s\nVersion code: %s\nSigning mode: %s\nSigner SHA-256: %s\nUpgrade compatibility: %s\nProduction upgrade QA: %s\n' \
             "$GITHUB_SHA" "$CODELAB_VERSION_CODE" "$CODELAB_SIGNING_MODE" \
             "$CODELAB_SIGNER_SHA256" "$CODELAB_UPGRADE_COMPATIBILITY" "$CODELAB_UPGRADE_TEST" > release/CodeLab-build-info.txt
@@ -250,17 +257,17 @@ jobs:
           else
             NOTES="Editor APK plus optional Python module. Both are CI fallback-debug signed and must come from the SAME build; cross-release in-place updates are not guaranteed. Back up projects. Python pack requires arm64 or x86_64. Android 8.0+. Checksums included."
           fi
-          NOTES="$NOTES Build commit: $GITHUB_SHA. CodeLab-Python.apk, CodeLab-JavaScript.apk CodeLab-Lua.apk, CodeLab-Java.apk (Java beta) and CodeLab-TypeScript.apk (single-file transpilation) are signed optional runtime packages. The editor keeps bundled JS/Lua fallback until verified module routing is released. See docs/INSTALLATION.md."
+          NOTES="$NOTES Build commit: $GITHUB_SHA. CodeLab-Python.apk, CodeLab-JavaScript.apk CodeLab-Lua.apk, CodeLab-Java.apk (Java beta) and CodeLab-TypeScript.apk (single-file transpilation) and CodeLab-SQLite.apk are signed optional runtime packages. The editor keeps bundled JS/Lua fallback until verified module routing is released. See docs/INSTALLATION.md."
           if [[ "$CODELAB_UPGRADE_COMPATIBILITY" == "signature_changed" ]]; then
             NOTES="$NOTES IMPORTANT: The signing certificate changed since the previous release. Android may reject this APK over an existing CodeLab installation. Export project ZIPs while the old app still works and save them outside the app. Only then uninstall, install CodeLab.apk and import the backups. There is no safe bypass for Android's signature check."
           fi
           if gh release view latest >/dev/null 2>&1; then
-            gh release upload latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab-JavaScript.apk release/CodeLab-Lua.apk release/CodeLab-Java.apk release/CodeLab-TypeScript.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --clobber
+            gh release upload latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab-JavaScript.apk release/CodeLab-Lua.apk release/CodeLab-Java.apk release/CodeLab-TypeScript.apk release/CodeLab-SQLite.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --clobber
             gh release edit latest --latest --title "CodeLab — latest Android APK" --notes "$NOTES" --target "$GITHUB_SHA"
             # The 'latest' release is intentionally mutable; keep its tag
             # pointing to the source that actually produced the APK assets.
             gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/latest" \
               -f sha="$GITHUB_SHA" -F force=true >/dev/null
           else
-            gh release create latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab-JavaScript.apk release/CodeLab-Lua.apk release/CodeLab-Java.apk release/CodeLab-TypeScript.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --target "$GITHUB_SHA" --title "CodeLab — latest Android APK" --notes "$NOTES" --latest
+            gh release create latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab-JavaScript.apk release/CodeLab-Lua.apk release/CodeLab-Java.apk release/CodeLab-TypeScript.apk release/CodeLab-SQLite.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --target "$GITHUB_SHA" --title "CodeLab — latest Android APK" --notes "$NOTES" --latest
           fi
