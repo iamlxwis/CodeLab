@@ -109,9 +109,16 @@ def main():
     apk = next(Path("app/build/outputs/apk/debug").glob("*.apk"))
     companion = next(Path("engine-python/build/outputs/apk/debug").glob("*.apk"))
     adb("install", "-r", str(companion))
+    # Both optional interpreters must be installed before CodeLab so that
+    # Android verifies their signature-permission IPC on a real API 35 device.
+    for engine in ("engine-js", "engine-lua"):
+        pack = next(Path(engine, "build/outputs/apk/debug").glob("*.apk"))
+        adb("install", "-r", str(pack))
     adb("install", "-r", str(apk))
     adb("shell", "pm", "clear", PACKAGE)
-    assert "site.lxwis.codelab.engine.python" in adb("shell", "pm", "list", "packages")
+    packages = adb("shell", "pm", "list", "packages")
+    for engine in ("python", "js", "lua"):
+        assert f"site.lxwis.codelab.engine.{engine}" in packages
     adb("shell", "cmd", "connectivity", "airplane-mode", "enable")
     adb("shell", "svc", "wifi", "disable")
     assert adb("shell", "settings", "get", "global", "airplane_mode_on") == "1"
@@ -158,6 +165,12 @@ def main():
     wait_for("DOWNLOAD MANAGER")
     wait_for("Manage Python")
     wait_for("Wi-Fi only downloads")
+    # Verify that separately signed JS/Lua packs appear in the manager.
+    wait_for("Manage JavaScript")
+    wait_for("Manage Lua")
+    tap("Manage JavaScript")
+    wait_for("Verified optional JavaScript module installed", contains=True)
+    tap("Close")
     tap("Downloadable")
     wait_for("Python")
     tap("Installed")

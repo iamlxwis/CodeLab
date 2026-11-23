@@ -14,7 +14,7 @@ import java.io.File
 
 /**
  * User-initiated download and Android-approved installation of the signed
- * Python runtime. The APK is never loaded as code in CodeLab's own process.
+ * optional JavaScript or Lua runtime. The APK is never loaded as code in CodeLab's own process.
  * DownloadManager persists transfer state if the app closes or rotates.
  * This side-loading channel is for the GitHub-distributed APK; a Play build
  * needs store-managed feature delivery and policy review instead.
@@ -128,7 +128,7 @@ internal class OptionalRuntimeDownload(private val app: Context, private val pac
                 if (status == DownloadManager.STATUS_SUCCESSFUL &&
                     (!file().isFile || file().length() <= 0L)) {
                     return Transfer(Stage.FAILED, received, total,
-                        "Completed download is missing. Download Python again.")
+                        "Completed download is missing. Download " + pack.label + " again.")
                 }
                 val stage = when (status) {
                     DownloadManager.STATUS_SUCCESSFUL -> Stage.DOWNLOADED
