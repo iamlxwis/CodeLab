@@ -92,3 +92,11 @@ to open the exact Python APK asset in CodeLab's GitHub release. Android handles
 the download/installation; the user may recheck status after returning.
 **This is not yet a native module download/install manager.** The companion
 asset becomes available only after a successful release workflow.
+
+## Build feedback — same-session follow-up
+
+GitHub Actions [45132438924](https://github.com/iamlxwis/CodeLab/actions/runs/45132438924)
+failed compiling both source modules. The exact errors were Java `illegal forward
+reference` in PythonRuntimeService and Kotlin `Unresolved reference 'app'`
+in WorkspaceModel at lines 138/1235/1236. This commit fixes those compile
+errors; **new CI verification is still required**.

@@ -27,6 +27,12 @@ public final class PythonRuntimeService extends Service {
 
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ArrayBlockingQueue<String> inputs = new ArrayBlockingQueue<>(1);
+    private Messenger client;
+    private boolean started;
+    private volatile boolean finished;
+    private int outputLimit;
+    private int outputChars;
+    private int outputLines;
     private final Messenger inbound = new Messenger(new Handler(Looper.getMainLooper(), msg -> {
         switch (msg.what) {
             case START: if (!started) begin(msg); break;
@@ -35,12 +41,6 @@ public final class PythonRuntimeService extends Service {
         }
         return true;
     }));
-    private Messenger client;
-    private boolean started;
-    private volatile boolean finished;
-    private int outputLimit;
-    private int outputChars;
-    private int outputLines;
 
     @Override public IBinder onBind(Intent intent) { return inbound.getBinder(); }
     @Override public void onDestroy() {
