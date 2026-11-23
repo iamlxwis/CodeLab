@@ -38,7 +38,10 @@ internal fun RunTargetMenu(m: WorkspaceModel, onProjectSettings: () -> Unit) {
                 onClick = { expanded = false; onProjectSettings() })
         }
     }
-    if (showPicker) RunFilePicker(m.files, m.cloudLanguages.keys, m::runTarget) { showPicker = false }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    if (showPicker) RunFilePicker(m.files, m.cloudLanguages.keys, m::runTarget,
+        installedModules = if (PythonModuleLocator.installed(context)) setOf("py") else emptySet()
+    ) { showPicker = false }
 }
 
 @Composable
@@ -46,11 +49,12 @@ internal fun RunFilePicker(
     files: List<String>,
     cloudExtensions: Set<String> = emptySet(),
     onRun: (String) -> Unit,
+    installedModules: Set<String> = emptySet(),
     onDismiss: () -> Unit
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var runnableOnly by rememberSaveable { mutableStateOf(true) }
-    val matches = files.map { it to RunCapability.forPath(it, cloudExtensions) }
+    val matches = files.map { it to RunCapability.forPath(it, cloudExtensions, installedModules) }
         .filter { (path, target) ->
             path.contains(query, ignoreCase = true) &&
                 (!runnableOnly || target.mode != RunCapability.Mode.UNAVAILABLE)

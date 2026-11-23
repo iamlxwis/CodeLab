@@ -76,3 +76,11 @@ and install both before emulator smoke. The pipeline and runtime have not
 yet been proven successful for this SHA; check separate APK and device run
 statuses. Fallback debug signing means users should install both APKs from
 the same release/build.
+
+## Runtime capability labels (this commit, verification pending)
+
+Python is no longer statically labelled as a bundled runtime. The file picker
+and new project sheet distinguish installed/verified Python from missing-pack
+and online-only states. Tests cover the three corresponding Python capability
+states. Future general online/offline choice and fully native pack management
+remain pending.

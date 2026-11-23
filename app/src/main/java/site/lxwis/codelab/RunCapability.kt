@@ -4,11 +4,18 @@ package site.lxwis.codelab
 internal object RunCapability {
     enum class Mode { LOCAL, PREVIEW, ONLINE, UNAVAILABLE }
     data class Target(val mode: Mode, val description: String)
-    fun forPath(path: String, cloudExtensions: Set<String> = emptySet()): Target {
+    fun forPath(path: String, cloudExtensions: Set<String> = emptySet(),
+        installedModules: Set<String> = emptySet()): Target {
         val extension = path.substringAfterLast('/').substringAfterLast('.', "").lowercase()
         if (extension in setOf("html", "htm"))
             return Target(Mode.PREVIEW, "Offline web preview")
-        val local = mapOf("js" to "Rhino JavaScript", "py" to "CPython",
+        if (extension == "py") {
+            if ("py" in installedModules) return Target(Mode.LOCAL, "Offline · Python module")
+            if ("py" in cloudExtensions) return Target(Mode.ONLINE,
+                "Online · Python offline module not installed")
+            return Target(Mode.UNAVAILABLE, "Python module not installed")
+        }
+        val local = mapOf("js" to "Rhino JavaScript",
             "lua" to "LuaJ", "java" to "Java interpreter beta", "sql" to "SQLite")
         local[extension]?.let { return Target(Mode.LOCAL, "Offline · " + it) }
         if (extension.isNotEmpty() && extension in cloudExtensions)

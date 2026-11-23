@@ -17,6 +17,7 @@ internal object RuntimePackCatalog {
         "TypeScript" to "TypeScript compiler/transpiler plus a compatible local JavaScript engine."
     )
     private val packsPlanned = mapOf(
+        "Python" to "Separately signed optional Python 3.13 APK",
         "C" to "C/C++ native toolchain",
         "C++" to "C/C++ native toolchain",
         "Kotlin" to "Java/Kotlin compiler pack",

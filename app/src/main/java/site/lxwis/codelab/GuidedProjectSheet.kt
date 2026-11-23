@@ -43,7 +43,12 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
     var demosOpen by rememberSaveable { mutableStateOf(false) }
     val isDemo = language in projectDemos
     val catalog = LanguageCatalog.entries.firstOrNull { it.name == language }
-    val runStatus = if (isDemo) "Ready-made example project" else RuntimePackCatalog.capability(language).label
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val runStatus = when {
+        isDemo -> "Ready-made example project"
+        language == "Python" -> PythonModuleLocator.check(context).description
+        else -> RuntimePackCatalog.capability(language).label
+    }
     val snippet = remember(language, starter) {
         when {
             isDemo -> "Includes example project files ready to explore."
