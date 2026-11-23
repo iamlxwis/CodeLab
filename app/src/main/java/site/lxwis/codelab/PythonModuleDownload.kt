@@ -38,6 +38,19 @@ internal class PythonModuleDownload(private val app: Context) {
 
     fun lastJob(): Long = preferences.getLong("python-id", -1L)
 
+    /** Cached installer is NOT the installed runtime; never touch user projects. */
+    fun cachedBytes(): Long = runCatching {
+        file().takeIf { it.isFile }?.length() ?: 0L
+    }.getOrDefault(0L)
+
+    /** Explicit user action; deletes only the installer and cancels its system download. */
+    fun clearCachedInstaller(): Boolean {
+        val id = lastJob()
+        if (id > 0L) manager.remove(id)
+        preferences.edit().remove("python-id").apply()
+        return runCatching { !file().exists() || file().delete() }.getOrDefault(false)
+    }
+
     @Suppress("DEPRECATION")
     private fun version(info: PackageInfo): Long =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode
@@ -113,12 +126,7 @@ internal class PythonModuleDownload(private val app: Context) {
         }
     }
 
-    fun cancel() {
-        val id = lastJob()
-        if (id > 0) manager.remove(id)
-        preferences.edit().remove("python-id").apply()
-        runCatching { file().delete() }
-    }
+    fun cancel() { clearCachedInstaller() }
 
     /**
      * Verifies exact package ID and APK signing certificate against the

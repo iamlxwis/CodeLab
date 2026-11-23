@@ -33,6 +33,8 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var search by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf("All") }
+    var removePythonConfirm by remember { mutableStateOf(false) }
+    var clearCacheConfirm by remember { mutableStateOf(false) }
     var inspected by remember(initialLanguage) {
         mutableStateOf(catalog.firstOrNull { it.name == initialLanguage })
     }
@@ -70,11 +72,14 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             .associateBy({ it.extension }, { OfflineRuntimeRegistry.locallyAvailable(it.extension) }) +
             ("py" to python.ready)
     }
+    val offlineReadyCount = detected.values.count { it }
+    val cachedInstallerBytes = remember(transfer, recheck) { module.cachedBytes() }
     val filteredLanguages = catalog.filter { language ->
         (language.name.contains(search, ignoreCase = true) ||
             language.extension.contains(search, ignoreCase = true)) &&
         when (filter) {
-            "Offline" -> detected[language.extension] == true
+            "Installed" -> detected[language.extension] == true
+            "Downloadable" -> RuntimePackCatalog.isDownloadable(language.name)
             "Cloud ready" -> model.isOnline && model.cloudLanguages.containsKey(language.extension)
             else -> true
         }
@@ -87,8 +92,8 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Languages & file types", style = MaterialTheme.typography.headlineSmall)
-                    Text("Edit broadly · run only when a runtime is available",
+                    Text("Language Manager", style = MaterialTheme.typography.headlineSmall)
+                    Text("Manage offline engines, downloads and execution",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall)
                 }
@@ -104,12 +109,13 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                 label = { Text("Find a language") })
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("All", "Offline", "Cloud ready").forEach { option ->
+                listOf("All", "Installed", "Downloadable", "Cloud ready").forEach { option ->
                     FilterChip(selected = filter == option, onClick = { filter = option },
                         label = { Text(option) })
                 }
             }
-            Text("${filteredLanguages.size} ${if (filteredLanguages.size == 1) "language" else "languages"} matching",
+            Text("${filteredLanguages.size} matching · $offlineReadyCount locally available · " +
+                "Installer cache: ${cachedInstallerBytes / 1024 / 1024} MB",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             HorizontalDivider()
@@ -118,6 +124,39 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                 // Search results take precedence; the status panel otherwise
                 // pushes the first match below the bottom sheet viewport.
                 if (search.isBlank()) item {
+                    Text("DOWNLOAD MANAGER", style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(8.dp))
+                    Text("Python: " + python.description,
+                        style = MaterialTheme.typography.bodySmall)
+                    Text(when (transfer.stage) {
+                        PythonModuleDownload.Stage.DOWNLOADING, PythonModuleDownload.Stage.PAUSED ->
+                            "Python download: " + (if (transfer.total > 0L)
+                                "${(transfer.progress * 100).toInt()}%" else "in progress") +
+                                (if (transfer.stage == PythonModuleDownload.Stage.PAUSED)
+                                    " · paused by Android" else "")
+                        PythonModuleDownload.Stage.DOWNLOADED -> "Python installer downloaded · ready for signature check"
+                        PythonModuleDownload.Stage.FAILED -> "Python download failed · retry from Manage Python"
+                        else -> "No active module download"
+                    }, style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
+                        transfer.stage == PythonModuleDownload.Stage.PAUSED)
+                        LinearProgressIndicator(progress = { transfer.progress },
+                            modifier = Modifier.fillMaxWidth())
+                    Text("JavaScript, Lua, Java beta and SQL remain built into CodeLab. " +
+                        "Unpublished compiler packs cannot be downloaded.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = {
+                            inspected = catalog.firstOrNull { it.name == "Python" }
+                        }) { Text("Manage Python") }
+                        if (cachedInstallerBytes > 0L) OutlinedButton(onClick = {
+                            clearCacheConfirm = true
+                        }) { Text("Clear cache") }
+                    }
+                    Spacer(Modifier.height(10.dp))
                     Text("EXECUTION AVAILABILITY", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(8.dp))
@@ -166,7 +205,11 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         Column(Modifier.weight(1f).padding(start = 12.dp)) {
                             Text(language.name, style = MaterialTheme.typography.bodyMedium)
                             Text(when {
-                                language.name == "Python" -> python.description +
+                                language.name == "Python" ->
+                                    (if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
+                                         transfer.stage == PythonModuleDownload.Stage.PAUSED)
+                                        "Downloading Python · ${(transfer.progress * 100).toInt()}%"
+                                     else python.description) +
                                     (if (cloud != null) " · Cloud ready" else "")
                                 localInstalled && cloud != null -> "Offline · " + engine!!.engine + " " + engine.version + " · Cloud ready"
                                 localInstalled -> "Offline · " + engine!!.engine + " " + engine.version
@@ -216,8 +259,12 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(if (language.name == "Python")
-                        "Download and manage Python here. Android confirms the final installation."
-                        else "Other engines remain bundled during modular migration.",
+                        "Install, update, reinstall or remove the signed Python companion. " +
+                            "Android confirms package installation and removal."
+                        else if (engine != null) "This engine is built into CodeLab, " +
+                            "so it cannot be uninstalled separately."
+                        else "No verified downloadable runtime is published for this language.",
+                        style = MaterialTheme.typography.labelSmall)
                         style = MaterialTheme.typography.labelSmall)
                     if (language.name == "Python") {
                         if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
@@ -283,7 +330,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                             // Also allow removal of incompatible or older-signed packs.
                             if (python.state != PythonModuleLocator.State.NOT_INSTALLED)
                                 OutlinedButton(onClick = {
-                                    moduleMessage = module.uninstall()
+                                    removePythonConfirm = true
                                 }) { Text("Remove Python module") }
                         }
                         if (moduleMessage.isNotEmpty()) Text(moduleMessage,
@@ -291,12 +338,43 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                         TextButton(onClick = {
                             recheck++
+                            downloadId = module.lastJob()
                             transfer = module.inspect()
                         }) { Text("Refresh module status") }
                     }
                 }
             }, confirmButton = { TextButton(onClick = { inspected = null }) { Text("Close") } })
     }
+
+    if (removePythonConfirm) AlertDialog(
+        onDismissRequest = { removePythonConfirm = false },
+        title = { Text("Remove Python runtime?") },
+        text = { Text("Android will ask to uninstall the optional Python companion. " +
+            "Your CodeLab projects and source files will not be deleted. " +
+            "Python offline execution requires reinstalling the module.") },
+        confirmButton = { Button(onClick = {
+            removePythonConfirm = false
+            moduleMessage = module.uninstall()
+        }) { Text("Open uninstaller") } },
+        dismissButton = { TextButton(onClick = { removePythonConfirm = false }) {
+            Text("Cancel")
+        } })
+    if (clearCacheConfirm) AlertDialog(
+        onDismissRequest = { clearCacheConfirm = false },
+        title = { Text("Clear downloaded installer?") },
+        text = { Text("Remove only the cached Python APK and cancel an active download. " +
+            "The installed Python runtime and CodeLab projects stay untouched.") },
+        confirmButton = { Button(onClick = {
+            val cleared = module.clearCachedInstaller()
+            downloadId = -1L
+            transfer = PythonModuleDownload.Transfer(PythonModuleDownload.Stage.IDLE)
+            moduleMessage = if (cleared) "Installer cache cleared" else "Unable to clear installer cache"
+            clearCacheConfirm = false
+            recheck++
+        }) { Text("Clear installer") } },
+        dismissButton = { TextButton(onClick = { clearCacheConfirm = false }) {
+            Text("Cancel")
+        } })
 
 }
 

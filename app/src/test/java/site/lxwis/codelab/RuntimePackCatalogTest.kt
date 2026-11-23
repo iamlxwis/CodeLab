@@ -4,6 +4,14 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class RuntimePackCatalogTest {
+    @Test fun onlyActualOptionalModuleIsDownloadable() {
+        assertEquals(setOf("Python"), RuntimePackCatalog.downloadableLanguages())
+        assertTrue(RuntimePackCatalog.isDownloadable("Python"))
+        for (name in listOf("TypeScript", "C++", "Rust", "Lua", "JavaScript")) {
+            assertFalse(name, RuntimePackCatalog.isDownloadable(name))
+        }
+    }
+
     @Test fun neverAdvertiseUnshippedCoreEngines() {
         // Optional Python is not bundled; real pack presence is verified on Android.
         assertNull(OfflineRuntimeRegistry.manifest("py"))

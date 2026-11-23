@@ -28,6 +28,11 @@ internal object RuntimePackCatalog {
         "C#" to "Compatible .NET execution pack"
     )
 
+    /** Only verified, actually published optional companions belong in Downloadable. */
+    fun downloadableLanguages(): Set<String> = setOf("Python")
+
+    fun isDownloadable(language: String): Boolean = language in downloadableLanguages()
+
     fun capability(language: String): Capability {
         if (language == "Web") return Capability(
             State.BUNDLED, "Offline preview included", "HTML, CSS and JavaScript preview in Android WebView.")
