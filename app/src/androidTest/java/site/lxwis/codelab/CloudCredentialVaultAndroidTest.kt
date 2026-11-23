@@ -9,6 +9,26 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class CloudCredentialVaultAndroidTest {
+    @Test fun isolatedGithubTokenCannotBeReadAsCloudToken() {
+        val ctx = InstrumentationRegistry.getInstrumentation().targetContext
+        val prefs = ctx.getSharedPreferences("vault-test-" + UUID.randomUUID(), 0)
+        try {
+            val cloud = CloudCredentialVault(prefs)
+            val git = CloudCredentialVault(prefs,
+                alias = "CodeLab.github-credential.v1",
+                encryptedKey = "github-token-encrypted-v1",
+                legacyKey = "unused-github-legacy-token")
+            cloud.save("cloud-secret")
+            git.save("github-secret")
+            assertEquals("cloud-secret", cloud.load())
+            assertEquals("github-secret", git.load())
+            assertFalse(prefs.getString("github-token-encrypted-v1", "").orEmpty().contains("github-secret"))
+            cloud.save("")
+            assertEquals("github-secret", git.load())
+            git.save("")
+        } finally { prefs.edit().clear().commit() }
+    }
+
     @Test fun encryptsTokenAndRemovesPlaintext() {
         val ctx = InstrumentationRegistry.getInstrumentation().targetContext
         val prefs = ctx.getSharedPreferences("vault-test-" + UUID.randomUUID(), 0)

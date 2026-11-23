@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
@@ -77,8 +78,17 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
     var author by rememberSaveable { mutableStateOf(prefs.getString("author", "") ?: "") }
     var email by rememberSaveable { mutableStateOf(prefs.getString("email", "") ?: "") }
     var branch by rememberSaveable { mutableStateOf("") }
+    var remoteExpanded by rememberSaveable { mutableStateOf(false) }
+    var remoteInput by rememberSaveable(m.project) { mutableStateOf("") }
+    var credentialInput by remember { mutableStateOf("") }
+    var confirmRemoteAction by remember { mutableStateOf<String?>(null) }
     val selectedForStage = remember(m.project) { mutableStateListOf<String>() }
     val state = m.gitState
+    LaunchedEffect(state?.remoteUrl) {
+        if (state?.remoteUrl != null && remoteInput.isBlank()) {
+            remoteInput = state.remoteUrl.removePrefix("https://github.com/").removeSuffix(".git")
+        }
+    }
     AlertDialog(onDismissRequest = dismiss,
         title = { Text("Git · local history") },
         text = {
@@ -163,13 +173,101 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                         Text(commit.shortId + " · " + commit.message + " — " + commit.author,
                             style = MaterialTheme.typography.bodySmall, maxLines = 2)
                     }
-                    Text("Only explicitly staged paths enter a commit. Git operations work offline; no remote push is configured.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    HorizontalDivider()
+                    TextButton(onClick = { remoteExpanded = !remoteExpanded }) {
+                        Icon(Icons.Default.CloudSync, null, Modifier.size(17.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (remoteExpanded) "Hide GitHub sync" else "GitHub sync · optional")
+                    }
+                    if (remoteExpanded) {
+                        Text("Remote operations are optional. Only GitHub HTTPS URLs are accepted.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (state.unsafeRemote) Text("This repository has an unsupported origin URL. Configure a trusted GitHub remote.",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall)
+                        OutlinedTextField(remoteInput, { remoteInput = it.take(180) },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("GitHub owner/repository") }, singleLine = true,
+                            placeholder = { Text("owner/repository") })
+                        OutlinedButton(
+                            enabled = !m.busy && remoteInput.isNotBlank(),
+                            onClick = { m.gitConfigureRemote(remoteInput) }
+                        ) { Text("Set GitHub remote") }
+                        state.remoteUrl?.let { url ->
+                            Text("Origin · " + url,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = FontFamily.Monospace,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        OutlinedTextField(credentialInput, { credentialInput = it.take(512) },
+                            modifier = Modifier.fillMaxWidth(),
+                            visualTransformation = PasswordVisualTransformation(),
+                            label = { Text("GitHub token (optional for public fetch)") },
+                            singleLine = true)
+                        Text(if (m.gitTokenConfigured) "Encrypted token stored on this device"
+                            else "No GitHub token stored",
+                            style = MaterialTheme.typography.bodySmall)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                enabled = !m.busy && credentialInput.isNotBlank(),
+                                onClick = {
+                                    m.gitSaveToken(credentialInput)
+                                    credentialInput = ""
+                                }
+                            ) { Text("Save token") }
+                            TextButton(
+                                enabled = !m.busy && m.gitTokenConfigured,
+                                onClick = { m.gitSaveToken("") }
+                            ) { Text("Remove token") }
+                        }
+                        OutlinedButton(
+                            enabled = !m.busy && m.isOnline && state.remoteUrl != null,
+                            onClick = m::gitFetch
+                        ) { Text("Fetch · no file changes") }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                enabled = !m.busy && m.isOnline && state.remoteUrl != null,
+                                onClick = { confirmRemoteAction = "pull" }
+                            ) { Text("Pull (FF only)") }
+                            Button(
+                                enabled = !m.busy && m.isOnline && state.remoteUrl != null &&
+                                    m.gitTokenConfigured && state.changes.isEmpty(),
+                                onClick = { confirmRemoteAction = "push" }
+                            ) { Text("Push branch") }
+                        }
+                        Text("Pull refuses divergence and local changes. Push never forces and may be rejected by GitHub.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    m.gitFeedback?.let {
+                        Text(it, style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary)
+                    }
                 }
             }
         },
         confirmButton = { TextButton(onClick = dismiss) { Text("Done") } })
+
+    if (confirmRemoteAction != null) {
+        val pushing = confirmRemoteAction == "push"
+        AlertDialog(
+            onDismissRequest = { confirmRemoteAction = null },
+            title = { Text(if (pushing) "Push branch to GitHub?" else "Pull updates from GitHub?") },
+            text = { Text(if (pushing)
+                "Upload local committed changes from the current branch to the configured GitHub remote. This is non-force and cannot overwrite a newer remote history."
+                else "Download and apply only fast-forward changes to the current branch. The pull is refused when the working tree is dirty or histories diverge.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRemoteAction = null
+                    if (pushing) m.gitPush() else m.gitPullFastForward()
+                }) { Text(if (pushing) "Push branch" else "Pull fast-forward") }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRemoteAction = null }) { Text("Cancel") }
+            }
+        )
+    }
 }
 
 

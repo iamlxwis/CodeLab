@@ -6,6 +6,46 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class GitWorkspaceTest {
+    @Test fun remoteAddressRejectsOffHostAndEmbeddedTokens() {
+        assertEquals("https://github.com/openai/hello.git",
+            GitHubRemoteAddress.canonical("openai/hello"))
+        assertEquals("https://github.com/openai/hello.git",
+            GitHubRemoteAddress.canonical("https://github.com/openai/hello.git"))
+        for (bad in listOf("http://github.com/openai/hello",
+            "https://evil.example.com/openai/hello",
+            "https://user:token@github.com/openai/hello",
+            "https://github.com/openai/hello?token=123",
+            "file:///tmp/repo", "../../secrets")) {
+            assertThrows(IllegalArgumentException::class.java) {
+                GitHubRemoteAddress.canonical(bad)
+            }
+        }
+    }
+
+    @Test fun configuringRemoteNeverContactsNetworkOrStagesFiles() {
+        val folder = temporary.newFolder("remote")
+        val git = GitWorkspace(folder)
+        git.init()
+        folder.resolve("draft.js").writeText("uncommitted")
+        git.configureGitHubRemote("openai/hello")
+        val status = git.inspect()
+        assertEquals("https://github.com/openai/hello.git", status.remoteUrl)
+        assertTrue(status.changes.any { it.path == "draft.js" })
+        assertTrue(status.staged.isEmpty())
+        assertThrows(IllegalArgumentException::class.java) {
+            git.pushGitHub("")
+        }
+        val config = folder.resolve(".git/config")
+        config.writeText(config.readText().replace("https://github.com/openai/hello.git",
+            "https://evil.example.com/not-allowed.git"))
+        val now = git.inspect()
+        assertTrue(now.unsafeRemote)
+        assertNull(now.remoteUrl)
+        assertThrows(IllegalArgumentException::class.java) {
+            git.fetchGitHub("")
+        }
+    }
+
     @Test fun onlySelectedPathsAreCommitted() {
         val folder = temporary.newFolder("selective")
         val git = GitWorkspace(folder)

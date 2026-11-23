@@ -278,6 +278,17 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private val gitCredentialPrefs = app.getSharedPreferences("git-remote", Context.MODE_PRIVATE)
+    private val gitVault = CloudCredentialVault(
+        gitCredentialPrefs, alias = "CodeLab.github-credential.v1",
+        encryptedKey = "github-token-encrypted-v1",
+        legacyKey = "unused-github-legacy-token"
+    )
+    var gitTokenConfigured by mutableStateOf(
+        gitCredentialPrefs.contains("github-token-encrypted-v1"))
+        private set
+    var gitFeedback by mutableStateOf<String?>(null)
+        private set
     internal var gitState by mutableStateOf<GitWorkspace.Snapshot?>(null)
         private set
     fun gitRefresh() {
@@ -319,6 +330,86 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             apply
         }
     }
+    fun gitSaveToken(token: String) {
+        val value = token.trim()
+        if (value.length > 512 || value.any { it == '\r' || it == '\n' }) {
+            error = "Invalid GitHub credential."
+            return
+        }
+        work {
+            gitVault.save(value)
+            val apply: () -> Unit = {
+                gitTokenConfigured = value.isNotEmpty()
+                gitFeedback = if (value.isEmpty()) "GitHub credential removed from this device."
+                    else "GitHub credential encrypted on this device."
+            }
+            apply
+        }
+    }
+
+    fun gitConfigureRemote(input: String) {
+        val p = project ?: return
+        work {
+            val git = GitWorkspace(store.projectDirectory(p))
+            git.configureGitHubRemote(input)
+            val snapshot = git.inspect()
+            val apply: () -> Unit = {
+                if (project == p) {
+                    gitState = snapshot
+                    gitFeedback = "GitHub remote configured. Nothing was uploaded."
+                }
+            }
+            apply
+        }
+    }
+
+    fun gitFetch() {
+        val p = project ?: return
+        work {
+            val git = GitWorkspace(store.projectDirectory(p))
+            val result = git.fetchGitHub(gitVault.load())
+            val snapshot = git.inspect()
+            val apply: () -> Unit = {
+                if (project == p) { gitState = snapshot; gitFeedback = result }
+            }
+            apply
+        }
+    }
+
+    fun gitPullFastForward() {
+        val p = project ?: return
+        flush()
+        val nav = ++navigationVersion
+        work {
+            val git = GitWorkspace(store.projectDirectory(p))
+            val result = git.pullFastForwardGitHub(gitVault.load())
+            val snapshot = git.inspect()
+            val opened = persist(load(p, tabs, active, allowUnavailable = true))
+            val apply: () -> Unit = {
+                if (project == p && nav == navigationVersion) {
+                    apply(opened)
+                    gitState = snapshot
+                    gitFeedback = result
+                }
+            }
+            apply
+        }
+    }
+
+    fun gitPush() {
+        val p = project ?: return
+        flush()
+        work {
+            val git = GitWorkspace(store.projectDirectory(p))
+            val result = git.pushGitHub(gitVault.load())
+            val snapshot = git.inspect()
+            val apply: () -> Unit = {
+                if (project == p) { gitState = snapshot; gitFeedback = result }
+            }
+            apply
+        }
+    }
+
     fun gitBranch(name: String) {
         val p = project ?: return
         work {

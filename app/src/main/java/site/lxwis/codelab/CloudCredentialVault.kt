@@ -15,10 +15,12 @@ import javax.crypto.spec.GCMParameterSpec
  * The key remains in Android Keystore; only IV + ciphertext are persisted.
  * A legacy plaintext preference is migrated once and then removed.
  */
-internal class CloudCredentialVault(private val preferences: SharedPreferences) {
-    private val alias = "CodeLab.cloud-credential.v1"
-    private val encryptedKey = "credential-encrypted-v1"
-    private val legacyKey = "credential"
+internal class CloudCredentialVault(
+    private val preferences: SharedPreferences,
+    private val alias: String = "CodeLab.cloud-credential.v1",
+    private val encryptedKey: String = "credential-encrypted-v1",
+    private val legacyKey: String = "credential"
+)
 
     fun load(): String {
         val ciphertext = preferences.getString(encryptedKey, null)
