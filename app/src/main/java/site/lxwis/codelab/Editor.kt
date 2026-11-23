@@ -189,7 +189,8 @@ fun CodeEditor(
                 if (oldName == null) renameError = "No identifier at cursor."
                 else try {
                     editor.replaceFromUser(CodeAnalysis.lexicalRename(
-                        editor.text.toString(), oldName, renameValue))
+                        editor.text.toString(), oldName, renameValue,
+                        filename.substringAfterLast('.', "")))
                     renameDialog = false
                 } catch (ex: IllegalArgumentException) {
                     renameError = ex.message.orEmpty()
@@ -199,6 +200,7 @@ fun CodeEditor(
         dismissButton = { TextButton(onClick = { renameDialog = false }) { Text("Cancel") } })
 
     if (foldPreview) CodeFoldPreview(foldSnapshot,
+        language = filename.substringAfterLast('.', ""),
         onJump = { line -> foldPreview = false; view?.goToLogicalLine(line) },
         onClose = { foldPreview = false })
     if (conflictDialog) AlertDialog(
@@ -421,7 +423,8 @@ fun CodeEditor(
                     val editor = view
                     val source = editor?.text?.toString().orEmpty()
                     val name = editor?.let { CodeAnalysis.identifierAt(source, it.selectionStart) }
-                    val refs = name?.let { CodeAnalysis.references(source, it) }.orEmpty()
+                    val refs = name?.let { CodeAnalysis.references(source, it,
+                        language = filename.substringAfterLast('.', "")) }.orEmpty()
                     if (refs.isEmpty()) DropdownMenuItem(text = { Text("Place cursor on an identifier") },
                         enabled = false, onClick = {})
                     refs.forEach { ref ->
@@ -482,7 +485,8 @@ fun CodeEditor(
             Box {
                 EditorIcon(Icons.Default.BugReport, "Structural bracket hints") { issuesMenu = true }
                 DropdownMenu(expanded = issuesMenu, onDismissRequest = { issuesMenu = false }) {
-                    val issues = CodeAnalysis.bracketIssues(view?.text?.toString() ?: text)
+                    val issues = CodeAnalysis.bracketIssues(view?.text?.toString() ?: text,
+                        filename.substringAfterLast('.', ""))
                     if (issues.isEmpty()) DropdownMenuItem(text = { Text("No bracket problems detected") },
                         enabled = false, onClick = {})
                     issues.forEach { issue ->

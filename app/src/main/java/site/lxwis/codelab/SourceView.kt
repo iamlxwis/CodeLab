@@ -77,7 +77,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             invalidate()
         } else {
             hintTask = highlightWorker.submit(Runnable {
-                val issues = CodeAnalysis.bracketIssues(snapshot).map { it.line }.toSet()
+                val issues = CodeAnalysis.bracketIssues(snapshot, language).map { it.line }.toSet()
                 post(Runnable applyHints@ {
                     if (generation != hintGeneration || snapshot != sourceSnapshot) return@applyHints
                     diagnostics = issues
@@ -188,7 +188,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         setSelection(start + suggestion.length)
     }
     fun jumpToMatchingBracket() {
-        val pair = CodeAnalysis.matchBracket(text.toString(), selectionStart) ?: return
+        val pair = CodeAnalysis.matchBracket(text.toString(), selectionStart, language) ?: return
         val at = if (selectionStart <= pair.first + 1) pair.second else pair.first
         requestFocus()
         setSelection(at)

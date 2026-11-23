@@ -36,17 +36,23 @@ internal object CodeAnalysis {
     }
 
     /** Searches only visible lexical occurrences in this buffer, not semantic references. */
-    fun references(source: String, identifier: String, cap: Int = 120): List<Reference> {
+    fun references(source: String, identifier: String, cap: Int = 120, language: String = ""): List<Reference> {
         if (!identifier.matches(Regex("[A-Za-z_][A-Za-z_0-9]*"))) return emptyList()
-        val allowed = visibleCode(source)
+        val allowed = visibleCode(source, language)
         val pattern = Regex("(?<![A-Za-z_0-9])" + Regex.escape(identifier) + "(?![A-Za-z_0-9])")
+        var line = 1
+        var scanned = 0
         return pattern.findAll(source).filter { allowed[it.range.first] }
             .take(cap.coerceIn(1, 500)).map { match ->
+                while (scanned < match.range.first) {
+                    if (source[scanned] == '\n') line++
+                    scanned++
+                }
                 val before = source.lastIndexOf('\n', (match.range.first - 1).coerceAtLeast(0)) + 1
                 val next = source.indexOf('\n', match.range.last).let {
                     if (it < 0) source.length else it
                 }
-                Reference(match.range.first, source.take(before).count { it == '\n' } + 1,
+                Reference(match.range.first, line,
                     source.substring(before, next).trim().take(100))
             }.toList()
     }
@@ -65,7 +71,7 @@ internal object CodeAnalysis {
      * Lexical rename: skips strings/comments. Does not resolve scopes or imports.
      * Intended as a transparent file-local edit rather than LSP rename.
      */
-    fun lexicalRename(source: String, old: String, replacement: String): String {
+    fun lexicalRename(source: String, old: String, replacement: String, language: String = ""): String {
         require(replacement.matches(Regex("[A-Za-z_][A-Za-z_0-9]*"))) {
             "New name must be a valid identifier."
         }
@@ -73,7 +79,7 @@ internal object CodeAnalysis {
         if (!old.matches(Regex("[A-Za-z_][A-Za-z_0-9]*"))) return source
         // Rename every visible occurrence. The UI reference list is capped for
         // responsiveness, but applying that cap here silently corrupts large edits.
-        val allowed = visibleCode(source)
+        val allowed = visibleCode(source, language)
         val pattern = Regex("(?<![A-Za-z_0-9])" + Regex.escape(old) + "(?![A-Za-z_0-9])")
         val builder = StringBuilder(source.length)
         var copiedThrough = 0
@@ -88,8 +94,13 @@ internal object CodeAnalysis {
         return builder.toString()
     }
 
-    internal fun visibleCode(source: String): BooleanArray {
+    /** File-local lexical mask. Handles common comment syntaxes, not a full parser. */
+    internal fun visibleCode(source: String, language: String = ""): BooleanArray {
         val allowed = BooleanArray(source.length)
+        val ext = language.lowercase()
+        val hashComments = ext in setOf("py", "rb", "sh", "bash", "yaml", "yml", "toml", "r")
+        val dashComments = ext in setOf("lua", "sql")
+        val slashComments = !hashComments && !dashComments
         var mode = 0
         var i = 0
         while (i < source.length) {
@@ -97,8 +108,12 @@ internal object CodeAnalysis {
             val next = source.getOrNull(i + 1)
             when (mode) {
                 0 -> when {
-                    ch == '/' && next == '/' -> { mode = 4; i++ }
-                    ch == '/' && next == '*' -> { mode = 5; i++ }
+                    hashComments && ch == '#' -> mode = 4
+                    dashComments && ch == '-' && next == '-' -> { mode = 4; i++ }
+                    slashComments && ch == '/' && next == '/' -> { mode = 4; i++ }
+                    slashComments && ch == '/' && next == '*' -> { mode = 5; i++ }
+                    ch == '\'' && source.startsWith("'''", i) -> { mode = 6; i += 2 }
+                    ch == '"' && source.startsWith("\"\"\"", i) -> { mode = 7; i += 2 }
                     ch == '\'' -> mode = 1
                     ch == '"' -> mode = 2
                     ch.code == 96 -> mode = 3
@@ -112,6 +127,11 @@ internal object CodeAnalysis {
                 }
                 4 -> if (ch == '\n') { mode = 0; allowed[i] = true }
                 5 -> if (ch == '*' && next == '/') { mode = 0; i++ }
+                6, 7 -> {
+                    val closing = if (mode == 6) "'''" else "\"\"\""
+                    if (source.startsWith(closing, i)) { mode = 0; i += 2 }
+                    else if (ch == '\\') i++
+                }
             }
             i++
         }
@@ -121,9 +141,9 @@ internal object CodeAnalysis {
     private val openers = mapOf('(' to ')', '[' to ']', '{' to '}')
     private val closers = openers.entries.associate { (start, end) -> end to start }
 
-    fun matchBracket(source: String, caret: Int): Pair<Int, Int>? {
+    fun matchBracket(source: String, caret: Int, language: String = ""): Pair<Int, Int>? {
         if (source.isEmpty()) return null
-        val visible = visibleCode(source)
+        val visible = visibleCode(source, language)
         val indices = listOf(caret, caret - 1).filter { it in source.indices }
         val index = indices.firstOrNull { i ->
             visible[i] && (source[i] in openers || source[i] in closers)
@@ -147,24 +167,26 @@ internal object CodeAnalysis {
     }
 
     /** Structural hints only; these are not compiler diagnostics. */
-    fun bracketIssues(source: String): List<Issue> {
-        val visible = visibleCode(source)
+    fun bracketIssues(source: String, language: String = ""): List<Issue> {
+        val visible = visibleCode(source, language)
         val stack = ArrayDeque<Pair<Char, Int>>()
         val issues = mutableListOf<Issue>()
-        fun line(at: Int): Int = source.take(at).count { it == '\n' } + 1
+        var line = 1
         for (index in source.indices) {
-            if (!visible[index]) continue
             val ch = source[index]
-            if (ch in openers) stack.addLast(ch to index)
-            else if (ch in closers) {
-                if (stack.isEmpty() || stack.last().first != closers[ch]) {
-                    issues += Issue(line(index), "Unexpected '" + ch + "'")
-                } else stack.removeLast()
+            if (visible[index]) {
+                if (ch in openers) stack.addLast(ch to line)
+                else if (ch in closers) {
+                    if (stack.isEmpty() || stack.last().first != closers[ch]) {
+                        issues += Issue(line, "Unexpected '" + ch + "'")
+                    } else stack.removeLast()
+                }
+                if (issues.size >= 30) return issues
             }
-            if (issues.size >= 30) return issues
+            if (ch == '\n') line++
         }
-        for ((ch, at) in stack.takeLast(30 - issues.size)) {
-            issues += Issue(line(at), "Unclosed '" + ch + "'")
+        for ((ch, atLine) in stack.takeLast(30 - issues.size)) {
+            issues += Issue(atLine, "Unclosed '" + ch + "'")
         }
         return issues
     }

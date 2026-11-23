@@ -14,8 +14,9 @@ import androidx.compose.ui.unit.dp
 /** Folded read-only view. The backing editable document is never transformed. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun CodeFoldPreview(source: String, onJump: (Int) -> Unit, onClose: () -> Unit) {
-    val regions = remember(source) { CodeFolds.regions(source) }
+internal fun CodeFoldPreview(source: String, language: String,
+    onJump: (Int) -> Unit, onClose: () -> Unit) {
+    val regions = remember(source, language) { CodeFolds.regions(source, language) }
     var collapsed by remember(source) { mutableStateOf(regions.map { it.startLine }.toSet()) }
     val rows = remember(source, regions, collapsed) {
         CodeFolds.preview(source, regions, collapsed)

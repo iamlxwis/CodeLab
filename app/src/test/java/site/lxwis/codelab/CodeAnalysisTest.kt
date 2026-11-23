@@ -64,4 +64,21 @@ class CodeAnalysisTest {
             CodeAnalysis.lexicalRename(source, "item", "total"))
         assertEquals(source, CodeAnalysis.lexicalRename(source, "item!", "total"))
     }
+
+    @Test fun pythonRenameSkipsHashCommentsAndTripleQuotedStrings() {
+        val source = "amount = 1 # amount\nprint(amount // 2)\n" +
+            "''' amount '''\nprint(amount)\n"
+        val renamed = CodeAnalysis.lexicalRename(source, "amount", "total", "py")
+        assertTrue(renamed.contains("total = 1 # amount"))
+        assertTrue(renamed.contains("print(total // 2)"))
+        assertTrue(renamed.contains("''' amount '''"))
+        assertEquals(3, CodeAnalysis.references(source, "amount", language = "py").size)
+    }
+
+    @Test fun diagnosticsHandleLongFilesWithAccurateLineNumbers() {
+        val source = "val x = 1\n".repeat(4000) + "fun broken() {\n"
+        val issues = CodeAnalysis.bracketIssues(source)
+        assertEquals(1, issues.size)
+        assertEquals(4001, issues.single().line)
+    }
 }

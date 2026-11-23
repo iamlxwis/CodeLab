@@ -5,9 +5,9 @@ internal object CodeFolds {
     data class Region(val startLine: Int, val endLine: Int)
     data class Row(val line: Int, val code: String, val region: Region?, val foldedLines: Int)
 
-    fun regions(source: String): List<Region> {
+    fun regions(source: String, language: String = ""): List<Region> {
         if (source.length > 2_000_000) return emptyList()
-        val visible = CodeAnalysis.visibleCode(source)
+        val visible = CodeAnalysis.visibleCode(source, language)
         val stack = ArrayDeque<Pair<Int, Int>>()
         val found = mutableListOf<Region>()
         var line = 1
