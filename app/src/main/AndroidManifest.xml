@@ -9,6 +9,8 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <service android:name=".PythonRuntimeService" android:exported="false"
+            android:isolatedProcess="true" android:process=":python"/>
         <service android:name=".RuntimeService" android:exported="false"
             android:isolatedProcess="true" android:process=":js"/>
         <service android:name=".JavaRuntimeService" android:exported="false"

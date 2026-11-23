@@ -11,7 +11,7 @@ object LanguageCatalog {
         SupportedLanguage("SQLite", "sql", "Offline"),
         SupportedLanguage("HTML", "html", "Offline preview"),
         SupportedLanguage("CSS", "css", "Offline preview"),
-        SupportedLanguage("Python", "py"),
+        SupportedLanguage("Python", "py", "Offline"),
         SupportedLanguage("C", "c"),
         SupportedLanguage("C++", "cpp"),
         SupportedLanguage("C#", "cs"),

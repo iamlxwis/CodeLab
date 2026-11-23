@@ -14,7 +14,6 @@ internal object RuntimePackCatalog {
     data class Capability(val state: State, val label: String, val detail: String)
 
     private val corePlanned = mapOf(
-        "Python" to "Embedded CPython interpreter, with stdout, input and sandbox testing.",
         "TypeScript" to "TypeScript compiler/transpiler plus a compatible local JavaScript engine."
     )
     private val packsPlanned = mapOf(

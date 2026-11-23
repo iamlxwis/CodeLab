@@ -110,6 +110,7 @@ open class RuntimeService : Service() {
             val code = try {
                 when {
                     name.endsWith(".sql", true) -> SqlEngine.execute(name, source, io)
+                    name.endsWith(".py", true) -> PythonEngine.execute(this, name, source, io)
                     name.endsWith(".lua", true) -> LuaEngine.execute(name, source, io)
                     name.endsWith(".java", true) -> JavaEngine.execute(name, source, io)
                     else -> JsEngine.execute(name, source, io, debugEnabled)

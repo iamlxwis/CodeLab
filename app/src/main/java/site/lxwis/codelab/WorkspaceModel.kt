@@ -136,7 +136,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun isLocalExecutable(path: String): Boolean =
         path.endsWith(".js", true) || path.endsWith(".sql", true) ||
-        path.endsWith(".lua", true) || path.endsWith(".java", true)
+        path.endsWith(".lua", true) || path.endsWith(".java", true) || path.endsWith(".py", true)
 
     fun cloudAvailable(path: String): Boolean =
         isOnline && cloudLanguages.containsKey(CloudJudge0.extension(path))

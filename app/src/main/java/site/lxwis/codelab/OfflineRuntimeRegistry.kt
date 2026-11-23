@@ -12,6 +12,10 @@ internal object OfflineRuntimeRegistry {
         val limitations: String
     )
     private val catalog = listOf(
+        Runtime("Python", "py", "CPython via Chaquopy", "3.13",
+            "com.chaquo.python.Python",
+            "Python 3 syntax, standard library where Android-compatible, console I/O",
+            "Isolated worker. No native pip installs at runtime and some OS APIs are unavailable."),
         Runtime("JavaScript", "js", "Mozilla Rhino", "1.7.15.1",
             "org.mozilla.javascript.Context",
             "Statements, functions, interactive readLine and console output",
