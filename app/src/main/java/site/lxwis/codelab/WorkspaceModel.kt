@@ -64,6 +64,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         private set
     var cloudPending by mutableStateOf<String?>(null)
         private set
+    private var cloudApproval: OnlineRunApproval? = null
     var isOnline by mutableStateOf(false)
         private set
     private val connectivityCallback = object : ConnectivityManager.NetworkCallback() {
@@ -80,6 +81,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val wasConnected = isOnline
         isOnline = connected
         if (!connected) {
+            cancelCloudRun()
             cloudLanguages = emptyMap()
             cloudError = "No internet connection"
             cloudChecking = false
@@ -143,20 +145,37 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun cloudAvailable(path: String): Boolean =
         isOnline && cloudLanguages.containsKey(CloudJudge0.extension(path))
 
+    private fun prepareOnlineApproval(filename: String) {
+        val language = cloudLanguages[CloudJudge0.extension(filename)]
+        if (language == null) {
+            error = "No available online compiler for this file."
+            return
+        }
+        cloudApproval = OnlineRunApproval(filename, revision, cloudEndpoint, language.id)
+        cloudPending = filename
+    }
+
     fun requestCloudRun() {
         val filename = active ?: return
+        if (runner.running) return
         if (!cloudAvailable(filename)) {
             error = "Online execution is unavailable for this language. Check Languages & Cloud."
             return
         }
-        cloudPending = filename
+        // This command explicitly requests cloud execution, even if Offline was selected.
+        chooseExecutionMode("Online")
+        prepareOnlineApproval(filename)
     }
 
     fun startCloudRun(stdin: String) {
         val filename = cloudPending ?: return
-        cloudPending = null
-        if (active != filename) { error = "File changed. Select Run again."; return }
+        val approval = cloudApproval
+        cancelCloudRun() // One-time approval is consumed before network activity.
         val language = cloudLanguages[CloudJudge0.extension(filename)]
+        if (approval?.matches(active, revision, executionMode, cloudEndpoint, language?.id) != true) {
+            error = "Source, run mode, or online compiler changed. Review the upload again."
+            return
+        }
         if (!isOnline || language == null) { error = "Online compiler is unavailable"; return }
         flush()
         runner.runOnline(filename, source, cloudEndpoint, cloudHeader, cloudCredential, language, stdin.take(4096))
@@ -164,7 +183,10 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         preview = false
     }
 
-    fun cancelCloudRun() { cloudPending = null }
+    fun cancelCloudRun() {
+        cloudPending = null
+        cloudApproval = null
+    }
     private val main = Handler(Looper.getMainLooper())
     val runner = RunSession(app)
     var executionMode by mutableStateOf(
@@ -174,6 +196,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         private set
     fun chooseExecutionMode(value: String) {
         if (value !in listOf("Offline", "Online") || runner.running) return
+        if (executionMode != value) cancelCloudRun()
         executionMode = value
         preferences.edit().putString("run-mode", value).apply()
     }
@@ -1338,7 +1361,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
         // Never switch from offline to cloud implicitly; the user chooses.
         if (executionMode == "Online") {
-            if (cloudAvailable(filename)) cloudPending = filename
+            if (cloudAvailable(filename)) prepareOnlineApproval(filename)
             else error = if (!isOnline) "Connect to the internet to run online."
                 else if (cloudChecking) "Checking the online compiler. Retry shortly."
                 else "No online compiler available for this file. Configure one in Languages & Cloud."

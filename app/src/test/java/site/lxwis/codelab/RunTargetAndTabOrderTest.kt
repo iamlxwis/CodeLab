@@ -2,6 +2,8 @@ package site.lxwis.codelab
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class RunTargetAndTabOrderTest {
@@ -27,4 +29,15 @@ class RunTargetAndTabOrderTest {
         assertEquals(emptySet<String>(),
             remapPinnedPaths(setOf("entry.ts"), "entry.ts", null))
     }
+    @Test fun onlineConsentCannotAuthorizeChangedSourceOrCompiler() {
+        val approval = OnlineRunApproval("src/main.js", 17L, "https://compiler.example", 63)
+        assertTrue(approval.matches("src/main.js", 17L, "Online", "https://compiler.example", 63))
+        assertFalse(approval.matches("src/main.js", 18L, "Online", "https://compiler.example", 63))
+        assertFalse(approval.matches("another.js", 17L, "Online", "https://compiler.example", 63))
+        assertFalse(approval.matches("src/main.js", 17L, "Offline", "https://compiler.example", 63))
+        assertFalse(approval.matches("src/main.js", 17L, "Online", "https://different.example", 63))
+        assertFalse(approval.matches("src/main.js", 17L, "Online", "https://compiler.example", 71))
+        assertFalse(approval.matches("src/main.js", 17L, "Online", "https://compiler.example", null))
+    }
+
 }

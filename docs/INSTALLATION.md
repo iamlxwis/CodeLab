@@ -1,3 +1,7 @@
+## Verified production signer (2026-11-23)
+
+[GitHub Actions run 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835) produced and published editor/Python APKs whose actual certificates match the existing permanent release keystore, after fixing workflow secret scope and Kotlin DSL property shadowing. The editor signing SHA-256 certificate is `c81d2aa187febd5252ad0369f2b4cfba368b5f16f6b4b049963fa284c9e42392`. Older debug-signed APKs **cannot** upgrade directly: export project ZIP backups before a one-time uninstall/reinstall. Same-certificate Android 13/15 in-place upgrade and physical-device retention still require separate verification.
+
 # Installing and upgrading CodeLab
 
 Download **CodeLab.apk** from the [latest GitHub release](https://github.com/iamlxwis/CodeLab/releases/tag/latest). **CodeLab-Python.apk** is an optional companion for offline Python, not the editor itself. CodeLab requires Android 8.0 or newer; the Python companion requires a supported 64-bit device.

@@ -33,3 +33,16 @@ internal fun remapPinnedPaths(
         else path
     }.toSet()
 }
+
+/** Consent cannot be reused for modified source, another file or compiler target. */
+internal data class OnlineRunApproval(
+    val filename: String,
+    val revision: Long,
+    val endpoint: String,
+    val languageId: Int
+) {
+    fun matches(active: String?, activeRevision: Long, executionMode: String,
+        currentEndpoint: String, currentLanguageId: Int?): Boolean =
+        active == filename && activeRevision == revision && executionMode == "Online" &&
+            endpoint == currentEndpoint && currentLanguageId == languageId
+}

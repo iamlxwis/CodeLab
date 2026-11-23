@@ -1,3 +1,5 @@
+**Signing status correction (2026-11-23):** Production signing is now cryptographically verified for both APKs at [release workflow 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835), source `7e04d47`, actual editor SHA-256 certificate `c81d2aa1...c9e42392`. Earlier debug APK certificates differ and need backed-up migration. T04 same-key emulator upgrade remains pending. Do not rotate the existing production key. Online consent is now bound to source revision, file, mode and compiler target (new CI pending).
+
 # CodeLab — development agent instructions
 
 Read this file before making changes to CodeLab, then read:

@@ -148,3 +148,11 @@ Actual APK signing blocks for [a11d15e](https://github.com/iamlxwis/CodeLab/acti
 ## KI-037 — production SigningConfig Kotlin DSL property shadowing (P0, 2026-11-23)
 
 [APK run 45204023605](https://github.com/iamlxwis/CodeLab/actions/runs/45204023605) failed at `:app:packageRelease`: `SigningConfig "production" is missing required property "storePassword"`. Root cause was receiver shadowing: `storePassword = keyPassword` and `keyAlias = keyAlias` in the app Gradle script selected uninitialized SigningConfig properties instead of top-level env variables. Fixed by renaming the top-level inputs and using unambiguous receiver assignments. Companion configuration already used distinct variable names. CI retest required. Existing permanent key preserved.
+
+## KI-036/KI-037 resolved for release signing — 2026-11-23
+
+[Release CI 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835) PASSED actual app + Python signer verification against existing permanent keystore; editor X509 digest `c81d2aa1...c9e42392`. Production-signed release published. Prior debug APKs still require backed-up migration. Same-key Android upgrade T04 not tested yet. This supersedes the earlier source-only/failed status in KI-036 and KI-037.
+
+## KI-038 — stale online upload approval (2026-11-23)
+
+`WorkspaceModel.startCloudRun` formerly checked only active filename, allowing a pending cloud execution after source revision, Online/Offline mode or compiler settings changed. Source now tracks one-time `OnlineRunApproval` bound to file, revision, mode, endpoint, language id, and cancels on mode/network changes; JVM regression added. **CI/device proof pending**, no live external provider run is claimed.
