@@ -122,11 +122,9 @@ jobs:
           else
             NOTES="Editor APK plus optional Python module. Both are CI fallback-debug signed and must come from the SAME build; cross-release in-place updates are not guaranteed. Back up projects. Python pack requires arm64 or x86_64. Android 8.0+. Checksums included."
           fi
-          NOTES="$NOTES"
-\n\n'"Build commit: $GITHUB_SHA. Download CodeLab.apk for the editor; CodeLab-Python.apk is only the optional Python runtime. See docs/INSTALLATION.md for upgrade and backup instructions."
+          NOTES="$NOTES Build commit: $GITHUB_SHA. Download CodeLab.apk for the editor; CodeLab-Python.apk is only the optional Python runtime. See docs/INSTALLATION.md for backup and upgrade instructions."
           if [[ "$CODELAB_UPGRADE_COMPATIBILITY" == "signature_changed" ]]; then
-            NOTES="$NOTES"
-\n\n'"IMPORTANT: The signing certificate changed since the previous release. Android may reject this APK over an existing CodeLab installation. Export projects as ZIPs while the old app still works, save the ZIPs outside the app, uninstall the old app, install CodeLab.apk, then import the backups. There is no safe way to bypass Android's signature check."
+            NOTES="$NOTES IMPORTANT: The signing certificate changed since the previous release. Android may reject this APK over an existing CodeLab installation. Export project ZIPs while the old app still works and save them outside the app. Only then uninstall, install CodeLab.apk and import the backups. There is no safe bypass for Android's signature check."
           fi
           if gh release view latest >/dev/null 2>&1; then
             gh release upload latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --clobber
