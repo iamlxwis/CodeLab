@@ -78,6 +78,16 @@ def verify_clay():
                for a in labels for b in selected), "Saved Clay appearance was not selected"
 
 
+def open_workspace_action(name):
+    """Use the searchable action sheet; destinations are nested in categories."""
+    ui.tap("More tools and settings")
+    ui.tap_node(ui.wait_for(field=True))
+    ui.adb("shell", "input", "text", name)
+    ui.adb("shell", "input", "keyevent", "4")
+    # Search EditText repeats the result name; tap only the result TextView.
+    ui.tap_text_result(name)
+
+
 def create_test_data():
     ui.launch()
     ui.wait_for("Welcome to CodeLab", timeout=45)
@@ -93,8 +103,7 @@ def create_test_data():
     ui.adb("shell", "input", "text", MARKER)
     ui.wait_for(MARKER, contains=True)
     ui.tap("Save file")
-    ui.tap("More tools and settings")
-    ui.tap("Appearance")
+    open_workspace_action("Appearance")
     ui.wait_for("Choose your style")
     ui.tap("Clay")
     verify_clay()
@@ -113,14 +122,12 @@ def validate_persistence_and_python():
     ui.wait_for("UpgradeProof")
     ui.tap("UpgradeProof")
     ui.wait_for(MARKER, contains=True, timeout=45)
-    ui.tap("More tools and settings")
-    ui.tap("Appearance")
+    open_workspace_action("Appearance")
     ui.wait_for("Choose your style")
     verify_clay()
     ui.tap("Done")
     ui.snapshot("signed-upgrade-after")
-    ui.tap("More tools and settings")
-    ui.tap("Languages")
+    open_workspace_action("Languages")
     ui.wait_for("Languages & file types")
     ui.tap_node(ui.wait_for(field=True))
     ui.adb("shell", "input", "text", "Python")

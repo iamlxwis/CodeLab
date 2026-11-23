@@ -25,7 +25,7 @@ Write, run, and manage projects from your phone.
 
 **1 / 9 completed · 8 remaining · 3 in progress · 0 blocked**
 
-**Current task:** `T04` — Same-certificate upgrade test on next release; `T03` online-consent regression
+**Current task:** `T04` — Repair Android 13 upgrade-test navigation, rerun API 33/35
 
 **Latest verified (2026-11-23):** [Production APK: actual keystore certificate verified](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835) · [Android 13: Passed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470) · [Android 15: Failed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470)
 
@@ -41,7 +41,7 @@ Write, run, and manage projects from your phone.
 | `T08` Finish interactive tutorial and accessibility | Queued |
 | `T09` Complete full QA and release readiness | Queued |
 
-**Last audit:** 2026-11-23 — signing verified, online-consent regression awaiting CI · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** 2026-11-23 — upgrade test found hidden Appearance action; UI search fix awaiting CI · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.

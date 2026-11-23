@@ -156,3 +156,7 @@ Actual APK signing blocks for [a11d15e](https://github.com/iamlxwis/CodeLab/acti
 ## KI-038 — stale online upload approval (2026-11-23)
 
 `WorkspaceModel.startCloudRun` formerly checked only active filename, allowing a pending cloud execution after source revision, Online/Offline mode or compiler settings changed. Source now tracks one-time `OnlineRunApproval` bound to file, revision, mode, endpoint, language id, and cancels on mode/network changes; JVM regression added. **CI/device proof pending**, no live external provider run is claimed.
+
+## KI-039 — production-upgrade QA cannot find nested Appearance action (2026-11-23)
+
+[CI 45207076639](https://github.com/iamlxwis/CodeLab/actions/runs/45207076639) failed its API33 signed-upgrade test at `Timed out waiting for ('Appearance',)`. Screenshot/XML show a healthy app displaying searchable Workspace actions sheet; Appearance exists under Settings, not at root. This is **test-navigation drift**, not proof of Android data loss. `qa/production_upgrade_smoke.py` now searches action names and taps result TextView for Appearance and Languages. New CI pending; upgrade data retention still unverified.

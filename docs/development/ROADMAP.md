@@ -1,3 +1,9 @@
+## 2026-11-23 — signed-upgrade CI debug checkpoint
+
+- [ ] Recheck Android 13 and 15 signed upgrade runs after repairing Appearance/Languages action search in `qa/production_upgrade_smoke.py`. Previous run 45207076639 failed before update at nested-menu navigation; no persisted-data pass.
+- [x] Verified first actual permanent-keystore-signed APK at release CI 45205309835; earlier debug-signed APK metadata was false.
+- [ ] Confirm same-key Android API33/API35 in-place upgrade with source/theme retention and offline Python companion execution, without uninstalling or clearing app data.
+
 ## 2026-11-23 — mobile GitHub Actions signing setup
 
 - [ ] Ensure manual signing-key generator workflow is visible and valid after commit; do not manually run it with an unset user passphrase.
