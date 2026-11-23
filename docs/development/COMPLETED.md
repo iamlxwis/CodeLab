@@ -1,6 +1,6 @@
 # Completed work — implementation versus verification
 
-Updated 2026-11-23; status inspected at source SHA \`3c37ae8c01dc\`.
+Updated 2026-11-23; status inspected at source SHA `3c37ae8c01dc`.
 
 | Area | Implemented in source | Verification/remaining caveat |
 | --- | --- | --- |
@@ -12,8 +12,8 @@ Updated 2026-11-23; status inspected at source SHA \`3c37ae8c01dc\`.
 | Python (legacy bundled implementation) | Chaquopy CPython 3.13 isolated worker and basic I/O/timeout integration | Latest emulator smoke fails waiting for visible Python output; not certified usable offline on device |
 | Cloud execution | Explicit confirmation and configurable HTTPS remote compiler integration | Remote provider availability / real-world integration not assumed |
 | Runtime planning | Catalog/status contract and security design document for optional modules | **No downloadable language pack or working install/uninstall manager yet** |
-| CI/distribution | GitHub Actions APK build, SHA-256 and public release; JVM tests, lint/security and emulator pipeline | APK pass at \`3c37ae8c\`; emulator smoke fail at that SHA; debug-signing fallback |
-| Development continuity | \`AGENTS.md\` plus \`docs/development/\` memory, decisions, roadmap and issues | This documentation commit establishes handoff discipline; future agents must keep it current |
+| CI/distribution | GitHub Actions APK build, SHA-256 and public release; JVM tests, lint/security and emulator pipeline | APK pass at `3c37ae8c`; emulator smoke fail at that SHA; debug-signing fallback |
+| Development continuity | `AGENTS.md` plus `docs/development/` memory, decisions, roadmap and issues | This documentation commit establishes handoff discipline; future agents must keep it current |
 
 Evidence:
 - [APK workflow (success) — source 3c37ae8c](https://github.com/iamlxwis/CodeLab/actions/runs/45129100978)

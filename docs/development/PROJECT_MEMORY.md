@@ -1,8 +1,8 @@
 # CodeLab project memory — handoff snapshot
 
 **Updated:** 2026-11-23
-**Source head inspected before this documentation commit:** \`3c37ae8c01dcdab225b5f13273c5d01f870983e9\`
-**Repository:** \`iamlxwis/CodeLab\` · default branch \`main\`
+**Source head inspected before this documentation commit:** `3c37ae8c01dcdab225b5f13273c5d01f870983e9`
+**Repository:** `iamlxwis/CodeLab` · default branch `main`
 **Purpose:** Let another AI coding assistant resume accurately without access to earlier chats.
 
 ## Product goal — user-approved
@@ -17,16 +17,16 @@ A high-quality **native Android editor** with professional vector icons (no emoj
 
 - Kotlin/Jetpack Compose Android app; editor/projects/files/session storage.
 - Theme gallery and five visual styles; new project flow with visual language cards, starter modes and sample previews.
-- \`StarterExamples.java\` covers the 95-entry language/file-type catalog (source starter, not execution promise).
-- \`OfflineRuntimeRegistry.kt\` describes current bundled engines; \`RuntimePackCatalog.kt\` contains planned-pack labels, not a working engine pack installer.
+- `StarterExamples.java` covers the 95-entry language/file-type catalog (source starter, not execution promise).
+- `OfflineRuntimeRegistry.kt` describes current bundled engines; `RuntimePackCatalog.kt` contains planned-pack labels, not a working engine pack installer.
 - CPython 3.13 through Chaquopy integrated into an isolated Python worker; implementation in current source, but end-to-end device testing is unresolved.
-- Existing opt-in cloud execution machinery through \`CloudJudge0.java\`; current run-target UI includes capability-aware online/local status. A **complete explicit online-vs-offline run choice and downloadable pack manager** are not yet implemented or verified.
-- \`docs/ENGINE_PACKS.md\` documents proposed signed runtime-pack security requirements, not released packs.
+- Existing opt-in cloud execution machinery through `CloudJudge0.java`; current run-target UI includes capability-aware online/local status. A **complete explicit online-vs-offline run choice and downloadable pack manager** are not yet implemented or verified.
+- `docs/ENGINE_PACKS.md` documents proposed signed runtime-pack security requirements, not released packs.
 
-## Latest CI observed for source head \`3c37ae8c\`
+## Latest CI observed for source head `3c37ae8c`
 
 - [Android APK run 45129100978](https://github.com/iamlxwis/CodeLab/actions/runs/45129100978): **success** (source builds; this does not establish device functionality).
-- [Android device smoke run 45129100951](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951): **failure**. Emulator journey timed out waiting for visible text \`Hello from CodeLab!\`. The log also contains transient adb exit-code-1 messages. Root cause **not established**: inspect UI flow, Python process/output and instrumented logs before attributing it to the runtime.
+- [Android device smoke run 45129100951](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951): **failure**. Emulator journey timed out waiting for visible text `Hello from CodeLab!`. The log also contains transient adb exit-code-1 messages. Root cause **not established**: inspect UI flow, Python process/output and instrumented logs before attributing it to the runtime.
 - After the documentation commit, these CI statuses describe the **previous implementation SHA**, not the new docs-only commit. Check new run results.
 
 ## Next action — do this before broader features
@@ -37,7 +37,7 @@ A high-quality **native Android editor** with professional vector icons (no emoj
 4. Build a clear Run choice (Online / Offline), and an install/manage-runtimes experience. Never auto-upload source; online support can depend on provider availability.
 5. Release with stable signing, physical-device verification and verified emulator CI. Additional languages follow only when genuine compatible engines exist.
 
-Read \`DECISIONS.md\` and \`KNOWN_ISSUES.md\` before acting. Update this file in **every meaningful implementation commit**.
+Read `DECISIONS.md` and `KNOWN_ISSUES.md` before acting. Update this file in **every meaningful implementation commit**.
 
 ## Handoff format for subsequent sessions
 
@@ -47,4 +47,4 @@ When updating, retain a short, explicit snapshot:
 - **Verified:** build run, unit tests, emulator, physical device, with links ...
 - **Failed / unverified:** exact steps or evidence ...
 - **Next task:** one concrete, reproducible objective ...
-- **Decision changes:** link/update \`DECISIONS.md\` ...
+- **Decision changes:** link/update `DECISIONS.md` ...

@@ -4,14 +4,14 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P0 — build and runtime reliability
 
-- [x] APK builds at source SHA \`3c37ae8c\`; see [build](https://github.com/iamlxwis/CodeLab/actions/runs/45129100978).
-- [ ] Debug [emulator Python-output timeout](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951) (waiting for \`Hello from CodeLab!\`). Check UI automation, keyboard focus, isolated Python worker, stdout transfer and logcat. Do not guess root cause.
+- [x] APK builds at source SHA `3c37ae8c`; see [build](https://github.com/iamlxwis/CodeLab/actions/runs/45129100978).
+- [ ] Debug [emulator Python-output timeout](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951) (waiting for `Hello from CodeLab!`). Check UI automation, keyboard focus, isolated Python worker, stdout transfer and logcat. Do not guess root cause.
 - [ ] Achieve passing APK + Android emulator smoke for the same source commit; retain exact run URLs and SHA.
 - [ ] Verify real device API/ABI coverage; Python integration currently targets arm64-v8a and x86_64, not 32-bit-only devices.
 
 ## P1 — optional module architecture (approved end state)
 
-- [ ] Implement a versioned \`EngineProvider\` / capability contract and accurate installed/not-installed/loading/error states.
+- [ ] Implement a versioned `EngineProvider` / capability contract and accurate installed/not-installed/loading/error states.
 - [ ] Choose supported Android distribution model for **GitHub APK**, with signed companion packages (or validated alternative); explicitly verify package identity/certificates, version and ABI. Consider Play on-demand features separately for a Play Store channel.
 - [ ] Authenticated, explicit and isolated IPC between core editor and each runtime package. Test cancellation, timeouts, bounded input/output and failure modes.
 - [ ] Build a real Language Module Manager: list, sizes/permissions/provenance, install, update, uninstall, offline state, version/compatibility and storage usage. Do not offer fake install actions.
@@ -37,4 +37,4 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## Commit process
 
-User approved direct commits to \`main\`. **In the same commit as implementation work**, update \`docs/development/PROJECT_MEMORY.md\`, and any relevant completed/roadmap/decision/issue docs. Store actual CI links after jobs complete in a follow-up docs-only commit if necessary.
+User approved direct commits to `main`. **In the same commit as implementation work**, update `docs/development/PROJECT_MEMORY.md`, and any relevant completed/roadmap/decision/issue docs. Store actual CI links after jobs complete in a follow-up docs-only commit if necessary.

@@ -21,10 +21,10 @@ CodeLab is a native Kotlin + Jetpack Compose Android code editor, intended to be
 
 ## Development/commit discipline
 
-- User authorized **direct commits to \`main\`**; no PR required unless they change this instruction.
+- User authorized **direct commits to `main`**; no PR required unless they change this instruction.
 - Before coding, inspect the actual files and latest GitHub Actions results. The repository may have changed since the last handoff.
 - Keep edits narrowly scoped, incremental and buildable. Preserve project data and do not remove working functionality until a replacement is validated.
-- **Every meaningful implementation commit must update project memory in the same commit.** At minimum update \`docs/development/PROJECT_MEMORY.md\` with: date, commit context, implemented/unverified/blocked changes, latest CI SHA/status, and precise next task. Update \`COMPLETED.md\`, \`ROADMAP.md\`, \`DECISIONS.md\`, \`KNOWN_ISSUES.md\` as applicable.
+- **Every meaningful implementation commit must update project memory in the same commit.** At minimum update `docs/development/PROJECT_MEMORY.md` with: date, commit context, implemented/unverified/blocked changes, latest CI SHA/status, and precise next task. Update `COMPLETED.md`, `ROADMAP.md`, `DECISIONS.md`, `KNOWN_ISSUES.md` as applicable.
 - Never mark work *verified* merely because source compiles. Distinguish source committed, Gradle build, automated unit tests, emulator smoke and real physical-device acceptance.
 - For a failure, include exact failing workflow URL and error text; do not guess the root cause.
 - Don't add secrets, tokens, passwords, personal details, fake screenshots or untested claims to repo documentation.
@@ -33,4 +33,4 @@ CodeLab is a native Kotlin + Jetpack Compose Android code editor, intended to be
 
 ## First task for a new agent
 
-Open \`docs/development/PROJECT_MEMORY.md\`, verify \`main\` and latest CI, then execute the next action in \`docs/development/ROADMAP.md\`. Report concrete completed work and remaining verification. If docs conflict with inspected code, **inspect and fix the docs** rather than treating the handoff as infallible.
+Open `docs/development/PROJECT_MEMORY.md`, verify `main` and latest CI, then execute the next action in `docs/development/ROADMAP.md`. Report concrete completed work and remaining verification. If docs conflict with inspected code, **inspect and fix the docs** rather than treating the handoff as infallible.
