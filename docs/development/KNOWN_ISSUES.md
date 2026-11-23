@@ -106,3 +106,5 @@ KI-023: Visible run strip has not been validated at narrow widths or large font 
 KI-024: New tutorial and QA script are not emulator verified. True anchored coach-mark highlights are not yet available; interaction is via Try-it shortcuts. Test on Android 13/15.
 
 KI-025: Android 13 and 15 emulator smoke matrix is source-only until workflows complete. No physical-device or TalkBack acceptance; test artifact images must be inspected before visual fidelity claims.
+
+KI-026: [45170798149](https://github.com/iamlxwis/CodeLab/actions/runs/45170798149) failed Kotlin compile `Unresolved reference InfoOutline` in RunTargetMenu.kt:10,67; fix committed, retest pending.

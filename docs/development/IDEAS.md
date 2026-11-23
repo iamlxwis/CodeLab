@@ -90,3 +90,5 @@ IDEA-019 visible execution-mode controls committed in source; run-mode persisten
 IDEA-020 now has a 14-topic progressive hands-on guide with action shortcuts in source. Screen-anchored coach-mark highlight overlays and Android acceptance pending.
 
 IDEA-018 regression tests added for preset codec; IDEA-021 two-API emulator matrix requested/added in source, verification pending.
+
+IDEA-019 source compile correction: unsupported vector icon InfoOutline replaced by standard Info. Verification pending.

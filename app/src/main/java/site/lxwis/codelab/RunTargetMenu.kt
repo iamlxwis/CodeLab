@@ -7,7 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.InfoOutline
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
@@ -64,7 +64,7 @@ internal fun RunModeStrip(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 Icon(if (missingModule || (m.executionMode == "Online" && !cloudReady))
-                    Icons.Default.InfoOutline else Icons.Default.CheckCircleOutline,
+                    Icons.Default.Info else Icons.Default.CheckCircleOutline,
                     contentDescription = null, modifier = Modifier.size(15.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(status, Modifier.weight(1f),

@@ -162,3 +162,5 @@ pack availability remains a PackageManager verification on Android devices.
 2026-11-23 source: FirstRunTutorial now has 14 practical steps split into four essential and ten optional topics, with progress and contextual Try-it actions opening real screens; completion and replay remain wired in Studio. Device smoke selectors updated for new tutorial and run controls. This is not a system-level spotlight overlay; true screen-anchored coach marks remain pending. CI pending.
 
 2026-11-23 QA expansion source: added JVM tests for custom color validation, corrupt and roundtrip preset persistence, name/size limit; emulator smoke matrix now API33 (Android 13) and API35 (Android 15), with per-API artifacts and clean-install result naming. These tests have not yet run successfully on the current source; physical device acceptance remains unverified.
+
+2026-11-23 build correction: [APK workflow 45170798149](https://github.com/iamlxwis/CodeLab/actions/runs/45170798149) failed compile with `RunTargetMenu.kt:10:47 Unresolved reference InfoOutline` and line 67. Replaced unsupported icon with Material Info; new CI pending, no APK/build green claim.

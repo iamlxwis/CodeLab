@@ -63,3 +63,5 @@ Source-only: Run mode chips and contextual status added next to editor Run workf
 Source-only: 14-topic progressive tutorial and corresponding smoke steps; not accepted until CI/emulator passes.
 
 Targeted appearance codec tests and dual-API emulator workflow added in source, not yet executed/verified.
+
+Run strip material icon compile correction in source; CI verification pending.

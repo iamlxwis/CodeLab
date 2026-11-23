@@ -88,3 +88,5 @@ User approved direct commits to `main`. **In the same commit as implementation w
 
 - [ ] Confirm two-API Android emulator workflow succeeds for API 33 and API 35; inspect actual screenshots separately.
 - [ ] Confirm AppearanceRecipesTest JVM tests pass. Do not mark physical-device acceptance from CI.
+
+- [ ] Confirm corrected Run strip vector icon compiles in APK/device workflows.
