@@ -78,14 +78,16 @@ class RuntimeServiceTest {
         await { session.transcript.contains("started") }
         main {
             session.stop()
-            assertTrue(session.status.contains("130"))
+            assertTrue("Stop status: " + session.status, session.status.contains("130"))
             session.run("flood.js", "while(true) print('line')")
         }
         await { !session.running }
         main {
-            assertEquals("Exit 1", session.status)
-            assertTrue(session.transcript.contains("output limit"))
-            assertTrue(session.transcript.length < 70_000)
+            assertEquals("Flood status: " + session.status + "; output: " + session.transcript.takeLast(200), "Exit 1", session.status)
+            assertTrue("Missing output-limit marker. Tail: " + session.transcript.takeLast(300),
+                session.transcript.contains("output limit"))
+            assertTrue("Console length: " + session.transcript.length,
+                session.transcript.length < 70_000)
         }
     }
     @Test fun pythonStartsOfflineAndHandlesStdinAndFailures() {

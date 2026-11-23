@@ -224,3 +224,7 @@ New signed Java companion uses BeanShell; it cannot compile general Java classes
 ## Nov 24, 2026, 4:04 AM PHT — TypeScript catalog regression fixed in source
 
 [Android APK CI 45254495018](https://github.com/iamlxwis/CodeLab/actions/runs/45254495018) failed exactly RuntimePackCatalogTest.onlyPackagedOptionalModulesAreListed line 15; test expected TypeScript unavailable despite new optional module. Corrected negative-case list to unshipped C++/Rust. Rebuild/test pending. SQLite new companion source also requires Android device validation. Both module APKs are not public until guarded release succeeds.
+
+## Nov 24, 2026, 4:08 AM PHT — Android 15 runtime cancellation/output-limit regression
+
+[Run 45253146184](https://github.com/iamlxwis/CodeLab/actions/runs/45253146184) failed **one** connected Android test, `RuntimeServiceTest.stopsInfiniteLoopAndEnforcesOutputLimit`. Prior Python/JS/Lua/Java pre-instrumentation smoke completed; the failing JUnit assertion had no line in step log. Diagnostic assertion messages now capture status/output tail on next run; investigate actual emulator error before source rewrite. Do not label Android15 verified yet.

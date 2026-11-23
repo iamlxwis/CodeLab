@@ -93,3 +93,15 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 4:01 AM PHT | Phase 1 / IDEA-001, IDEA-026 | SQLite source in progress, CI pending | Added optional SQLite companion based on Android platform SQLite, signed IPC/pack manager and CI/release wiring; preserves bundled engine. No extra compiler/device pass claimed. |
 
 | Nov 24, 2026, 4:04 AM PHT | Phase 1 / IDEA-026, IDEA-028 | Source fix; CI rerun pending | Examined [Android APK CI 45254495018](https://github.com/iamlxwis/CodeLab/actions/runs/45254495018); exact failure was obsolete TypeScript-is-unavailable assertion at RuntimePackCatalogTest:15, not compilation. Updated test expectation and integrated optional SQLite Android-platform companion with signed CI/release. |
+
+| Nov 24, 2026, 4:07 AM PHT | Phase 1 / IDEA-002, IDEA-011 | UI source changed; CI pending | Missing optional runtime error actions open exact Language Manager pack; Run-strip Languages opens active file pack. No silent source upload or installer bypass. |
+
+| Nov 24, 2026, 4:08 AM PHT | Phase 1 / QA | Diagnostics added, rerun pending | [Device 45253146184](https://github.com/iamlxwis/CodeLab/actions/runs/45253146184) failed 1/27 Android instrumentation tests in RuntimeServiceTest infinite-loop/output-limit test. Added assertion diagnostics without weakening coverage; need exact next-result evidence. |
+
+| Nov 24, 2026, 4:10 AM PHT | Phase 1 / runtime cancellation, IDEA-029 | Source verification pending | Main commit dcb1daed adds a guarded post-stop bind delay and explicit output-limit messages. Preserved alongside module navigation and strict Android instrumentation diagnostics. Device rerun required. |
+
+| Nov 24, 4:13 AM PHT | Phase 1 / IDEA-011, IDEA-029 | Release discovery source, CI pending | Official GitHub release metadata verifies published APK names/states/size before Download is enabled; unsigned/unshipped URLs cannot trigger download. Cached verified installs remain possible; parser tests added. |
+
+| Nov 24, 4:14 AM PHT | Phase 1 / IDEA-009, IDEA-026 | Feasibility audit complete, implementations pending | Added per-language proof/blocker matrix and Android 10+ W^X/14+ dynamic-loading limits; PHP/Ruby WASM research candidates. No unsupported runtime claimed shipped, unfinished Phase 1 remains open. |
+
+| Nov 24, 4:17 AM PHT | Phase 1 / documentation | Source status corrected | Installation/implementation docs distinguish six source runtimes from published signed APKs and preserve language feasibility audit. CI/Android QA pending. |

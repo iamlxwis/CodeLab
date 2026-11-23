@@ -1,3 +1,27 @@
+## Nov 24, 4:17 AM PHT — Installation and implementation documentation synchronized
+
+Updated docs/INSTALLATION.md and IMPLEMENTATION_STATUS.md with precise six-companion source status, required official release asset confirmation, Android owner-approved installation, and the previous API35 1/27 runtime-output-limit test failure. The earlier language feasibility source audit remains preserved below, including all remaining compiler blockers. No claim of Phase 1 completion or public TS/SQLite release. Session WORKING at checkpoint.
+
+## Nov 24, 4:14 AM PHT — Full Phase 1 language feasibility audit
+
+Added [LANGUAGE_FEASIBILITY.md](LANGUAGE_FEASIBILITY.md) documenting six signed runtime projects in source and precise unimplemented blockers for C/C++, true Java, Kotlin, PHP, Ruby, Rust, Go and C#. References official Android W^X/DCL and wasm-project docs. None of the unimplemented engines is advertised as working; user explicitly prioritized genuine offline execution and plans physical-device acceptance. Same-commit CI, public JS/Lua/Java/TS/SQLite packs and network download QA still pending. Session WORKING at checkpoint.
+
+## Nov 24, 4:13 AM PHT — Truthful module asset availability, source unverified
+
+Added `RuntimeReleaseAssets` read-only official GitHub latest-release metadata lookup; validates exact supported APK filenames, state=uploaded and 1..120MB size with bounded 256KB response and 6s network timeout. Language Manager disables user-initiated network Download buttons until the corresponding release asset is confirmed, but keeps signed cached-APK installation available. HTTP performed on Dispatchers.IO. App-side error/run strip now links to the correct runtime manager. JVM parser tests added. No public TypeScript/Java/SQLite claims; next source CI and Android15 QA pending. This does not change package signature trust or allow arbitrary executable downloads. Session WORKING at checkpoint.
+
+## Nov 24, 2026, 4:10 AM PHT — Signed runtime and QA handoff preparation
+
+Repository main received source fix dcb1daed for fast stop/restart binding and explicit module output-limit events. Preserve this commit. This integration overlays separate missing-runtime navigation and diagnostic assertion changes without overwriting dcb source. The old Android 15 run failed 1/27 runtime-stop test, and the corrected source must be retested. Do not release until fast APK + same-SHA API35 pass, and do not claim C/C++/Kotlin/PHP/Ruby/Go/Rust/C# implemented. Session WORKING at checkpoint.
+
+## Nov 24, 2026, 4:08 AM PHT — Android15 legacy isolated-runtime intermittent failure triage
+
+The prior device workflow [45253146184](https://github.com/iamlxwis/CodeLab/actions/runs/45253146184) built, installed and passed QA stages through Android instrumentation. One of 27 instrumentation tests failed: `RuntimeServiceTest.stopsInfiniteLoopAndEnforcesOutputLimit`; exact failing assertion was not exposed by the runner. Assertions remain strict; added status/transcript diagnostics to isolate a stop/output-limit race on next device run. No behavior was silently weakened. Missing-pack UI deep links were staged alongside. New fast CI pending. Session WORKING at source checkpoint.
+
+## Nov 24, 2026, 4:07 AM PHT — Missing offline module entry point improved
+
+User requests direct and intuitive offline language install. Run error for any optional module (especially TypeScript) now provides a `Manage [language]` action opening the actual signed companion manager; Run-strip Languages opens the current file language directly, while the Python install path continues to work. No automatic cloud fallback or silent install. CI/build pending. Session WORKING at source checkpoint.
+
 ## Nov 24, 2026, 4:04 AM PHT — TypeScript test mismatch repair and SQLite source checkpoint
 
 TypeScript source at 89b3ed700 passed source compilation/most tests but [Android APK CI 45254495018](https://github.com/iamlxwis/CodeLab/actions/runs/45254495018) failed **RuntimePackCatalogTest:15** because it still expected TypeScript not downloadable while new module catalog includes it. Updated the negative set to C++/Rust, preserving catalog verification. Added separately signed SQLite companion source using Android platform SQLite with package discovery/manager/CI/release and built-in SQL fallback. No TypeScript or SQLite device validation/publishing yet. Latest CI must run again. Session WORKING at checkpoint.

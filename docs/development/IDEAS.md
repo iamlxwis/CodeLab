@@ -137,3 +137,9 @@ Nov 24, 2026, 2:56 AM PHT: IDEA-022 UX revision. Dedicated Downloads pane separa
 | IDEA-027 | 2026-11-24 | Engineering implementation of the approved TypeScript offline pack: official TypeScript single-file transpilation, signed companion IPC, no network, clearly disclose absence of static type checking and multi-file module resolution until implemented. | In progress | New engine-ts source added; not built or app-routed. |
 
 | IDEA-028 | 2026-11-24 | Engineering optional SQLite runtime pack for modular architecture using Android platform SQLite in companion UID, preserving core fallback; do not claim standalone SQLite binaries. | In progress | Source and release wiring staged, CI pending. |
+
+| IDEA-029 | 2026-11-24 | Route missing offline execution errors and Run-strip Languages directly to the corresponding module manager, not a generic language-listing dialog; retain explicit download/install consent. | In progress | Source changed for Python/TS/other optional packs; test pending. |
+
+| IDEA-030 | 2026-11-24 | Modules must not display an active download action until an official GitHub release actually publishes the matching signed module APK; check metadata inside app, preserve cached signed installer flow, avoid automatic download. | In progress | Source RuntimeReleaseAssets + tests; CI and network/device QA pending. |
+
+| IDEA-031 | 2026-11-24 | Maintain a grounded per-language Android offline compiler feasibility matrix with technical blockers/next evidence; only mark genuine, isolated, signed and offline execution done after tests. | In progress | docs/development/LANGUAGE_FEASIBILITY.md added; future real compilers remain open. |

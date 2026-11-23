@@ -185,7 +185,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         if (!focusMode || p == null) WorkspaceTopBar(m, p) { dialog = it }
         if (p != null && !focusMode) RunModeStrip(m,
             onLanguages = {
-                requestedLanguage = if (m.active?.endsWith(".py", true) == true) "Python" else null
+                val ext = m.active?.substringAfterLast('.', "")?.lowercase()
+                requestedLanguage = if (ext == "py") "Python"
+                    else OptionalRuntimeLocator.Pack.entries.firstOrNull { it.extension == ext }?.label
                 dialog = "languages"
             },
             onProjectSettings = { dialog = "projectsettings" })
@@ -596,13 +598,21 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         AlertDialog(onDismissRequest = { m.error = null }, title = { Text("Workspace error") }, text = { Text(issue) },
             confirmButton = { TextButton(onClick = { m.error = null }) { Text("Close") } },
             dismissButton = {
-                if (issue.contains("Python", ignoreCase = true) &&
-                    issue.contains("module", ignoreCase = true)) {
+                val missingLanguage = when {
+                    issue.contains("Python", ignoreCase = true) &&
+                        issue.contains("module", ignoreCase = true) -> "Python"
+                    else -> OptionalRuntimeLocator.Pack.entries.firstOrNull { pack ->
+                        issue.contains(pack.label, ignoreCase = true) &&
+                            (issue.contains("module", ignoreCase = true) ||
+                                issue.contains("runtime", ignoreCase = true))
+                    }?.label
+                }
+                if (missingLanguage != null) {
                     TextButton(onClick = {
                         m.error = null
-                        requestedLanguage = "Python"
+                        requestedLanguage = missingLanguage
                         dialog = "languages"
-                    }) { Text("Manage Python") }
+                    }) { Text("Manage " + missingLanguage) }
                 }
             })
     }

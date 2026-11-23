@@ -1,3 +1,10 @@
+## Nov 24, 4:14 AM PHT — Phase 1 broader offline language feasibility audit
+
+- [x] Record accurate Android feasibility and blockers for C/C++, Java/Kotlin full compilation, PHP/Ruby WASM, Go, Rust and C# in [LANGUAGE_FEASIBILITY.md](LANGUAGE_FEASIBILITY.md).
+- [ ] Finish same-commit fast CI, API35 runtime tests and signed public module releases for Python/JavaScript/Lua/Java beta/TypeScript/SQLite.
+- [ ] Accept full TS single-file execution in airplane mode and actual installation lifecycle on Android; no false full type checker claim.
+- [ ] Prototype PHP/Ruby WASM and native compiler packs only where compatible with Android W^X and signed standalone distribution. Keep explicit blockers visible.
+
 ## Nov 24, 2026 · 12:35 AM PHT — appearance accessibility
 
 - [ ] Verify Android API33/API35 Compose AppearanceAccentAccessibilityTest and existing device/theme tests; fix real source issues without weakening assertions.

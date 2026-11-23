@@ -38,11 +38,16 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     // Filtered rows have different lengths; always reveal the new section heading.
     LaunchedEffect(filter, search) { languageListState.scrollToItem(0) }
     var removePythonConfirm by remember { mutableStateOf(false) }
-    var optionalInspect by remember { mutableStateOf<OptionalRuntimeLocator.Pack?>(null) }
+    var optionalInspect by remember(initialLanguage) {
+        mutableStateOf(OptionalRuntimeLocator.Pack.entries.firstOrNull { it.label == initialLanguage })
+    }
     var clearCacheConfirm by remember { mutableStateOf(false) }
     var wifiOnly by remember { mutableStateOf(false) }
     var inspected by remember(initialLanguage) {
-        mutableStateOf(catalog.firstOrNull { it.name == initialLanguage })
+        mutableStateOf(catalog.firstOrNull { candidate ->
+            candidate.name == initialLanguage &&
+                OptionalRuntimeLocator.Pack.entries.none { it.label == candidate.name }
+        })
     }
     val context = LocalContext.current
     val module = remember(context) { PythonModuleDownload(context.applicationContext) }
@@ -51,6 +56,18 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     var transfer by remember { mutableStateOf(module.inspect(downloadId)) }
     var moduleMessage by remember { mutableStateOf("") }
     var recheck by remember { mutableIntStateOf(0) }
+    var publishedAssets by remember { mutableStateOf<Set<String>?>(null) }
+    var publishedError by remember { mutableStateOf<String?>(null) }
+    var releaseRefresh by remember { mutableIntStateOf(0) }
+    LaunchedEffect(releaseRefresh) {
+        publishedAssets = null
+        publishedError = null
+        runCatching { withContext(Dispatchers.IO) { RuntimeReleaseAssets.fetch() } }
+            .onSuccess { publishedAssets = it }
+            .onFailure {
+                publishedError = "Cannot check current GitHub release; check your connection."
+            }
+    }
     val lifecycle = LocalLifecycleOwner.current
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
@@ -324,6 +341,9 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             pack = pack,
             manager = requireNotNull(optionalPacks[pack]),
             status = requireNotNull(optionalStatuses[pack]),
+            published = publishedAssets?.contains("CodeLab-" + pack.suffix + ".apk"),
+            publishedError = publishedError,
+            onCheckRelease = { releaseRefresh++ },
             onDismiss = { optionalInspect = null; recheck++ },
             onRefresh = { recheck++ }
         )
@@ -473,6 +493,9 @@ internal fun OptionalRuntimeManagerDialog(
     pack: OptionalRuntimeLocator.Pack,
     manager: OptionalRuntimeDownload,
     status: PythonModuleLocator.Status,
+    published: Boolean?,
+    publishedError: String?,
+    onCheckRelease: () -> Unit,
     onDismiss: () -> Unit,
     onRefresh: () -> Unit
 ) {
@@ -498,6 +521,12 @@ internal fun OptionalRuntimeManagerDialog(
             Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(status.description)
+                Text(when (published) {
+                    true -> "Published in the official CodeLab release"
+                    false -> "Module APK is not yet published in the latest release"
+                    null -> publishedError ?: "Checking published APK availability..."
+                }, style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(if (pack == OptionalRuntimeLocator.Pack.TYPESCRIPT)
                     "Single-file TypeScript transpilation via bundled official compiler. " +
                         "No static type checking, module resolution, Node.js or browser APIs. " +
@@ -539,7 +568,7 @@ internal fun OptionalRuntimeManagerDialog(
                         message = runCatching { manager.begin(); onRefresh(); "Download started" }
                             .getOrElse { "Download failed: " + it.javaClass.simpleName }
                         transfer = manager.inspect()
-                    }) { Text(if (transfer.stage == OptionalRuntimeDownload.Stage.FAILED)
+                    }, enabled = published == true) { Text(if (transfer.stage == OptionalRuntimeDownload.Stage.FAILED)
                         "Retry download" else "Download " + pack.label) }
                 }
                 if (status.state != PythonModuleLocator.State.NOT_INSTALLED) {
@@ -551,6 +580,7 @@ internal fun OptionalRuntimeManagerDialog(
                     TextButton(onClick = { confirmCache = true }) { Text("Clear installer cache") }
                 }
                 if (message.isNotEmpty()) Text(message, style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = onCheckRelease) { Text("Check published availability") }
                 TextButton(onClick = {
                     transfer = manager.inspect()
                     onRefresh()
