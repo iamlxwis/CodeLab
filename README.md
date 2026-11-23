@@ -24,21 +24,21 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last committed checkpoint:** Nov 24, 2026, 4:20 AM PHT · **Assistant: WORKING at checkpoint** · **CI: API35 six-pack release checkpoint dispatched by this push**
+**Last committed checkpoint:** Nov 24, 2026, 4:23 AM PHT · **Assistant: WORKING at checkpoint** · **CI: Maven 429-safe API35 rerun dispatched**
 
 > This is a **commit checkpoint**, not a live clock or background agent. `HANDED OFF` means this interactive turn stopped after committing; independent GitHub Actions may still run. Each subsequent turn can resume from the [project memory](docs/development/PROJECT_MEMORY.md).
 
 | Workstream | Verified / implemented | Remaining before completion |
 | --- | --- | --- |
-| **CI Option B — Smart CI** | Source/build changes trigger fast compile, unit, lint and signed APK artifacts. Docs-only pushes skipped. Manual API 35 device smoke. `cancel-in-progress: true` retained. Manual release publication requires same-commit device success. | Validate full run and manually trigger API 35 smoke |
-| **Phase 1 — Runtime manager** | Six signed optional companion projects (Python, JavaScript, Lua, Java beta, TypeScript single-file, SQLite Android platform) built by CI; signed module manager and published-asset detection implemented. [Previous six-pack fast CI](https://github.com/iamlxwis/CodeLab/actions/runs/45256384445) **passed**. | Exact-head fast CI 45257846511 and newly dispatched API35 checkpoint must pass before public signed module release. C/C++/PHP/Ruby/Kotlin/Rust/Go/C# genuine offline engines remain undone or blocked in [feasibility](docs/development/LANGUAGE_FEASIBILITY.md). |
+| **CI Option B — Smart CI** | Fast compile/unit/lint/signed APK and six companions successfully built at [34030469](https://github.com/iamlxwis/CodeLab/actions/runs/45257846511). Normal source builds and manual API35 gate preserved; new retry wrapper targets upstream Maven HTTP 429 without ignoring compiler/test failures. | Re-run device acceptance on exact current SHA, then protected publication. |
+| **Phase 1 — Runtime manager** | Six separately signed runtime implementations in source (Python, JS, Lua, Java beta, TypeScript single-file, SQLite platform), official-asset-aware module manager; fast CI [34030469](https://github.com/iamlxwis/CodeLab/actions/runs/45257846511) **PASSED**. | [API35 45258495504](https://github.com/iamlxwis/CodeLab/actions/runs/45258495504) failed **before emulator** on Maven Central HTTP 429 for TypeScript WebJar. Retrying automatically; new device/public release pending, genuine other compilers unimplemented. |
 | **Phase 2 — Editor intelligence** | Not started | Begin only after agreed Phase 1 completion gate |
 
 **Current counts:** Six optional module implementations in source, one historically confirmed public (Python); remaining five need published installer checks. Java beta is not javac; TS is single-file transpilation, SQLite uses Android platform.
 
 **Latest implementation:** Signed Java beta, TypeScript and SQLite companion sources plus direct missing-runtime entry points. Runtime stop/restart and output-limit race source fix [dcb1daed](https://github.com/iamlxwis/CodeLab/commit/dcb1daeda2fb1e8a494a26171a7ef30e8b32d6b9). New fast/device CI pending.
 
-**Next:** watch [API35 checkpoint](https://github.com/iamlxwis/CodeLab/actions/workflows/phase1-checkpoint.yml), diagnose actual failures and only publish signed APK modules after same-SHA smoke; retain all unimplemented compiler requirements. Phase 1 not complete.
+**Next:** check [new Phase1 checkpoint](https://github.com/iamlxwis/CodeLab/actions/workflows/phase1-checkpoint.yml) and device CI; guarded release only after same-commit API35 success, with individual module APKs. Phase 1 remains open.
 
 [Compiler feasibility](docs/development/LANGUAGE_FEASIBILITY.md) · [Full audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Project memory](docs/development/PROJECT_MEMORY.md)
 

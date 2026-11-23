@@ -228,3 +228,7 @@ New signed Java companion uses BeanShell; it cannot compile general Java classes
 ## Nov 24, 2026, 4:08 AM PHT — Android 15 runtime cancellation/output-limit regression
 
 [Run 45253146184](https://github.com/iamlxwis/CodeLab/actions/runs/45253146184) failed **one** connected Android test, `RuntimeServiceTest.stopsInfiniteLoopAndEnforcesOutputLimit`. Prior Python/JS/Lua/Java pre-instrumentation smoke completed; the failing JUnit assertion had no line in step log. Diagnostic assertion messages now capture status/output tail on next run; investigate actual emulator error before source rewrite. Do not label Android15 verified yet.
+
+## Nov 24, 2026, 4:23 AM PHT — API35 Maven Central rate limit, CI retry pending
+
+[API35 45258495504](https://github.com/iamlxwis/CodeLab/actions/runs/45258495504) failed before test instrumentation with HTTP 429 resolving `org.webjars.npm:typescript:5.9.3` from Maven Central. Fast CI at the prior source [45257846511](https://github.com/iamlxwis/CodeLab/actions/runs/45257846511) passed with the same declared dependency. This is upstream throttle, not an observed runtime failure. Both workflows now retry only these errors up to three attempts with backoff; CI rerun pending. No release assets published by failed checkpoint.

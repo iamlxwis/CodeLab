@@ -1,3 +1,10 @@
+## Nov 24, 2026, 4:23 AM PHT — Transient Maven Central throttling
+
+- [x] [Fast six-runtime CI 45257846511](https://github.com/iamlxwis/CodeLab/actions/runs/45257846511) passed Kotlin/Java compile, JVM tests, lint and signature checks.
+- [ ] [API35 45258495504](https://github.com/iamlxwis/CodeLab/actions/runs/45258495504) failed pre-emulator on TypeScript WebJar dependency fetch HTTP 429 (not device code). Retry wrapper added and triggered via checkpoint; check same-SHA API35 success.
+- [ ] Protected production release and real network installation/update/uninstall not yet verified.
+- [ ] Full offline compiler/interpreter expansion beyond six source engines still pending as in [LANGUAGE_FEASIBILITY.md](LANGUAGE_FEASIBILITY.md).
+
 ## Nov 24, 2026, 4:20 AM PHT — Current Phase1 release checkpoint
 
 - [x] Fast six-pack source baseline dcb1daed passed [CI](https://github.com/iamlxwis/CodeLab/actions/runs/45256384445).

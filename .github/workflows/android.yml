@@ -77,7 +77,26 @@ jobs:
           CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
           CODELAB_KEY_ALIAS: ${{ secrets.CODELAB_KEY_ALIAS }}
           CODELAB_KEY_PASSWORD: ${{ secrets.CODELAB_KEY_PASSWORD }}
-        run: bash gradlew --no-daemon :app:assembleRelease :engine-python:assembleRelease :engine-js:assembleRelease :engine-lua:assembleRelease :engine-java:assembleRelease :engine-ts:assembleRelease :engine-sql:assembleRelease :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin :app:lintDebug
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Recheck only transient Maven Central throttling; never mask real Gradle failures.
+          for attempt in 1 2 3; do
+            if bash gradlew --no-daemon :app:assembleRelease :engine-python:assembleRelease :engine-js:assembleRelease :engine-lua:assembleRelease :engine-java:assembleRelease :engine-ts:assembleRelease :engine-sql:assembleRelease :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin :app:lintDebug > gradle-release-build.log 2>&1; then
+              cat gradle-release-build.log
+              exit 0
+            fi
+            cat gradle-release-build.log
+            if ! grep -Eiq 'status code 429|HTTP 429|Too Many Requests' gradle-release-build.log; then
+              exit 1
+            fi
+            if [[ "$attempt" -eq 3 ]]; then
+              echo "::error::Maven server returned HTTP 429 after three attempts."
+              exit 1
+            fi
+            echo "::warning::Maven repository HTTP 429 on attempt $attempt/3; retrying with backoff."
+            sleep $((attempt * 40))
+          done
       - name: Upload quality reports
         if: always()
         uses: actions/upload-artifact@v4
