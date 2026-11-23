@@ -90,3 +90,5 @@ User approved direct commits to `main`. **In the same commit as implementation w
 - [ ] Confirm AppearanceRecipesTest JVM tests pass. Do not mark physical-device acceptance from CI.
 
 - [ ] Confirm corrected Run strip vector icon compiles in APK/device workflows.
+
+- [ ] Verify project card file counts, newly created/imported/renamed projects, loading state and large-font card clipping in real emulator screenshots.

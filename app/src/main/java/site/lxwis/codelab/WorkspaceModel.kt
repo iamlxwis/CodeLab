@@ -14,6 +14,8 @@ import androidx.lifecycle.AndroidViewModel
 import java.io.File
 import java.util.concurrent.Executors
 
+internal data class ProjectCardDetail(val template: String, val fileCount: Int, val description: String)
+
 class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     private val store = ProjectStore(File(app.filesDir, "workspace"))
     private val preferences = app.getSharedPreferences("appearance", 0)
@@ -553,6 +555,23 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
     var projects by mutableStateOf(emptyList<String>())
         private set
+
+    internal var projectCardDetails by mutableStateOf<Map<String, ProjectCardDetail>>(emptyMap())
+        private set
+
+    /** Collect metadata on the I/O executor, never while Compose draws a project card. */
+    fun refreshProjectCardDetails() {
+        val current = projects.toList()
+        io.execute {
+            val cards = current.associateWith { name ->
+                val metadata = runCatching { store.metadata(name) }.getOrNull()
+                val count = runCatching { store.files(name).size }.getOrDefault(0)
+                ProjectCardDetail(metadata?.template?.take(42) ?: "Local project",
+                    count, metadata?.description?.take(80).orEmpty())
+            }
+            main.post { projectCardDetails = cards }
+        }
+    }
     var project by mutableStateOf<String?>(null)
         private set
     var files by mutableStateOf(emptyList<String>())

@@ -164,3 +164,5 @@ pack availability remains a PackageManager verification on Android devices.
 2026-11-23 QA expansion source: added JVM tests for custom color validation, corrupt and roundtrip preset persistence, name/size limit; emulator smoke matrix now API33 (Android 13) and API35 (Android 15), with per-API artifacts and clean-install result naming. These tests have not yet run successfully on the current source; physical device acceptance remains unverified.
 
 2026-11-23 build correction: [APK workflow 45170798149](https://github.com/iamlxwis/CodeLab/actions/runs/45170798149) failed compile with `RunTargetMenu.kt:10:47 Unresolved reference InfoOutline` and line 67. Replaced unsupported icon with Material Info; new CI pending, no APK/build green claim.
+
+2026-11-23 Projects metadata refinement in source: project cards now show real starter-template name, file count and optional description, asynchronously fetched via serialized project store executor (no filesystem I/O during Compose draws). Missing metadata has a local-project fallback; new work pending CI/emulator screenshot validation.

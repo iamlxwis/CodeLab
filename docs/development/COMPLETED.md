@@ -65,3 +65,5 @@ Source-only: 14-topic progressive tutorial and corresponding smoke steps; not ac
 Targeted appearance codec tests and dual-API emulator workflow added in source, not yet executed/verified.
 
 Run strip material icon compile correction in source; CI verification pending.
+
+Source-only: project-card template/file count/description on background storage executor; CI acceptance pending.

@@ -164,6 +164,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
     var importOptions by rememberSaveable { mutableStateOf(false) }
     var projectSearch by rememberSaveable { mutableStateOf("") }
     var projectSort by rememberSaveable { mutableStateOf("Recent") }
+    LaunchedEffect(m.projects, m.project) { m.refreshProjectCardDetails() }
     val spacing = CodeLabSpacing.forDensity(m.interfaceDensity)
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(
         horizontal = CodeLabSpacing.screen, vertical = CodeLabSpacing.large),
@@ -276,12 +277,21 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(start = 10.dp).size(18.dp))
                     }
-                    Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                    Column(Modifier.weight(1f).padding(start = 14.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.titleMedium)
-                        Text(if (name in m.favorites) "Favorite · On this device"
-                            else "On this device · Private",
+                        val summary = m.projectCardDetails[name]
+                        Text(if (summary != null) summary.template + " · " +
+                            summary.fileCount + (if (summary.fileCount == 1) " file" else " files")
+                            else "Local project",
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (summary?.description?.isNotBlank() == true) Text(
+                            summary.description,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Box {
