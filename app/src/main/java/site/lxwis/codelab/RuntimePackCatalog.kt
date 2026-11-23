@@ -28,8 +28,8 @@ internal object RuntimePackCatalog {
         "C#" to "Compatible .NET execution pack"
     )
 
-    /** Only verified, actually published optional companions belong in Downloadable. */
-    fun downloadableLanguages(): Set<String> = setOf("Python", "JavaScript", "Lua")
+    /** Only signed release module sources belong in Downloadable; listing is not proof of public release availability. */
+    fun downloadableLanguages(): Set<String> = setOf("Python", "JavaScript", "Lua", "Java")
 
     fun isDownloadable(language: String): Boolean = language in downloadableLanguages()
 

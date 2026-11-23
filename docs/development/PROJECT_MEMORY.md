@@ -1,3 +1,7 @@
+## Nov 24, 2026, 3:48 AM PHT — Phase 1 Java beta build wiring
+
+Added :engine-java release/debug CI builds, signer checks, Java beta optional module catalog and Android 15 package/UI smoke assertions. Core bundled Java fallback is retained; beta is BeanShell rather than javac. CI and public release still unverified. Next: fix optional transfer-status polling, harden security gate, inspect new source CI and run device workflow. Session WORKING at checkpoint.
+
 ## Nov 24, 2026, 3:46 AM PHT — Phase 1 Java beta implementation checkpoint (source only)
 
 User authorized broad Phase 1 work before Phase 2 and will handle final physical-phone acceptance. Created engine-java signed optional companion source using the existing BeanShell Java **beta** interpreter; signed IPC, runtime package allowlist, release download URL, app package visibility and RunSession routing with bundled Java fallback. This is **not javac**, and is not yet published or CI-tested. Next: wire Gradle and release workflow, static security scan, emulator QA, module dialog refresh, verify build and publish. Other full language compilers remain pending. Session WORKING at this source checkpoint.

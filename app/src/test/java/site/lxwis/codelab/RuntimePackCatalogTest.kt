@@ -4,11 +4,12 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class RuntimePackCatalogTest {
-    @Test fun onlyActualOptionalModuleIsDownloadable() {
-        assertEquals(setOf("Python", "JavaScript", "Lua"), RuntimePackCatalog.downloadableLanguages())
+    @Test fun onlyPackagedOptionalModulesAreListed() {
+        assertEquals(setOf("Python", "JavaScript", "Lua", "Java"), RuntimePackCatalog.downloadableLanguages())
         assertTrue(RuntimePackCatalog.isDownloadable("Python"))
         assertTrue(RuntimePackCatalog.isDownloadable("JavaScript"))
         assertTrue(RuntimePackCatalog.isDownloadable("Lua"))
+        assertTrue(RuntimePackCatalog.isDownloadable("Java"))
         for (name in listOf("TypeScript", "C++", "Rust")) {
             assertFalse(name, RuntimePackCatalog.isDownloadable(name))
         }

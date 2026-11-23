@@ -83,3 +83,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 3:26 AM PHT | Phase 1 signed JS/Lua modules | Source integrated, QA/release pending; HANDED OFF | 9c722abe verified optional package discovery, per-pack download management, IPC routing and bundled fallback; b19db610 syntax fixes; de387a2b/c62c9522 API35 signed pack install + UI test. CI still needs passing result; no public JS/Lua release yet. |
 
 | Nov 24, 2026, 3:46 AM PHT | Phase 1 / IDEA-001, IDEA-009 | In progress; source only | New signed Java **beta** companion source, allowlisted IPC and optional route; bundled fallback preserved. CI/release integration and full javac remain open. |
+
+| Nov 24, 2026, 3:48 AM PHT | Phase 1 / IDEA-026 | Source integration in progress; CI pending | Added Java beta companion to CI build, signing, release APK, module catalog and Android15 smoke. This is not javac; no public APK confirmed. |
