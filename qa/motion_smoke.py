@@ -60,7 +60,8 @@ def main():
             if "Welcome to CodeLab" in labels:
                 tap_node(wait_for("Next"))
                 tap_node(wait_for("Next"))
-                tap_node(wait_for("Start coding"))
+                tap_node(wait_for("Next"))
+                tap_node(wait_for("Finish basics"))
             elif "Project library" in labels:
                 tap_node(wait_for("Project library"))
             else:

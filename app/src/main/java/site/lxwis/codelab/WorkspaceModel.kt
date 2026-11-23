@@ -1333,7 +1333,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         } else {
             val capability = RunCapability.forPath(filename)
             error = capability.description + ". Offline execution requires an installed runtime; " +
-                "choose Online in the Run menu if a remote compiler supports this file."
+                "choose Online beside Run if a remote compiler supports this file."
         }
     }
 

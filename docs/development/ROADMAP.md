@@ -92,3 +92,5 @@ User approved direct commits to `main`. **In the same commit as implementation w
 - [ ] Confirm corrected Run strip vector icon compiles in APK/device workflows.
 
 - [ ] Verify project card file counts, newly created/imported/renamed projects, loading state and large-font card clipping in real emulator screenshots.
+
+- [ ] Retest full motion benchmark after replacing legacy onboarding selectors; no fabricated screen tests.

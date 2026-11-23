@@ -91,15 +91,6 @@ internal fun RunTargetMenu(m: WorkspaceModel, onProjectSettings: () -> Unit) {
             Icon(Icons.Default.MoreHoriz, "Run file and entry options")
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(
-                text = { Text(if (m.executionMode == "Offline") "Offline · selected" else "Run offline") },
-                leadingIcon = { Icon(Icons.Default.Computer, null) },
-                onClick = { m.chooseExecutionMode("Offline"); expanded = false })
-            DropdownMenuItem(
-                text = { Text(if (m.executionMode == "Online") "Online · selected" else "Run online") },
-                leadingIcon = { Icon(Icons.Default.Cloud, null) },
-                onClick = { m.chooseExecutionMode("Online"); expanded = false })
-            HorizontalDivider()
             m.active?.let { path ->
                 DropdownMenuItem(text = { Text("Run active · ${path.substringAfterLast('/')}") },
                     onClick = { expanded = false; m.runTarget(path) })

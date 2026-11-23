@@ -94,3 +94,6 @@ IDEA-018 regression tests added for preset codec; IDEA-021 two-API emulator matr
 IDEA-019 source compile correction: unsupported vector icon InfoOutline replaced by standard Info. Verification pending.
 
 IDEA-016: project card metadata now displays measured template/file count/description asynchronously; source-only, device QA pending.
+
+IDEA-019 polish: eliminated duplicate hidden mode controls; choice remains visible in Run strip.
+IDEA-020: aligned motion QA with revised onboarding; pending two-API smoke.

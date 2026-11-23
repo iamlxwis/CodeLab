@@ -166,3 +166,5 @@ pack availability remains a PackageManager verification on Android devices.
 2026-11-23 build correction: [APK workflow 45170798149](https://github.com/iamlxwis/CodeLab/actions/runs/45170798149) failed compile with `RunTargetMenu.kt:10:47 Unresolved reference InfoOutline` and line 67. Replaced unsupported icon with Material Info; new CI pending, no APK/build green claim.
 
 2026-11-23 Projects metadata refinement in source: project cards now show real starter-template name, file count and optional description, asynchronously fetched via serialized project store executor (no filesystem I/O during Compose draws). Missing metadata has a local-project fallback; new work pending CI/emulator screenshot validation.
+
+2026-11-23 QA synchronization: motion benchmark still referenced removed three-step tutorial actions (`Start coding`). Updated fallback navigation to new four essential steps + Finish basics. Removed redundant Online/Offline controls from file/entry dropdown because mode is now always visible beside Run; offline guidance copy updated. New CI required.

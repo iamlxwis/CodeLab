@@ -110,3 +110,5 @@ KI-025: Android 13 and 15 emulator smoke matrix is source-only until workflows c
 KI-026: [45170798149](https://github.com/iamlxwis/CodeLab/actions/runs/45170798149) failed Kotlin compile `Unresolved reference InfoOutline` in RunTargetMenu.kt:10,67; fix committed, retest pending.
 
 KI-027: New project summary metadata lookup uses background I/O but has not yet been stress-tested on large project libraries; verify counts after modifications and imports.
+
+KI-028: `qa/motion_smoke.py` contained obsolete tutorial selectors (`Start coding`) after 14-topic guide migration. Fixed script; CI pending.

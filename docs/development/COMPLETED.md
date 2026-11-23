@@ -67,3 +67,5 @@ Targeted appearance codec tests and dual-API emulator workflow added in source, 
 Run strip material icon compile correction in source; CI verification pending.
 
 Source-only: project-card template/file count/description on background storage executor; CI acceptance pending.
+
+Source QA text synchronized with new tutorial and execution selector; no assertion of passing full emulator smoke.
