@@ -165,6 +165,16 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun cancelCloudRun() { cloudPending = null }
     private val main = Handler(Looper.getMainLooper())
     val runner = RunSession(app)
+    var executionMode by mutableStateOf(
+        preferences.getString("run-mode", "Offline")?.takeIf { it in listOf("Offline", "Online") }
+            ?: "Offline"
+    )
+        private set
+    fun chooseExecutionMode(value: String) {
+        if (value !in listOf("Offline", "Online") || runner.running) return
+        executionMode = value
+        preferences.edit().putString("run-mode", value).apply()
+    }
     var appearance by mutableStateOf(preferences.getString("mode", "Dark") ?: "Dark")
         private set
     var visualStyle by mutableStateOf(
@@ -1232,9 +1242,18 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             console = false
             return
         }
-        if (filename.endsWith(".py", true) && !PythonModuleLocator.installed(getApplication<Application>())) {
+        // Never switch from offline to cloud implicitly; the user chooses.
+        if (executionMode == "Online") {
+            if (cloudAvailable(filename)) cloudPending = filename
+            else error = if (!isOnline) "Connect to the internet to run online."
+                else if (cloudChecking) "Checking the online compiler. Retry shortly."
+                else "No online compiler available for this file. Configure one in Languages & Cloud."
+            return
+        }
+        if (filename.endsWith(".py", true) &&
+            !PythonModuleLocator.installed(getApplication<Application>())) {
             error = PythonModuleLocator.check(getApplication<Application>()).description +
-                ". Install Python from the Languages screen or choose online execution."
+                ". Download Python inside the Languages screen."
             return
         }
         if (isLocalExecutable(filename)) {
@@ -1242,13 +1261,10 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             console = true
             preview = false
             runner.run(filename, source)
-        } else if (cloudAvailable(filename)) {
-            cloudPending = filename
         } else {
             val capability = RunCapability.forPath(filename)
-            error = if (!isOnline) capability.description + ". Online execution requires a connection and approval."
-                else if (cloudChecking) "Checking available online languages. Try again shortly."
-                else capability.description + ". No verified online compiler configured; check Languages & Cloud."
+            error = capability.description + ". Offline execution requires an installed runtime; " +
+                "choose Online in the Run menu if a remote compiler supports this file."
         }
     }
 

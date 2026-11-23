@@ -75,6 +75,7 @@ import androidx.lifecycle.ViewModelProvider
 @Composable
 internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var dialog by rememberSaveable { mutableStateOf("") }
+    var requestedLanguage by rememberSaveable { mutableStateOf<String?>(null) }
     var selected by rememberSaveable { mutableStateOf("") }
     val snackbarHost = remember { SnackbarHostState() }
     LaunchedEffect(m.undoDeletion?.id) {
@@ -388,7 +389,10 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             onToggleQuick = { m.toggleQuickAction(it, p != null) },
             onAction = ::openAction,
             onDismiss = { dialog = "" })
-        "languages" -> LanguageManagerSheet(m) { dialog = "" }
+        "languages" -> LanguageManagerSheet(m, initialLanguage = requestedLanguage) {
+            dialog = ""
+            requestedLanguage = null
+        }
         "switchproject" -> ProjectSwitcher(m) { dialog = "" }
         "screenshot" -> CodeScreenshotStudio(
             m.active.orEmpty(), m.source, selectedSnippet, selectedSnippetLine
@@ -568,7 +572,17 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
     m.error?.let { issue ->
         AlertDialog(onDismissRequest = { m.error = null }, title = { Text("Workspace error") }, text = { Text(issue) },
-            confirmButton = { TextButton(onClick = { m.error = null }) { Text("Close") } })
+            confirmButton = { TextButton(onClick = { m.error = null }) { Text("Close") } },
+            dismissButton = {
+                if (issue.contains("Python", ignoreCase = true) &&
+                    issue.contains("module", ignoreCase = true)) {
+                    TextButton(onClick = {
+                        m.error = null
+                        requestedLanguage = "Python"
+                        dialog = "languages"
+                    }) { Text("Manage Python") }
+                }
+            })
     }
 }
 

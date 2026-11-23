@@ -23,7 +23,7 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 - [ ] Choose supported Android distribution model for **GitHub APK**, with signed companion packages (or validated alternative); explicitly verify package identity/certificates, version and ABI. Consider Play on-demand features separately for a Play Store channel.
 - [ ] Authenticated, explicit and isolated IPC between core editor and each runtime package. Test cancellation, timeouts, bounded input/output and failure modes.
 - [ ] Build a real Language Module Manager: list, sizes/permissions/provenance, install, update, uninstall, offline state, version/compatibility and storage usage. Do not offer fake install actions.
-- [ ] Implement online-vs-offline mode choice at Run, with deliberate consent before remote source transfer and no forced cloud fallback.
+- [ ] Test new explicit Online/Offline Run selection on emulator, including unavailable provider and Python-missing-pack states. Source implementation committed; no automatic offline-to-cloud fallback.
 - [ ] Migrate **all optional language engines**, including Python, JavaScript and Lua, out of the core APK only after working replacements are tested. Keep local editor and Android platform UI functionality intact.
 - [ ] Make runtime state depend on actual installed/verified modules, not hardcoded roadmap assumptions.
 

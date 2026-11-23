@@ -5,6 +5,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Computer
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,8 +24,17 @@ internal fun RunTargetMenu(m: WorkspaceModel, onProjectSettings: () -> Unit) {
         IconButton(
             onClick = { expanded = true },
             modifier = Modifier.size(48.dp)
-        ) { Icon(Icons.Default.ArrowDropDown, "Choose run target") }
+        ) { Icon(Icons.Default.ArrowDropDown, "Run mode and target · ${m.executionMode}") }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(if (m.executionMode == "Offline") "Offline · selected" else "Run offline") },
+                leadingIcon = { Icon(Icons.Default.Computer, null) },
+                onClick = { m.chooseExecutionMode("Offline"); expanded = false })
+            DropdownMenuItem(
+                text = { Text(if (m.executionMode == "Online") "Online · selected" else "Run online") },
+                leadingIcon = { Icon(Icons.Default.Cloud, null) },
+                onClick = { m.chooseExecutionMode("Online"); expanded = false })
+            HorizontalDivider()
             m.active?.let { path ->
                 DropdownMenuItem(text = { Text("Run active · ${path.substringAfterLast('/')}") },
                     onClick = { expanded = false; m.runTarget(path) })

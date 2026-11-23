@@ -41,3 +41,7 @@ APKs together, publish them as a pair and verify the runtime device journey.
 ## KI-011 — incomplete in-app module install acceptance (2026-11-23)
 
 GitHub-distributed APK now includes a Python in-app downloader with progress and certificate validation, but tests have not verified network transfer, system unknown-source approval, installation/update/uninstall failures or storage pressure. The existing fallback-debug release signature can differ between builds, so downloadable Python can be rejected when the editor was installed from a different run. This is **intentional fail-closed security behavior**, not a reason to loosen signature checks. Stable signing and clear recovery flow are still required. For Google Play, Play Feature Delivery is required instead of arbitrary downloaded executable APKs.
+
+## KI-012 — online/offline routing acceptance
+
+Historically `WorkspaceModel.run()` silently selected cloud when no local engine existed. That contradicted the requested deliberate run choice. A persisted Run-mode dropdown now chooses Offline or Online, never auto-switches, and sends remote source only through explicit consent. Unit/UI and device acceptance are still required.

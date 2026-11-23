@@ -28,11 +28,13 @@ private val catalog = LanguageCatalog.entries
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
+fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null, close: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var search by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf("All") }
-    var inspected by remember { mutableStateOf<SupportedLanguage?>(null) }
+    var inspected by remember(initialLanguage) {
+        mutableStateOf(catalog.firstOrNull { it.name == initialLanguage })
+    }
     val context = LocalContext.current
     val module = remember(context) { PythonModuleDownload(context.applicationContext) }
     var downloadId by remember { mutableLongStateOf(module.lastJob()) }
