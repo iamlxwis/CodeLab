@@ -24,14 +24,14 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**SESSION: STOPPED — handoff after interactive work** · Updated **Nov 24, 2026, 2:27 AM PHT**  
-**This feature pass:** 6 source improvements committed · **Major remaining product areas:** 6 · **Validation:** [APK CI](https://github.com/iamlxwis/CodeLab/actions/runs/45237884590) and [device CI](https://github.com/iamlxwis/CodeLab/actions/runs/45237884296) running at handoff, **not yet verified**.
+**SESSION: STOPPED — handoff after interactive work** · Updated **Nov 24, 2026, 2:29 AM PHT**  
+**This feature pass:** 6 source improvements committed · **Major remaining product areas:** 6 · **Validation:** Gradle build, JVM tests, lint and signing checks **passed** on the feature source; [APK emulator acceptance](https://github.com/iamlxwis/CodeLab/actions/runs/45237884590) and [device tests](https://github.com/iamlxwis/CodeLab/actions/runs/45237884296) still running.
 
 **Current activity (one row, overwritten at each handoff):**
 
 | Updated (Philippine time, AM/PM) | Task | Action / result | Next |
 | --- | --- | --- | --- |
-| Nov 24, 2026 · 2:27 AM | Product features + safe cleanup | Added HTTPS request builder, reliable editor autosave for batch edits, visual conflict-marker resolution, JavaScript variable inspection, read-only code folding preview, and faster language-aware analysis. Removed unused imports from split source files; preserved runtime engines, signing and project storage. **Source complete for these changes; build/device results pending. Session STOPPED.** | Confirm compilation/tests; continue real downloadable runtimes, LSP, inline folding, multi-cursor, PTY terminal and tutorial coach marks. |
+| Nov 24, 2026 · 2:29 AM | Product features + safe cleanup | Added HTTPS request builder, reliable editor autosave for batch edits, visual conflict-marker resolution, JavaScript variable inspection, read-only code folding preview, and faster language-aware analysis. Removed unused imports from split source files; preserved runtime engines, signing and project storage. **Build/JVM/lint passed; Android device acceptance pending. Session STOPPED.** | Confirm compilation/tests; continue real downloadable runtimes, LSP, inline folding, multi-cursor, PTY terminal and tutorial coach marks. |
 
 **Remaining product gaps:** real downloadable offline runtimes beyond Python; semantic LSP; inline editable folding and multiple carets; PTY-backed terminal; multi-language debugging; screen-anchored tutorial and full accessibility review. These are **not** marked complete. See [feature inventory](docs/IMPLEMENTATION_STATUS.md).
 

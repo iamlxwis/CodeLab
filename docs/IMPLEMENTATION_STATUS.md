@@ -19,7 +19,7 @@ Updated Nov 24, 2026. This is a source-level feature inventory; **committed code
 
 - Previously validated release/device workflows: [APK and signed upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45229584184) and [Android 13/15 device smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45229584342).
 - Current feature source checkpoint: [75c1c051](https://github.com/iamlxwis/CodeLab/commit/75c1c051e77e9ddb0ee565dab0ad6c48fbe61ef4).
-- Current feature verification at this document update: [APK workflow](https://github.com/iamlxwis/CodeLab/actions/runs/45237884590) and [device workflow](https://github.com/iamlxwis/CodeLab/actions/runs/45237884296) **in progress**. Do not count as passed until they complete.
+- Current feature verification at this document update: [APK workflow](https://github.com/iamlxwis/CodeLab/actions/runs/45237884590) and [device workflow](https://github.com/iamlxwis/CodeLab/actions/runs/45237884296) **in progress** for Android emulator acceptance. Gradle release compilation, JVM tests, lint, APK signatures and signing-compatibility checks have passed; do not count device acceptance as passed until it completes.
 
 ## Cleanup safety
 
