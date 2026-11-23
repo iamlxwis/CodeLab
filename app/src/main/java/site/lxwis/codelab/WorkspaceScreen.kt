@@ -256,9 +256,11 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     val showSidebar = wide && explorerPinned && !focusMode
                     Row(Modifier.fillMaxSize()) {
                     AnimatedVisibility(visible = showSidebar,
-                        enter = expandHorizontally(animationSpec = tween(motionMillis)) +
+                        // Translate the fixed-width sidebar; do not continuously
+                        // resize the native editor and its text layout.
+                        enter = slideInHorizontally(animationSpec = tween(motionMillis)) { -it / 4 } +
                             fadeIn(animationSpec = tween(motionMillis)),
-                        exit = shrinkHorizontally(animationSpec = tween(motionMillis)) +
+                        exit = slideOutHorizontally(animationSpec = tween(motionMillis)) { -it / 4 } +
                             fadeOut(animationSpec = tween(motionMillis))) {
                         Row {
                         Surface(Modifier.width(224.dp).fillMaxHeight(),
@@ -333,7 +335,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 }
                 if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
                     PanelButton("Preview", m.preview, motionMillis) { m.console = false; m.preview = true }
-                Text(when {
+                val languageLabel = when {
                     m.active?.endsWith(".js", true) == true -> "JavaScript"
                     m.active?.endsWith(".sql", true) == true -> "SQLite"
                     m.active?.endsWith(".lua", true) == true -> "Lua"
@@ -341,8 +343,16 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     m.active?.endsWith(".html", true) == true -> "HTML"
                     m.active?.let(m::cloudAvailable) == true -> "Cloud available"
                     else -> "Text · cloud setup"
-                }, Modifier.padding(start = 18.dp), style = MaterialTheme.typography.labelSmall,
-                    fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                AnimatedContent(targetState = languageLabel,
+                    transitionSpec = {
+                        fadeIn(tween(motionMillis)) togetherWith fadeOut(tween(motionMillis))
+                    }, label = "language-label") { value ->
+                    Text(value, Modifier.padding(start = 18.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = FontFamily.Monospace,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 QuickActionsBar(m.quickEditorActions, onAction = ::openAction)
             }
         }

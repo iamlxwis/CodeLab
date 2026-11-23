@@ -86,8 +86,14 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
         }
         Column(Modifier.weight(1f).padding(start = 4.dp)
             .clickable(enabled = project != null) { onAction("switchproject") }) {
-            Text(project ?: "CodeLab", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            AnimatedContent(
+                targetState = project ?: "CodeLab",
+                transitionSpec = { fadeIn(tween(duration)) togetherWith fadeOut(tween(duration)) },
+                label = "project-title"
+            ) { title ->
+                Text(title, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
             if (project != null) Text(if (m.dirty) "Saving changes…" else "Local workspace",
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -245,7 +251,6 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 onClick = { UiLatencyProbe.nextFrame(context, "Open project"); m.openProject(name) },
                 interactionSource = pressInteraction,
                 modifier = Modifier.graphicsLayer { scaleX = pressScale; scaleY = pressScale }
-                    .animateContentSize(animationSpec = tween(motionMillis))
             ) {
                 Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     Surface(shape = CodeLabCorners.iconTile,
