@@ -77,3 +77,5 @@ User approved direct commits to `main`. **In the same commit as implementation w
 - [ ] IDEA-019: move execution mode into a visible selector by Run, show module/provider status and maintain consent.
 - [ ] IDEA-020: replace three-page introduction with a practical 14-topic replayable guide and guided actions.
 - [ ] IDEA-021: run Android 13/15, large fonts, and complete release QA; retain phone clean-install blocker independently.
+
+- [ ] Verify visibility correction via new CI before continuing screen-level changes.

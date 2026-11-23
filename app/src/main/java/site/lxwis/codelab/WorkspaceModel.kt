@@ -279,7 +279,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(visualStyle)
     )
         private set
-    var savedAppearanceRecipes by mutableStateOf(
+    internal var savedAppearanceRecipes by mutableStateOf(
         AppearanceRecipes.decode(preferences.getString("saved-appearance-recipes", "[]")))
         private set
 

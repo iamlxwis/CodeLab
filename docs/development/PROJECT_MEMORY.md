@@ -152,3 +152,5 @@ pack availability remains a PackageManager verification on Android devices.
 - Tested: source patch construction and GitHub tree write; **Gradle/JVM/emulator/physical-device verification pending CI**. The existing APK workflow was green at \`aff23e19\`; device workflow 45163951663 failed before installation due to the smoke-script check above.
 - No claim of genuine OS compositor backdrop sampling: Glass uses layered translucent Compose surfaces and gradients with stable, low-cost fallbacks. Actual screenshots, accessibility and contrast validation remain mandatory.
 - Next: wire full appearance preset management UI, visible run-mode choice, deeper tutorial; run CI and fix compile/device regressions. Keep IDEA-015 installation blocker open until tested.
+
+2026-11-23 CI follow-up: [APK run 45169778823](https://github.com/iamlxwis/CodeLab/actions/runs/45169778823) and [device run 45169778754](https://github.com/iamlxwis/CodeLab/actions/runs/45169778754) failed before tests: Kotlin exposed internal AppearanceRecipe through public WorkspaceModel property. Scoped that property to `internal`; rebuild pending. No device result claimed.

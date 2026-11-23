@@ -53,3 +53,5 @@ Latest baseline `a62738cf` passed both [APK](https://github.com/iamlxwis/CodeLab
 Staged new per-style theme preference storage and named preset codec, neutral Glass palette,
 redesigned Import sheet and Projects controls, and corrected clean-install CI script.
 No build/device acceptance is claimed; IDEAs 016–021 remain in progress/pending.
+
+Source visibility fix applied after first CI compile failure; validation pending. No completion claim.

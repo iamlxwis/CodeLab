@@ -95,3 +95,6 @@ User confirms that, as with earlier successful releases, they **uninstall the ol
 
 ## KI-019 — appearance and onboarding acceptance gap
 New appearance/Projects/Import source has not yet passed Gradle, emulator screenshots, Android 13/15 contrast/TalkBack/large-font or user-device testing. Neutral Glass is a composited appearance, not a true system compositor liquid-glass shader. Follow up on status before describing feature as released.
+
+## KI-021 — source visibility compile failure
+[APK 45169778823](https://github.com/iamlxwis/CodeLab/actions/runs/45169778823): `WorkspaceModel.kt:282:9 Property 'public' exposes its 'internal' type 'AppearanceRecipe'`. Scope corrected to `internal`; retest pending.

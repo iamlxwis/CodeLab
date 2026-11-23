@@ -80,3 +80,5 @@ IDEA-015 revision: user explicitly states their normal process is **uninstall ol
 | IDEA-019 | 2026-11-23 | Clearly exposed Online/Offline choice beside Run, honest runtime status, module guidance and explicit upload consent | Approved | Dedicated selector and tests pending; existing consent route retained |
 | IDEA-020 | 2026-11-23 | Practical immersive, skippable/replayable 14-topic interactive tutorial, safe for large fonts and existing users | Approved | Existing basic tutorial requires expansion and QA |
 | IDEA-021 | 2026-11-23 | App-wide accessibility/visual/performance audit, real Android 13/15 screenshots, tests, successful installable release, accurate handoff commits | In progress | Build green before this checkpoint; emulator blocked by clean-install smoke bug now patched |
+
+IDEA-018 CI note: Kotlin visibility mismatch from first source checkpoint corrected; build retry pending.
