@@ -165,14 +165,16 @@ def main():
     wait_for("DOWNLOAD MANAGER")
     wait_for("Manage Python")
     wait_for("Wi-Fi only downloads")
-    # Verify that separately signed JS/Lua packs appear in the manager.
-    wait_for("Manage JavaScript")
-    wait_for("Manage Lua")
-    tap("Manage JavaScript")
-    wait_for("Verified optional JavaScript module installed", contains=True)
-    tap("Close")
+    # The Downloads section may scroll on small phones. Search the short
+    # Downloadable list instead of assuming every management button is visible.
     tap("Downloadable")
     wait_for("Python")
+    tap_text_result("JavaScript")
+    wait_for("Verified optional JavaScript module installed", contains=True)
+    tap("Close")
+    tap_text_result("Lua")
+    wait_for("Verified optional Lua module installed", contains=True)
+    tap("Close")
     tap("Installed")
     wait_for("executable engines", contains=True)
     # Searching automatically expands to All instead of hiding an edit-only language.
