@@ -25,3 +25,5 @@ Short, append-only development checkpoints. The [README tracker](../../README.md
 #### Required update format
 
 With each meaningful task start, commit checkpoint, failure, retry, or verified completion, append a row with the date, task ID, correct state, actual change and evidence link. Update README task row and counts **in the same commit**, plus `PROJECT_MEMORY.md`. In-progress checkpoints remain In progress until done. If a test fails, preserve Failed/Blocked evidence rather than declaring completion. Keep entries short and factual.
+
+| 2026-11-23 | T02 | In progress | Confirmed API35 failure in [device CI 45191732470](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470): XML shows `Online: source upload needs confirmation`, a valid state. Smoke now accepts all three legitimate status messages; API33/35 rerun pending. 1/9 done, 8 remaining, 1 active, 0 blocked. |

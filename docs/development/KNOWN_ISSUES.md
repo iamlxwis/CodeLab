@@ -132,3 +132,7 @@ Existing editor and Python app codes were static at 5/1, and published CI builds
 ## KI-033 — GitHub Actions key provisioning acceptance (2026-11-23)
 
 One-time keygen, authenticated encrypted artifact and local phone WebCrypto unlocker have been authored. A public repository's workflow artifacts must **never contain the raw JKS or plaintext Base64 key**. User must create the strong generator passphrase as a GitHub Actions repository secret. No production secrets are currently verified configured, and local Android HTML/browser recovery and actual production-signed upgrade are not yet verified. Never solicit secret values in chat or confuse generator workflow with production release.
+
+## KI-034 — API35 online availability smoke assertion (2026-11-23)
+
+[Device workflow 45191732470](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470) failed at `qa/device_smoke.py` because the test accepted only offline-provider errors; downloaded `last-window.xml` shows `Online: source upload needs confirmation` after selecting Online. This is a valid no-upload-yet status and not a proven app bug. Source test now accepts all three truthful outcomes. **Await API33/API35 CI rerun before marking fixed.**
