@@ -1,6 +1,8 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -38,7 +40,8 @@ internal fun FirstRunTutorial(onFinish: () -> Unit) {
             shape = RoundedCornerShape(26.dp),
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             shadowElevation = 14.dp) {
-            Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+            Column(Modifier.heightIn(max = 540.dp).verticalScroll(rememberScrollState())
+                .padding(24.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("GETTING STARTED", style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,

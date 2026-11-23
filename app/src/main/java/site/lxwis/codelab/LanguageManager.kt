@@ -146,9 +146,11 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                                     if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED)
                                         "Download again" else "Download Python")
                             }
-                            if (python.ready) OutlinedButton(onClick = {
-                                moduleMessage = module.uninstall()
-                            }) { Text("Remove Python module") }
+                            // Also allow removal of incompatible or older-signed packs.
+                            if (python.state != PythonModuleLocator.State.NOT_INSTALLED)
+                                OutlinedButton(onClick = {
+                                    moduleMessage = module.uninstall()
+                                }) { Text("Remove Python module") }
                         }
                         if (moduleMessage.isNotEmpty()) Text(moduleMessage,
                             style = MaterialTheme.typography.bodySmall,

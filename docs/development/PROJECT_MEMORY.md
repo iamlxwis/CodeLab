@@ -1,3 +1,5 @@
+> **Additional source fixes pending CI:** cap runtime downloads at 120 MB while downloading; allow uninstall of mismatched/incompatible engine packages; scroll tutorial under large font scaling; enforce no emoji characters in app source.
+
 > **QA follow-up (unverified):** Device smoke script now exercises the explicit Online/Offline Run selector, asserts the selected mode, returns to Offline, and then runs the active JavaScript file. Preserves the original emulator journeys while covering the new menu. Latest CI results for this revision must be checked before closing the issue.
 
 > **Run-mode routing change (unverified):** Run dropdown now lets users choose persistent Offline or Online; offline never uploads code automatically, online always goes through existing consent confirmation. Missing Python shows a direct Manage Python action, preselecting its in-app downloader. Device and unit regression tests pending.

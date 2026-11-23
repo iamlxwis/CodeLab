@@ -64,6 +64,11 @@ internal class PythonModuleDownload(private val app: Context) {
                 val received = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
                 val total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
                 val reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
+                if (received > maxBytes || total > maxBytes) {
+                    manager.remove(id)
+                    return Transfer(Stage.FAILED, received, total,
+                        "Module exceeds the 120 MB download safety limit")
+                }
                 val stage = when (status) {
                     DownloadManager.STATUS_SUCCESSFUL -> Stage.DOWNLOADED
                     DownloadManager.STATUS_FAILED -> Stage.FAILED

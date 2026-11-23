@@ -45,3 +45,9 @@ GitHub-distributed APK now includes a Python in-app downloader with progress and
 ## KI-012 — online/offline routing acceptance
 
 Historically `WorkspaceModel.run()` silently selected cloud when no local engine existed. That contradicted the requested deliberate run choice. A persisted Run-mode dropdown now chooses Offline or Online, never auto-switches, and sends remote source only through explicit consent. Unit/UI and device acceptance are still required.
+
+## 2026-11-23 — additional bugs fixed in source, awaiting verification
+
+- Incompatible/signed-differently Python modules could not be removed from Languages because Remove required the module to be ready. The UI now offers user-confirmed removal for untrusted/incompatible modules too.
+- DownloadManager now stops transfers exceeding the 120 MB size cap, rather than waiting until after download for validation.
+- First-launch tutorial scrolls under large font settings; app-source emoji prevention is part of the static CI gate.
