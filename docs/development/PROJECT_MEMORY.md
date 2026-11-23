@@ -49,3 +49,12 @@ When updating, retain a short, explicit snapshot:
 - **Failed / unverified:** exact steps or evidence ...
 - **Next task:** one concrete, reproducible objective ...
 - **Decision changes:** link/update `DECISIONS.md` ...
+
+## Current migration work — source stage (unverified)
+
+A new `:engine-python` Android application and signature-protected Messenger service
+were added as a **prototype**, using Chaquopy within its own app UID (not `isolatedProcess`).
+The core still uses its embedded Python worker until the next integration commit.
+No installation/download, build or emulator claims for the companion are valid yet.
+The earlier Python failure was confirmed by the GitHub device artifact: isolated
+Chaquopy could not access `SharedPreferences` / `UserManager`.

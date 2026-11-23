@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     repositories { google(); mavenCentral() }
 }
 rootProject.name = "CodeLab"
-include(":app")
+include(":app", ":engine-python")

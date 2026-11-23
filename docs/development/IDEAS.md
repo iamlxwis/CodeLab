@@ -23,7 +23,7 @@ Updated: 2026-11-23. **This is the authoritative, durable list of user requests 
 | IDEA-007 | 2026-11-23 | **Every newly introduced thought/request remains recorded until done.** New sessions must retain unfinished items; completed ones remain in history, never silently deleted | Approved | D-012; this ledger and AGENTS.md rule |
 | IDEA-008 | 2026-11-23 | Direct commits to main with frequent verification and handoff updates, unless user changes workflow | Approved | D-009; AGENTS.md |
 | IDEA-009 | 2026-11-23 | Support popular offline languages via modular engine packs, prioritize Python, JavaScript, Lua, C/C++, TypeScript, Java/Kotlin, PHP/Ruby, then feasibility for Go/Rust/C# | Approved | docs/ENGINE_PACKS.md; runtime packs not yet delivered |
-| IDEA-010 | 2026-11-23 | Python runtime must actually pass offline device execution, including stdout, stdin and error handling, rather than merely building | Blocked | Emulator run 45129100951 failed. Artifact log shows isolated worker has no SharedPreferences/UserManager during Chaquopy startup; move to tested separate-UID module |
+| IDEA-010 | 2026-11-23 | Python runtime must actually pass offline device execution, including stdout, stdin and error handling, rather than merely building | In progress | Companion Python APK source added; requires core integration and CI/emulator acceptance |
 
 ## Revision history
 
