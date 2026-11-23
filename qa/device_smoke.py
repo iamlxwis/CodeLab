@@ -74,8 +74,20 @@ def choose_language(name):
     field = wait_for(field=True)
     tap_node(field)
     adb("shell", "input", "text", name)
-    tap(name)
-    # The sheet itself hides the search keyboard on selection.
+    # Dismiss IME to reveal the result, then select its TextView, not the
+    # identically named editable search field.
+    adb("shell", "input", "keyevent", "4")
+    until = time.monotonic() + 16
+    while time.monotonic() < until:
+        choices = [node for node in nodes()
+                   if node.attrib.get("class") == "android.widget.TextView"
+                   and node.attrib.get("text") == name]
+        if choices:
+            tap_node(choices[0])
+            wait_for("New project")
+            return
+        time.sleep(.4)
+    raise AssertionError(f"Language result {name} did not appear")
 
 
 def main():
