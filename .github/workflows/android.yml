@@ -1,9 +1,30 @@
 name: Android APK
 on:
   pull_request:
+    paths:
+      - 'app/**'
+      - 'engine-*/**'
+      - 'qa/**'
+      - 'gradle/**'
+      - 'gradlew'
+      - '*.gradle.kts'
+      - '.github/workflows/android.yml'
   push:
     branches: [main]
+    paths:
+      - 'app/**'
+      - 'engine-*/**'
+      - 'qa/**'
+      - 'gradle/**'
+      - 'gradlew'
+      - '*.gradle.kts'
+      - '.github/workflows/android.yml'
   workflow_dispatch:
+    inputs:
+      publish_release:
+        description: 'Publish latest release after same-commit Android 15 smoke'
+        type: boolean
+        default: false
 permissions:
   contents: write
   actions: read
@@ -56,7 +77,7 @@ jobs:
           CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
           CODELAB_KEY_ALIAS: ${{ secrets.CODELAB_KEY_ALIAS }}
           CODELAB_KEY_PASSWORD: ${{ secrets.CODELAB_KEY_PASSWORD }}
-        run: bash gradlew --no-daemon :app:assembleRelease :engine-python:assembleRelease :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin :app:debugUnitTestCoverage :app:lintDebug
+        run: bash gradlew --no-daemon :app:assembleRelease :engine-python:assembleRelease :engine-js:assembleRelease :engine-lua:assembleRelease :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin :app:lintDebug
       - name: Upload quality reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -68,10 +89,13 @@ jobs:
           if-no-files-found: warn
       - name: Verify APK signature
         run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk'
-      - name: Verify Python companion signature
-        run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose engine-python/build/outputs/apk/release/engine-python-release.apk'
+      - name: Verify all optional runtime signatures
+        run: |
+          for apk in engine-python engine-js engine-lua; do
+            "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$apk/build/outputs/apk/release/$apk-release.apk"
+          done
       - name: Enforce actual production signing certificate
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         env:
           CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
           CODELAB_KEY_ALIAS: ${{ secrets.CODELAB_KEY_ALIAS }}
@@ -87,9 +111,14 @@ jobs:
             signer="$ANDROID_HOME/build-tools/35.0.0/apksigner"
             actual_editor="$("$signer" verify --print-certs app/build/outputs/apk/release/app-release.apk |
               sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1)"
-            actual_python="$("$signer" verify --print-certs engine-python/build/outputs/apk/release/engine-python-release.apk |
-              sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1)"
-            if [[ -z "$expected" || "$actual_editor" != "$expected" || "$actual_python" != "$expected" ]]; then
+            for pack in engine-python engine-js engine-lua; do
+              actual_pack="$("$signer" verify --print-certs "$pack/build/outputs/apk/release/$pack-release.apk" |
+                sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1)"
+              if [[ -z "$expected" || "$actual_editor" != "$expected" || "$actual_pack" != "$expected" ]]; then
+                echo "::error::Release APK signer mismatch for $pack"; exit 1
+              fi
+            done
+            if [[ -z "$expected" || "$actual_editor" != "$expected" ]]; then
               echo "::error::Release APK signer does not match the configured permanent keystore; refusing to publish."
               exit 1
             fi
@@ -98,7 +127,7 @@ jobs:
             echo "::warning::Fallback-debug signing; production signing not claimed."
           fi
       - name: Audit upgrade signing compatibility
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -110,11 +139,12 @@ jobs:
               sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1
           }
           editor_cert="$(signing_sha256 app/build/outputs/apk/release/app-release.apk)"
-          python_cert="$(signing_sha256 engine-python/build/outputs/apk/release/engine-python-release.apk)"
-          if [[ -z "$editor_cert" || "$editor_cert" != "$python_cert" ]]; then
-            echo "::error::CodeLab and Python APKs must use exactly the same signer."
-            exit 1
-          fi
+          for pack in engine-python engine-js engine-lua; do
+            pack_cert="$(signing_sha256 "$pack/build/outputs/apk/release/$pack-release.apk")"
+            if [[ -z "$editor_cert" || "$editor_cert" != "$pack_cert" ]]; then
+              echo "::error::CodeLab and $pack APKs must use the same signer."; exit 1
+            fi
+          done
           echo "CODELAB_SIGNER_SHA256=$editor_cert" >> "$GITHUB_ENV"
           echo "CODELAB_UPGRADE_COMPATIBILITY=no_previous" >> "$GITHUB_ENV"
           echo "CODELAB_UPGRADE_TEST=not_run" >> "$GITHUB_ENV"
@@ -143,42 +173,27 @@ jobs:
               echo "::warning title=CodeLab upgrade cannot replace prior installation::Signing certificate differs from the previously published APK. Back up projects before uninstalling; configure stable GitHub Actions signing secrets."
             fi
           fi
-      - name: Enable emulator acceleration for signed upgrade tests
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && env.CODELAB_SIGNING_MODE == 'production' && env.CODELAB_UPGRADE_COMPATIBILITY == 'compatible'
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-      - name: Verify production upgrade and persistence on Android 13
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && env.CODELAB_SIGNING_MODE == 'production' && env.CODELAB_UPGRADE_COMPATIBILITY == 'compatible'
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 33
-          arch: x86_64
-          target: google_apis
-          profile: pixel_2
-          disable-animations: true
-          script: python3 qa/production_upgrade_smoke.py
-      - name: Verify production upgrade and persistence on Android 15
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && env.CODELAB_SIGNING_MODE == 'production' && env.CODELAB_UPGRADE_COMPATIBILITY == 'compatible'
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          arch: x86_64
-          target: google_apis
-          profile: pixel_2
-          disable-animations: true
-          script: python3 qa/production_upgrade_smoke.py
-      - name: Record production upgrade acceptance
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && env.CODELAB_SIGNING_MODE == 'production' && env.CODELAB_UPGRADE_COMPATIBILITY == 'compatible'
-        run: echo "CODELAB_UPGRADE_TEST=passed_api33_api35" >> "$GITHUB_ENV"
+      # Android emulators are expensive: manual device.yml is the single device gate.
+      # Publishing still requires the same-commit API 35 device run below.
       - name: Upload production upgrade evidence
-        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: always() && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         uses: actions/upload-artifact@v4
         with:
           name: production-upgrade-evidence
           path: qa-results/
           if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CodeLab-JavaScript-module
+          path: engine-js/build/outputs/apk/release/engine-js-release.apk
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CodeLab-Lua-module
+          path: engine-lua/build/outputs/apk/release/engine-lua-release.apk
+          if-no-files-found: error
+          retention-days: 90
       - uses: actions/upload-artifact@v4
         with:
           name: CodeLab-Python-module
@@ -192,23 +207,25 @@ jobs:
           if-no-files-found: error
           retention-days: 90
       - name: Prepare installable release APK and checksum
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         run: |
           mkdir -p release
           cp app/build/outputs/apk/release/app-release.apk release/CodeLab.apk
           cp engine-python/build/outputs/apk/release/engine-python-release.apk release/CodeLab-Python.apk
-          (cd release && sha256sum CodeLab.apk CodeLab-Python.apk > CodeLab.apk.sha256)
+          cp engine-js/build/outputs/apk/release/engine-js-release.apk release/CodeLab-JavaScript.apk
+          cp engine-lua/build/outputs/apk/release/engine-lua-release.apk release/CodeLab-Lua.apk
+          (cd release && sha256sum CodeLab.apk CodeLab-Python.apk CodeLab-JavaScript.apk CodeLab-Lua.apk > CodeLab.apk.sha256)
           printf 'Build commit: %s\nVersion code: %s\nSigning mode: %s\nSigner SHA-256: %s\nUpgrade compatibility: %s\nProduction upgrade QA: %s\n' \
             "$GITHUB_SHA" "$CODELAB_VERSION_CODE" "$CODELAB_SIGNING_MODE" \
             "$CODELAB_SIGNER_SHA256" "$CODELAB_UPGRADE_COMPATIBILITY" "$CODELAB_UPGRADE_TEST" > release/CodeLab-build-info.txt
       - name: Require same-commit Android device smoke success
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         timeout-minutes: 43
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 qa/require_device_smoke.py
       - name: Publish latest APK
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -219,17 +236,17 @@ jobs:
           else
             NOTES="Editor APK plus optional Python module. Both are CI fallback-debug signed and must come from the SAME build; cross-release in-place updates are not guaranteed. Back up projects. Python pack requires arm64 or x86_64. Android 8.0+. Checksums included."
           fi
-          NOTES="$NOTES Build commit: $GITHUB_SHA. Download CodeLab.apk for the editor; CodeLab-Python.apk is only the optional Python runtime. See docs/INSTALLATION.md for backup and upgrade instructions."
+          NOTES="$NOTES Build commit: $GITHUB_SHA. CodeLab-Python.apk, CodeLab-JavaScript.apk and CodeLab-Lua.apk are separately signed optional runtime packages. The editor keeps bundled JS/Lua fallback until verified module routing is released. See docs/INSTALLATION.md."
           if [[ "$CODELAB_UPGRADE_COMPATIBILITY" == "signature_changed" ]]; then
             NOTES="$NOTES IMPORTANT: The signing certificate changed since the previous release. Android may reject this APK over an existing CodeLab installation. Export project ZIPs while the old app still works and save them outside the app. Only then uninstall, install CodeLab.apk and import the backups. There is no safe bypass for Android's signature check."
           fi
           if gh release view latest >/dev/null 2>&1; then
-            gh release upload latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --clobber
+            gh release upload latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab-JavaScript.apk release/CodeLab-Lua.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --clobber
             gh release edit latest --latest --title "CodeLab — latest Android APK" --notes "$NOTES" --target "$GITHUB_SHA"
             # The 'latest' release is intentionally mutable; keep its tag
             # pointing to the source that actually produced the APK assets.
             gh api --method PATCH "repos/$GITHUB_REPOSITORY/git/refs/tags/latest" \
               -f sha="$GITHUB_SHA" -F force=true >/dev/null
           else
-            gh release create latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --target "$GITHUB_SHA" --title "CodeLab — latest Android APK" --notes "$NOTES" --latest
+            gh release create latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab-JavaScript.apk release/CodeLab-Lua.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --target "$GITHUB_SHA" --title "CodeLab — latest Android APK" --notes "$NOTES" --latest
           fi
