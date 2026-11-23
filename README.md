@@ -24,14 +24,14 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**SESSION: WORKING — interactive ChatGPT turn** · Updated **Nov 24, 2026, 1:54 AM PHT**  
+**SESSION: WORKING — interactive ChatGPT turn** · Updated **Nov 24, 2026, 2:01 AM PHT**  
 **Completed:** 3/9 · **Remaining:** 6 · **Active workstreams:** T03 / T05 / T07 / T08 / T09
 
 **One live activity (the previous entry is replaced):**
 
 | Updated (Philippine time, AM/PM) | Task | Action / result | Next |
 | --- | --- | --- | --- |
-| Nov 24, 2026 · 1:54 AM | T03 / T05 / T09 | Android 13/15 APK, upgrade and device CI PASSED at e85214f. Added same-commit device gate before publication, permanent signer continuity check, safer Python pack migration messaging and rejected-save history regression tests. **New CI pending.** | Verify gate unit tests, Android APK/device workflows and actual release gating; repair any failure. |
+| Nov 24, 2026 · 2:01 AM | T09 | Fixed corrupted APK workflow by rebuilding from e85214f known-good YAML. Prior implementation used a text replacement that interpreted shell `$'` as an insertion token and duplicated the workflow. Rebuilt via literal callback replacement; exactly one publish/gate step validated. **New CI pending.** | Confirm APK CI parses/builds and Android 13/15 smoke passes; troubleshoot new safeguards. |
 
 **Verification:** [APK and signed upgrades: passed API33/35](https://github.com/iamlxwis/CodeLab/actions/runs/45229584184) · [Full device CI: passed API33/35](https://github.com/iamlxwis/CodeLab/actions/runs/45229584342) · [Latest release](https://github.com/iamlxwis/CodeLab/releases/latest)
 
