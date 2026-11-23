@@ -6,6 +6,7 @@ Read this file before making changes to CodeLab, then read:
 3. [Known issues](docs/development/KNOWN_ISSUES.md) — blockers and test failures.
 4. [Roadmap](docs/development/ROADMAP.md) — prioritized remaining work.
 5. [Completed](docs/development/COMPLETED.md) — what is implemented, with verification scope.
+6. [Idea ledger](docs/development/IDEAS.md) — every new user thought, approved feature and requirement, including pending items.
 
 This repository is the durable handoff between chat sessions. Assume a new assistant knows **nothing** from past chats. Do not rely on conversation memory for implementation decisions.
 
@@ -24,6 +25,7 @@ CodeLab is a native Kotlin + Jetpack Compose Android code editor, intended to be
 - User authorized **direct commits to `main`**; no PR required unless they change this instruction.
 - Before coding, inspect the actual files and latest GitHub Actions results. The repository may have changed since the last handoff.
 - Keep edits narrowly scoped, incremental and buildable. Preserve project data and do not remove working functionality until a replacement is validated.
+- **Every new user thought, feature request, rule or correction must be recorded in `docs/development/IDEAS.md` in the same session** (even if implementation must wait). Assign a stable ID and status. Keep the item until verified complete; then mark it `Completed` with evidence instead of deleting it. If requirements change, mark the prior item `Superseded` with a link to its replacement; retain the history. Never silently remove an unfinished item. Updates to the ledger should be committed to `main`.
 - **Every meaningful implementation commit must update project memory in the same commit.** At minimum update `docs/development/PROJECT_MEMORY.md` with: date, commit context, implemented/unverified/blocked changes, latest CI SHA/status, and precise next task. Update `COMPLETED.md`, `ROADMAP.md`, `DECISIONS.md`, `KNOWN_ISSUES.md` as applicable.
 - Never mark work *verified* merely because source compiles. Distinguish source committed, Gradle build, automated unit tests, emulator smoke and real physical-device acceptance.
 - For a failure, include exact failing workflow URL and error text; do not guess the root cause.

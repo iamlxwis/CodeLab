@@ -1,0 +1,30 @@
+# CodeLab persistent idea ledger
+
+Updated: 2026-11-23. **This is the authoritative, durable list of user requests and decisions.**
+
+## Ledger rules
+
+1. When the user introduces a new idea, requirement, correction, or design rule, record it in this file **in the same development session**, even before work begins. A proposal can be marked `Proposed` until accepted, but it must not be lost.
+2. Every idea has an immutable `IDEA-NNN` ID, date, owner (user/request or engineering), status, and concrete acceptance criteria. Link relevant decisions and commits.
+3. Allowed status values: `Proposed`, `Approved`, `In progress`, `Blocked`, `Verified complete`, `Superseded`. Do **not** mark verified complete without code + appropriate test results.
+4. Never delete an idea row, even after completion. Preserve completed and superseded rows here, with evidence and replacement links. If an approved item changes, append a clear revision history and update the older row.
+5. A future AI must check this ledger alongside `AGENTS.md` and `PROJECT_MEMORY.md` before coding. Roadmap priorities may change; pending requirements do not silently disappear.
+
+## Ideas and requirements
+
+| ID | Added | Request / acceptance criteria | Status | Evidence / follow-up |
+| --- | --- | --- | --- | --- |
+| IDEA-001 | 2026-11-23 | CodeLab is a lightweight Android editor; all optional execution engines are separate installable/removable language modules, **including Python** | Approved | D-001, D-003; currently bundled engines must be migrated |
+| IDEA-002 | 2026-11-23 | Run UI offers an intentional **Online** or **Offline** choice. Online has explicit consent before source leaves device. Offline prompts to install the runtime if absent, then runs without internet | Approved | D-002, D-006; full choice and module installation incomplete |
+| IDEA-003 | 2026-11-23 | Allow editing and provide examples for every catalog entry; project choices Beginner Example, Hello World, Blank | In progress | StarterExamples + GuidedProjectSheet committed; complete device acceptance pending |
+| IDEA-004 | 2026-11-23 | Five high-quality themes: Minimal, Glass, Clay, AMOLED, Paper; simplify menus and screens | In progress | AppearanceGallery committed; overall screen-wide fidelity and accessibility unverified |
+| IDEA-005 | 2026-11-23 | No emojis anywhere in the APK; use consistent professional vector icons and typography | Approved | D-007; complete UI audit pending |
+| IDEA-006 | 2026-11-23 | Provide a **development Second Brain** stored in GitHub, not an in-app AI chatbot. It must tell future assistants what was completed, pending, blocked and next | In progress | AGENTS.md and development docs committed; retention enforcement added by this commit |
+| IDEA-007 | 2026-11-23 | **Every newly introduced thought/request remains recorded until done.** New sessions must retain unfinished items; completed ones remain in history, never silently deleted | Approved | D-012; this ledger and AGENTS.md rule |
+| IDEA-008 | 2026-11-23 | Direct commits to main with frequent verification and handoff updates, unless user changes workflow | Approved | D-009; AGENTS.md |
+| IDEA-009 | 2026-11-23 | Support popular offline languages via modular engine packs, prioritize Python, JavaScript, Lua, C/C++, TypeScript, Java/Kotlin, PHP/Ruby, then feasibility for Go/Rust/C# | Approved | docs/ENGINE_PACKS.md; runtime packs not yet delivered |
+| IDEA-010 | 2026-11-23 | Python runtime must actually pass offline device execution, including stdout, stdin and error handling, rather than merely building | Blocked | Emulator run 45129100951 failed. Artifact log shows isolated worker has no SharedPreferences/UserManager during Chaquopy startup; move to tested separate-UID module |
+
+## Revision history
+
+- 2026-11-23: Created persistent ledger and non-deletion policy after user clarification. Earlier requirements reconstructed from agreed project decisions; if any historical detail differs from original intent, preserve the row and append a correction.

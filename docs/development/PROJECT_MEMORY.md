@@ -4,6 +4,7 @@
 **Source head inspected before this documentation commit:** `3c37ae8c01dcdab225b5f13273c5d01f870983e9`
 **Repository:** `iamlxwis/CodeLab` · default branch `main`
 **Purpose:** Let another AI coding assistant resume accurately without access to earlier chats.
+**Persistent idea ledger:** [IDEAS.md](IDEAS.md); every new user thought is logged with an immutable ID, remains visible until tested/complete and is never silently deleted.
 
 ## Product goal — user-approved
 
@@ -26,12 +27,12 @@ A high-quality **native Android editor** with professional vector icons (no emoj
 ## Latest CI observed for source head `3c37ae8c`
 
 - [Android APK run 45129100978](https://github.com/iamlxwis/CodeLab/actions/runs/45129100978): **success** (source builds; this does not establish device functionality).
-- [Android device smoke run 45129100951](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951): **failure**. Emulator journey timed out waiting for visible text `Hello from CodeLab!`. The log also contains transient adb exit-code-1 messages. Root cause **not established**: inspect UI flow, Python process/output and instrumented logs before attributing it to the runtime.
+- [Android device smoke run 45129100951](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951): **failure**. Emulator journey timed out waiting for visible text `Hello from CodeLab!`. The uploaded device evidence definitively shows `Exit 1` and `Python runtime error: IllegalStateException: SharedPreferences cannot be accessed if UserManager is not available. (e.g. from inside an isolated process)` during Chaquopy bootstrap. An isolated service cannot initialize Chaquopy as currently configured. Keep a strong process boundary: plan separately installable companion runtime with an independent app UID and authenticated IPC rather than disabling isolation in the core.
 - After the documentation commit, these CI statuses describe the **previous implementation SHA**, not the new docs-only commit. Check new run results.
 
 ## Next action — do this before broader features
 
-1. Diagnose and correct failing emulator smoke end-to-end Python journey (failure above). Preserve build success.
+1. Fix the now-confirmed Chaquopy isolated-worker initialization failure by migrating Python into a separately signed, independently sandboxed Android runtime module (or validate another safe mechanism); preserve build success, then retest real offline Python stdout/stdin/errors.
 2. Design and implement a **real modular runtime contract**: signed Android companion engine packages or appropriate store-delivered features, certificate checks, versioned authenticated IPC, install-detection, ABI and version checks, uninstall/status, resource bounds and isolation.
 3. Migrate existing bundled runtimes, including Python, to **optional** modules only when their offline behavior is independently proven; guard migrations with tests.
 4. Build a clear Run choice (Online / Offline), and an install/manage-runtimes experience. Never auto-upload source; online support can depend on provider availability.

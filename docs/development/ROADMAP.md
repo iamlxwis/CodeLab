@@ -5,7 +5,8 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 ## P0 — build and runtime reliability
 
 - [x] APK builds at source SHA `3c37ae8c`; see [build](https://github.com/iamlxwis/CodeLab/actions/runs/45129100978).
-- [ ] Debug [emulator Python-output timeout](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951) (waiting for `Hello from CodeLab!`). Check UI automation, keyboard focus, isolated Python worker, stdout transfer and logcat. Do not guess root cause.
+- [x] Diagnose [emulator Python-output timeout](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951). Actual UI trace confirms `Exit 1`: Chaquopy reads SharedPreferences from an isolated process where UserManager is unavailable.
+- [ ] Repair using a properly isolated, signed companion runtime APK (not simply an unisolated service in CodeLab), then demonstrate real offline stdout/stdin/errors.
 - [ ] Achieve passing APK + Android emulator smoke for the same source commit; retain exact run URLs and SHA.
 - [ ] Verify real device API/ABI coverage; Python integration currently targets arm64-v8a and x86_64, not 32-bit-only devices.
 
@@ -34,6 +35,10 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 - [ ] Real-device smoke + performance, long-running cancellation, ABI coverage, source privacy review.
 - [ ] Stable production/release signing before distributing updatable companion runtime packages; avoid breaking existing users.
 - [ ] Keep docs, changelog, screenshots and release claims aligned with measured behavior.
+
+## Persistent requirements
+
+Every user suggestion, even when not yet implemented, belongs in [IDEAS.md](IDEAS.md) with an immutable ID and status. Keep it until **verified complete**; preserve completed and superseded entries indefinitely as history. Update it in the same development session as the request.
 
 ## Commit process
 

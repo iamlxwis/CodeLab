@@ -15,6 +15,7 @@ Updated 2026-11-23. These are user requirements, not evidence that code already 
 | D-009 | Commit verified incremental work **directly to `main`**; avoid PR review unless the user changes this instruction | Approved |
 | D-010 | Maintain a GitHub-based **Second Brain for development**, not an end-user AI assistant: AGENTS.md + status, roadmap, decisions and known issues. Every meaningful implementation commit includes updated memory/next steps | Established by this documentation work |
 | D-011 | Protect user projects and source: isolated execution, bounded resources, signed trustworthy module distribution, explicit network permission, no arbitrary downloaded native executable loading | Engineering requirement; full module architecture pending |
+| D-012 | Each new user thought or development requirement is assigned a persistent ID and recorded immediately. Pending and in-progress ideas remain in the repository until verified complete; completed and superseded ideas retain history and supporting evidence rather than being silently removed | Idea ledger established; ongoing discipline required |
 
 ## Implementation notes
 
