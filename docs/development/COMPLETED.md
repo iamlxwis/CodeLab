@@ -44,3 +44,7 @@ Not verified: physical phones, native module install/update/uninstall workflow, 
 ## 2026-11-23 — theme correction committed in source (not yet verified)
 
 Root transparent Surface now explicitly sets its onSurface foreground; Glass/Clay blur decorations use Canvas radial glows; Minimal Light no longer inherits dark-only themePreset backgrounds. Contrast instrumentation covers five styles in Dark/Light and device smoke captures the five theme gallery states. Motion benchmark startup is more defensive after observed CI failure. This is **source-implemented only**; compile, connected test, screenshot review and physical-device acceptance remain open.
+
+## 2026-11-23 — installation triage and release transparency (source only)
+
+Latest baseline `a62738cf` passed both [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45151364074) and [emulator](https://github.com/iamlxwis/CodeLab/actions/runs/45151364143). The physical-device installer reported `package appears to be invalid`; this is **not** considered resolved. New workflow source audits previous/current APK certs and same-build editor/Python signer, adds build provenance and backup-first release warnings, corrects portable checksum paths, and aligns mutable latest tag with built SHA. Requires CI/real-device validation; stable signing secrets are not yet configured.

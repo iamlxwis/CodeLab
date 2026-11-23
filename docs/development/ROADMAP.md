@@ -4,6 +4,10 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P0 — build and runtime reliability
 
+- [ ] **IDEA-015 / KI-017 — BLOCKER:** Resolve installer rejection. Verify release signer comparison and published APK provenance; set stable production signing secrets for future releases, then test Android upgrade on physical phone. Prior-project ZIP backups are mandatory before replacing incompatible old installs.
+- [ ] Check the source-stage release audit, corrected checksum packaging and latest tag alignment in the APK CI run triggered by this commit.
+
+
 - [ ] **IDEA-014 / KI-015:** Verify on APK, Android instrumentation, emulator screenshots and physical phone that all five themes have readable text/icons and no rectangular Glass/Clay glows; code and screenshot test added, latest CI pending.
 - [ ] **KI-016:** [Emulator run 45145653756](https://github.com/iamlxwis/CodeLab/actions/runs/45145653756) failed in motion benchmark after functional phases; source now navigates to the library before measuring. Retest full device workflow.
 
