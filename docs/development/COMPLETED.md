@@ -55,3 +55,5 @@ redesigned Import sheet and Projects controls, and corrected clean-install CI sc
 No build/device acceptance is claimed; IDEAs 016–021 remain in progress/pending.
 
 Source visibility fix applied after first CI compile failure; validation pending. No completion claim.
+
+New appearance editor controls implemented in source, not verified by Gradle or device yet. IDEA-018 not marked complete.

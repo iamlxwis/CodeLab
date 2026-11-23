@@ -98,3 +98,5 @@ New appearance/Projects/Import source has not yet passed Gradle, emulator screen
 
 ## KI-021 — source visibility compile failure
 [APK 45169778823](https://github.com/iamlxwis/CodeLab/actions/runs/45169778823): `WorkspaceModel.kt:282:9 Property 'public' exposes its 'internal' type 'AppearanceRecipe'`. Scope corrected to `internal`; retest pending.
+
+KI-022: New appearance editor is not yet device-tested, and entering or editing colors/presets must undergo accessibility, contrast and persistence QA.

@@ -82,3 +82,5 @@ IDEA-015 revision: user explicitly states their normal process is **uninstall ol
 | IDEA-021 | 2026-11-23 | App-wide accessibility/visual/performance audit, real Android 13/15 screenshots, tests, successful installable release, accurate handoff commits | In progress | Build green before this checkpoint; emulator blocked by clean-install smoke bug now patched |
 
 IDEA-018 CI note: Kotlin visibility mismatch from first source checkpoint corrected; build retry pending.
+
+IDEA-018 editor UI source now implements custom hex, preset CRUD, load and style defaults; CI/device validation pending.

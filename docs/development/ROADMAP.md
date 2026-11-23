@@ -79,3 +79,5 @@ User approved direct commits to `main`. **In the same commit as implementation w
 - [ ] IDEA-021: run Android 13/15, large fonts, and complete release QA; retain phone clean-install blocker independently.
 
 - [ ] Verify visibility correction via new CI before continuing screen-level changes.
+
+- [ ] Test IDEA-018 AppearanceGallery custom accent validation, multi-style preset CRUD and persistence across app restart; check large-font screenshots.

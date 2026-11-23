@@ -11,7 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -129,6 +130,14 @@ private fun SettingChoices(title: String, choices: List<String>, selected: Strin
 /** Full-width, scrollable visual settings page, replacing the cramped modal. */
 @Composable
 internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
+    var customHex by remember(m.visualStyle) {
+        mutableStateOf(if (m.accent.startsWith("#")) m.accent else "#")
+    }
+    var recipeName by rememberSaveable { mutableStateOf("") }
+    var editingId by rememberSaveable { mutableStateOf<String?>(null) }
+    var notice by remember { mutableStateOf("") }
+    var advanced by rememberSaveable { mutableStateOf(false) }
+    var pendingDelete by remember { mutableStateOf<String?>(null) }
     Dialog(onDismissRequest = dismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -202,14 +211,128 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                             Text("Selected: " + m.accent,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            OutlinedTextField(
+                                value = customHex,
+                                onValueChange = { next ->
+                                    if (next.length <= 7) {
+                                        customHex = next
+                                        if (AppearanceRecipes.validAccent(next)) m.chooseAccent(next)
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("Custom color (hex)") },
+                                placeholder = { Text("#AABBCC") },
+                                singleLine = true,
+                                isError = customHex.length > 1 &&
+                                    !AppearanceRecipes.validAccent(customHex),
+                                supportingText = {
+                                    Text("Enter #RRGGBB to preview. Text contrast adapts automatically.")
+                                })
                         }
                     }
                     item {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically) {
+                                Text("Saved appearances", Modifier.weight(1f),
+                                    style = MaterialTheme.typography.titleLarge)
+                                Text(m.savedAppearanceRecipes.size.toString() + "/" +
+                                    AppearanceRecipes.LIMIT,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Text("Load looks from any style, or save the current one.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall)
+                            m.savedAppearanceRecipes.forEach { recipe ->
+                                Surface(onClick = {
+                                    m.useAppearanceRecipe(recipe.id)
+                                    editingId = recipe.id
+                                    recipeName = recipe.name
+                                    notice = "Loaded " + recipe.name
+                                }, color = MaterialTheme.colorScheme.surfaceContainer,
+                                    shape = RoundedCornerShape(16.dp)) {
+                                    Row(Modifier.fillMaxWidth().padding(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Icon(Icons.Default.Palette, contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary)
+                                        Column(Modifier.weight(1f)) {
+                                            Text(recipe.name, style = MaterialTheme.typography.titleSmall)
+                                            Text(recipe.style + " · " + recipe.accent,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        IconButton(onClick = {
+                                            m.useAppearanceRecipe(recipe.id)
+                                            editingId = recipe.id
+                                            recipeName = recipe.name
+                                            notice = "Adjust the look, then select Update"
+                                        }) {
+                                            Icon(Icons.Default.Edit,
+                                                contentDescription = "Edit " + recipe.name)
+                                        }
+                                        IconButton(onClick = { pendingDelete = recipe.id }) {
+                                            Icon(Icons.Default.DeleteOutline,
+                                                contentDescription = "Delete " + recipe.name)
+                                        }
+                                    }
+                                }
+                            }
+                            OutlinedTextField(value = recipeName, onValueChange = {
+                                if (it.length <= 32) recipeName = it
+                            }, modifier = Modifier.fillMaxWidth(), singleLine = true,
+                                label = { Text("Preset name") },
+                                placeholder = { Text("My workspace") })
+                            Row(Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically) {
+                                Button(onClick = {
+                                    val saved = m.saveAppearanceRecipe(recipeName, editingId)
+                                    notice = if (saved) "Appearance saved"
+                                        else "Name must be 1–32 characters; maximum 20 presets"
+                                    if (saved) { editingId = null; recipeName = "" }
+                                }, enabled = recipeName.isNotBlank()) {
+                                    Icon(Icons.Default.Save, contentDescription = null,
+                                        modifier = Modifier.size(17.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(if (editingId == null) "Save new" else "Update")
+                                }
+                                if (editingId != null) TextButton(onClick = {
+                                    editingId = null
+                                    recipeName = ""
+                                    notice = ""
+                                }) { Text("Cancel edit") }
+                            }
+                            if (notice.isNotBlank()) Text(notice,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary)
+                            TextButton(onClick = {
+                                m.restoreAppearanceDefaults()
+                                editingId = null
+                                recipeName = ""
+                                customHex = "#"
+                                notice = "Style defaults restored; saved looks unchanged"
+                            }) {
+                                Icon(Icons.Default.Restore, null, Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text("Restore " + m.visualStyle + " defaults")
+                            }
+                        }
+                    }
+                    item {
+                        TextButton(onClick = { advanced = !advanced }) {
+                            Text(if (advanced) "Hide advanced options" else "Advanced options")
+                            Icon(if (advanced) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = null)
+                        }
+                    }
+                    if (advanced) item {
                         SettingChoices("INTERFACE DENSITY",
                             listOf("Compact", "Comfortable", "Spacious"),
                             m.interfaceDensity, m::chooseDensity)
                     }
-                    item {
+                    if (advanced) item {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             SettingChoices("ANIMATIONS", listOf("System", "Full", "Reduced"),
                                 m.motionPreference, m::chooseMotion)
@@ -232,5 +355,22 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                 }
             }
         }
+    }
+    pendingDelete?.let { id ->
+        val recipe = m.savedAppearanceRecipes.firstOrNull { it.id == id }
+        AlertDialog(onDismissRequest = { pendingDelete = null },
+            title = { Text("Delete saved appearance?") },
+            text = { Text("Delete " + (recipe?.name ?: "this preset") +
+                "? Your current theme will not change.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    m.deleteAppearanceRecipe(id)
+                    if (editingId == id) { editingId = null; recipeName = "" }
+                    pendingDelete = null
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) { Text("Cancel") }
+            })
     }
 }
