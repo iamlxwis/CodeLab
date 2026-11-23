@@ -602,6 +602,20 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 cancel = m::cancelCloudRun, start = m::startCloudRun)
         }
     }
+    if (m.gitPullInProgress) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Updating Git branch") },
+            text = {
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
+                    Text("Applying fast-forward changes. Editing is temporarily paused.")
+                }
+            },
+            confirmButton = {}
+        )
+    }
     m.error?.let { issue ->
         AlertDialog(onDismissRequest = { m.error = null }, title = { Text("Workspace error") }, text = { Text(issue) },
             confirmButton = { TextButton(onClick = { m.error = null }) { Text("Close") } })

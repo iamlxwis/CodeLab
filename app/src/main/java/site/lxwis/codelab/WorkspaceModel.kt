@@ -289,6 +289,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         private set
     var gitFeedback by mutableStateOf<String?>(null)
         private set
+    var gitPullInProgress by mutableStateOf(false)
+        private set
     internal var gitState by mutableStateOf<GitWorkspace.Snapshot?>(null)
         private set
     fun gitRefresh() {
@@ -378,14 +380,19 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun gitPullFastForward() {
         val p = project ?: return
+        if (gitPullInProgress) return
+        // Block source edits and workspace actions while JGit may write files.
+        // A modal progress dialog in Studio owns focus until the I/O callback.
+        gitPullInProgress = true
         flush()
         val nav = ++navigationVersion
-        work {
+        work(onFailure = { gitPullInProgress = false }) {
             val git = GitWorkspace(store.projectDirectory(p))
             val result = git.pullFastForwardGitHub(gitVault.load())
             val snapshot = git.inspect()
             val opened = persist(load(p, tabs, active, allowUnavailable = true))
             val apply: () -> Unit = {
+                gitPullInProgress = false
                 if (project == p && nav == navigationVersion) {
                     apply(opened)
                     gitState = snapshot
@@ -629,7 +636,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     // All I/O is serialized. The main-thread editor never waits for a disk operation.
     // A versioned, per-file buffer prevents slow callbacks from overwriting newer typing.
-    private fun work(task: () -> (() -> Unit)) {
+    private fun work(onFailure: (() -> Unit)? = null, task: () -> (() -> Unit)) {
         main.removeCallbacks(autoSave)
         val p = project
         val f = active
@@ -658,6 +665,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                 main.post {
                     lastOperationMillis = elapsed
                     lastOperationName = "Failed workspace I/O"
+                    onFailure?.invoke()
                     error = e.localizedMessage ?: "Workspace operation failed"
                     endOperation()
                 }
