@@ -1,6 +1,10 @@
+## In-place production-signed upgrade: emulator verification complete (2026-11-23)
+
+[Release workflow 45209632286](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) passed **both Android 13 and Android 15** for editor/Python APK versionCode `1286 -> 1288`. On disposable emulators CI installed the older APKs, created project text and a Clay appearance setting, verified restart persistence, installed both newer APKs with `adb install -r` (no uninstall or data wipe), confirmed project/theme retention, and executed real offline Python with the updated verified companion. The published `latest` APKs carry the existing permanent signing identity. **This proves emulator upgrade compatibility, not an upgrade on a physical phone.** Users of earlier *debug-signed* APKs must export their projects and complete a one-time backed-up reinstall; Android correctly rejects the certificate mismatch.
+
 ## Verified production signer (2026-11-23)
 
-[GitHub Actions run 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835) produced and published editor/Python APKs whose actual certificates match the existing permanent release keystore, after fixing workflow secret scope and Kotlin DSL property shadowing. The editor signing SHA-256 certificate is `c81d2aa187febd5252ad0369f2b4cfba368b5f16f6b4b049963fa284c9e42392`. Older debug-signed APKs **cannot** upgrade directly: export project ZIP backups before a one-time uninstall/reinstall. Same-certificate Android 13/15 in-place upgrade and physical-device retention still require separate verification.
+[GitHub Actions run 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835) produced and published editor/Python APKs whose actual certificates match the existing permanent release keystore, after fixing workflow secret scope and Kotlin DSL property shadowing. The editor signing SHA-256 certificate is `c81d2aa187febd5252ad0369f2b4cfba368b5f16f6b4b049963fa284c9e42392`. Older debug-signed APKs **cannot** upgrade directly: export project ZIP backups before a one-time uninstall/reinstall. Same-certificate Android 13/15 in-place upgrade **PASSED** in [release CI 45209632286](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286), including project/theme retention and actual Python companion execution; a physical-device upgrade is still untested.
 
 # Installing and upgrading CodeLab
 
@@ -28,7 +32,7 @@ If you have already uninstalled CodeLab and Android reports `App not installed a
 
 ## Critical correction: prior signing labels were wrong (2026-11-23)
 
-APK certificate inspection proved a11d15e, 7acd475 and ee24cd3 were signed with different Android Debug certificates despite release notes stating `production`. A GitHub Actions secret-scoping bug omitted passwords and alias from Gradle. The existing permanent keystore was not changed; the build step and pre-publication certificate check are now corrected in source, but their CI results must pass before production signing is verified. Prior debug-signed users must export their projects and complete a one-time backed-up migration. Never replace the permanent key.
+APK certificate inspection proved a11d15e, 7acd475 and ee24cd3 were signed with different Android Debug certificates despite release notes stating `production`. A GitHub Actions secret-scoping bug omitted passwords and alias from Gradle. The existing permanent keystore was not changed. The build step and pre-publication certificate check are verified in [CI 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835), and Android 13/15 same-key upgrade acceptance subsequently passed in [CI 45209632286](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286). Prior debug-signed users must export their projects and complete a one-time backed-up migration. Never replace the permanent key.
 
 ## Signing policy
 

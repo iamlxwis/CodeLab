@@ -1,5 +1,7 @@
 # CodeLab signing from an Android phone — no Termux or PC
 
+> **Existing CodeLab production signing identity is already configured and verified. Do not run the generator again for CodeLab.** [Release CI 45209632286](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) confirmed current editor/Python certificates and successful Android 13/15 data-retaining in-place upgrades (versionCode `1286 -> 1288`). The generator instructions below are historical/new-project setup guidance only; replacing the current CodeLab key would break future in-place updates.
+
 This method requires **GitHub Actions and Chrome only**. It generates a new,
 permanent Android signing identity on GitHub's temporary build runner, then
 uploads an **encrypted-only backup**. No private keystore is ever committed or

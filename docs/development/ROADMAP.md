@@ -1,3 +1,16 @@
+## Post-acceptance checkpoint (2026-11-23) — remaining priorities
+
+- [x] T01: real permanent-signer APK check passed, never rotate or replace release signing key ([CI](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835)).
+- [x] T02: Android 13/15 device-smoke tests passed including Online status ([CI](https://github.com/iamlxwis/CodeLab/actions/runs/45209632246)).
+- [x] T04: Android 13/15 signed upgrade acceptance `adb install -r`, retained project/theme, Python execution, version `1286 -> 1288` ([CI](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286)).
+- [ ] T03: comprehensive remaining app bug audit + regression tests; verify real cloud execution and consent beyond JVM guards.
+- [ ] T04 additional real-phone signed upgrade with backed-up test data (separate from completed emulator acceptance).
+- [ ] T05: end-to-end Python download/progress/cancel/Android approval/install/update/uninstall/missing-module recovery on real Android.
+- [ ] T06: optional offline language module architecture beyond existing supported runtimes; feasibility claims only for verified engines.
+- [ ] T07: premium all-screen UI/UX/accessibility refinements for five themes.
+- [ ] T08: contextual interactive tutorial and first-run accessibility on different screen sizes/font scales.
+- [ ] T09: comprehensive performance, security, QA and production-ready release gates; do not claim 1.0 stable prematurely.
+
 ## 2026-11-23 — signed-upgrade CI debug checkpoint
 
 - [ ] Recheck Android 13 and 15 signed upgrade runs after repairing Appearance/Languages action search in `qa/production_upgrade_smoke.py`. Previous run 45207076639 failed before update at nested-menu navigation; no persisted-data pass.

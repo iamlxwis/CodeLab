@@ -23,25 +23,25 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**1 / 9 completed · 8 remaining · 3 in progress · 0 blocked**
+**3 / 9 completed · 6 remaining · 1 in progress · 0 blocked**
 
-**Current task:** `T04` — Repair Android 13 upgrade-test navigation, rerun API 33/35
+**Current task:** `T03` — Continue application-wide defect audit and regression coverage; `T05` runtime module verification next
 
-**Latest verified (2026-11-23):** [Production APK: actual keystore certificate verified](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835) · [Android 13: Passed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470) · [Android 15: Failed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470)
+**Latest verified (2026-11-23):** [Production APK and signed upgrades: Passed Android 13/15](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) · [Device smoke: Passed Android 13/15](https://github.com/iamlxwis/CodeLab/actions/runs/45209632246) · [Download release](https://github.com/iamlxwis/CodeLab/releases/latest)
 
 | Task | Status |
 | --- | --- |
 | `T01` Permanent production APK signing | Done — actual APK signer verified |
-| `T02` Fix Android 15 online-run smoke | In progress — test fixed, awaiting CI |
-| `T03` Complete app-wide bug audit | In progress — cloud consent fix pending CI |
-| `T04` Verify production-signed data-preserving upgrades | In progress — QA gate committed, unverified |
+| `T02` Fix Android 15 online-run smoke | Done — API 33/35 device smoke passed |
+| `T03` Complete app-wide bug audit | In progress — cloud consent guarded/tested, remaining audit open |
+| `T04` Verify production-signed data-preserving upgrades | Done for API 33/35 emulators — `adb install -r`, project/theme retention and Python passed; physical-device check remains |
 | `T05` Validate Python module download/install/update | Queued |
 | `T06` Expand optional offline language modules | Queued |
 | `T07` Refine all five themes and app navigation | Queued |
 | `T08` Finish interactive tutorial and accessibility | Queued |
 | `T09` Complete full QA and release readiness | Queued |
 
-**Last audit:** 2026-11-23 — upgrade test found hidden Appearance action; UI search fix awaiting CI · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** 2026-11-23 — both signed upgrade and device smoke CI gates passed · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.

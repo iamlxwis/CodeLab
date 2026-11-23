@@ -1,3 +1,10 @@
+## Verified milestones — 2026-11-23
+
+- **T01 permanent production signer:** editor and companion actual keystore certificate verified at [CI 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835), retained in [CI 45209632286](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286); existing key unchanged.
+- **T02 Android 15 Online-mode smoke:** [CI 45209632246](https://github.com/iamlxwis/CodeLab/actions/runs/45209632246) success for both Android 13 and Android 15 device smoke.
+- **T04 signed APK upgrade continuity on disposable emulators:** [CI 45209632286](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) success on API33/35 for actual `adb install -r`, app and companion version `1286 -> 1288`, retained project source/Clay preference and real offline Python. A physical Android phone upgrade is not proven and remains on the roadmap.
+- T03 whole-app audit, T05 Python download/install/update flow, T06 new modules, T07 UI, T08 tutorial/accessibility, and T09 complete release QA **remain unfinished**. This is not a claim of 1.0 stability.
+
 ## 2026-11-23 — permanent signer verified (T01 complete)
 
 [APK CI 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835) succeeded with both APK signing certificates matching the existing keystore and published the release. Independently extracted editor cert SHA-256 `c81d2aa187febd5252ad0369f2b4cfba368b5f16f6b4b049963fa284c9e42392`. This supersedes earlier debug-signed release claims. Existing debug installs need backed-up migration. Production update-retention and real-phone tests are separate uncompleted milestones.

@@ -160,3 +160,11 @@ Actual APK signing blocks for [a11d15e](https://github.com/iamlxwis/CodeLab/acti
 ## KI-039 — production-upgrade QA cannot find nested Appearance action (2026-11-23)
 
 [CI 45207076639](https://github.com/iamlxwis/CodeLab/actions/runs/45207076639) failed its API33 signed-upgrade test at `Timed out waiting for ('Appearance',)`. Screenshot/XML show a healthy app displaying searchable Workspace actions sheet; Appearance exists under Settings, not at root. This is **test-navigation drift**, not proof of Android data loss. `qa/production_upgrade_smoke.py` now searches action names and taps result TextView for Appearance and Languages. New CI pending; upgrade data retention still unverified.
+
+## KI-034 / KI-039 — device smoke and signed-upgrade test navigation resolved (2026-11-23)
+
+[Device CI 45209632246](https://github.com/iamlxwis/CodeLab/actions/runs/45209632246) passed both Android API33/35 after accepting legitimate online source-upload consent status. [Release CI 45209632286](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) passed both API33/35 signer-matched in-place upgrade acceptance after changing the UI test to search nested Appearance and Languages actions. Confirmed data retention, Python companion and versionCode `1286 -> 1288`; do not repeat earlier failure as current. Physical device check remains OPEN.
+
+## KI-038 — source-upload consent revision guard: unit-verified, full end-to-end still open
+
+`ca4ffc9` regression test passed with 12/12 branch coverage for `OnlineRunApproval.matches` and `45209632286` release JVM checks passed. A live external cloud execution test has NOT run; broader audit remains T03.
