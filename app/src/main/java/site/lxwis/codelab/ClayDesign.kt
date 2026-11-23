@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.shadow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -50,16 +53,25 @@ internal fun ClayPanel(
     content: @Composable () -> Unit
 ) {
     val style = LocalCodeLabVisualStyle.current
+    val shape = if (style == "Clay") CodeLabCorners.panel else MaterialTheme.shapes.large
+    val colors = MaterialTheme.colorScheme
     Surface(
-        modifier = modifier,
-        shape = if (style == "Clay") CodeLabCorners.panel else MaterialTheme.shapes.large,
-        color = if (style == "Glass") MaterialTheme.colorScheme.surfaceContainer.copy(alpha = .72f)
-            else MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = if (style == "Clay") 3.dp else 0.dp,
-        shadowElevation = if (style == "Clay") 8.dp else 0.dp,
-        border = if (style == "Glass" || style == "Clay")
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .65f))
-            else null
+        modifier = if (style == "Clay") modifier.shadow(12.dp, shape, clip = false) else modifier,
+        shape = shape,
+        color = if (style == "Glass") colors.surfaceContainer.copy(alpha = .72f)
+            else colors.surfaceContainer,
+        tonalElevation = if (style == "Clay") 2.dp else 0.dp,
+        shadowElevation = if (style == "Clay") 3.dp else 0.dp,
+        border = when (style) {
+            "Glass" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
+                Color.White.copy(alpha = .58f),
+                colors.outlineVariant.copy(alpha = .28f))))
+            "Clay" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
+                Color.White.copy(alpha = .30f),
+                colors.outlineVariant.copy(alpha = .5f))))
+            "AMOLED" -> BorderStroke(1.dp, colors.outlineVariant.copy(alpha = .72f))
+            else -> null
+        }
     ) { content() }
 }
 
@@ -71,19 +83,26 @@ internal fun ClayActionCard(
     content: @Composable () -> Unit
 ) {
     val style = LocalCodeLabVisualStyle.current
+    val shape = if (style == "Clay") CodeLabCorners.card else MaterialTheme.shapes.large
+    val colors = MaterialTheme.colorScheme
     Surface(
         onClick = onClick,
-        modifier = modifier,
+        modifier = if (style == "Clay") modifier.shadow(12.dp, shape, clip = false) else modifier,
         enabled = true,
         interactionSource = interactionSource,
-        shape = if (style == "Clay") CodeLabCorners.card else MaterialTheme.shapes.large,
+        shape = shape,
         color = if (style == "Glass")
-            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = .72f)
-            else MaterialTheme.colorScheme.surfaceContainerHigh,
+            colors.surfaceContainerHigh.copy(alpha = .72f)
+            else colors.surfaceContainerHigh,
         tonalElevation = if (style == "Clay") CodeLabElevation.tonal else 0.dp,
         shadowElevation = if (style == "Clay") 9.dp else 0.dp,
-        border = if (style == "Glass" || style == "Clay")
-            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .65f))
-            else null
+        border = when (style) {
+            "Glass" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
+                Color.White.copy(alpha = .55f), colors.outlineVariant.copy(alpha = .20f))))
+            "Clay" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
+                Color.White.copy(alpha = .35f), colors.outlineVariant.copy(alpha = .55f))))
+            "AMOLED" -> BorderStroke(1.dp, colors.outlineVariant.copy(alpha = .75f))
+            else -> null
+        }
     ) { content() }
 }

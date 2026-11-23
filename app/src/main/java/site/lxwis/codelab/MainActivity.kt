@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Surface
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
@@ -33,8 +34,10 @@ class MainActivity : ComponentActivity() {
                         isAppearanceLightNavigationBars = !dark
                     }
                 }
-                Surface(Modifier.fillMaxSize()) {
-                    Studio(model, Modifier.windowInsetsPadding(WindowInsets.safeDrawing).imePadding())
+                CodeLabBackdrop(model.visualStyle, dark) {
+                    Surface(Modifier.fillMaxSize(), color = Color.Transparent) {
+                        Studio(model, Modifier.windowInsetsPadding(WindowInsets.safeDrawing).imePadding())
+                    }
                 }
             }
         }

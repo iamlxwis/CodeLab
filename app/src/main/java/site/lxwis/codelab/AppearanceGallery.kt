@@ -29,8 +29,8 @@ private data class StyleSample(
 )
 private val styles = listOf(
     StyleSample("Minimal", "Clean & focused", Color(0xff101517), Color(0xff242a2c), Color(0xff83e5ca)),
-    StyleSample("Glass", "Layered & translucent", Color(0xff152840), Color(0xff405e77), Color(0xff9ee7e0)),
-    StyleSample("Clay", "Soft & tactile", Color(0xff1e2a30), Color(0xff3c5259), Color(0xffa9e3cf)),
+    StyleSample("Glass", "Frosted & luminous", Color(0xff152840), Color(0xff405e77), Color(0xff9ee7e0)),
+    StyleSample("Clay", "Raised & tactile", Color(0xff1e2a30), Color(0xff3c5259), Color(0xffa9e3cf)),
     StyleSample("AMOLED", "Pure black", Color.Black, Color(0xff141414), Color(0xff83e5ca)),
     StyleSample("Paper", "Warm & bright", Color(0xfffaf8f1), Color(0xffede8dc), Color(0xff177563))
 )

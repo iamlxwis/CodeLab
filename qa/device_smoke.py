@@ -103,6 +103,12 @@ def main():
     assert adb("shell", "settings", "get", "global", "airplane_mode_on") == "1"
     adb("logcat", "-c")
     launch()
+    wait_for("Welcome to CodeLab")
+    tap("Next")
+    wait_for("Write and run")
+    tap("Next")
+    wait_for("Make it yours")
+    tap("Start coding")
     wait_for("New project")
     snapshot("01-home")
     # Python is now a genuine CPython runtime. Run the starter with airplane mode on.

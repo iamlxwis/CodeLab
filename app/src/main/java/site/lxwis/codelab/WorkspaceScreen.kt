@@ -92,6 +92,10 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var focusMode by rememberSaveable { mutableStateOf(false) }
     var explorerPinned by rememberSaveable { mutableStateOf(true) }
     val context = androidx.compose.ui.platform.LocalContext.current
+    val tutorialPrefs = remember(context) {
+        context.getSharedPreferences("first-run-guide", android.content.Context.MODE_PRIVATE)
+    }
+    var showTutorial by rememberSaveable { mutableStateOf(!tutorialPrefs.getBoolean("complete", false)) }
     val haptics = LocalHapticFeedback.current
     val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity)
     val motionMillis = motion.millis(170)
@@ -159,6 +163,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             "history" -> { m.refreshHistory(); dialog = action }
             "git" -> { m.gitRefresh(); dialog = action }
             "cloudrun" -> m.requestCloudRun()
+            "tutorial" -> { dialog = ""; showTutorial = true }
             "run-active" -> m.run()
             "save" -> m.flush()
             "focus" -> {
@@ -535,6 +540,10 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
         "appearance" -> AppearanceGallery(m) { dialog = "" }
+    }
+    if (showTutorial) FirstRunTutorial {
+        tutorialPrefs.edit().putBoolean("complete", true).apply()
+        showTutorial = false
     }
     m.cloudPending?.let { filename ->
         val language = m.cloudLanguages[CloudJudge0.extension(filename)]

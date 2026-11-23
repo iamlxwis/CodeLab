@@ -52,9 +52,9 @@ internal fun CodeLabTheme(
             val base = when (visualStyle) {
                 "AMOLED" -> night.copy(
                     background = Color.Black, surface = Color.Black,
-                    surfaceContainer = Color(0xff101010),
-                    surfaceContainerHigh = Color(0xff1b1b1b),
-                    surfaceVariant = Color(0xff161616),
+                    surfaceContainer = Color(0xff090909),
+                    surfaceContainerHigh = Color(0xff121212),
+                    surfaceVariant = Color(0xff0a0a0a),
                     outlineVariant = Color(0xff303030))
                 "Paper" -> day.copy(
                     background = Color(0xfffaf8f1), surface = Color(0xfffaf8f1),
@@ -64,17 +64,22 @@ internal fun CodeLabTheme(
                     onSurface = Color(0xff272922),
                     onSurfaceVariant = Color(0xff555950))
                 "Glass" -> palette.copy(
-                    background = if (dark) Color(0xff101c2a) else Color(0xffedf4f7),
-                    surface = if (dark) Color(0xff101c2a) else Color(0xffedf4f7),
-                    surfaceContainer = if (dark) Color(0xff21364b) else Color(0xffe2eff4),
-                    surfaceContainerHigh = if (dark) Color(0xff2a455a) else Color(0xffd4e6ee),
-                    surfaceVariant = if (dark) Color(0xff30485c) else Color(0xffdae8ef))
+                    background = if (dark) Color(0xff091321) else Color(0xffe8f4fb),
+                    surface = if (dark) Color(0xff15293e).copy(alpha = .86f)
+                        else Color(0xffecf8fd).copy(alpha = .87f),
+                    surfaceContainer = if (dark) Color(0xff1b344b).copy(alpha = .70f)
+                        else Color(0xffe2f0f7).copy(alpha = .72f),
+                    surfaceContainerHigh = if (dark) Color(0xff29435c).copy(alpha = .74f)
+                        else Color(0xffd7eaf2).copy(alpha = .80f),
+                    surfaceVariant = if (dark) Color(0xff30485c) else Color(0xffdae8ef),
+                    outlineVariant = if (dark) Color(0xff607f98) else Color(0xffb0d0dd))
                 "Clay" -> palette.copy(
-                    background = if (dark) Color(0xff161e20) else Color(0xfff3f5f0),
-                    surface = if (dark) Color(0xff161e20) else Color(0xfff3f5f0),
-                    surfaceContainer = if (dark) Color(0xff263337) else Color(0xffe9eeea),
-                    surfaceContainerHigh = if (dark) Color(0xff344347) else Color(0xffe0e9e3),
-                    surfaceVariant = if (dark) Color(0xff354447) else Color(0xffdde8e1))
+                    background = if (dark) Color(0xff111b23) else Color(0xffe7eeeb),
+                    surface = if (dark) Color(0xff17252e) else Color(0xffeaf0ed),
+                    surfaceContainer = if (dark) Color(0xff233742) else Color(0xffedf3ee),
+                    surfaceContainerHigh = if (dark) Color(0xff304854) else Color(0xfff6faf6),
+                    surfaceVariant = if (dark) Color(0xff354b56) else Color(0xffd9e5df),
+                    outlineVariant = if (dark) Color(0xff4d6772) else Color(0xffc2d3c9))
                 else -> when (themePreset) {
                     "Nocturne" -> palette.copy(
                         background = Color(0xff0c1020), surface = Color(0xff0c1020),

@@ -38,6 +38,9 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P3 — quality, design and distribution
 
+- [ ] Verify first-launch tutorial shows once, supports Skip/Next/Start and Settings replay, is accessible at 200% font and survives restart. Source/UI journey added.
+- [ ] Verify all five themes now differ in actual rendered screens and remain legible in editor/console; examine emulator screenshots and contrast. Source rendering upgraded.
+
 - [ ] Replace overloaded UI controls across remaining screens; audit Glass/Clay fidelity, contrast, performance, reduced-motion and TalkBack behavior. Use **professional vector icons, no emojis**.
 - [ ] Real-device smoke + performance, long-running cancellation, ABI coverage, source privacy review.
 - [ ] Stable production/release signing before distributing updatable companion runtime packages; avoid breaking existing users.
