@@ -130,6 +130,11 @@ fun CodeEditor(
     var renameDialog by remember { mutableStateOf(false) }
     var renameValue by remember { mutableStateOf("") }
     var renameError by remember { mutableStateOf("") }
+    var conflictDialog by remember { mutableStateOf(false) }
+    var conflictError by remember { mutableStateOf("") }
+    var conflictSource by remember { mutableStateOf("") }
+    var conflictHunks by remember { mutableStateOf<List<MergeConflictMarkers.Hunk>>(emptyList()) }
+    var conflictChoices by remember { mutableStateOf<List<MergeConflictMarkers.Choice>>(emptyList()) }
     var bookmarksMenu by remember { mutableStateOf(false) }
     var showLineNumbers by remember { mutableStateOf(preferences.getBoolean("line-numbers", true)) }
     var showActiveLine by remember { mutableStateOf(preferences.getBoolean("active-line", true)) }
@@ -191,6 +196,61 @@ fun CodeEditor(
         }) { Text("Rename") } },
         dismissButton = { TextButton(onClick = { renameDialog = false }) { Text("Cancel") } })
 
+    if (conflictDialog) AlertDialog(
+        onDismissRequest = { conflictDialog = false },
+        title = { Text("Resolve conflict markers") },
+        text = {
+            if (conflictError.isNotBlank()) Text(conflictError)
+            else if (conflictHunks.isEmpty()) Text("No two-way Git conflict markers in this file.")
+            else Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Choose the content to keep for each conflict. The file is changed only when you apply.",
+                    style = MaterialTheme.typography.bodySmall)
+                conflictHunks.forEachIndexed { index, hunk ->
+                    HorizontalDivider()
+                    Text("Conflict " + (index + 1) + " · line " + hunk.line,
+                        style = MaterialTheme.typography.titleSmall)
+                    Text(hunk.oursLabel + ": " + hunk.ours.trim().take(160),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace)
+                    Text(hunk.theirsLabel + ": " + hunk.theirs.trim().take(160),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = FontFamily.Monospace)
+                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        MergeConflictMarkers.Choice.entries.forEach { choice ->
+                            FilterChip(selected = conflictChoices.getOrNull(index) == choice,
+                                onClick = {
+                                    conflictChoices = conflictChoices.toMutableList().also {
+                                        it[index] = choice
+                                    }
+                                }, label = { Text(choice.name.lowercase().replaceFirstChar {
+                                    it.uppercase()
+                                }) })
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            if (conflictError.isBlank() && conflictHunks.isNotEmpty()) {
+                TextButton(enabled = !readOnly, onClick = {
+                    val editor = view
+                    if (editor?.text?.toString() != conflictSource) {
+                        conflictError = "File changed while the dialog was open. Reopen the resolver."
+                    } else {
+                        editor.replaceFromUser(MergeConflictMarkers.resolve(
+                            conflictSource, conflictChoices))
+                        conflictDialog = false
+                    }
+                }) { Text("Apply resolution") }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { conflictDialog = false }) {
+                Text(if (conflictError.isNotBlank() || conflictHunks.isEmpty()) "Close" else "Cancel")
+            }
+        })
     LaunchedEffect(jumpLine, view) {
         if (jumpLine != null && view != null) {
             view?.goToLogicalLine(jumpLine)
@@ -375,6 +435,18 @@ fun CodeEditor(
                 renameValue = editor?.let { CodeAnalysis.identifierAt(source, it.selectionStart) }.orEmpty()
                 renameError = ""
                 renameDialog = renameValue.isNotBlank() && !readOnly
+            }
+            EditorIcon(Icons.Default.CompareArrows, "Resolve Git conflict markers") {
+                val source = view?.text?.toString().orEmpty()
+                conflictSource = source
+                conflictError = ""
+                conflictHunks = try { MergeConflictMarkers.parse(source) }
+                    catch (e: IllegalArgumentException) {
+                        conflictError = e.message ?: "Unable to parse conflict markers."
+                        emptyList()
+                    }
+                conflictChoices = List(conflictHunks.size) { MergeConflictMarkers.Choice.OURS }
+                conflictDialog = true
             }
             EditorIcon(Icons.Default.DataObject, "Jump to matching bracket") {
                 view?.jumpToMatchingBracket()
