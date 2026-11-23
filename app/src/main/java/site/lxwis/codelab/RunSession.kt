@@ -86,6 +86,8 @@ class RunSession(context: Context) {
                 OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.JAVASCRIPT)
             name.endsWith(".lua", true) ->
                 OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.LUA)
+            name.endsWith(".java", true) ->
+                OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.JAVA)
             else -> null
         }
         if (name.endsWith(".py", true) && pythonPack == null) {

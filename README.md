@@ -24,21 +24,21 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last committed checkpoint:** Nov 24, 2026, 3:26 AM PHT · **Assistant: HANDED OFF at checkpoint** · **CI: see live Actions, not this timestamp**
+**Last committed checkpoint:** Nov 24, 2026, 3:46 AM PHT · **Assistant: WORKING at checkpoint** · **CI: Java beta implementation pending build**
 
 > This is a **commit checkpoint**, not a live clock or background agent. `HANDED OFF` means this interactive turn stopped after committing; independent GitHub Actions may still run. Each subsequent turn can resume from the [project memory](docs/development/PROJECT_MEMORY.md).
 
 | Workstream | Verified / implemented | Remaining before completion |
 | --- | --- | --- |
 | **CI Option B — Smart CI** | Source/build changes trigger fast compile, unit, lint and signed APK artifacts. Docs-only pushes skipped. Manual API 35 device smoke. `cancel-in-progress: true` retained. Manual release publication requires same-commit device success. | Validate full run and manually trigger API 35 smoke |
-| **Phase 1 — Runtime manager** | Python signed optional runtime already published. JavaScript/Lua signed companion APK **source** and authenticated package discovery, per-pack downloads/install/uninstall/cache/Wi-Fi policy, editor IPC routing with bundled fallback, and API 35 QA source committed. | **Fresh CI must pass; JS/Lua release assets not yet published; manual API 35 end-to-end installation/execution and removal QA not passed. TypeScript/C/C++/Rust and other toolchains not shipped.** |
+| **Phase 1 — Runtime manager** | Python published; signed JS/Lua companion integration exists; separate **Java beta companion** and package routing added in source. Legacy Java fallback remains. | Java beta needs release/build/CI integration; public JS/Lua/Java downloads unconfirmed, additional language toolchains not shipped. |
 | **Phase 2 — Editor intelligence** | Not started | Begin only after agreed Phase 1 completion gate |
 
-**Current counts:** 3 optional module implementations in source (Python, JavaScript, Lua); **1 confirmed public optional runtime (Python)**; **2 additional runtime APKs pending validated publication**. Other languages retain their existing built-in/edit-only/cloud statuses; no unsupported compiler is falsely described as installed.
+**Current counts:** 4 optional module implementations in source (Python, JavaScript, Lua, Java **beta**); **1 confirmed public runtime (Python)**; **3 pending public distribution**. SQLite remains a platform runtime. Java beta is not javac.
 
-**Latest implementation:** [c62c9522](https://github.com/iamlxwis/CodeLab/commit/c62c9522cae7e6236be916702f136df17842b4cd). **Current fast CI:** [Android APK workflow](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml) (superseded runs cancel by design). **Android 15 QA:** [manual workflow](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml). **Release:** [latest published APK](https://github.com/iamlxwis/CodeLab/releases/latest) may predate this implementation.
+**Latest implementation:** Java beta companion source and signed module routing committed; next step CI wiring. **Latest known fast CI:** [c62c9522 success](https://github.com/iamlxwis/CodeLab/actions/runs/45248817992); newer source unverified. **Device:** [API35 workflow](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml).
 
-**Next:** fix any compiler/CI failures, run the manual API 35 smoke, publish all three signed runtime APKs through the protected manual release workflow, verify in-app downloads on a networked device. Do not label Phase 1 finished before these gates pass.
+**Next:** wire Java optional pack into release/QA and fix per-pack transfer progress; build and run gate before asserting compatibility.
 
 [Full audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Project memory](docs/development/PROJECT_MEMORY.md)
 
