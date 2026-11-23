@@ -88,7 +88,7 @@ internal object CodeAnalysis {
         return builder.toString()
     }
 
-    private fun visibleCode(source: String): BooleanArray {
+    internal fun visibleCode(source: String): BooleanArray {
         val allowed = BooleanArray(source.length)
         var mode = 0
         var i = 0

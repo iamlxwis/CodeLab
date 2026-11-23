@@ -130,6 +130,8 @@ fun CodeEditor(
     var renameDialog by remember { mutableStateOf(false) }
     var renameValue by remember { mutableStateOf("") }
     var renameError by remember { mutableStateOf("") }
+    var foldPreview by remember { mutableStateOf(false) }
+    var foldSnapshot by remember { mutableStateOf("") }
     var conflictDialog by remember { mutableStateOf(false) }
     var conflictError by remember { mutableStateOf("") }
     var conflictSource by remember { mutableStateOf("") }
@@ -196,6 +198,9 @@ fun CodeEditor(
         }) { Text("Rename") } },
         dismissButton = { TextButton(onClick = { renameDialog = false }) { Text("Cancel") } })
 
+    if (foldPreview) CodeFoldPreview(foldSnapshot,
+        onJump = { line -> foldPreview = false; view?.goToLogicalLine(line) },
+        onClose = { foldPreview = false })
     if (conflictDialog) AlertDialog(
         onDismissRequest = { conflictDialog = false },
         title = { Text("Resolve conflict markers") },
@@ -435,6 +440,10 @@ fun CodeEditor(
                 renameValue = editor?.let { CodeAnalysis.identifierAt(source, it.selectionStart) }.orEmpty()
                 renameError = ""
                 renameDialog = renameValue.isNotBlank() && !readOnly
+            }
+            EditorIcon(Icons.Default.UnfoldLess, "Fold code preview") {
+                foldSnapshot = view?.text?.toString() ?: text
+                foldPreview = true
             }
             EditorIcon(Icons.Default.CompareArrows, "Resolve Git conflict markers") {
                 val source = view?.text?.toString().orEmpty()
