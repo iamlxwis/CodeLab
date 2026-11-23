@@ -42,7 +42,7 @@ Write, run, and manage projects from your phone.
 | `T05` Python download/install/update | IN PROGRESS — version/downgrade tests + new Android 13/15 missing-module UI flow; CI pending | Nov 24, 2026 · 12:26 AM |
 | `T06` Additional offline modules | QUEUED — feasibility and real runtimes required | Not started |
 | `T07` Five-theme UI/UX refinement | QUEUED | Not started in this session |
-| `T08` Interactive tutorial and accessibility | IN PROGRESS — Try a feature now resumes next topic after returning; JVM tests pending CI | Nov 24, 2026 · 12:30 AM |
+| `T08` Interactive tutorial and accessibility | IN PROGRESS — saved resume index + JVM tests; actual Android 13/15 process-restart UI smoke added, CI pending | Nov 24, 2026 · 12:32 AM |
 | `T09` Full QA and stable release readiness | QUEUED | Not started in this session |
 
 **Recent task events (Philippine time, 12-hour clock)**
@@ -54,11 +54,12 @@ Write, run, and manage projects from your phone.
 | Nov 24 · 12:20 AM | T03, T05 | Source inspection started |
 | Nov 24 · 12:23 AM | T05 | Download recovery and safer Python update/reinstall policy added; CI pending |
 | Nov 24 · 12:26 AM | T05 | Added Android 13/15 missing-module navigation smoke; CI pending |
-| Nov 24 · 12:30 AM | T08 | Fixed Try-a-feature prematurely finishing onboarding; resume index is saved; regression tests added |
+| Nov 24 · 12:30 AM | T08 | Fixed premature completion; resume index and JVM tests added |
+| Nov 24 · 12:32 AM | T08 | Added Android 13/15 restart-and-resume UI smoke for Try vs intentional Skip; CI pending |
 
 The complete append-only [task audit log](docs/development/PROGRESS_LOG.md) records commits, failures, tests and handoffs. Times are in **Asia/Manila**, written with **AM/PM**, not military time.
 
-**Last audit:** Nov 24, 2026 · 12:30 AM PHT — tutorial continuation implemented; CI pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** Nov 24, 2026 · 12:32 AM PHT — tutorial restart/resume UI QA added; CI pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.

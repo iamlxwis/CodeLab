@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 12:32 AM PHT
+
+New Android 13/15 `qa/tutorial_resume_smoke.py` tests live project detour, process restart and guide resume, plus intentional skip. Runs before missing-Python test and installed-runtime smoke. Treat as unverified until device CI finishes. Preserve buildability, permanent signing, and stopped-at-chat-boundary audit.
+
 ## Nov 24, 2026 · 12:30 AM PHT
 
 T08 source now separates temporarily exploring a live CodeLab action from actually completing onboarding. `first-run-guide.resume-index` preserves next topic across reopen/restart. JUnit tests added, CI pending. T05 download-version/missing-module updates still pending CI. Before final response, commit accurate STOPPED session marker and timestamp.

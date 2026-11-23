@@ -180,3 +180,7 @@ The existing Android device smoke installed Python before app launch, so it coul
 ## KI-042 — Interactive tutorial Try action falsely marked onboarding complete (Nov 24, 2026, 12:30 AM PHT)
 
 `FirstRunTutorial` called `onFinish()` when user tapped `Try it in CodeLab`, marking guide complete even though they were only visiting a real feature. Source fix saves next topic in `first-run-guide` preferences, leaves complete=false and allows returning through guide replay; Skip/Finish still deliberately completes. Added 3 JVM checkpoint tests; Android CI/large-font/TalkBack acceptance pending. T08 open.
+
+## KI-043 — tutorial resume process-restart not yet verified (Nov 24, 2026, 12:32 AM PHT)
+
+The saved progress correction for KI-042 needs actual Android process death verification. New API33/API35 device smoke asserts Try-a-feature resumes at next topic after force-stop, whereas deliberate Skip finishes onboarding. This is source QA authored, **CI pending**; don't count as accessible tutorial completion.

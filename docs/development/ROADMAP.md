@@ -1,3 +1,8 @@
+## Nov 24, 2026 · 12:32 AM PHT — verify tutorial lifecycle
+
+- [ ] Watch new Android 13/15 `tutorial_resume_smoke.py` and `missing_python_smoke.py`; fix emulator-specific navigation errors using screenshots/XML, without erasing acceptance conditions.
+- [ ] Only after pass mark Try-vs-Skip semantics verified; 14-topic large-text/TalkBack usability still outstanding.
+
 ## Nov 24, 2026 · 12:30 AM PHT — tutorial continuation checkpoint
 
 - [ ] Verify `TutorialProgressTest` and APK compile, then Android API33/API35 smoke with new resume-index behavior.
