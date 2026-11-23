@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -80,7 +81,7 @@ internal fun CodeLabTheme(
                     surfaceContainerHigh = if (dark) Color(0xff304854) else Color(0xfff6faf6),
                     surfaceVariant = if (dark) Color(0xff354b56) else Color(0xffd9e5df),
                     outlineVariant = if (dark) Color(0xff4d6772) else Color(0xffc2d3c9))
-                else -> when (themePreset) {
+                else -> if (!dark) palette else when (themePreset) {
                     "Nocturne" -> palette.copy(
                         background = Color(0xff0c1020), surface = Color(0xff0c1020),
                         surfaceContainer = Color(0xff151a2d),
@@ -155,4 +156,18 @@ internal fun CodeLabTheme(
             content(dark)
         }
     }
+}
+
+/** The transparent root still needs a theme-aware text and icon foreground.
+ * Otherwise inherited content color can be black on every dark visual style.
+ */
+@Composable
+internal fun CodeLabForegroundSurface(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Surface(
+        modifier = modifier, color = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onSurface, content = content
+    )
 }
