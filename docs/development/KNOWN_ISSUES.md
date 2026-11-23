@@ -89,3 +89,9 @@ Source-stage mitigation: workflow compares new signer to previous public APK, re
 ## KI-017 addendum — user rules out ordinary upgrade conflict
 
 User confirms that, as with earlier successful releases, they **uninstall the old app before installing the new version**. This substantially reduces the likelihood that two installed CodeLab versions' signing certificates are conflicting. Do not repeat the upgrade/signing hypothesis as the demonstrated cause. New source smoke tests **fresh install of the RELEASE variant** (not just debug install or release-over-debug), startup and captured screenshot on Android 35 emulator. Other platform versions, browser download integrity and the user's phone remain unverified; capture real install failure code before claiming a root cause.
+
+## KI-018 — latest pre-redesign emulator smoke failure (2026-11-23)
+[Run 45163951663](https://github.com/iamlxwis/CodeLab/actions/runs/45163951663) stops at \`qa/clean_install_smoke.py:32\`, \`AssertionError: adb shell pm path site.lxwis.codelab failed (1)\`. The check incorrectly treated a missing package's exit status as fatal. Source now passes \`check=False\` and needs fresh CI. This does not prove the user-reported physical install failure (KI-017) is resolved.
+
+## KI-019 — appearance and onboarding acceptance gap
+New appearance/Projects/Import source has not yet passed Gradle, emulator screenshots, Android 13/15 contrast/TalkBack/large-font or user-device testing. Neutral Glass is a composited appearance, not a true system compositor liquid-glass shader. Follow up on status before describing feature as released.

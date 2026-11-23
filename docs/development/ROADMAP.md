@@ -69,3 +69,11 @@ Every user suggestion, even when not yet implemented, belongs in [IDEAS.md](IDEA
 ## Commit process
 
 User approved direct commits to `main`. **In the same commit as implementation work**, update `docs/development/PROJECT_MEMORY.md`, and any relevant completed/roadmap/decision/issue docs. Store actual CI links after jobs complete in a follow-up docs-only commit if necessary.
+
+## UI/UX redesign workstream (2026-11-23)
+- [ ] IDEA-016: validate Projects and Import redesign, test ZIP/GitHub paths on emulator.
+- [ ] IDEA-017: verify neutral translucent Glass and other four styles with actual device screenshots; document no platform-wide pixel-sampled blur.
+- [ ] IDEA-018: finish appearance editor for custom hex and saved recipes; verify persistence and restore.
+- [ ] IDEA-019: move execution mode into a visible selector by Run, show module/provider status and maintain consent.
+- [ ] IDEA-020: replace three-page introduction with a practical 14-topic replayable guide and guided actions.
+- [ ] IDEA-021: run Android 13/15, large fonts, and complete release QA; retain phone clean-install blocker independently.

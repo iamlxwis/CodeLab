@@ -21,8 +21,8 @@ internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable 
     val scheme = MaterialTheme.colorScheme
     val background = when (style) {
         "Glass" -> if (dark)
-            Brush.verticalGradient(listOf(Color(0xff091321), Color(0xff182d42), Color(0xff0a1524)))
-            else Brush.verticalGradient(listOf(Color(0xffe8f4fb), Color(0xffd3e6ef), Color(0xfff2f6f9)))
+            Brush.verticalGradient(listOf(Color(0xff101214), Color(0xff252a2e), Color(0xff14171a)))
+            else Brush.verticalGradient(listOf(Color(0xfff8f9fa), Color(0xffdfe3e6), Color(0xfff2f4f5)))
         "Clay" -> if (dark)
             Brush.verticalGradient(listOf(Color(0xff18232a), Color(0xff111b23)))
             else Brush.verticalGradient(listOf(Color(0xfff4f5f0), Color(0xffe3ebe8)))
@@ -35,10 +35,10 @@ internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable 
             Canvas(Modifier.fillMaxSize()) {
                 val radius = maxOf(size.width, size.height * .58f)
                 if (style == "Glass") {
-                    val firstGlow = if (dark) Color(0xff5e67c9).copy(alpha = .24f)
-                        else Color(0xff70bdcf).copy(alpha = .30f)
-                    val secondGlow = if (dark) Color(0xff1ed4b0).copy(alpha = .16f)
-                        else Color(0xff96a3ff).copy(alpha = .20f)
+                    val firstGlow = if (dark) Color.White.copy(alpha = .12f)
+                        else Color.White.copy(alpha = .70f)
+                    val secondGlow = if (dark) Color(0xffaeb7c0).copy(alpha = .10f)
+                        else Color(0xffa1abb3).copy(alpha = .18f)
                     drawRect(Brush.radialGradient(
                         colors = listOf(firstGlow, firstGlow.copy(alpha = 0f)),
                         center = Offset(size.width * .10f, size.height * .16f),

@@ -73,3 +73,10 @@ IDEA-015 captures the user's screenshot of Android rejecting `CodeLab.apk` as an
 ## 2026-11-23 — clean-install clarification
 
 IDEA-015 revision: user explicitly states their normal process is **uninstall old CodeLab first, install new CodeLab APK second**, and that had always worked. This changes triage priorities: prove a clean installation of the exact release variant, investigate download integrity and handset Android compatibility, and collect an exact installer failure code. Signature continuity remains a future upgradability issue but is not an established explanation for this incident.
+
+| IDEA-016 | 2026-11-23 | Redesign Projects and ZIP/GitHub Import with accessible layouts, useful states and secure existing import routing | In progress | New Compose UI source added; CI/screenshots pending |
+| IDEA-017 | 2026-11-23 | Neutral Apple-inspired Liquid Glass visuals, with Android API/performance fallbacks, while preserving other four styles | In progress | Neutral palette and gradient diffusion added; no true pixel-sampled blur claim; visual QA pending |
+| IDEA-018 | 2026-11-23 | Per-theme curated/custom accent and named save/edit/load/delete appearance presets, live preview, reset, persistence | In progress | Persistence and validation source added; editor UI and CI pending |
+| IDEA-019 | 2026-11-23 | Clearly exposed Online/Offline choice beside Run, honest runtime status, module guidance and explicit upload consent | Approved | Dedicated selector and tests pending; existing consent route retained |
+| IDEA-020 | 2026-11-23 | Practical immersive, skippable/replayable 14-topic interactive tutorial, safe for large fonts and existing users | Approved | Existing basic tutorial requires expansion and QA |
+| IDEA-021 | 2026-11-23 | App-wide accessibility/visual/performance audit, real Android 13/15 screenshots, tests, successful installable release, accurate handoff commits | In progress | Build green before this checkpoint; emulator blocked by clean-install smoke bug now patched |

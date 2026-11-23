@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,15 +66,15 @@ internal fun CodeLabTheme(
                     onSurface = Color(0xff272922),
                     onSurfaceVariant = Color(0xff555950))
                 "Glass" -> palette.copy(
-                    background = if (dark) Color(0xff091321) else Color(0xffe8f4fb),
-                    surface = if (dark) Color(0xff15293e).copy(alpha = .86f)
-                        else Color(0xffecf8fd).copy(alpha = .87f),
-                    surfaceContainer = if (dark) Color(0xff1b344b).copy(alpha = .70f)
-                        else Color(0xffe2f0f7).copy(alpha = .72f),
-                    surfaceContainerHigh = if (dark) Color(0xff29435c).copy(alpha = .74f)
-                        else Color(0xffd7eaf2).copy(alpha = .80f),
-                    surfaceVariant = if (dark) Color(0xff30485c) else Color(0xffdae8ef),
-                    outlineVariant = if (dark) Color(0xff607f98) else Color(0xffb0d0dd))
+                    background = if (dark) Color(0xff111416) else Color(0xffeef0f1),
+                    surface = if (dark) Color(0xff24282b) else Color(0xfff7f8f9),
+                    surfaceContainer = if (dark) Color(0xff393d41).copy(alpha = .77f)
+                        else Color.White.copy(alpha = .73f),
+                    surfaceContainerHigh = if (dark) Color(0xff494d51).copy(alpha = .84f)
+                        else Color.White.copy(alpha = .86f),
+                    surfaceVariant = if (dark) Color(0xff34383c) else Color(0xffe6e9ec),
+                    onSurfaceVariant = if (dark) Color(0xffd1d6d9) else Color(0xff454a50),
+                    outlineVariant = if (dark) Color(0xff7c8388) else Color(0xffb8bec2))
                 "Clay" -> palette.copy(
                     background = if (dark) Color(0xff111b23) else Color(0xffe7eeeb),
                     surface = if (dark) Color(0xff17252e) else Color(0xffeaf0ed),
@@ -101,14 +102,20 @@ internal fun CodeLabTheme(
                 "Amber" -> if (dark) Color(0xffffc978) else Color(0xff936000)
                 "Rose" -> if (dark) Color(0xffff92b7) else Color(0xffa52655)
                 "Mono" -> if (dark) Color(0xffced4d5) else Color(0xff465152)
-                else -> base.primary
+                else -> if (AppearanceRecipes.validAccent(accentPreset) &&
+                    accentPreset.startsWith("#")) Color(0xff000000 or accentPreset.drop(1).toLong(16))
+                    else if (visualStyle == "Glass") {
+                        if (dark) Color(0xffd9dee1) else Color(0xff38444b)
+                    } else base.primary
             }
-            val accentContainer = accent.copy(alpha = .15f).compositeOver(base.surface)
+            // Choose text contrast from actual color luminance, not theme mode alone.
+            val onAccent = if (accent.luminance() > .179f) Color.Black else Color.White
+            val accentContainer = accent.copy(alpha = .16f).compositeOver(base.surface)
             val schemeNormal = base.copy(primary = accent,
-                onPrimary = if (dark) Color(0xff101517) else Color.White,
-                primaryContainer = accentContainer, onPrimaryContainer = accent,
-                secondary = accent, onSecondary = if (dark) Color(0xff101517) else Color.White,
-                secondaryContainer = accentContainer, onSecondaryContainer = accent)
+                onPrimary = onAccent,
+                primaryContainer = accentContainer, onPrimaryContainer = base.onSurface,
+                secondary = accent, onSecondary = onAccent,
+                secondaryContainer = accentContainer, onSecondaryContainer = base.onSurface)
             if (highContrast) schemeNormal.copy(
                 onSurface = if (dark) Color.White else Color.Black,
                 onSurfaceVariant = if (dark) Color(0xffe3eceb) else Color(0xff243331),

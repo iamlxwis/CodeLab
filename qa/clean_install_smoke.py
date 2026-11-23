@@ -26,7 +26,8 @@ def main():
     # Emulators used for CI have no user data. Explicitly test a clean
     # installation rather than upgrading a debug APK signed by the same run.
     adb("uninstall", PACKAGE, check=False)
-    assert not adb("shell", "pm", "path", PACKAGE), "Core app is still installed"
+    # pm path returns exit 1 when a package is absent. That is expected here.
+    assert not adb("shell", "pm", "path", PACKAGE, check=False), "Core app is still installed"
     install = adb("install", str(APK))
     assert "Success" in install, f"Installer did not confirm success: {install}"
     installed = adb("shell", "pm", "path", PACKAGE)

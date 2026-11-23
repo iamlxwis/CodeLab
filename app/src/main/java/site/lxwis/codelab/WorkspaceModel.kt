@@ -187,9 +187,18 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     )
         private set
     fun chooseVisualStyle(value: String) {
-        if (!CodeLabVisualStyles.accepts(value)) return
+        if (!CodeLabVisualStyles.accepts(value) || value == visualStyle) return
+        val old = visualStyle
+        // Each visual style remembers its own mode and accent independently.
+        preferences.edit().putString("accent:$old", accent)
+            .putString("mode:$old", appearance).apply()
         visualStyle = value
-        preferences.edit().putString("visual-style", value).apply()
+        accent = preferences.getString("accent:$value", AppearanceRecipes.defaultAccent(value))
+            ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(value)
+        appearance = preferences.getString("mode:$value", "Dark")
+            ?.takeIf { it in listOf("Dark", "Light", "System") } ?: "Dark"
+        preferences.edit().putString("visual-style", value)
+            .putString("accent", accent).putString("mode", appearance).apply()
     }
     var themePreset by mutableStateOf(preferences.getString("preset", "Obsidian") ?: "Obsidian")
         private set
@@ -264,8 +273,47 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         interfaceDensity = value
         preferences.edit().putString("density", value).apply()
     }
-    var accent by mutableStateOf(preferences.getString("accent", "Mint") ?: "Mint")
+    var accent by mutableStateOf(
+        preferences.getString("accent:" + visualStyle,
+            preferences.getString("accent", AppearanceRecipes.defaultAccent(visualStyle)))
+            ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(visualStyle)
+    )
         private set
+    var savedAppearanceRecipes by mutableStateOf(
+        AppearanceRecipes.decode(preferences.getString("saved-appearance-recipes", "[]")))
+        private set
+
+    fun saveAppearanceRecipe(name: String, editingId: String? = null): Boolean {
+        val clean = name.trim()
+        if (!AppearanceRecipes.validName(clean)) return false
+        val old = savedAppearanceRecipes.firstOrNull { it.id == editingId }
+        if (old == null && savedAppearanceRecipes.size >= AppearanceRecipes.LIMIT) return false
+        val recipe = AppearanceRecipe(old?.id ?: java.util.UUID.randomUUID().toString(),
+            clean, visualStyle, appearance, accent)
+        savedAppearanceRecipes = if (old == null) savedAppearanceRecipes + recipe
+            else savedAppearanceRecipes.map { if (it.id == old.id) recipe else it }
+        preferences.edit().putString("saved-appearance-recipes",
+            AppearanceRecipes.encode(savedAppearanceRecipes)).apply()
+        return true
+    }
+
+    fun useAppearanceRecipe(id: String) {
+        val recipe = savedAppearanceRecipes.firstOrNull { it.id == id } ?: return
+        chooseVisualStyle(recipe.style)
+        setMode(recipe.mode)
+        chooseAccent(recipe.accent)
+    }
+
+    fun deleteAppearanceRecipe(id: String) {
+        savedAppearanceRecipes = savedAppearanceRecipes.filterNot { it.id == id }
+        preferences.edit().putString("saved-appearance-recipes",
+            AppearanceRecipes.encode(savedAppearanceRecipes)).apply()
+    }
+
+    fun restoreAppearanceDefaults() {
+        setMode("Dark")
+        chooseAccent(AppearanceRecipes.defaultAccent(visualStyle))
+    }
     private var shellSession: WorkspaceShell? = null
     private var shellProject: String? = null
     var terminalOutput by mutableStateOf("CodeLab workspace commands\nType help for available commands.")
@@ -1199,14 +1247,16 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun setMode(mode: String) {
+        if (mode !in listOf("Dark", "Light", "System")) return
         appearance = mode
-        preferences.edit().putString("mode", mode).apply()
+        preferences.edit().putString("mode", mode).putString("mode:$visualStyle", mode).apply()
     }
 
     fun chooseAccent(value: String) {
-        if (value !in listOf("Mint", "Blue", "Violet", "Amber", "Rose", "Mono")) return
+        if (!AppearanceRecipes.validAccent(value)) return
         accent = value
-        preferences.edit().putString("accent", value).apply()
+        preferences.edit().putString("accent", value)
+            .putString("accent:$visualStyle", value).apply()
     }
 
     fun debugCurrent(lines: List<Int>) {

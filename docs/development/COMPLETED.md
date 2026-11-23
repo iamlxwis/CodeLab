@@ -48,3 +48,8 @@ Root transparent Surface now explicitly sets its onSurface foreground; Glass/Cla
 ## 2026-11-23 — installation triage and release transparency (source only)
 
 Latest baseline `a62738cf` passed both [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45151364074) and [emulator](https://github.com/iamlxwis/CodeLab/actions/runs/45151364143). The physical-device installer reported `package appears to be invalid`; this is **not** considered resolved. New workflow source audits previous/current APK certs and same-build editor/Python signer, adds build provenance and backup-first release warnings, corrects portable checksum paths, and aligns mutable latest tag with built SHA. Requires CI/real-device validation; stable signing secrets are not yet configured.
+
+## 2026-11-23 source-only UI checkpoint (not verified complete)
+Staged new per-style theme preference storage and named preset codec, neutral Glass palette,
+redesigned Import sheet and Projects controls, and corrected clean-install CI script.
+No build/device acceptance is claimed; IDEAs 016–021 remain in progress/pending.

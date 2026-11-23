@@ -171,11 +171,12 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
         horizontal = CodeLabSpacing.screen, vertical = CodeLabSpacing.large),
         verticalArrangement = Arrangement.spacedBy(spacing)) {
         item {
-            Text("WORKSPACE", fontSize = 11.sp, letterSpacing = 2.sp,
-                fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(8.dp))
-            Text("Projects", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-            Text("Local development, organized.", style = MaterialTheme.typography.bodyMedium,
+            Text("YOUR WORKSPACE", style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(7.dp))
+            Text("Projects", style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.SemiBold)
+            Text("Open a project or start something new.", style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(CodeLabSpacing.large))
             Row(Modifier.fillMaxWidth(),
@@ -193,19 +194,28 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                     Text("Import", maxLines = 1)
                 }
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(20.dp))
             OutlinedTextField(value = projectSearch, onValueChange = { projectSearch = it },
                 modifier = Modifier.fillMaxWidth(), singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Search, null) },
-                placeholder = { Text("Search projects") })
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf("Recent", "Favorites", "A–Z", "Z–A").forEach { option ->
+                shape = RoundedCornerShape(18.dp),
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (projectSearch.isNotEmpty()) IconButton(onClick = { projectSearch = "" }) {
+                        Icon(Icons.Default.Close, contentDescription = "Clear project search")
+                    }
+                },
+                placeholder = { Text("Find a project") })
+            Spacer(Modifier.height(6.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(listOf("Recent", "Favorites", "A–Z", "Z–A")) { option ->
                     FilterChip(selected = projectSort == option, onClick = { projectSort = option },
-                        label = { Text(option) })
+                        label = { Text(option) },
+                        leadingIcon = if (projectSort == option)
+                            ({ Icon(Icons.Default.Check, contentDescription = null, Modifier.size(16.dp)) })
+                            else null)
                 }
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(12.dp))
             val visibleCount = m.projects.count { it.contains(projectSearch.trim(), ignoreCase = true) }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
@@ -220,7 +230,11 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 Column(Modifier.fillMaxWidth().padding(20.dp)) {
                     Text("No projects yet", fontWeight = FontWeight.Medium)
                     Spacer(Modifier.height(6.dp))
-                    Text("Create a project or import a project ZIP.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Choose New project to start with a template, or import work you already have.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(12.dp))
+                    Button(onClick = new) { Icon(Icons.Default.Add, null); Spacer(Modifier.width(6.dp)); Text("New project") }
                 }
             }
         }
@@ -264,8 +278,14 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(start = 10.dp).size(18.dp))
                     }
-                    Text(name, Modifier.weight(1f).padding(start = 14.dp), maxLines = 2,
-                        overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
+                    Column(Modifier.weight(1f).padding(start = 14.dp)) {
+                        Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.titleMedium)
+                        Text(if (name in m.favorites) "Favorite · On this device"
+                            else "On this device · Private",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     Box {
                         IconButton(onClick = { options = name }) { Icon(Icons.Default.MoreVert, "Manage $name") }
                         DropdownMenu(expanded = options == name, onDismissRequest = { options = null }) {
