@@ -48,7 +48,7 @@ class CodeAnalysisTest {
             append("val item = 0\n")
             repeat(750) { append("print(item)\n") }
             append("// item must remain unchanged\n")
-            append("val message = \\"item\\"\n")
+            append("val message = \"item\"\n")
         }
         val updated = CodeAnalysis.lexicalRename(source, "item", "value")
         assertEquals(751, Regex("\\bvalue\\b").findAll(updated).count())
