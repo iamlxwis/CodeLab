@@ -21,6 +21,27 @@ Write, run, and manage projects from your phone.
 </p>
 <p align="center"><sub>Actual Android emulator screenshots from CodeLab's automated device tests.</sub></p>
 
+## Development tracker
+
+**1 / 9 completed · 8 remaining · 1 in progress · 0 blocked**
+
+**Current task:** `T02` — Fix Android 15 online-run smoke
+
+**Latest verified (2026-11-23):** [Production APK: Passed](https://github.com/iamlxwis/CodeLab/actions/runs/45194290919) · [Android 13: Passed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470) · [Android 15: Failed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470)
+
+| Task | Status |
+| --- | --- |
+| `T01` Permanent production APK signing | Done |
+| `T02` Fix Android 15 online-run smoke | In progress |
+| `T03` Complete app-wide bug audit | Queued |
+| `T04` Verify production-signed data-preserving upgrades | Queued |
+| `T05` Validate Python module download/install/update | Queued |
+| `T06` Expand optional offline language modules | Queued |
+| `T07` Refine all five themes and app navigation | Queued |
+| `T08` Finish interactive tutorial and accessibility | Queued |
+| `T09` Complete full QA and release readiness | Queued |
+
+**Last audit:** 2026-11-23 · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.
@@ -38,7 +59,7 @@ From a project, open **Git**, then expand **GitHub sync** and configure an `owne
 
 Download **[CodeLab.apk](https://github.com/iamlxwis/CodeLab/releases/latest/download/CodeLab.apk)** on an Android 8.0+ device and open it. Allow installation from your browser or file manager if prompted.
 
-> **Before updating:** Until a permanent signing key is configured, APK signatures may differ between builds. Export your projects before reinstalling. Java is an interpreter-backed beta; other languages may require an optional online compiler.
+> **Before updating:** Production signing is configured. Older debug-signed installs generally need a **one-time backed-up reinstall**; later production-signed updates should preserve app data, pending device validation. Export projects before reinstalling. Java is an interpreter-backed beta; other languages may require an optional online compiler.
 
 ## Build
 

@@ -7,6 +7,7 @@ Read this file before making changes to CodeLab, then read:
 4. [Roadmap](docs/development/ROADMAP.md) — prioritized remaining work.
 5. [Completed](docs/development/COMPLETED.md) — what is implemented, with verification scope.
 6. [Idea ledger](docs/development/IDEAS.md) — every new user thought, approved feature and requirement, including pending items.
+7. [Public README progress tracker](README.md#development-tracker) and [progress audit](docs/development/PROGRESS_LOG.md) — task counts, active work, completed and pending tasks, actual CI results and concise audit history.
 
 This repository is the durable handoff between chat sessions. Assume a new assistant knows **nothing** from past chats. Do not rely on conversation memory for implementation decisions.
 
@@ -18,7 +19,7 @@ CodeLab is a native Kotlin + Jetpack Compose Android code editor, intended to be
 - **Catalog:** Editing and starter examples work regardless of whether an execution module is installed. Do not conflate a recognized file type (JSON, Markdown, CSS) with an executable language.
 - **UX:** Professional vector icons only; **no emojis anywhere in CodeLab** (UI, copy, assets, docs intended for users). Minimal, Glass, Clay, AMOLED and Paper styles; prioritize clarity, accessible code contrast and performance over visual effects.
 - **Security:** Never submit source to an online compiler without user action/permission. Never load arbitrary untrusted downloaded executable code into the editor process. Signed/verifiable Android-compatible runtime packs must use isolated execution and authenticated IPC with size/time limits.
-- **Distribution:** GitHub release APK currently uses fallback debug signing, not stable production signing. Never represent a successful Gradle build as proof that emulator and physical-device tests passed.
+- **Distribution:** Production signing is verified at a11d15ec (versionCode 1281). Preserve the existing signing key; older fallback-debug installs need a backed-up reinstall. Never present Gradle builds as proof emulator or real phone QA passed.
 
 ## Development/commit discipline
 
@@ -26,7 +27,8 @@ CodeLab is a native Kotlin + Jetpack Compose Android code editor, intended to be
 - Before coding, inspect the actual files and latest GitHub Actions results. The repository may have changed since the last handoff.
 - Keep edits narrowly scoped, incremental and buildable. Preserve project data and do not remove working functionality until a replacement is validated.
 - **Every new user thought, feature request, rule or correction must be recorded in `docs/development/IDEAS.md` in the same session** (even if implementation must wait). Assign a stable ID and status. Keep the item until verified complete; then mark it `Completed` with evidence instead of deleting it. If requirements change, mark the prior item `Superseded` with a link to its replacement; retain the history. Never silently remove an unfinished item. Updates to the ledger should be committed to `main`.
-- **Every meaningful implementation commit must update project memory in the same commit.** At minimum update `docs/development/PROJECT_MEMORY.md` with: date, commit context, implemented/unverified/blocked changes, latest CI SHA/status, and precise next task. Update `COMPLETED.md`, `ROADMAP.md`, `DECISIONS.md`, `KNOWN_ISSUES.md` as applicable.
+- **Mandatory public progress audit in every meaningful task commit:** Update `README.md`'s Development tracker and append a short dated row to `docs/development/PROGRESS_LOG.md` whenever a task starts, advances, blocks, unblocks or completes. Include current task, exact done/remaining/in-progress/blocked counts, one-line task status, and most recent VERIFIED Android CI (links, not guesses). Update these in the same commit as source and Project Memory. Do not skip checkpoints, claim untested work is complete, or invent progress. Keep the README short, no marketing filler. Track task statuses against immutable Txx IDs from the audit baseline; if adding tasks adjust denominators and record it in the log. Status is commit-based, not instant/live between commits.
+- **Every meaningful implementation commit must update project memory in the same commit. At minimum update `docs/development/PROJECT_MEMORY.md` with: date, commit context, implemented/unverified/blocked changes, latest CI SHA/status, and precise next task. Update `COMPLETED.md`, `ROADMAP.md`, `DECISIONS.md`, `KNOWN_ISSUES.md` as applicable.
 - Never mark work *verified* merely because source compiles. Distinguish source committed, Gradle build, automated unit tests, emulator smoke and real physical-device acceptance.
 - For a failure, include exact failing workflow URL and error text; do not guess the root cause.
 - Don't add secrets, tokens, passwords, personal details, fake screenshots or untested claims to repo documentation.

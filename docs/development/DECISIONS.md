@@ -34,3 +34,7 @@ D-023: A dependable install-over-existing update requires the **same Android sig
 ## 2026-11-23 — GitHub Actions-only signing provisioning
 
 D-024: User explicitly chose GitHub Actions instead of requiring Termux or a PC. Generate a permanent key on a temporary runner only on manual dispatch. Protect the key via an owner-supplied 20+ character `CODELAB_KEYGEN_PASSPHRASE` GitHub **repository secret**, encrypt authenticated key backup before public Actions artifact upload, and supply a local browser-based decryptor. No cleartext keystore or Base64 key is committed, logged, attached or sent in chat. Users own and secure original keystore backups. The four existing production secrets still must be populated by owner.
+
+## 2026-11-23 — README progress tracker
+
+D-025: README is the owner's concise project status dashboard. Every substantive task state transition or checkpoint is recorded in the same commit in README, `docs/development/PROGRESS_LOG.md`, and `PROJECT_MEMORY.md`. Show done/remaining counts, exact current task, concise statuses and truthful linked CI, without emojis or inflated completion claims. The audit remains append-only; the tracker reflects committed progress, not uncommitted work.

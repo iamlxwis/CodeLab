@@ -85,3 +85,5 @@ Added CI release versionCode monotonicity for both editor and Python, partially 
 Source checkpoint: corrected overly strict online-status smoke assertion after inspecting API35 failure screenshot/accessibility XML. Actual UI reported a valid absence of configured compiler; device retest pending.
 
 2026-11-23 source-only provisioning checkpoint: Added one-time GitHub Actions key generator with AES-GCM-only artifact, private offline HTML unlocker and mobile guide. This is implementation, not proof that owner provisioned secrets or that production-signed APK updates are working. Previous source `7f70bf9c` passed APK and both API33/35 device CI.
+
+2026-11-23 README status-tracker source checkpoint: Added 9-task public README progress table, append-only baseline/transition audit and mandatory AGENTS instructions. This is a tracking improvement, **not** completion of remaining app work. Latest production APK CI green, API35 smoke currently failing.

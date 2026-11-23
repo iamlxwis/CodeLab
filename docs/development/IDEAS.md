@@ -107,3 +107,5 @@ IDEA-015 revision (2026-11-23): User explicitly wants future CodeLab versions to
 IDEA-022 checkpoint: discovered and patched file creation collision corrupting optimistic tab state; added disk non-overwrite unit test and Android UI test. Still requires CI.
 
 | IDEA-023 | 2026-11-23 | User chooses a GitHub Actions-only, Android-phone-friendly signing-key provisioning process; provide a clear step-by-step walkthrough for each GitHub repository secret, without Termux or a PC and without disclosing unencrypted keys in public artifacts | In progress | One-time keytool workflow, authenticated encrypted backup, standalone offline unlock page, full mobile guide authored. GitHub workflow key-generation test + end-user setup required. |
+
+| IDEA-024 | 2026-11-23 | Keep concise README task tracker with precise done/remaining counts, current task, current verification, per-task statuses, and an auditable entry for every meaningful task progress checkpoint; prevent chat-hopping for status | In progress | README dashboard, audit baseline, agent commit policy added on main; continued compliance and verification required. |
