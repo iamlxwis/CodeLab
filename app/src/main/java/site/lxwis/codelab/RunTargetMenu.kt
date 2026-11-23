@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -37,28 +38,56 @@ internal fun RunTargetMenu(m: WorkspaceModel, onProjectSettings: () -> Unit) {
                 onClick = { expanded = false; onProjectSettings() })
         }
     }
-    if (showPicker) RunFilePicker(m.files, m::runTarget) { showPicker = false }
+    if (showPicker) RunFilePicker(m.files, m.cloudLanguages.keys, m::runTarget) { showPicker = false }
 }
 
 @Composable
 internal fun RunFilePicker(
     files: List<String>,
+    cloudExtensions: Set<String> = emptySet(),
     onRun: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var query by rememberSaveable { mutableStateOf("") }
+    var runnableOnly by rememberSaveable { mutableStateOf(true) }
+    val matches = files.map { it to RunCapability.forPath(it, cloudExtensions) }
+        .filter { (path, target) ->
+            path.contains(query, ignoreCase = true) &&
+                (!runnableOnly || target.mode != RunCapability.Mode.UNAVAILABLE)
+        }.sortedWith(compareBy({ it.second.mode.ordinal }, { it.first.lowercase() }))
     AlertDialog(onDismissRequest = onDismiss,
-        title = { Text("Run a file") },
+        title = { Text("Choose a run target") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(),
-                    label = { Text("Find file") }, singleLine = true)
-                LazyColumn(Modifier.heightIn(max = 360.dp)) {
-                    items(files.filter { it.contains(query, ignoreCase = true) }, key = { it }) { path ->
-                        TextButton(onClick = { onDismiss(); onRun(path) },
-                            modifier = Modifier.fillMaxWidth()) {
-                            Text(path, modifier = Modifier.fillMaxWidth(),
-                                maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    label = { Text("Search project files") }, singleLine = true)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    FilterChip(selected = runnableOnly,
+                        onClick = { runnableOnly = !runnableOnly },
+                        label = { Text("Runnable only") })
+                    Spacer(Modifier.width(10.dp))
+                    Text(matches.size.toString() + " files",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (matches.isEmpty()) Text(
+                    "No matching runnable files. Disable the filter to see all files.",
+                    style = MaterialTheme.typography.bodySmall)
+                LazyColumn(Modifier.heightIn(max = 360.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                    items(matches, key = { it.first }) { (path, target) ->
+                        val available = target.mode != RunCapability.Mode.UNAVAILABLE
+                        Surface(onClick = { onDismiss(); onRun(path) },
+                            enabled = available,
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
+                            shape = MaterialTheme.shapes.medium) {
+                            Column(Modifier.fillMaxWidth().padding(12.dp)) {
+                                Text(path, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                Text(target.description,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (available) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                     }
                 }

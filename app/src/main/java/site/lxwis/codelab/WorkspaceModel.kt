@@ -135,8 +135,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun isLocalExecutable(path: String): Boolean =
-        path.endsWith(".js", true) || path.endsWith(".sql", true) ||
-        path.endsWith(".lua", true) || path.endsWith(".java", true) || path.endsWith(".py", true)
+        RunCapability.forPath(path).mode == RunCapability.Mode.LOCAL
 
     fun cloudAvailable(path: String): Boolean =
         isOnline && cloudLanguages.containsKey(CloudJudge0.extension(path))
@@ -1240,9 +1239,10 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         } else if (cloudAvailable(filename)) {
             cloudPending = filename
         } else {
-            error = if (!isOnline) "This language needs an online compiler. Connect to the internet, then check Languages & Cloud."
+            val capability = RunCapability.forPath(filename)
+            error = if (!isOnline) capability.description + ". Online execution requires a connection and approval."
                 else if (cloudChecking) "Checking available online languages. Try again shortly."
-                else "No verified online compiler for this file type. Open Languages & Cloud to configure a Judge0 endpoint."
+                else capability.description + ". No verified online compiler configured; check Languages & Cloud."
         }
     }
 
