@@ -24,23 +24,25 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**SESSION: STOPPED — handoff after interactive work** · Updated **Nov 24, 2026, 2:29 AM PHT**  
-**This feature pass:** 6 source improvements committed · **Major remaining product areas:** 6 · **Validation:** Gradle build, JVM tests, lint and signing checks **passed** on the feature source; [APK emulator acceptance](https://github.com/iamlxwis/CodeLab/actions/runs/45237884590) and [device tests](https://github.com/iamlxwis/CodeLab/actions/runs/45237884296) still running.
+**SESSION: STOPPED — interactive runtime-manager handoff** · Updated **Nov 24, 2026, 2:52 AM PHT**  
+**Phase A checkpoint:** Download manager for real signed Python companion, existing bundled engines preserved. **Optional modules shipped: 1 (Python).** **Remaining runtime work:** publish and verify separate JS/Lua/TypeScript/native toolchains. **Validation:** new [APK CI 45242235726](https://github.com/iamlxwis/CodeLab/actions/runs/45242235726) and [Android 13/15 smoke 45242235734](https://github.com/iamlxwis/CodeLab/actions/runs/45242235734) pending at handoff; no new release claimed until gates pass.
 
 **Current activity (one row, overwritten at each handoff):**
 
 | Updated (Philippine time, AM/PM) | Task | Action / result | Next |
 | --- | --- | --- | --- |
-| Nov 24, 2026 · 2:29 AM | Product features + safe cleanup | Added HTTPS request builder, reliable editor autosave for batch edits, visual conflict-marker resolution, JavaScript variable inspection, read-only code folding preview, and faster language-aware analysis. Removed unused imports from split source files; preserved runtime engines, signing and project storage. **Build/JVM/lint passed; Android device acceptance pending. Session STOPPED.** | Confirm compilation/tests; continue real downloadable runtimes, LSP, inline folding, multi-cursor, PTY terminal and tutorial coach marks. |
+| Nov 24, 2026, 2:52 AM | Phase A — offline language downloads | Implemented Language Manager Installed/Downloadable views, signed Python download status/progress and retry, Wi-Fi transfer policy, APK/cache size, cache clearing, Android-confirmed removal/reinstall path, and source/unit/device regression checks. JS/Lua/Java/SQL remain bundled; other packs not falsely labeled available. **CI pending; session STOPPED.** | Confirm build, signed-upgrade and API33/35 QA; test actual download/installer acceptance on a device; produce safely migratable optional JS/Lua/TypeScript/native runtimes. |
 
-**Remaining product gaps:** real downloadable offline runtimes beyond Python; semantic LSP; inline editable folding and multiple carets; PTY-backed terminal; multi-language debugging; screen-anchored tutorial and full accessibility review. These are **not** marked complete. See [feature inventory](docs/IMPLEMENTATION_STATUS.md).
+**Remaining product gaps:** modular runtimes beyond Python; semantic LSP; editable inline folding/multi-cursor; PTY terminal; multi-language debugging; screen-anchored tutorial and full accessibility validation. See [implementation status](docs/IMPLEMENTATION_STATUS.md) and [project memory](docs/development/PROJECT_MEMORY.md).
 
-*Historical actions are kept in [development memory](docs/development/PROJECT_MEMORY.md) and Git history. No background coding continues after this chat turn.*
+*GitHub Actions may continue independently; the assistant does not keep coding after this reply.*
+
 
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.
 - **Run offline** — JavaScript, Lua, SQL, and limited Java support, with an integrated console.
+- **Language Manager** — Installed/Downloadable filtering, signed optional Python APK download, progress/cancel/retry, network policy, cache controls, Android-approved installation and removal.
 - **Web preview** — Build and preview HTML, CSS, and JavaScript locally.
 - **Projects** — Templates, autosave, file management, and ZIP import/export.
 - **Tools** — Selective Git commits, optional GitHub remote sync, JavaScript debugging and code screenshots.

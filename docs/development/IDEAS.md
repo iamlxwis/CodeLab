@@ -121,3 +121,11 @@ IDEA-015/023/025 milestone (2026-11-23): Verified first real existing-keystore p
 IDEA-025 T04 checkpoint 2026-11-23: First same-signer release run 45207076639 reached API33 emulator and genuine app, but QA action discovery failed because Appearance was nested in searchable Workspace sheet. Test helper now searches actual UI for Appearance/Languages, excluding EditText false matches. Still pending full install -r + persisted-data + Python proof; not finished.
 
 IDEA-025 verified checkpoint (2026-11-23): T01 permanent signer DONE, T02 online status device smoke DONE, T04 same-signer Android API33/35 in-place `adb install -r` and source/theme/Python retention DONE via [45209632286](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286), with both API33/35 [device smoke success 45209632246](https://github.com/iamlxwis/CodeLab/actions/runs/45209632246). Physical-phone update pending; broad remaining T03/T05/T06/T07/T08/T09 preserved. No false full-completion or stable label.
+
+## Nov 24, 2026, 2:52 AM PHT — IDEA-022: installed/downloaded language manager
+
+| ID | Added | Request / acceptance criteria | Status | Evidence / follow-up |
+| --- | --- | --- | --- | --- |
+| IDEA-022 | 2026-11-24 | Dedicated, discoverable manager must show which offline runtimes are installed/downloaded, permit user-driven download, cancellation, retry, Android-confirmed removal, update and reinstall, report per-module version/storage and let users clear installers without touching source projects. Download state must survive app closure; no fictional available packs. | In progress | Source commits 7636fda7, 0059a8ba, d13de118 add Python manager, DownloadManager persisted job and device UI checks; verify [release CI](https://github.com/iamlxwis/CodeLab/actions/runs/45242235726) and [device CI](https://github.com/iamlxwis/CodeLab/actions/runs/45242235734). Only Python optional, full pack marketplace / live download QA remain. |
+
+The user's choice to prioritize Phase A over editor Phase B is explicit. Preserve missing modular-runtime work rather than closing IDEA-001/009/011/022 early.
