@@ -451,6 +451,11 @@ public final class ProjectStore {
     public synchronized void save(String project, String path, String text, boolean durable) throws IOException {
         File target = resolve(project(project), path);
         if (!target.isFile()) throw new IOException("File does not exist.");
+        // Reject invalid input before creating a history snapshot. A failed
+        // save must not invent a version or change existing file contents.
+        if (text == null) throw new IOException("Source text is missing.");
+        if (text.getBytes(StandardCharsets.UTF_8).length > MAX_FILE_BYTES)
+            throw new IOException("Editor files are limited to 256 KiB.");
         if (read(project, path).equals(text)) {
             // Autosave can have renamed the file without fsync. A lifecycle/explicit
             // flush must still durably sync that previously written content.

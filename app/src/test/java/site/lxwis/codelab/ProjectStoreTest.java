@@ -44,6 +44,18 @@ public class ProjectStoreTest {
         assertEquals("print('preserved');", store.read("First", "main.js"));
     }
 
+    @Test public void rejectedSaveCannotCreatePhantomFileHistory() throws Exception {
+        String original = store.read("First", "main.js");
+        int before = store.versions("First", "main.js").size();
+        char[] huge = new char[262145];
+        Arrays.fill(huge, 'x');
+        assertThrows(IOException.class, () -> store.save("First", "main.js", new String(huge), true));
+        assertThrows(IOException.class, () -> store.save("First", "main.js", null, true));
+        assertEquals(original, store.read("First", "main.js"));
+        assertEquals("Rejected saves cannot add phantom history snapshots",
+            before, store.versions("First", "main.js").size());
+    }
+
     @Test public void restartRestoresOnlySurvivingTabs() throws Exception {
         store.createFile("First", "lib/λ.js", "print('你好');\n");
         store.remember("First", Arrays.asList("main.js", "lib/λ.js"), "main.js");

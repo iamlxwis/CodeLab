@@ -144,18 +144,26 @@ internal class PythonModuleDownload(private val app: Context) {
                     info.signingInfo?.apkContentsSigners else info.signatures
                 return signatures?.map { it.toCharsString() }?.toSet().orEmpty()
             }
-            if (certs(host).isEmpty() || certs(host) != certs(packageInfo)) {
-                "Module signature differs from CodeLab. Install both from the same release."
-            } else {
-                val current = try {
-                    version(pm.getPackageInfo(PythonModuleLocator.PACKAGE_NAME, 0))
-                } catch (_: PackageManager.NameNotFoundException) { null }
-                when (PythonModuleVersionPolicy.decide(version(packageInfo), current)) {
-                    PythonModuleVersionPolicy.Decision.INVALID ->
-                        "Python module has an invalid version. Download it again."
-                    PythonModuleVersionPolicy.Decision.DOWNGRADE ->
-                        "Downloaded Python is older than the installed runtime. Downgrades are blocked."
-                    else -> null
+            val existingPack = try {
+                pm.getPackageInfo(PythonModuleLocator.PACKAGE_NAME, flags)
+            } catch (_: PackageManager.NameNotFoundException) { null }
+            when (PythonModuleSignaturePolicy.check(
+                certs(host), certs(packageInfo), existingPack?.let { certs(it) })) {
+                PythonModuleSignaturePolicy.State.HOST_UNKNOWN ->
+                    "Cannot verify CodeLab's signing key. Installation blocked."
+                PythonModuleSignaturePolicy.State.DOWNLOAD_UNTRUSTED ->
+                    "Module signature differs from CodeLab. Install both from the same release."
+                PythonModuleSignaturePolicy.State.INSTALLED_UNTRUSTED ->
+                    "Installed Python uses a different signing key. Remove Python module before installing the trusted download."
+                PythonModuleSignaturePolicy.State.TRUSTED -> {
+                    when (PythonModuleVersionPolicy.decide(
+                        version(packageInfo), existingPack?.let { version(it) })) {
+                        PythonModuleVersionPolicy.Decision.INVALID ->
+                            "Python module has an invalid version. Download it again."
+                        PythonModuleVersionPolicy.Decision.DOWNGRADE ->
+                            "Downloaded Python is older than the installed runtime. Downgrades are blocked."
+                        else -> null
+                    }
                 }
             }
         } catch (e: Exception) {

@@ -52,6 +52,10 @@ def inspect():
         errors.append("Production signing secrets missing from Gradle build step")
     if "- name: Enforce actual production signing certificate" not in workflow:
         errors.append("Release lacks actual signer-versus-keystore verification")
+    if "- name: Require same-commit Android device smoke success" not in workflow:
+        errors.append("Public release must require complete Android 13/15 device workflow")
+    if "Production signing key changed since the prior published release" not in workflow:
+        errors.append("Production release must forbid accidental signing-key rotation")
     app_gradle = (ROOT / "app/build.gradle.kts").read_text()
     if any(value not in app_gradle for value in (
         "storePassword = releaseStorePassword", "keyAlias = releaseAlias",

@@ -9,6 +9,7 @@ Write, run, and manage projects from your phone.
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white)
 ![Offline](https://img.shields.io/badge/Execution-Offline-1F6F5C)
 [![Android CI](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml)
+[![Device CI](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml/badge.svg?branch=main)](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml)
 
 **[Download APK](https://github.com/iamlxwis/CodeLab/releases/latest/download/CodeLab.apk)** · [Releases](https://github.com/iamlxwis/CodeLab/releases) · [Issues](https://github.com/iamlxwis/CodeLab/issues)
 
@@ -23,16 +24,16 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**SESSION: WORKING — interactive ChatGPT turn** · Updated **Nov 24, 2026, 1:36 AM PHT**  
-**Completed:** 3/9 · **Remaining:** 6 · **Active workstreams:** T03 / T05 / T07 / T08
+**SESSION: WORKING — interactive ChatGPT turn** · Updated **Nov 24, 2026, 1:54 AM PHT**  
+**Completed:** 3/9 · **Remaining:** 6 · **Active workstreams:** T03 / T05 / T07 / T08 / T09
 
 **One live activity (the previous entry is replaced):**
 
 | Updated (Philippine time, AM/PM) | Task | Action / result | Next |
 | --- | --- | --- | --- |
-| Nov 24, 2026 · 1:36 AM | T07 / T09 | Fixed AppearanceAccentAccessibilityTest invalid Kotlin import that failed Android 13/15 test compilation. Release CI now compiles Android instrumentation tests before APK publication. **New CI pending.** | Verify Android 13/15 tests and signed-upgrade release, then fix actual failures. |
+| Nov 24, 2026 · 1:54 AM | T03 / T05 / T09 | Android 13/15 APK, upgrade and device CI PASSED at e85214f. Added same-commit device gate before publication, permanent signer continuity check, safer Python pack migration messaging and rejected-save history regression tests. **New CI pending.** | Verify gate unit tests, Android APK/device workflows and actual release gating; repair any failure. |
 
-**Verification:** [Last APK CI: passed](https://github.com/iamlxwis/CodeLab/actions/runs/45223423186) · [Last device CI: failed (test compile)](https://github.com/iamlxwis/CodeLab/actions/runs/45223423018) · [Latest release](https://github.com/iamlxwis/CodeLab/releases/latest)
+**Verification:** [APK and signed upgrades: passed API33/35](https://github.com/iamlxwis/CodeLab/actions/runs/45229584184) · [Full device CI: passed API33/35](https://github.com/iamlxwis/CodeLab/actions/runs/45229584342) · [Latest release](https://github.com/iamlxwis/CodeLab/releases/latest)
 
 **Remaining:** T03 app-wide defect audit; T05 Python module download/install/update/remove; T06 feasible additional offline runtimes; T07 comprehensive UI/themes/accessibility; T08 tutorial accessibility; T09 full QA and release readiness. T01/T02/T04 verified in CI; physical handset upgrade and live external cloud runs unverified.
 

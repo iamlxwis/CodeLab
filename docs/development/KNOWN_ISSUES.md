@@ -204,3 +204,15 @@ Android15 [run 45220967836](https://github.com/iamlxwis/CodeLab/actions/runs/452
 ## KI-048 — signed-upgrade selection assertion tied to removed icon accessibility label (Nov 24, 2026 · 1:02 AM PHT)
 
 [CI 45220967890](https://github.com/iamlxwis/CodeLab/actions/runs/45220967890) failed after actual Android 13 in-place update because QA looked for `Selected` icon description eliminated for accessibility. Screenshot shows Clay selected visually after update (mint border/check). Added contextual spoken `Clay style, selected` and dual-version selection assertion (legacy icon vs current contextual card). Source committed, CI pending; do not claim upgraded test pass until rerun.
+
+## KI-049 — release could publish despite independent device CI failure (Nov 24, 2026 · 1:54 AM PHT)
+
+Before this commit, APK CI 45223423186 could publish when device CI 45223423018 failed. Added fail-closed same-commit device workflow gate before publish, plus offline unit tests and actions:read permission. Also added production signer continuity requirement against previous published production release. Newly authored, CI still pending; rollback/publishing consistency remains outside this gate.
+
+## KI-050 — installed Python may use unrelated signer even when downloaded APK is trusted (Nov 24, 2026 · 1:54 AM PHT)
+
+Download signature verification formerly only compared the new APK to the editor; it did not detect an already-installed differently signed Python pack, leading to Android install rejection without guidance. Verify now checks all relevant identities and instructs removal before trustworthy installation. Added pure JVM checks; real Android migration/installer consent remains pending.
+
+## KI-051 — rejected oversized edit generates phantom version history (Nov 24, 2026 · 1:54 AM PHT)
+
+ProjectStore.save used to snapshot the old file before writeText verified UTF-8 byte limits. Invalid huge/null editor buffers could therefore create misleading snapshots on failed saves. Validate first and add regression verifying file and history unchanged. CI pending.
