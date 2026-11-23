@@ -50,3 +50,7 @@ IDEA-011 records the user's specific correction: downloadable language modules m
 ## 2026-11-23 QA coverage extension
 
 Source changes add an emulator UI journey for the persistent Run Offline / Run Online selector, verifying the selected menu state and returning to Offline before invoking the JavaScript runtime. This is added regression coverage for IDEA-002. Retain this item as in progress until the resulting emulator run passes.
+
+## 2026-11-23 theme preview quality
+
+IDEA-013: Appearance-gallery samples now use actual theme composables and surface tokens rather than independent fake palettes. Verification remains pending on the new source SHA and should include screenshots for all five styles.

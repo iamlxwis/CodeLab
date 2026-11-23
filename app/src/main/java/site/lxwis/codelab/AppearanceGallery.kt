@@ -1,6 +1,7 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,20 +24,24 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-private data class StyleSample(
-    val name: String, val summary: String, val background: Color, val card: Color,
-    val accent: Color
-)
+private data class StyleSample(val name: String, val summary: String)
 private val styles = listOf(
-    StyleSample("Minimal", "Clean & focused", Color(0xff101517), Color(0xff242a2c), Color(0xff83e5ca)),
-    StyleSample("Glass", "Frosted & luminous", Color(0xff152840), Color(0xff405e77), Color(0xff9ee7e0)),
-    StyleSample("Clay", "Raised & tactile", Color(0xff1e2a30), Color(0xff3c5259), Color(0xffa9e3cf)),
-    StyleSample("AMOLED", "Pure black", Color.Black, Color(0xff141414), Color(0xff83e5ca)),
-    StyleSample("Paper", "Warm & bright", Color(0xfffaf8f1), Color(0xffede8dc), Color(0xff177563))
+    StyleSample("Minimal", "Clean & focused"),
+    StyleSample("Glass", "Frosted & luminous"),
+    StyleSample("Clay", "Raised & tactile"),
+    StyleSample("AMOLED", "Pure black"),
+    StyleSample("Paper", "Warm & bright")
 )
 
+/**
+ * Render miniature previews with the SAME theme, backdrop and panel pipeline
+ * used by the real app. Previously hand-picked sample palettes could lie
+ * about the appearance of the selected theme.
+ */
 @Composable
-private fun StyleCard(choice: StyleSample, selected: Boolean, onClick: () -> Unit, modifier: Modifier) {
+private fun StyleCard(choice: StyleSample, selected: Boolean, onClick: () -> Unit,
+    modifier: Modifier, model: WorkspaceModel
+) {
     Surface(
         onClick = onClick, modifier = modifier,
         shape = RoundedCornerShape(18.dp),
@@ -45,39 +50,38 @@ private fun StyleCard(choice: StyleSample, selected: Boolean, onClick: () -> Uni
         border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
     ) {
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(
-                Modifier.fillMaxWidth().height(119.dp)
-                    .background(
-                        if (choice.name == "Glass") Brush.linearGradient(listOf(
-                            choice.background, Color(0xff466c87), Color(0xff183146)))
-                        else Brush.linearGradient(listOf(choice.background, choice.background)),
-                        RoundedCornerShape(12.dp)
-                    )
-            ) {
-                Column(
-                    Modifier.fillMaxWidth().padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        repeat(3) {
-                            Box(Modifier.size(6.dp).background(
-                                choice.accent.copy(alpha = if (it == 0) 1f else .45f),
-                                CircleShape))
-                        }
-                    }
-                    Surface(
-                        shape = RoundedCornerShape(if (choice.name == "Clay") 15.dp else 7.dp),
-                        color = choice.card.copy(alpha = if (choice.name == "Glass") .65f else 1f),
-                        shadowElevation = if (choice.name == "Clay") 7.dp else 0.dp
-                    ) {
-                        Column(Modifier.fillMaxWidth().padding(10.dp),
-                            verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                            Box(Modifier.fillMaxWidth(.75f).height(5.dp)
-                                .background(choice.accent, CircleShape))
-                            Box(Modifier.fillMaxWidth(.95f).height(4.dp)
-                                .background(choice.accent.copy(alpha = .35f), CircleShape))
-                            Box(Modifier.fillMaxWidth(.55f).height(4.dp)
-                                .background(choice.accent.copy(alpha = .35f), CircleShape))
+            Box(Modifier.fillMaxWidth().height(119.dp).clip(RoundedCornerShape(12.dp))) {
+                CodeLabTheme(
+                    themePreset = model.themePreset,
+                    visualStyle = choice.name,
+                    appearance = model.appearance,
+                    accentPreset = model.accent,
+                    highContrast = model.highContrast,
+                    largeInterfaceText = false
+                ) { dark ->
+                    CodeLabBackdrop(choice.name, dark) {
+                        Column(Modifier.fillMaxWidth().padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                                repeat(3) { index ->
+                                    Box(Modifier.size(6.dp).background(
+                                        MaterialTheme.colorScheme.primary.copy(
+                                            alpha = if (index == 0) 1f else .55f), CircleShape))
+                                }
+                            }
+                            ClayPanel {
+                                Column(Modifier.fillMaxWidth().padding(10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                                    Box(Modifier.fillMaxWidth(.75f).height(5.dp).background(
+                                        MaterialTheme.colorScheme.primary, CircleShape))
+                                    Box(Modifier.fillMaxWidth(.92f).height(4.dp).background(
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .45f),
+                                        CircleShape))
+                                    Box(Modifier.fillMaxWidth(.55f).height(4.dp).background(
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .45f),
+                                        CircleShape))
+                                }
+                            }
                         }
                     }
                 }
@@ -155,7 +159,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                             row.forEach { style ->
                                 StyleCard(style, selected = m.visualStyle == style.name,
                                     onClick = { m.chooseVisualStyle(style.name) },
-                                    modifier = Modifier.weight(1f))
+                                    modifier = Modifier.weight(1f), model = m)
                             }
                             if (row.size == 1) Spacer(Modifier.weight(1f))
                         }

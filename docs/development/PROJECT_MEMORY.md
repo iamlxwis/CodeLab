@@ -1,3 +1,5 @@
+> **Gallery fidelity correction (awaiting CI):** Theme previews now compose the same CodeLabTheme, CodeLabBackdrop and ClayPanel pipeline as actual screens, rather than fixed invented sample colors. Changes respond to the requirement for genuine, consistent themes.
+
 > **Additional source fixes pending CI:** cap runtime downloads at 120 MB while downloading; allow uninstall of mismatched/incompatible engine packages; scroll tutorial under large font scaling; enforce no emoji characters in app source.
 
 > **QA follow-up (unverified):** Device smoke script now exercises the explicit Online/Offline Run selector, asserts the selected mode, returns to Offline, and then runs the active JavaScript file. Preserves the original emulator journeys while covering the new menu. Latest CI results for this revision must be checked before closing the issue.

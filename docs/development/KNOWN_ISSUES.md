@@ -51,3 +51,7 @@ Historically `WorkspaceModel.run()` silently selected cloud when no local engine
 - Incompatible/signed-differently Python modules could not be removed from Languages because Remove required the module to be ready. The UI now offers user-confirmed removal for untrusted/incompatible modules too.
 - DownloadManager now stops transfers exceeding the 120 MB size cap, rather than waiting until after download for validation.
 - First-launch tutorial scrolls under large font settings; app-source emoji prevention is part of the static CI gate.
+
+## 2026-11-23 — fixed mismatch in visual previews (awaiting CI)
+
+AppearanceGallery previously used five static mocked colors for style samples, which did not reflect live backgrounds and panel effects. Previews now render actual CodeLabTheme + CodeLabBackdrop + ClayPanel in each thumbnail; device/visual QA remains open.
