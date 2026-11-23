@@ -4,7 +4,6 @@ import org.gradle.testing.jacoco.tasks.JacocoReport
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.chaquo.python")
     id("org.jetbrains.kotlin.plugin.compose")
     id("jacoco")
 }
@@ -23,7 +22,6 @@ android {
     defaultConfig {
         applicationId = "site.lxwis.codelab"
         minSdk = 26
-        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         targetSdk = 35
         versionCode = 5
         versionName = "0.5.0-alpha"
@@ -61,10 +59,6 @@ android {
                 else signingConfigs.getByName("debug")
         }
     }
-}
-
-chaquopy {
-    defaultConfig { version = "3.13" }
 }
 
 dependencies {

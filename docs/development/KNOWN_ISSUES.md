@@ -16,3 +16,10 @@ Updated 2026-11-23. Evidence reflects source SHA `3c37ae8c01dc`.
 Other unverified work: full Java/Kotlin offline compilation, TypeScript transpilation, C/C++, PHP/Ruby/Go/Rust/C# packs, production signing, physical-device acceptance, full language-server features.
 
 **Verification note:** APK workflow [45129100978](https://github.com/iamlxwis/CodeLab/actions/runs/45129100978) passed, but it does **not** negate the failing emulator result.
+
+## Migration note (unverified)
+
+Core's Python dispatcher now expects an independently installed same-certificate
+Python companion. Early APK releases still included embedded Chaquopy; preserve
+project source/files while testing the migration. CI must build/sign the two
+APKs together, publish them as a pair and verify the runtime device journey.

@@ -58,3 +58,12 @@ The core still uses its embedded Python worker until the next integration commit
 No installation/download, build or emulator claims for the companion are valid yet.
 The earlier Python failure was confirmed by the GitHub device artifact: isolated
 Chaquopy could not access `SharedPreferences` / `UserManager`.
+
+## Python companion integration — unverified (this commit)
+
+The editor no longer directly embeds Chaquopy: the separate `:engine-python`
+application is the Python execution target. Core checks exact package name,
+signing-certificate match, signature permission and protocol version before
+explicitly binding; a missing or untrusted pack is rejected. Existing
+JavaScript/Lua/Java runtimes remain embedded pending their own migrations.
+**Build and offline-device verification of this integration are outstanding.**

@@ -77,6 +77,11 @@ class RunSession(context: Context) {
         transcript = ""
         if (!name.endsWith(".js", true) && !name.endsWith(".sql", true) && !name.endsWith(".lua", true) && !name.endsWith(".java", true) && !name.endsWith(".py", true)) { status = "Run a .js, .py, .sql, .lua or .java file"; return }
         if (source.length > 128_000) { status = "Script exceeds 128,000 characters"; return }
+        val pythonPack = if (name.endsWith(".py", true)) PythonModuleLocator.component(app) else null
+        if (name.endsWith(".py", true) && pythonPack == null) {
+            status = PythonModuleLocator.check(app).description
+            return
+        }
         if (debug && !name.endsWith(".js", true)) {
             status = "Debugger currently supports JavaScript only"
             return
@@ -111,6 +116,7 @@ class RunSession(context: Context) {
                 worker = Messenger(binder)
                 val request = packet(START, source).apply {
                     data.putString("name", name)
+                    data.putInt("protocol", PythonModuleLocator.PROTOCOL_VERSION)
                     data.putInt("limit-seconds", timeLimitSeconds)
                     data.putInt("output-chars", outputLimitCharacters)
                     data.putBoolean("debug", debug)
@@ -140,10 +146,18 @@ class RunSession(context: Context) {
             val lua = name.endsWith(".lua", true)
             val javaMode = name.endsWith(".java", true)
             val python = name.endsWith(".py", true)
-            val intent = Intent(app, when { sql -> SqlRuntimeService::class.java; lua -> LuaRuntimeService::class.java; javaMode -> JavaRuntimeService::class.java; python -> PythonRuntimeService::class.java; else -> RuntimeService::class.java })
-            val bound = if (Build.VERSION.SDK_INT >= 29 && !sql)
-                app.bindIsolatedService(intent, Context.BIND_AUTO_CREATE, "run${java.util.UUID.randomUUID().toString().replace("-", "")}", app.mainExecutor, listener)
-            else app.bindService(intent, listener, Context.BIND_AUTO_CREATE)
+            val intent = if (python) Intent().setComponent(requireNotNull(pythonPack))
+                else Intent(app, when {
+                    sql -> SqlRuntimeService::class.java
+                    lua -> LuaRuntimeService::class.java
+                    javaMode -> JavaRuntimeService::class.java
+                    else -> RuntimeService::class.java
+                })
+            val bound = if (python || sql || Build.VERSION.SDK_INT < 29)
+                app.bindService(intent, listener, Context.BIND_AUTO_CREATE)
+            else app.bindIsolatedService(intent, Context.BIND_AUTO_CREATE,
+                "run${java.util.UUID.randomUUID().toString().replace("-", "")}",
+                app.mainExecutor, listener)
             if (bound) main.postDelayed(watchdog, 8000) else end("Unable to start runtime")
         } catch (e: RuntimeException) { end("Unable to start runtime · ${e.javaClass.simpleName}") }
     }

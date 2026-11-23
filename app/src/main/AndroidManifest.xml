@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <permission android:name="site.lxwis.codelab.permission.BIND_ENGINE"
+        android:protectionLevel="signature"/>
+    <uses-permission android:name="site.lxwis.codelab.permission.BIND_ENGINE"/>
+    <queries><package android:name="site.lxwis.codelab.engine.python"/></queries>
     <application android:label="@string/app_name" android:icon="@drawable/ic_codelab"
         android:allowBackup="false" android:theme="@style/AppTheme" android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
@@ -9,8 +13,6 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <service android:name=".PythonRuntimeService" android:exported="false"
-            android:isolatedProcess="true" android:process=":python"/>
         <service android:name=".RuntimeService" android:exported="false"
             android:isolatedProcess="true" android:process=":js"/>
         <service android:name=".JavaRuntimeService" android:exported="false"

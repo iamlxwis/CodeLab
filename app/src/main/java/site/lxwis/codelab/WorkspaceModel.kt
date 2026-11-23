@@ -135,7 +135,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun isLocalExecutable(path: String): Boolean =
-        RunCapability.forPath(path).mode == RunCapability.Mode.LOCAL
+        if (path.endsWith(".py", true)) PythonModuleLocator.installed(app)
+        else RunCapability.forPath(path).mode == RunCapability.Mode.LOCAL
 
     fun cloudAvailable(path: String): Boolean =
         isOnline && cloudLanguages.containsKey(CloudJudge0.extension(path))
@@ -1229,6 +1230,11 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             flush()
             preview = true
             console = false
+            return
+        }
+        if (filename.endsWith(".py", true) && !PythonModuleLocator.installed(app)) {
+            error = PythonModuleLocator.check(app).description +
+                ". Install Python from the Languages screen or choose online execution."
             return
         }
         if (isLocalExecutable(filename)) {
