@@ -84,8 +84,10 @@ public final class SqlRuntimeService extends Service {
                     if (finished) throw new IllegalStateException("Module stopped");
                     final String text = (error ? "! " : "") + line.substring(0, Math.min(line.length(), 8192)) + "\n";
                     chars[0] += text.length(); lines[0]++;
-                    if (chars[0] > outputLimit || lines[0] > 1500 || line.length() > 8192)
+                    if (chars[0] > outputLimit || lines[0] > 1500 || line.length() > 8192) {
+                        send(OUTPUT, 0, "! Console output limit reached\n");
                         throw new IllegalStateException("Module output limit");
+                    }
                     send(OUTPUT, 0, text);
                 }
                 @Override public String read(String prompt) {

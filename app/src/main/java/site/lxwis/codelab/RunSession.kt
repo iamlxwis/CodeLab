@@ -45,6 +45,9 @@ class RunSession(context: Context) {
         val source = lastLocalSource ?: return
         run(name, source, lastDebug, lastBreakpoints)
     }
+    // A stopped module may still be terminating its dedicated Android process.
+    // Avoid immediately binding a new request to that dying service instance.
+    private var nextSafeBindElapsed = 0L
     private var connection: ServiceConnection? = null
     private var worker: Messenger? = null
     private var onlineThread: Thread? = null
@@ -163,7 +166,9 @@ class RunSession(context: Context) {
             }
         }
         connection = listener
-        try {
+        val bindRuntime = Runnable {
+            if (generation != token || !running) return@Runnable
+            try {
             val sql = name.endsWith(".sql", true)
             val lua = name.endsWith(".lua", true)
             val javaMode = name.endsWith(".java", true)
@@ -182,7 +187,12 @@ class RunSession(context: Context) {
                 "run${java.util.UUID.randomUUID().toString().replace("-", "")}",
                 app.mainExecutor, listener)
             if (bound) main.postDelayed(watchdog, 8000) else end("Unable to start runtime")
-        } catch (e: RuntimeException) { end("Unable to start runtime · ${e.javaClass.simpleName}") }
+            } catch (e: RuntimeException) {
+                end("Unable to start runtime · ${e.javaClass.simpleName}")
+            }
+        }
+        val delayMs = (nextSafeBindElapsed - SystemClock.elapsedRealtime()).coerceAtLeast(0L)
+        if (delayMs > 0L) main.postDelayed(bindRuntime, delayMs) else bindRuntime.run()
     }
 
     /** Cloud runs require an explicit confirmation from the UI before this is called. */
@@ -242,6 +252,7 @@ class RunSession(context: Context) {
         try { worker?.send(packet(STOP)) } catch (_: RemoteException) {}
         val online = onlineThread != null
         onlineThread?.interrupt()
+        if (!online) nextSafeBindElapsed = SystemClock.elapsedRealtime() + 400L
         end(if (online) "Stopped monitoring online run" else "Stopped · Exit 130")
     }
 
