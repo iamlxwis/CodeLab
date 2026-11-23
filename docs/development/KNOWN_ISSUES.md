@@ -67,3 +67,11 @@ When a missing Python pack opened Languages with an initial selected language, t
 ## KI-014 — Languages sheet exit reliability (source fixed, retest pending)
 
 [Device 45144260324](https://github.com/iamlxwis/CodeLab/actions/runs/45144260324) passed initial UI steps but timed out waiting for `New project` at `qa/device_smoke.py:153`. XML showed Languages bottom sheet still open after closing module details and one Android Back key. Added visible `Close languages` toolbar action and QA uses it explicitly; this also improves real-user navigation discoverability. Retest needed.
+
+## KI-015 — incorrect foreground colors and clipped Glass/Clay effects
+
+Four user-supplied physical-phone screenshots (2026-11-23) show black text/icons against dark backgrounds and hard-edged translucent rectangles. The root transparent Material Surface lacked an explicit `onSurface` content color; large blurred decoration layers were clipped. Source now provides the theme foreground at root, uses edge-fading Canvas radial gradients, and prevents dark-only Minimal presets from overriding Light mode. Added an Android contrast test across all five styles and both modes and five-style screenshot capture. **Awaiting new APK/emulator/device results**; visual review of all actual screens and physical-device acceptance remains open.
+
+## KI-016 — motion benchmark cannot reach the project library
+
+[Device workflow 45145653756](https://github.com/iamlxwis/CodeLab/actions/runs/45145653756) failed at `qa/motion_smoke.py:55`, exact error `AssertionError: Timed out waiting for ('New project',)`. The benchmark assumed the prior stages had left the app in the home library. Source now checks onboarding, project navigation and Back transitions to reach a known library state; **not retested yet**. Earlier app/JVM success does not prove the motion stage passed.

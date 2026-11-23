@@ -40,3 +40,7 @@ marked verified**; check both build and emulator workflows for the new SHA.
 | Other supported emulator journeys | JS/Lua/Java beta, SQL, HTML preview, editor storage/rotation, instrumentation/performance scripts passed | [Device](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) |
 
 Not verified: physical phones, native module install/update/uninstall workflow, explicit Online/Offline selector, stable signing or additional downloadable engines.
+
+## 2026-11-23 — theme correction committed in source (not yet verified)
+
+Root transparent Surface now explicitly sets its onSurface foreground; Glass/Clay blur decorations use Canvas radial glows; Minimal Light no longer inherits dark-only themePreset backgrounds. Contrast instrumentation covers five styles in Dark/Light and device smoke captures the five theme gallery states. Motion benchmark startup is more defensive after observed CI failure. This is **source-implemented only**; compile, connected test, screenshot review and physical-device acceptance remain open.

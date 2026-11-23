@@ -4,6 +4,10 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P0 — build and runtime reliability
 
+- [ ] **IDEA-014 / KI-015:** Verify on APK, Android instrumentation, emulator screenshots and physical phone that all five themes have readable text/icons and no rectangular Glass/Clay glows; code and screenshot test added, latest CI pending.
+- [ ] **KI-016:** [Emulator run 45145653756](https://github.com/iamlxwis/CodeLab/actions/runs/45145653756) failed in motion benchmark after functional phases; source now navigates to the library before measuring. Retest full device workflow.
+
+
 - [ ] **KI-014:** Verify Languages sheet explicit Close action returns to project library after visiting Python details; previous [device fail](https://github.com/iamlxwis/CodeLab/actions/runs/45144260324). Source fix committed, CI pending.
 
 - [ ] **KI-013:** Retest Language Manager search with status panel hidden during search, ensuring Python row is visible/clickable; [previous failure](https://github.com/iamlxwis/CodeLab/actions/runs/45142776614). Source fix committed, CI pending.

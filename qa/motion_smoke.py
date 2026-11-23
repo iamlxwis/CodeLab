@@ -46,12 +46,29 @@ def main():
         # lines; swipes alone may produce zero frame samples. Instead exercise
         # the real project-library sheet transitions at 1x animation.
         from device_smoke import nodes, tap_node, wait_for
-        for node in nodes():
-            if "Project library" in (
-                node.attrib.get("text", ""), node.attrib.get("content-desc", "")
-            ):
-                tap_node(node)
+        # Earlier instrumentation/performance stages may leave the app in the
+        # editor, on an onboarding dialog or with a transient sheet expanded.
+        # Establish a known library state instead of assuming one navigation tap.
+        for _ in range(8):
+            current = nodes()
+            labels = {
+                value for node in current
+                for value in (node.attrib.get("text", ""), node.attrib.get("content-desc", ""))
+            }
+            if "New project" in labels:
                 break
+            if "Welcome to CodeLab" in labels:
+                tap_node(wait_for("Next"))
+                tap_node(wait_for("Next"))
+                tap_node(wait_for("Start coding"))
+            elif "Project library" in labels:
+                tap_node(wait_for("Project library"))
+            else:
+                adb("shell", "input", "keyevent", "KEYCODE_BACK")
+            time.sleep(0.8)
+        else:
+            raise AssertionError("Cannot reach library before motion benchmark; "
+                                 "inspect qa-results/last-window.xml")
         wait_for("New project", timeout=10)
         adb("shell", "dumpsys", "gfxinfo", PACKAGE, "reset")
         for _ in range(4):
