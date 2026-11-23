@@ -54,3 +54,7 @@ Source changes add an emulator UI journey for the persistent Run Offline / Run O
 ## 2026-11-23 theme preview quality
 
 IDEA-013: Appearance-gallery samples now use actual theme composables and surface tokens rather than independent fake palettes. Verification remains pending on the new source SHA and should include screenshots for all five styles.
+
+## 2026-11-23 search UX repair
+
+IDEA-011: emulator revealed the Python search result was hidden beneath a bulky availability panel. When searching, results now appear directly after search and filters, improving module discoverability. This remains in progress until the updated emulator test passes.

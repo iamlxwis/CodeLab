@@ -59,3 +59,7 @@ AppearanceGallery previously used five static mocked colors for style samples, w
 ## 2026-11-23 — module dialog stacking issue fixed in source
 
 When a missing Python pack opened Languages with an initial selected language, the AlertDialog previously appeared in the composition before the ModalBottomSheet. The sheet could cover the details on initial navigation. The details are now composed after the sheet, and emulator QA covers a real Python module management dialog. CI pending.
+
+## KI-013 — hidden language search results, source fix awaiting retest
+
+[Emulator run 45142776614](https://github.com/iamlxwis/CodeLab/actions/runs/45142776614) failed `Timed out waiting for ('Python runtime',)`. `last-window.xml` showed the search field had Python, the filter had 1 match, but the one language result was not in the visible hierarchy because an oversized execution-status header consumed the available LazyColumn viewport. Fixed by omitting the execution status panel while search text is nonblank and by making QA tap only the matching TextView instead of an EditText. **Not yet verified by new emulator CI.**

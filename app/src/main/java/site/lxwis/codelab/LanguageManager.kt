@@ -105,13 +105,15 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         label = { Text(option) })
                 }
             }
-            Text("${filteredLanguages.size} languages matching",
+            Text("${filteredLanguages.size} ${if (filteredLanguages.size == 1) "language" else "languages"} matching",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
             HorizontalDivider()
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(9.dp),
                 contentPadding = PaddingValues(bottom = 28.dp)) {
-                item {
+                // Search results take precedence; the status panel otherwise
+                // pushes the first match below the bottom sheet viewport.
+                if (search.isBlank()) item {
                     Text("EXECUTION AVAILABILITY", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(8.dp))

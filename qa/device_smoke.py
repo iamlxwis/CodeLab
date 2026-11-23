@@ -68,6 +68,20 @@ def tap(*labels):
     tap_node(wait_for(*labels))
 
 
+def tap_text_result(name):
+    """Tap the actual result TextView, never a search EditText with the same text."""
+    until = time.monotonic() + 16
+    while time.monotonic() < until:
+        options = [node for node in nodes()
+                   if node.attrib.get("class") == "android.widget.TextView"
+                   and node.attrib.get("text") == name]
+        if options:
+            tap_node(options[0])
+            return
+        time.sleep(.4)
+    raise AssertionError(f"Result text {name} did not appear")
+
+
 def choose_language(name):
     """Choose from the searchable language browser, not an off-screen quick card."""
     tap("Change")
@@ -130,7 +144,7 @@ def main():
     tap_node(search)
     adb("shell", "input", "text", "Python")
     adb("shell", "input", "keyevent", "4")
-    tap("Python")
+    tap_text_result("Python")
     wait_for("Python runtime")
     wait_for("Check for updates")
     wait_for("Remove Python module")
