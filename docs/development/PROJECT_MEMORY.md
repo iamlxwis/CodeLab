@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 12:39 AM PHT — T07 CI compilation failure identified and fixed
+
+Both 7db7e3e workflows failed Kotlin compilation in AppearanceGallery.kt:117 (`val cannot be reassigned`, Boolean cannot assign to String). This was an accidental name collision between SettingChoices `selected: String` argument and Compose semantics `selected` receiver property. Changed local parameter to `currentChoice` and retains `semantics { selected = active }`. Source correction pending CI. No release was published by failed run. Other tests never executed; do not treat T05/T08 tests as failed runtime acceptance or verified passing until next run. Continue T03/T05/T07/T08. Session must be set STOPPED before reply.
+
 ## Nov 24, 2026 · 12:35 AM PHT — accessible Appearance palette source committed
 
 T07: Previous unselected accent circles had 40dp touch targets with no spoken name. Implemented labeled 48dp selectable swatches, scrollable for narrow devices; theme cards and color mode options also expose selected semantics, with minimum 48dp mode target height. New AppearanceAccentAccessibilityTest instrumentation verifies six spoken labels and selection change. CI pending; manual TalkBack and complete theme checks remain. T03/T05/T07/T08 active; 3/9 completed. Remember STOPPED state at final reply.

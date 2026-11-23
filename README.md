@@ -41,7 +41,7 @@ Write, run, and manage projects from your phone.
 | `T04` Data-preserving signed upgrades | DONE for API 33/35 emulators; physical-device validation remains | Nov 23, 2026 · 11:49 PM |
 | `T05` Python download/install/update | IN PROGRESS — version/downgrade tests + new Android 13/15 missing-module UI flow; CI pending | Nov 24, 2026 · 12:26 AM |
 | `T06` Additional offline modules | QUEUED — feasibility and real runtimes required | Not started |
-| `T07` Five-theme UI/UX refinement | IN PROGRESS — accessible 48dp accent controls and theme selection states; Android test pending | Nov 24, 2026 · 12:35 AM |
+| `T07` Five-theme UI/UX refinement | IN PROGRESS — fixed Kotlin semantics receiver shadowing after CI compile failure; rerun pending | Nov 24, 2026 · 12:39 AM |
 | `T08` Interactive tutorial and accessibility | IN PROGRESS — saved resume index + JVM tests; actual Android 13/15 process-restart UI smoke added, CI pending | Nov 24, 2026 · 12:32 AM |
 | `T09` Full QA and stable release readiness | QUEUED | Not started in this session |
 
@@ -56,11 +56,12 @@ Write, run, and manage projects from your phone.
 | Nov 24 · 12:26 AM | T05 | Added Android 13/15 missing-module navigation smoke; CI pending |
 | Nov 24 · 12:30 AM | T08 | Fixed premature completion; resume index and JVM tests added |
 | Nov 24 · 12:32 AM | T08 | Added Android 13/15 tutorial resume UI smoke; CI pending |
-| Nov 24 · 12:35 AM | T07 | Six color swatches receive names/selection state and 48dp targets; Compose UI test added |
+| Nov 24 · 12:35 AM | T07 | Six accents labeled with selection semantics and 48dp targets |
+| Nov 24 · 12:39 AM | T07 | CI compiler error from selected-name shadowing diagnosed/fixed; next CI pending |
 
 The complete append-only [task audit log](docs/development/PROGRESS_LOG.md) records commits, failures, tests and handoffs. Times are in **Asia/Manila**, written with **AM/PM**, not military time.
 
-**Last audit:** Nov 24, 2026 · 12:35 AM PHT — appearance accessibility implemented; CI pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** Nov 24, 2026 · 12:39 AM PHT — resolved CI Kotlin receiver shadowing; rerun pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.

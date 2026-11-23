@@ -188,3 +188,7 @@ The saved progress correction for KI-042 needs actual Android process death veri
 ## KI-044 — unlabeled small appearance accent circles (Nov 24, 2026 · 12:35 AM PHT)
 
 Unselected color swatches were anonymous clickable 40dp circles; screen readers lacked names. Source fix: named 48dp accents with selected semantics, selection on style/mode choices, Android Compose regression. CI pending; full TalkBack and 5-theme accessibility still open.
+
+## KI-045 — appearance semantics property shadowing breaks compile (Nov 24, 2026 · 12:39 AM PHT)
+
+CI [45218655670](https://github.com/iamlxwis/CodeLab/actions/runs/45218655670) failed compile because new `semantics { selected = active }` targeted outer `selected: String` function parameter. Renamed outer parameter to `currentChoice` so receiver semantics receives Boolean. Retest CI required. This is a real source failure, not device regression; signing and previous release remain intact.

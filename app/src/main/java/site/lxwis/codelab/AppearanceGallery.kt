@@ -104,7 +104,7 @@ private fun StyleCard(choice: StyleSample, isSelected: Boolean, onClick: () -> U
 }
 
 @Composable
-private fun SettingChoices(title: String, choices: List<String>, selected: String,
+private fun SettingChoices(title: String, choices: List<String>, currentChoice: String,
     onSelect: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -112,7 +112,7 @@ private fun SettingChoices(title: String, choices: List<String>, selected: Strin
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             choices.forEach { choice ->
-                val active = selected == choice
+                val active = currentChoice == choice
                 Surface(onClick = { onSelect(choice) },
                     modifier = Modifier.weight(1f).semantics { selected = active },
                     shape = RoundedCornerShape(12.dp),

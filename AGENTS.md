@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 12:39 AM PHT
+
+T07 Kotlin compile break caused by semantics property/selected String argument name collision; corrected to currentChoice. Verify next CI; do not claim test pass yet. Same kind of shadowing previously caused signing bug: avoid receiver property name reuse in Compose/Gradle DSLs.
+
 ## Nov 24, 2026 · 12:35 AM PHT
 
 T07 source: 48dp labeled color swatches and selection semantics for appearance controls, with Android instrumentation. Pending CI and manual TalkBack. Preserve existing appearance presets. Before final response mark README STOPPED with AM/PM local timestamp.
