@@ -70,12 +70,21 @@ internal object CodeAnalysis {
             "New name must be a valid identifier."
         }
         if (old == replacement) return source
-        val spots = references(source, old, 500)
-        if (spots.isEmpty()) return source
-        val builder = StringBuilder(source)
-        for (position in spots.asReversed()) {
-            builder.replace(position.index, position.index + old.length, replacement)
+        if (!old.matches(Regex("[A-Za-z_][A-Za-z_0-9]*"))) return source
+        // Rename every visible occurrence. The UI reference list is capped for
+        // responsiveness, but applying that cap here silently corrupts large edits.
+        val allowed = visibleCode(source)
+        val pattern = Regex("(?<![A-Za-z_0-9])" + Regex.escape(old) + "(?![A-Za-z_0-9])")
+        val builder = StringBuilder(source.length)
+        var copiedThrough = 0
+        for (match in pattern.findAll(source)) {
+            if (!allowed[match.range.first]) continue
+            builder.append(source, copiedThrough, match.range.first)
+            builder.append(replacement)
+            copiedThrough = match.range.last + 1
         }
+        if (copiedThrough == 0) return source
+        builder.append(source, copiedThrough, source.length)
         return builder.toString()
     }
 

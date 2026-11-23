@@ -24,20 +24,18 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**SESSION: WORKING — interactive ChatGPT turn** · Updated **Nov 24, 2026, 2:01 AM PHT**  
-**Completed:** 3/9 · **Remaining:** 6 · **Active workstreams:** T03 / T05 / T07 / T08 / T09
+**SESSION: STOPPED — interactive work handed off** · Updated **Nov 24, 2026, 2:11 AM PHT**  
+**Existing stabilization milestones:** 3/9 completed · 6 remaining. **Product feature expansion:** ongoing; not falsely counted as finished.
 
-**One live activity (the previous entry is replaced):**
+**Current activity (one entry; replaced on each substantive action):**
 
 | Updated (Philippine time, AM/PM) | Task | Action / result | Next |
 | --- | --- | --- | --- |
-| Nov 24, 2026 · 2:01 AM | T09 | Fixed corrupted APK workflow by rebuilding from e85214f known-good YAML. Prior implementation used a text replacement that interpreted shell `$'` as an insertion token and duplicated the workflow. Rebuilt via literal callback replacement; exactly one publish/gate step validated. **New CI pending.** | Confirm APK CI parses/builds and Android 13/15 smoke passes; troubleshoot new safeguards. |
+| Nov 24, 2026 · 2:11 AM | Editor refactoring and safe cleanup | Fixed file-local Rename to update **all** identifier occurrences instead of silently stopping after 500; preserves strings/comments and adds regression tests. No runtime engines or app assets deleted. **Source committed; tests not yet executed.** Session STOPPED at handoff. | Extend editor capabilities and runtime modules; test change and continue safe, evidence-based cleanup. |
 
-**Verification:** [APK and signed upgrades: passed API33/35](https://github.com/iamlxwis/CodeLab/actions/runs/45229584184) · [Full device CI: passed API33/35](https://github.com/iamlxwis/CodeLab/actions/runs/45229584342) · [Latest release](https://github.com/iamlxwis/CodeLab/releases/latest)
+**Product work still open:** additional real downloadable offline engines; LSP-grade intelligence; code folding/multi-cursor; PTY terminal; advanced debugger; full API request builder; visual Git conflict editor; tutorial coach marks; remaining UI/accessibility validation. Python module manager, Run mode selector, themes and basic editor intelligence already exist.
 
-**Remaining:** T03 app-wide defect audit; T05 Python module download/install/update/remove; T06 feasible additional offline runtimes; T07 comprehensive UI/themes/accessibility; T08 tutorial accessibility; T09 full QA and release readiness. T01/T02/T04 verified in CI; physical handset upgrade and live external cloud runs unverified.
-
-*This README shows one current action only. Previous events remain in [development memory](docs/development/PROJECT_MEMORY.md), [audit history](docs/development/PROGRESS_LOG.md) and Git commits. Assistant activity is limited to interactive sessions; GitHub Actions can keep running independently.*
+*Only one live activity is shown. Prior actions remain in [development memory](docs/development/PROJECT_MEMORY.md) and Git history. ChatGPT does not keep working after the interactive turn ends.*
 
 ## Features
 

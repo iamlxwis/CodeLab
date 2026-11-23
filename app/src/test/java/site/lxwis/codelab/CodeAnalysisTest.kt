@@ -42,4 +42,26 @@ class CodeAnalysisTest {
         val result = CodeAnalysis.wordCompletions("renderView()\nren", 16)
         assertTrue(result.contains("renderView"))
     }
+
+    @Test fun renameUpdatesAllOccurrencesBeyondReferenceDisplayCap() {
+        val source = buildString {
+            append("val item = 0\n")
+            repeat(750) { append("print(item)\n") }
+            append("// item must remain unchanged\n")
+            append("val message = \\"item\\"\n")
+        }
+        val updated = CodeAnalysis.lexicalRename(source, "item", "value")
+        assertEquals(751, Regex("\\bvalue\\b").findAll(updated).count())
+        assertFalse(updated.contains("print(item)"))
+        assertTrue(updated.contains("// item must remain unchanged"))
+        assertTrue(updated.contains("\\"item\\""))
+        assertEquals(120, CodeAnalysis.references(source, "item").size)
+    }
+
+    @Test fun renameDoesNotChangePartialIdentifiersOrInvalidNames() {
+        val source = "val item = 1; val itemized = item"
+        assertEquals("val total = 1; val itemized = total",
+            CodeAnalysis.lexicalRename(source, "item", "total"))
+        assertEquals(source, CodeAnalysis.lexicalRename(source, "item!", "total"))
+    }
 }
