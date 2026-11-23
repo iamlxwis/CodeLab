@@ -9,7 +9,7 @@ class OfflineRuntimeRegistryTest {
         assertNotNull(OfflineRuntimeRegistry.manifest("lua"))
         assertNotNull(OfflineRuntimeRegistry.manifest("java"))
         assertNotNull(OfflineRuntimeRegistry.manifest("sql"))
-        assertNotNull(OfflineRuntimeRegistry.manifest("py"))
+        assertNull("Python is a separate optional APK", OfflineRuntimeRegistry.manifest("py"))
         assertNull(OfflineRuntimeRegistry.manifest("rust"))
     }
     @Test fun capabilitiesAreExplained() {

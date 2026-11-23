@@ -100,3 +100,9 @@ failed compiling both source modules. The exact errors were Java `illegal forwar
 reference` in PythonRuntimeService and Kotlin `Unresolved reference 'app'`
 in WorkspaceModel at lines 138/1235/1236. This commit fixes those compile
 errors; **new CI verification is still required**.
+
+## JVM catalog/test migration follow-up
+
+The language catalog no longer hardcodes Python as bundled offline; JVM tests
+now assert Python is not part of the core runtime registry. Actual installed
+pack availability remains a PackageManager verification on Android devices.
