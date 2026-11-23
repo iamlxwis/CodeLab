@@ -27,8 +27,12 @@ Write, run, and manage projects from your phone.
 - **Run offline** — JavaScript, Lua, SQL, and limited Java support, with an integrated console.
 - **Web preview** — Build and preview HTML, CSS, and JavaScript locally.
 - **Projects** — Templates, autosave, file management, and ZIP import/export.
-- **Tools** — Selective local Git staging, JavaScript debugging, and code screenshot sharing.
-- **Privacy** — Cloud credentials encrypted with Android Keystore; confirmation required for online execution.
+- **Tools** — Selective Git commits, optional GitHub remote sync, JavaScript debugging and code screenshots.
+- **Privacy** — Optional cloud and GitHub credentials are encrypted in Android Keystore. No source upload without an explicit action.
+
+## Optional GitHub sync
+
+From a project, open **Git**, then expand **GitHub sync** and configure an `owner/repository` origin. **Fetch** only downloads remote history. **Pull** requires a clean working tree and only fast-forwards. **Push** requires confirmation, a GitHub access token and a clean branch; it never forces changes. Save a fine-grained token with only the repository permissions you need.
 
 ## Install
 

@@ -1,15 +1,18 @@
 # Changelog
 
-## 0.4.x development — 2026-11-23
+## 0.5.0-alpha — 2026-11-23
 
 - System-aware motion controller honoring Android animation disable setting.
 - Viewport syntax highlighting skips off-screen edit invalidations.
 - Optional cloud compiler token encrypted using Android Keystore AES-GCM, with migration of legacy plaintext setting.
 - Local Git commits explicitly stage selected paths; no automatic stage-all.
-- CI static safety regression gate and animation-enabled emulator jank measurement.
+- Optional GitHub-only HTTPS origin, Fetch, clean-tree fast-forward Pull, and explicit non-force Push, using a separately encrypted device-bound access token.
+- Selection-aware editor indent/outdent fixes, near-256 KiB file and IME composition tests.
+- Project/title transitions and lighter tablet-sidebar motion to avoid repeated native editor resizing.
+- Static security checks, Android lint and JaCoCo coverage reports, and release-mode emulator motion profiling.
 - Architecture/contributing guides, corrected roadmap and QA status.
 
-These updates remain subject to new `main` CI verification. Workstreams #4–#8 are not fully complete: remote Git, semantic editor/LSP, device-specific motion certification, generated baseline profiles, manual accessibility and stable signing are still outstanding.
+These features require successful CI on their latest `main` SHA. Workstreams #4–#8 are not fully complete: authenticated GitHub network acceptance and OAuth, semantic LSP, physical-device motion QA, generated baseline profiles, manual accessibility and stable signing remain outstanding.
 
 
 ## 0.3.0-alpha — 2026-11-22

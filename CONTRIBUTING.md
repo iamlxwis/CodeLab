@@ -25,8 +25,11 @@ accessible UI hierarchy evidence.
 - Run file and credential network operations only with user consent.
 - Keep editor text input fluid; add tests for IME, save/restart and large files.
 - Respect Android's **system-wide disabled animations**, regardless of app theme.
-- Never stage every Git file as an unannounced side effect. Explicitly select
-  paths and verify after commit.
+- Never stage every Git file as an unannounced side effect. GitHub remotes
+  must be canonical HTTPS; Pull is FF-only and Push is non-force with consent.
+  Never log or embed access tokens.
+- Review the lint and JaCoCo reports in `CodeLab-quality-reports`;
+  these reports are observational, not enforced coverage thresholds.
 - Separate emulator automation from physical TalkBack, contrast and
   performance certification. CI green is necessary, not universal acceptance.
 

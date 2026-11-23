@@ -11,12 +11,12 @@ From the repository root with JDK 17 and Android SDK 35:
 GitHub Actions:
 
 - Android APK: Gradle compilation, signature verification, unit tests,
-  direct APK release and SHA-256 output.
+  report-only Android lint and JaCoCo coverage, public APK and SHA-256 output.
 - Android device smoke: instrumented tests, **emulator** performance measurements,
   accessibility inspection, airplane-mode editor/runtime journey, screenshots and logcat.
 - CI outputs are factual emulator measurements; no phone FPS, startup, or memory claim is made without physical evidence.
 - The static gate in `qa/security_gate.py` checks selected secret signatures, plaintext-token persistence, stage-all Git calls, backup policy and isolated runtime configuration.
-- `qa/motion_smoke.py` records gfxinfo after scrolling with Android animation scale set to 1x. Its previous setting is restored.
+- `qa/motion_smoke.py` measures the R8-optimized release APK at 1x animation scale, records frame percentiles and restores the previous setting. Device functional tests remain on debug. Emulator jank is not physical-device certification.
 
 ## Core user journeys
 
@@ -28,7 +28,9 @@ GitHub Actions:
 6. Preview HTML/CSS/JS offline with proper sandboxed asset paths.
 7. Export and import ZIP archives with size and traversal limits.
 8. Import public GitHub sources with bounded ZIP processing.
-9. Initialize local Git, commit, and switch branches with a clean working tree.
+9. Initialize Git, stage only selected files, commit and switch branches.
+   Test opt-in GitHub HTTPS Fetch/fast-forward Pull/non-force Push with a disposable
+   remote, invalid tokens, divergent history and offline access.
 10. Create and verify PNG code screenshots, with user-selected destination.
 11. Change themes, interface scaling and motion preferences.
 12. Use external keyboard and touch input, portrait and landscape layouts.

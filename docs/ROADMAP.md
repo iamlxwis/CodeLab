@@ -9,11 +9,11 @@ with GitHub Actions required for validation.
 | #1 Architecture | Split activity, theme, workspace, dialogs, editor; memoized theme allocation | UI state hoisting and layout/performance audits |
 | #2 Design | Material 3 tokens, restrained clay cards, project/library discoverability | Complete contrast, adaptive device and typography matrix |
 | #3 Interaction | PRs #9–#14 integrated through PR #15: phone split, tab controls, run targets, Undo, search/replace, palette, error navigation, 200% font smoke | Manual TalkBack, keyboard and foldable acceptance |
-| #4 Motion | Shared duration controller watches Android animator scale; even Full respects system disabled animations; existing tabs, panels, run and cards are connected | Fuller screen transitions, manual reduced-motion and device-wide jank review |
-| #5 Editor | Cancellable viewport-highlighting; redundant worker jobs avoided for edits below visible viewport | Tree-sitter/LSP, semantic editing, IME matrix, multi-cursor, large-files |
-| #6 Safety | Device-bound Keystore AES-GCM for optional cloud API token, automatic migration from plaintext; selective Git stage before commit; bounded imports | Explicit remote OAuth/push/pull, conflict resolution, hostile-file/provider testing |
-| #7 Reliability | Serialized atomic saves, session restoration, curated baseline rules, startup/memory/gfx metrics, static security CI guard, 1x motion emulator samples | Generated baseline profiles, code coverage, lint baseline, multi-hour soak and low-end devices |
-| #8 Documentation | Real emulator screenshots in README; architecture map, contributor guide, changelog, status/QA docs | Physical-device screenshots, stable-signing and release acceptance |
+| #4 Motion | Central duration controller observes system scale; even Full respects disabled animations; lightweight project/language transitions and tablet-sidebar fade/slide | Full navigation choreography, manual reduced-motion and physical-device jank review |
+| #5 Editor | Cancellable viewport highlighting, less offscreen work, logical-line indent/outdent, IME and near-limit file persistence tests | Tree-sitter/LSP, semantic editing, extended IME matrix, multi-cursor and multi-MiB files |
+| #6 Safety | Device-bound encrypted cloud and GitHub tokens; selective local Git staging; GitHub HTTPS origin, user-triggered Fetch, fast-forward Pull and non-force Push | Real remote auth/network tests, OAuth, merge conflict UX and hostile-provider matrix |
+| #7 Reliability | Serialized atomic saves, session restore, curated baseline rules, security gate, near-limit persistence test, lint/JaCoCo reports and release-mode 1x emulator jank | Generated baseline profiles, enforced lint/coverage thresholds, soak and low-end devices |
+| #8 Documentation | Emulator screenshots, GitHub sync guide, architecture map, contributor guide, changelog/status/QA docs and 0.5.0-alpha | Physical-device screenshots, stable signing and release acceptance |
 
 ## Evidence
 
@@ -29,7 +29,8 @@ stable signing secrets; fallback debug keys may change.
 Rhino JS, LuaJ Lua, SQLite and limited BeanShell Java execute locally.
 Other editing languages do not automatically have an offline runtime.
 GitHub source import is a bounded ZIP download, not Git clone/sync.
-Remote Git auth/push/pull, a PTY, full Tree-sitter/LSP and physical
-accessibility certification are not implemented.
+GitHub HTTPS sync supports user-supplied tokens, but not an OAuth account
+flow or conflict editor. A PTY, full Tree-sitter/LSP and physical accessibility
+certification are not implemented.
 
 The entries above represent workstream **slices**, not proof of complete delivery.
