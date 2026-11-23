@@ -153,7 +153,7 @@ def main():
     wait_for("Language Manager")
     # Download status no longer pushes installed languages below the screen.
     wait_for("Installed")
-    wait_for("JavaScript")
+    wait_for("executable engines", contains=True)
     tap("Downloads")
     wait_for("DOWNLOAD MANAGER")
     wait_for("Manage Python")
@@ -161,7 +161,7 @@ def main():
     tap("Downloadable")
     wait_for("Python")
     tap("Installed")
-    wait_for("JavaScript")
+    wait_for("executable engines", contains=True)
     # Searching automatically expands to All instead of hiding an edit-only language.
     search = wait_for(field=True)
     tap_node(search)
