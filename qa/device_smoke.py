@@ -157,7 +157,7 @@ def main():
     adb("shell", "input", "keyevent", "4")
     tap_text_result("Python")
     wait_for("Python runtime")
-    wait_for("Check for updates")
+    wait_for("Download latest Python")
     wait_for("Remove Python module")
     tap("Close")
     tap("Close languages")

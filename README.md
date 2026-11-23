@@ -39,10 +39,10 @@ Write, run, and manage projects from your phone.
 | `T02` Android 15 online-run smoke | DONE — Android 13/15 device smoke passed | Nov 23, 2026 · 11:49 PM |
 | `T03` App-wide bug audit | IN PROGRESS — module error/recovery review and regressions | Nov 24, 2026 · 12:23 AM |
 | `T04` Data-preserving signed upgrades | DONE for API 33/35 emulators; physical-device validation remains | Nov 23, 2026 · 11:49 PM |
-| `T05` Python download/install/update | IN PROGRESS — version/downgrade tests + new Android 13/15 missing-module UI flow; CI pending | Nov 24, 2026 · 12:26 AM |
+| `T05` Python download/install/update | IN PROGRESS — missing-module UI passed API35; legacy QA labels fixed; retest pending | Nov 24, 2026 · 1:00 AM |
 | `T06` Additional offline modules | QUEUED — feasibility and real runtimes required | Not started |
 | `T07` Five-theme UI/UX refinement | IN PROGRESS — fixed Kotlin semantics receiver shadowing after CI compile failure; rerun pending | Nov 24, 2026 · 12:39 AM |
-| `T08` Interactive tutorial and accessibility | IN PROGRESS — API35 tutorial Skip persistence failure fixed; CI retry pending | Nov 24, 2026 · 12:48 AM |
+| `T08` Interactive tutorial and accessibility | IN PROGRESS — resume/Skip process-restart passed API35, API33/full accessibility pending | Nov 24, 2026 · 1:00 AM |
 | `T09` Full QA and stable release readiness | QUEUED | Not started in this session |
 
 **Recent task events (Philippine time, 12-hour clock)**
@@ -58,11 +58,12 @@ Write, run, and manage projects from your phone.
 | Nov 24 · 12:32 AM | T08 | Added Android 13/15 tutorial resume UI smoke; CI pending |
 | Nov 24 · 12:35 AM | T07 | Six accents labeled with selection semantics and 48dp targets |
 | Nov 24 · 12:39 AM | T07 | CI compiler error from selected-name shadowing diagnosed/fixed |
-| Nov 24 · 12:48 AM | T08 | API35 found Skip not persisted after immediate restart; synchronous save and test assertion added |
+| Nov 24 · 12:48 AM | T08 | Fixed Skip persistence by durable preference commit and dismissal check |
+| Nov 24 · 1:00 AM | T08, T05 | API35 tutorial and missing-module journeys passed; old smoke expected renamed Python button and failed; test sync committed |
 
 The complete append-only [task audit log](docs/development/PROGRESS_LOG.md) records commits, failures, tests and handoffs. Times are in **Asia/Manila**, written with **AM/PM**, not military time.
 
-**Last audit:** Nov 24, 2026 · 12:48 AM PHT — fixed API35 tutorial persistence regression, retest pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** Nov 24, 2026 · 1:00 AM PHT — API35 tutorial and missing-module journeys passed, legacy test label corrected · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.

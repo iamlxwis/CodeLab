@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 1:00 AM PHT
+
+API35 device run 45220967836 proved tutorial resume + missing-module recovery test passed, then old smoke expected obsolete `Check for updates` UI text. Actual label `Download latest Python` deliberately reflects full APK retrieval. Updated both old device and signed-upgrade QA scripts. Wait for renewed API33/35 CI before marking overall device/release passes. Mark STOPPED at chat boundary.
+
 ## Nov 24, 2026 · 12:48 AM PHT
 
 T08 API35 failure: immediate process death after intentional Skip reopened topic3, despite Try-resume working. Persist guide flags using checked synchronous SharedPreferences.commit(), and QA now checks dismissal before force-stop. Rerun required; keep T08 open. Before final answer commit STOPPED session marker.

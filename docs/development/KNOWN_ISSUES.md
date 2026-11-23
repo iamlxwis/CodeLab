@@ -196,3 +196,7 @@ CI [45218655670](https://github.com/iamlxwis/CodeLab/actions/runs/45218655670) f
 ## KI-046 — tutorial Skip lost on immediate process death (Nov 24, 2026 · 12:48 AM PHT)
 
 [Android 15 device run 45219173196](https://github.com/iamlxwis/CodeLab/actions/runs/45219173196) ended at tutorial resumed topic 3 instead of library after Skip plus fast force-stop/relaunch. Potential cause asynchronous preference apply; new code commits checked synchronously and smoke first asserts actual dismissal before termination. **Rerun pending; cause not yet conclusively proven.** Signing and previous release preserved.
+
+## KI-046 partial resolution / KI-047 outdated Python label in existing QA (Nov 24, 2026 · 1:00 AM PHT)
+
+Android15 [run 45220967836](https://github.com/iamlxwis/CodeLab/actions/runs/45220967836) successfully ran the tutorial Try/Skip process-restart smoke and missing-Python recovery smoke; so KI-046 has specific API35 pass evidence. The next old full smoke failed solely at UI label `Check for updates` after the app correctly renamed the button `Download latest Python`. Updated both device smoke and production-signed upgrade smoke expected text; CI rerun pending. T08 and T05 not fully complete.

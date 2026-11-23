@@ -134,7 +134,7 @@ def validate_persistence_and_python():
     ui.adb("shell", "input", "keyevent", "4")
     ui.tap_text_result("Python")
     ui.wait_for("Python runtime")
-    ui.wait_for("Check for updates")
+    ui.wait_for("Download latest Python")
     ui.tap("Close")
     ui.tap("Close languages")
     ui.tap("Project library")
