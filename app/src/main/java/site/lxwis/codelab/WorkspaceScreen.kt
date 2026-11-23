@@ -534,66 +534,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
-        "appearance" -> AlertDialog(onDismissRequest = { dialog = "" },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = { Text("Appearance") },
-            text = { Column(Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("THEME", color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall)
-                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    listOf("Dark", "Light", "System").forEach { mode ->
-                        FilterChip(selected = m.appearance == mode, onClick = { m.setMode(mode) },
-                            label = { Text(mode) })
-                    }
-                }
-                Text("PRESET", color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall)
-                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    listOf("Obsidian", "Nocturne", "Paper", "Dracula", "One Dark", "Monokai", "GitHub Light", "OLED").forEach { preset ->
-                        FilterChip(selected = m.themePreset == preset, onClick = { m.choosePreset(preset) },
-                            label = { Text(preset) })
-                    }
-                }
-                Text("ACCENT", color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall)
-                Row(Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("Mint", "Blue", "Violet", "Amber").forEach { accent ->
-                        FilterChip(selected = m.accent == accent, onClick = { m.chooseAccent(accent) },
-                            label = { Text(accent) })
-                    }
-                }
-                Text("ANIMATIONS", color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall)
-                Row(Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    listOf("System", "Full", "Reduced").forEach { mode ->
-                        FilterChip(selected = m.motionPreference == mode,
-                            onClick = { m.chooseMotion(mode) }, label = { Text(mode) })
-                    }
-                }
-                Text("Motion intensity · " + m.motionIntensity + "%",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Slider(value = m.motionIntensity.toFloat(),
-                    onValueChange = { m.chooseMotionIntensity(it.toInt()) },
-                    valueRange = 0f..100f)
-                Text("INTERFACE DENSITY", color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelSmall)
-                Row(Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    listOf("Compact", "Comfortable", "Spacious").forEach { density ->
-                        FilterChip(selected = m.interfaceDensity == density,
-                            onClick = { m.chooseDensity(density) },
-                            label = { Text(density) })
-                    }
-                }
-                Text("More editor preferences are available from the editor toolbar.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            } },
-            confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
+        "appearance" -> AppearanceGallery(m) { dialog = "" }
     }
     m.cloudPending?.let { filename ->
         val language = m.cloudLanguages[CloudJudge0.extension(filename)]

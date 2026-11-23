@@ -49,13 +49,17 @@ internal fun ClayPanel(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val style = LocalCodeLabVisualStyle.current
     Surface(
         modifier = modifier,
-        shape = CodeLabCorners.panel,
-        color = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = CodeLabElevation.tonal,
-        shadowElevation = CodeLabElevation.panel,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        shape = if (style == "Clay") CodeLabCorners.panel else MaterialTheme.shapes.large,
+        color = if (style == "Glass") MaterialTheme.colorScheme.surfaceContainer.copy(alpha = .72f)
+            else MaterialTheme.colorScheme.surfaceContainer,
+        tonalElevation = if (style == "Clay") 3.dp else 0.dp,
+        shadowElevation = if (style == "Clay") 8.dp else 0.dp,
+        border = if (style == "Glass" || style == "Clay")
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .65f))
+            else null
     ) { content() }
 }
 
@@ -66,15 +70,20 @@ internal fun ClayActionCard(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val style = LocalCodeLabVisualStyle.current
     Surface(
         onClick = onClick,
         modifier = modifier,
         enabled = true,
         interactionSource = interactionSource,
-        shape = CodeLabCorners.card,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = CodeLabElevation.tonal,
-        shadowElevation = CodeLabElevation.card,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        shape = if (style == "Clay") CodeLabCorners.card else MaterialTheme.shapes.large,
+        color = if (style == "Glass")
+            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = .72f)
+            else MaterialTheme.colorScheme.surfaceContainerHigh,
+        tonalElevation = if (style == "Clay") CodeLabElevation.tonal else 0.dp,
+        shadowElevation = if (style == "Clay") 9.dp else 0.dp,
+        border = if (style == "Glass" || style == "Clay")
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .65f))
+            else null
     ) { content() }
 }

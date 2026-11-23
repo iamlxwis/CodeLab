@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
@@ -33,42 +34,67 @@ private val day = lightColorScheme(
 @Composable
 internal fun CodeLabTheme(
     themePreset: String,
+    visualStyle: String,
     appearance: String,
     accentPreset: String,
     highContrast: Boolean,
     largeInterfaceText: Boolean,
     content: @Composable (Boolean) -> Unit
 ) {
-            val dark = if (themePreset in listOf("Paper", "GitHub Light")) false
-                else if (themePreset in listOf("Dracula", "One Dark", "Monokai", "OLED")) true else
-                appearance == "Dark" || (appearance == "System" && isSystemInDarkTheme())
+    val dark = when (visualStyle) {
+        "AMOLED" -> true
+        "Paper" -> false
+        else -> appearance == "Dark" || (appearance == "System" && isSystemInDarkTheme())
+    }
     // Do not allocate a new ColorScheme on unrelated editor recompositions.
-    val scheme = remember(themePreset, accentPreset, highContrast, dark) {
-            val base = when (themePreset) {
-                "Nocturne" -> night.copy(
-                    background = Color(0xff0c1020), surface = Color(0xff0c1020),
-                    surfaceContainer = Color(0xff151a2d), surfaceContainerHigh = Color(0xff20263b),
-                    surfaceVariant = Color(0xff222942), outlineVariant = Color(0xff333b55))
-                "Paper", "GitHub Light" -> day
-                "Dracula" -> night.copy(
-                    background = Color(0xff282a36), surface = Color(0xff282a36),
-                    surfaceContainer = Color(0xff323442), surfaceContainerHigh = Color(0xff414356))
-                "One Dark" -> night.copy(
-                    background = Color(0xff282c34), surface = Color(0xff282c34),
-                    surfaceContainer = Color(0xff30353e), surfaceContainerHigh = Color(0xff3c424c))
-                "Monokai" -> night.copy(
-                    background = Color(0xff272822), surface = Color(0xff272822),
-                    surfaceContainer = Color(0xff33352c), surfaceContainerHigh = Color(0xff3e4135))
-                "OLED" -> night.copy(
+    val scheme = remember(themePreset, visualStyle, accentPreset, highContrast, dark) {
+            val palette = if (dark) night else day
+            val base = when (visualStyle) {
+                "AMOLED" -> night.copy(
                     background = Color.Black, surface = Color.Black,
-                    surfaceContainer = Color(0xff101010), surfaceContainerHigh = Color(0xff1b1b1b),
-                    surfaceVariant = Color(0xff191919), outlineVariant = Color(0xff303030))
-                else -> if (dark) night else day
+                    surfaceContainer = Color(0xff101010),
+                    surfaceContainerHigh = Color(0xff1b1b1b),
+                    surfaceVariant = Color(0xff161616),
+                    outlineVariant = Color(0xff303030))
+                "Paper" -> day.copy(
+                    background = Color(0xfffaf8f1), surface = Color(0xfffaf8f1),
+                    surfaceContainer = Color(0xfff3efe5),
+                    surfaceContainerHigh = Color(0xffeae5d8),
+                    surfaceVariant = Color(0xffe9e4d8),
+                    onSurface = Color(0xff272922),
+                    onSurfaceVariant = Color(0xff555950))
+                "Glass" -> palette.copy(
+                    background = if (dark) Color(0xff101c2a) else Color(0xffedf4f7),
+                    surface = if (dark) Color(0xff101c2a) else Color(0xffedf4f7),
+                    surfaceContainer = if (dark) Color(0xff21364b) else Color(0xffe2eff4),
+                    surfaceContainerHigh = if (dark) Color(0xff2a455a) else Color(0xffd4e6ee),
+                    surfaceVariant = if (dark) Color(0xff30485c) else Color(0xffdae8ef))
+                "Clay" -> palette.copy(
+                    background = if (dark) Color(0xff161e20) else Color(0xfff3f5f0),
+                    surface = if (dark) Color(0xff161e20) else Color(0xfff3f5f0),
+                    surfaceContainer = if (dark) Color(0xff263337) else Color(0xffe9eeea),
+                    surfaceContainerHigh = if (dark) Color(0xff344347) else Color(0xffe0e9e3),
+                    surfaceVariant = if (dark) Color(0xff354447) else Color(0xffdde8e1))
+                else -> when (themePreset) {
+                    "Nocturne" -> palette.copy(
+                        background = Color(0xff0c1020), surface = Color(0xff0c1020),
+                        surfaceContainer = Color(0xff151a2d),
+                        surfaceContainerHigh = Color(0xff20263b))
+                    "Dracula" -> palette.copy(
+                        background = Color(0xff282a36), surface = Color(0xff282a36))
+                    "One Dark" -> palette.copy(
+                        background = Color(0xff282c34), surface = Color(0xff282c34))
+                    "Monokai" -> palette.copy(
+                        background = Color(0xff272822), surface = Color(0xff272822))
+                    else -> palette
+                }
             }
             val accent = when (accentPreset) {
                 "Blue" -> if (dark) Color(0xff8ab7fa) else Color(0xff245eaf)
                 "Violet" -> if (dark) Color(0xffc4b0ff) else Color(0xff6747b7)
                 "Amber" -> if (dark) Color(0xffffc978) else Color(0xff936000)
+                "Rose" -> if (dark) Color(0xffff92b7) else Color(0xffa52655)
+                "Mono" -> if (dark) Color(0xffced4d5) else Color(0xff465152)
                 else -> base.primary
             }
             val accentContainer = accent.copy(alpha = .15f).compositeOver(base.surface)
@@ -103,16 +129,25 @@ internal fun CodeLabTheme(
                     fontSize = baseTypography.labelSmall.fontSize * textScale)
             )
     }
-    val shapes = remember {
-        Shapes(
-            extraSmall = RoundedCornerShape(7.dp),
-            small = RoundedCornerShape(11.dp),
-            medium = RoundedCornerShape(15.dp),
-            large = RoundedCornerShape(20.dp),
-            extraLarge = RoundedCornerShape(28.dp)
-        )
+    val shapes = remember(visualStyle) {
+        when (visualStyle) {
+            "Clay" -> Shapes(
+                extraSmall = RoundedCornerShape(12.dp), small = RoundedCornerShape(17.dp),
+                medium = RoundedCornerShape(22.dp), large = RoundedCornerShape(28.dp),
+                extraLarge = RoundedCornerShape(34.dp))
+            "AMOLED" -> Shapes(
+                extraSmall = RoundedCornerShape(5.dp), small = RoundedCornerShape(8.dp),
+                medium = RoundedCornerShape(12.dp), large = RoundedCornerShape(15.dp),
+                extraLarge = RoundedCornerShape(20.dp))
+            else -> Shapes(
+                extraSmall = RoundedCornerShape(7.dp), small = RoundedCornerShape(11.dp),
+                medium = RoundedCornerShape(15.dp), large = RoundedCornerShape(20.dp),
+                extraLarge = RoundedCornerShape(28.dp))
+        }
     }
-    MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes) {
-        content(dark)
+    CompositionLocalProvider(LocalCodeLabVisualStyle provides visualStyle) {
+        MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes) {
+            content(dark)
+        }
     }
 }

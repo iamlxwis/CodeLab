@@ -167,6 +167,20 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     val runner = RunSession(app)
     var appearance by mutableStateOf(preferences.getString("mode", "Dark") ?: "Dark")
         private set
+    var visualStyle by mutableStateOf(
+        preferences.getString("visual-style", null)?.takeIf(CodeLabVisualStyles::accepts)
+            ?: when (preferences.getString("preset", "Obsidian")) {
+                "OLED" -> "AMOLED"
+                "Paper", "GitHub Light" -> "Paper"
+                else -> "Minimal"
+            }
+    )
+        private set
+    fun chooseVisualStyle(value: String) {
+        if (!CodeLabVisualStyles.accepts(value)) return
+        visualStyle = value
+        preferences.edit().putString("visual-style", value).apply()
+    }
     var themePreset by mutableStateOf(preferences.getString("preset", "Obsidian") ?: "Obsidian")
         private set
     fun choosePreset(value: String) {
@@ -1180,7 +1194,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun chooseAccent(value: String) {
-        if (value !in listOf("Mint", "Blue", "Violet", "Amber")) return
+        if (value !in listOf("Mint", "Blue", "Violet", "Amber", "Rose", "Mono")) return
         accent = value
         preferences.edit().putString("accent", value).apply()
     }

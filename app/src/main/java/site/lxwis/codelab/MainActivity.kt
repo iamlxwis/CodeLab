@@ -21,6 +21,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             CodeLabTheme(
                 themePreset = model.themePreset,
+                visualStyle = model.visualStyle,
                 appearance = model.appearance,
                 accentPreset = model.accent,
                 highContrast = model.highContrast,
