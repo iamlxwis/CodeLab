@@ -1,3 +1,5 @@
+> **Verified milestone, 2026-11-23:** Python 3.13 is available as a separate 36.45 MB APK for the 3.53 MB editor, with signature-bound IPC and passing [offline emulator test](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) at source `216a58aa`. This is **not** yet a built-in installation manager, and all other optional language packs remain pending.
+
 # CodeLab modular offline execution: engineering contract
 
 Status: **design and capability registry implemented; optional engine APKs NOT released**. For the latest user-approved product contract and handoff, see [development decisions](development/DECISIONS.md) and [project memory](development/PROJECT_MEMORY.md).

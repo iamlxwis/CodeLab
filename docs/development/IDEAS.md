@@ -14,7 +14,7 @@ Updated: 2026-11-23. **This is the authoritative, durable list of user requests 
 
 | ID | Added | Request / acceptance criteria | Status | Evidence / follow-up |
 | --- | --- | --- | --- | --- |
-| IDEA-001 | 2026-11-23 | CodeLab is a lightweight Android editor; all optional execution engines are separate installable/removable language modules, **including Python** | Approved | D-001, D-003; currently bundled engines must be migrated |
+| IDEA-001 | 2026-11-23 | CodeLab is a lightweight Android editor; all optional execution engines are separate installable/removable language modules, **including Python** | In progress | Python companion passed emulator; JS/Lua/Java still bundled. [CI](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) |
 | IDEA-002 | 2026-11-23 | Run UI offers an intentional **Online** or **Offline** choice. Online has explicit consent before source leaves device. Offline prompts to install the runtime if absent, then runs without internet | Approved | D-002, D-006; full choice and module installation incomplete |
 | IDEA-003 | 2026-11-23 | Allow editing and provide examples for every catalog entry; project choices Beginner Example, Hello World, Blank | In progress | StarterExamples + GuidedProjectSheet committed; complete device acceptance pending |
 | IDEA-004 | 2026-11-23 | Five high-quality themes: Minimal, Glass, Clay, AMOLED, Paper; simplify menus and screens | In progress | AppearanceGallery committed; overall screen-wide fidelity and accessibility unverified |
@@ -23,7 +23,7 @@ Updated: 2026-11-23. **This is the authoritative, durable list of user requests 
 | IDEA-007 | 2026-11-23 | **Every newly introduced thought/request remains recorded until done.** New sessions must retain unfinished items; completed ones remain in history, never silently deleted | Approved | D-012; this ledger and AGENTS.md rule |
 | IDEA-008 | 2026-11-23 | Direct commits to main with frequent verification and handoff updates, unless user changes workflow | Approved | D-009; AGENTS.md |
 | IDEA-009 | 2026-11-23 | Support popular offline languages via modular engine packs, prioritize Python, JavaScript, Lua, C/C++, TypeScript, Java/Kotlin, PHP/Ruby, then feasibility for Go/Rust/C# | Approved | docs/ENGINE_PACKS.md; runtime packs not yet delivered |
-| IDEA-010 | 2026-11-23 | Python runtime must actually pass offline device execution, including stdout, stdin and error handling, rather than merely building | In progress | Companion Python APK source added; requires core integration and CI/emulator acceptance |
+| IDEA-010 | 2026-11-23 | Python runtime must actually pass offline device execution, including stdout, stdin and error handling, rather than merely building | Verified complete | APK + emulator + connected instrumentation passed at `216a58aa` ([CI](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400)); physical-device coverage is a separate unresolved quality gate |
 
 ## Revision history
 
@@ -35,3 +35,7 @@ IDEA-001 / IDEA-010: removed stale bundled Python runtime metadata from the
 core (source patch; unit tests pending). IDEA-003: Web project template is now
 searchable in the guided creation browser (source patch; emulator retest pending).
 No new approved user requirement was dropped or marked complete.
+
+## 2026-11-23 verification milestone
+
+The original IDEA-010 requirement is now **verified complete on emulator** at `216a58aa`, with [passing APK](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472) and [passing device smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400). Preserve IDEA-010 as historical verification evidence. IDEA-001/002/003/004/005/006/007/008/009 remain tracked at their stated statuses; Python's success does not imply the full modular marketplace or end-to-end UI redesign is complete.

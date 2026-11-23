@@ -1,3 +1,5 @@
+> **Current verified baseline**: `216a58aa` — [APK green](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472), [emulator green](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400). Earlier rows describing bundled Python and failing emulator are historical and superseded by this verification.
+
 # Completed work — implementation versus verification
 
 Updated 2026-11-23; status inspected at source SHA `3c37ae8c01dc`.
@@ -26,3 +28,15 @@ Evidence:
 This commit removes Python from the core runtime inventory and restores the
 Web multi-file template to language search. These source fixes are **not yet
 marked verified**; check both build and emulator workflows for the new SHA.
+
+## Verified on 2026-11-23 — source `216a58aa`
+
+| Item | Result | Evidence |
+| --- | --- | --- |
+| Python optional companion APK, exact-package/same-signature binding | APKs built, signed and published; emulator installs pack before running code offline | [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472), [emulator](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) |
+| CPython code execution, stdin/error handling | Emulator smoke and Android instrumentation passed | [Device](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) |
+| Python removed from core bundled runtime registry | JVM unit tests passed | [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472) |
+| Web multi-file starter discoverability | Search/creation/preview journey passed on emulator | [Device](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) |
+| Other supported emulator journeys | JS/Lua/Java beta, SQL, HTML preview, editor storage/rotation, instrumentation/performance scripts passed | [Device](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) |
+
+Not verified: physical phones, native module install/update/uninstall workflow, explicit Online/Offline selector, stable signing or additional downloadable engines.

@@ -1,7 +1,9 @@
+> **Current canonical verification:** SHA `216a58aa` passed [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472) and [emulator](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400). Earlier section headings marked “unverified” are preserved historical snapshots and are superseded by this verified status.
+
 # CodeLab project memory — handoff snapshot
 
 **Updated:** 2026-11-23
-**Source head inspected before this documentation commit:** `3c37ae8c01dcdab225b5f13273c5d01f870983e9`
+**Latest VERIFIED source SHA:** `216a58aaf5b7b01e91840344d11f2144952cf1b8` (both APK and emulator CI passed).
 **Repository:** `iamlxwis/CodeLab` · default branch `main`
 **Purpose:** Let another AI coding assistant resume accurately without access to earlier chats.
 **Persistent idea ledger:** [IDEAS.md](IDEAS.md); every new user thought is logged with an immutable ID, remains visible until tested/complete and is never silently deleted.
@@ -24,19 +26,20 @@ A high-quality **native Android editor** with professional vector icons (no emoj
 - Existing opt-in cloud execution machinery through `CloudJudge0.java`; current run-target UI includes capability-aware online/local status. A **complete explicit online-vs-offline run choice and downloadable pack manager** are not yet implemented or verified.
 - `docs/ENGINE_PACKS.md` documents proposed signed runtime-pack security requirements, not released packs.
 
-## Latest CI observed for source head `3c37ae8c`
+## Current verified CI — source `216a58aa`
 
-- [Android APK run 45129100978](https://github.com/iamlxwis/CodeLab/actions/runs/45129100978): **success** (source builds; this does not establish device functionality).
-- [Android device smoke run 45129100951](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951): **failure**. Emulator journey timed out waiting for visible text `Hello from CodeLab!`. The uploaded device evidence definitively shows `Exit 1` and `Python runtime error: IllegalStateException: SharedPreferences cannot be accessed if UserManager is not available. (e.g. from inside an isolated process)` during Chaquopy bootstrap. An isolated service cannot initialize Chaquopy as currently configured. Keep a strong process boundary: plan separately installable companion runtime with an independent app UID and authenticated IPC rather than disabling isolation in the core.
-- After the documentation commit, these CI statuses describe the **previous implementation SHA**, not the new docs-only commit. Check new run results.
+- [Android APK build + JVM tests](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472): **PASS**. Produces signed (fallback-debug) `CodeLab.apk` and separately signed `CodeLab-Python.apk`; artifacts are published to the same release.
+- [Android emulator smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400): **PASS**, including CodeLab/Python companion installation, airplane-mode Python execution, Python stdin/error instrumentation, JavaScript/Lua/Java beta, SQLite, HTML preview, editor storage/tab journeys, Android connected instrumentation, motion and accessibility scripts. Device artifact `result.txt` explicitly records these functional outcomes.
+- Release: `CodeLab.apk` **3,527,082 bytes**, `CodeLab-Python.apk` **36,453,454 bytes**. Fallback debug signing still prevents guaranteed cross-release updates. Physical Android device acceptance remains unverified.
+- Superseded failures: Python isolated-process bootstrap ([45129100951](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951)), two stale bundled-runtime assertions ([45134808317](https://github.com/iamlxwis/CodeLab/actions/runs/45134808317)), and missing searchable Web template ([45133009129](https://github.com/iamlxwis/CodeLab/actions/runs/45133009129)). Preserved in `KNOWN_ISSUES.md` as history; resolved by the companion architecture and commit `216a58aa`.
 
-## Next action — do this before broader features
+## Next action — after verified Python module
 
-1. Fix the now-confirmed Chaquopy isolated-worker initialization failure by migrating Python into a separately signed, independently sandboxed Android runtime module (or validate another safe mechanism); preserve build success, then retest real offline Python stdout/stdin/errors.
-2. Design and implement a **real modular runtime contract**: signed Android companion engine packages or appropriate store-delivered features, certificate checks, versioned authenticated IPC, install-detection, ABI and version checks, uninstall/status, resource bounds and isolation.
-3. Migrate existing bundled runtimes, including Python, to **optional** modules only when their offline behavior is independently proven; guard migrations with tests.
-4. Build a clear Run choice (Online / Offline), and an install/manage-runtimes experience. Never auto-upload source; online support can depend on provider availability.
-5. Release with stable signing, physical-device verification and verified emulator CI. Additional languages follow only when genuine compatible engines exist.
+1. Implement clear explicit **Online / Offline** Run selector, with consent before remote upload. Do not silently send code online or assume a cloud compiler is always available.
+2. Build a real language pack manager with installation/update/uninstall state, package compatibility and signing checks; current Python button opens a GitHub release APK and requires Android installation.
+3. Move the remaining optional Rhino JS, LuaJ Lua and BeanShell Java beta engines to verified companion modules, protecting existing project data; maintain tests.
+4. Validate absence/untrusted/wrong-version pack behavior, cancellation/timeouts, upgrades, physical-device and ABI coverage.
+5. Add more executable languages only when Android-compatible runtime modules and CI tests actually work. Preserve all 10 ideas in `IDEAS.md` until done; maintain history.
 
 Read `DECISIONS.md` and `KNOWN_ISSUES.md` before acting. Update this file in **every meaningful implementation commit**.
 

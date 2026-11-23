@@ -1,3 +1,5 @@
+> **Latest evidence:** Signed editor/Python APK build and JVM tests **pass** at [`216a58aa`](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472); emulator device smoke including Python, Web preview, JS, SQL, Lua and Java beta **passes** [here](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400). Historical status rows below may predate this verified milestone. Python is optional companion APK, not bundled. Other engines remain bundled and must be modularized.
+
 > **Current handoff:** Read [docs/development/PROJECT_MEMORY.md](development/PROJECT_MEMORY.md) and [DECISIONS.md](development/DECISIONS.md). Latest approved architecture differs from some earlier plans.
 
 # CodeLab 2.0 implementation status

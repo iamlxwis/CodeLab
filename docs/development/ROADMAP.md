@@ -4,13 +4,13 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P0 — build and runtime reliability
 
-- [ ] Verify registry cleanup removes the two Python-as-bundled unit test failures ([45134808317](https://github.com/iamlxwis/CodeLab/actions/runs/45134808317)). Patch committed, CI pending.
-- [ ] Verify searchable Web template unblocks emulator journey ([45133009129](https://github.com/iamlxwis/CodeLab/actions/runs/45133009129)). Patch committed, CI pending.
+- [x] Verify Python bundled-registry cleanup: [APK CI passed](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472) on `216a58aa`.
+- [x] Verify searchable Web template: [emulator passed](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) on `216a58aa`.
 
 - [x] APK builds at source SHA `3c37ae8c`; see [build](https://github.com/iamlxwis/CodeLab/actions/runs/45129100978).
 - [x] Diagnose [emulator Python-output timeout](https://github.com/iamlxwis/CodeLab/actions/runs/45129100951). Actual UI trace confirms `Exit 1`: Chaquopy reads SharedPreferences from an isolated process where UserManager is unavailable.
-- [ ] Repair using a properly isolated, signed companion runtime APK (not simply an unisolated service in CodeLab), then demonstrate real offline stdout/stdin/errors.
-- [ ] Achieve passing APK + Android emulator smoke for the same source commit; retain exact run URLs and SHA.
+- [x] Separate signed Python companion APK using its own UID and signature-checked IPC; [emulator offline Python passed](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) including stdio/error instrumentation.
+- [x] Both [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472) and [device smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) passed for `216a58aa`.
 - [ ] Verify real device API/ABI coverage; Python integration currently targets arm64-v8a and x86_64, not 32-bit-only devices.
 
 ## P1 — optional module architecture (approved end state)
@@ -25,7 +25,7 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P2 — expand real offline language coverage
 
-- [ ] First downloadable Python runtime prototype (existing Chaquopy implementation is **bundled**, not a module).
+- [x] First separately installable Python APK (Chaquopy in companion app; core editor is 3.53 MB), [verified on emulator](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400). Automatic in-app pack installer/uninstaller is still pending.
 - [ ] Downloadable JavaScript and Lua modules; assess grouping TypeScript transpiler with JS without silently bundling either.
 - [ ] Valid Android-compatible C/C++ toolchain prototype, with ABI/SDK tests.
 - [ ] Full Java/Kotlin compilers versus existing limited BeanShell Java beta.

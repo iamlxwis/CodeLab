@@ -1,3 +1,5 @@
+> **Current implementation** (`216a58aa`): Chaquopy CPython 3.13 is delivered as a **separate companion APK**, not embedded in CodeLab core. The emulator test suite passed offline Python execution with input/output/error instrumentation. [Evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400). The following original notes describe the earlier bundled design and are superseded where they differ.
+
 # Python 3.13 runtime integration
 
 Embedded CPython 3.13 via Chaquopy 17.2.0 (MIT); builds target arm64-v8a and x86_64 only.
