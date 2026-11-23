@@ -20,9 +20,13 @@ def main():
     ui.adb("shell", "pm", "clear", PACKAGE)
     ui.launch()
     ui.wait_for("Welcome to CodeLab", timeout=45)
-    ui.tap("Next")
-    ui.tap("Next")
-    ui.tap("Next")
+    for action, expected in (
+        ("Next", "Create a project"),
+        ("Next", "Choose language and template"),
+        ("Next", "Import projects"),
+    ):
+        ui.tap(action)
+        ui.wait_for(expected)
     ui.tap("Finish basics")
     ui.wait_for("New project")
     ui.tap("New project")

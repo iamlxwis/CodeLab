@@ -98,8 +98,15 @@ def open_workspace_action(name):
 def create_test_data():
     ui.launch()
     ui.wait_for("Welcome to CodeLab", timeout=45)
-    for text in ("Next", "Next", "Next", "Finish basics"):
-        ui.tap(text)
+    # Wait for each Compose step; back-to-back taps can race the recomposition.
+    for action, expected in (
+        ("Next", "Create a project"),
+        ("Next", "Choose language and template"),
+        ("Next", "Import projects"),
+    ):
+        ui.tap(action)
+        ui.wait_for(expected)
+    ui.tap("Finish basics")
     ui.wait_for("New project")
     ui.tap("New project")
     ui.tap_node(ui.wait_for(field=True))

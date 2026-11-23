@@ -170,6 +170,12 @@ def main():
     wait_for("Python runtime")
     wait_for("Download latest Python")
     wait_for("Remove Python module")
+    tap("Remove Python module")
+    wait_for("Remove Python runtime?")
+    wait_for("Open uninstaller")
+    tap("Cancel")
+    # A cancelled confirmation must keep the installed signed module intact.
+    wait_for("Python runtime")
     tap("Close")
     tap("Close languages")
     wait_for("New project")
