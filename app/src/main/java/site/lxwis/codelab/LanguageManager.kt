@@ -1,5 +1,8 @@
 package site.lxwis.codelab
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,13 +29,19 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
     var search by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf("All") }
     var inspected by remember { mutableStateOf<SupportedLanguage?>(null) }
-    val detected = remember { OfflineRuntimeRegistry.engines()
-        .associateBy({ it.extension }, { OfflineRuntimeRegistry.locallyAvailable(it.extension) }) }
+    val context = LocalContext.current
+    var recheck by remember { mutableIntStateOf(0) }
+    val python = remember(recheck) { PythonModuleLocator.check(context) }
+    val detected = remember(python.state) {
+        OfflineRuntimeRegistry.engines()
+            .associateBy({ it.extension }, { OfflineRuntimeRegistry.locallyAvailable(it.extension) }) +
+            ("py" to python.ready)
+    }
     val filteredLanguages = catalog.filter { language ->
         (language.name.contains(search, ignoreCase = true) ||
             language.extension.contains(search, ignoreCase = true)) &&
         when (filter) {
-            "Offline" -> language.local != null
+            "Offline" -> detected[language.extension] == true
             "Cloud ready" -> model.isOnline && model.cloudLanguages.containsKey(language.extension)
             else -> true
         }
@@ -44,18 +53,36 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
             title = { Text(language.name + " runtime") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(if (engine == null) RuntimePackCatalog.capability(language.name).label else if (detected[language.extension] == true)
+                    Text(if (language.name == "Python") python.description
+                        else if (engine == null) RuntimePackCatalog.capability(language.name).label else if (detected[language.extension] == true)
                         "Installed in this APK" else "Runtime unavailable",
                         style = MaterialTheme.typography.titleMedium)
-                    Text(engine?.engine?.plus(" · ")?.plus(engine.version)
-                        ?: "Editing supported, execution requires a compatible online compiler.")
+                    Text(if (language.name == "Python") "CPython 3.13 · optional companion APK"
+                        else engine?.engine?.plus(" · ")?.plus(engine.version)
+                            ?: "Editing supported, execution requires a compatible online compiler.")
                     Text(engine?.capabilities ?: RuntimePackCatalog.capability(language.name).detail,
                         style = MaterialTheme.typography.bodySmall)
                     Text(engine?.limitations ?: "The Android app does not bundle an offline toolchain for this language.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("Bundled engines require no download. Optional compiler packs are not available yet.",
+                    Text(if (language.name == "Python")
+                        "Install the signed Python pack. The module runs offline in its own Android sandbox."
+                        else "Other engines remain bundled during modular migration.",
                         style = MaterialTheme.typography.labelSmall)
+                    if (language.name == "Python") {
+                        if (!python.ready) {
+                            TextButton(onClick = {
+                                context.startActivity(Intent(Intent.ACTION_VIEW,
+                                    Uri.parse(PythonModuleLocator.DOWNLOAD_URL)))
+                            }) { Text("Download Python module") }
+                        } else {
+                            Text("Module installed. Uninstall through Android App settings.",
+                                style = MaterialTheme.typography.bodySmall)
+                        }
+                        TextButton(onClick = { recheck++ }) {
+                            Text("Recheck installation")
+                        }
+                    }
                 }
             }, confirmButton = { TextButton(onClick = { inspected = null }) { Text("Close") } })
     }
@@ -131,7 +158,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
                 items(filteredLanguages, key = { it.extension }) { language ->
                     val cloud = model.cloudLanguages[language.extension]
                     val engine = OfflineRuntimeRegistry.manifest(language.extension)
-                    val localInstalled = engine != null && detected[language.extension] == true
+                    val localInstalled = detected[language.extension] == true
                     Row(Modifier.fillMaxWidth().heightIn(min = 50.dp)
                         .clickable { inspected = language },
                         verticalAlignment = Alignment.CenterVertically) {
@@ -140,6 +167,8 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
                         Column(Modifier.weight(1f).padding(start = 12.dp)) {
                             Text(language.name, style = MaterialTheme.typography.bodyMedium)
                             Text(when {
+                                language.name == "Python" -> python.description +
+                                    (if (cloud != null) " · Cloud ready" else "")
                                 localInstalled && cloud != null -> "Offline · " + engine!!.engine + " " + engine.version + " · Cloud ready"
                                 localInstalled -> "Offline · " + engine!!.engine + " " + engine.version
                                 engine != null -> "Offline runtime unavailable"

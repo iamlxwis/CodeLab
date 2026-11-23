@@ -84,3 +84,11 @@ and new project sheet distinguish installed/verified Python from missing-pack
 and online-only states. Tests cover the three corresponding Python capability
 states. Future general online/offline choice and fully native pack management
 remain pending.
+
+## Python package download entry point (this commit)
+
+Language Manager now reads the verified package status and offers a button
+to open the exact Python APK asset in CodeLab's GitHub release. Android handles
+the download/installation; the user may recheck status after returning.
+**This is not yet a native module download/install manager.** The companion
+asset becomes available only after a successful release workflow.
