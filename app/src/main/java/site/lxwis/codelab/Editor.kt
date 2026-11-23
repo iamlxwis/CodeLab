@@ -181,7 +181,7 @@ fun CodeEditor(
                     editor.text.toString(), editor.selectionStart)
                 if (oldName == null) renameError = "No identifier at cursor."
                 else try {
-                    editor.replaceSource(CodeAnalysis.lexicalRename(
+                    editor.replaceFromUser(CodeAnalysis.lexicalRename(
                         editor.text.toString(), oldName, renameValue))
                     renameDialog = false
                 } catch (ex: IllegalArgumentException) {
@@ -636,7 +636,7 @@ fun CodeEditor(
                         if (pattern != null) {
                             val count = pattern.findAll(original).count()
                             if (count > 0) {
-                                editor.replaceSource(pattern.replace(original) { replacement })
+                                editor.replaceFromUser(pattern.replace(original) { replacement })
                                 result = "$count replacements"
                             } else result = "No matches"
                         }

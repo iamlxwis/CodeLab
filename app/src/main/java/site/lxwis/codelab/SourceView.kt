@@ -344,6 +344,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         }
     }
 
+    /** Synchronize an external model snapshot without writing it back to the model. */
     fun replaceSource(source: String) {
         val cursor = selectionStart.coerceIn(0, source.length)
         syncing = true
@@ -353,6 +354,15 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         } finally {
             syncing = false
         }
+    }
+
+    /** Apply a user-invoked whole-file edit and notify autosave exactly as typing does. */
+    fun replaceFromUser(source: String) {
+        val editable = text ?: return
+        if (editable.toString() == source) return
+        val cursor = selectionStart.coerceIn(0, source.length)
+        editable.replace(0, editable.length, source)
+        setSelection(cursor)
     }
 
     fun duplicateCurrentLine() {

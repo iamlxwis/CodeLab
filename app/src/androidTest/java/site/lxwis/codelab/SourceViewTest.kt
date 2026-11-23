@@ -56,4 +56,21 @@ class SourceViewTest {
             assertEquals("if (ready) {\n    print(42)}    ", editor.text.toString())
         }
     }
+
+    @Test fun userWholeFileEditsNotifyAutosaveButModelSyncDoesNot() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.runOnMainSync {
+            val editor = SourceView(ContextThemeWrapper(instrumentation.targetContext,
+                android.R.style.Theme_Material), "main.kt")
+            editor.setText("val old = 1")
+            val changes = mutableListOf<String>()
+            editor.changed = { changes.add(it) }
+            editor.replaceSource("val synced = 2")
+            assertEquals(emptyList<String>(), changes)
+            editor.replaceFromUser("val saved = 3")
+            assertEquals(listOf("val saved = 3"), changes)
+            editor.replaceFromUser("val saved = 3")
+            assertEquals(1, changes.size)
+        }
+    }
 }
