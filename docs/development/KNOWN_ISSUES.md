@@ -172,3 +172,7 @@ Actual APK signing blocks for [a11d15e](https://github.com/iamlxwis/CodeLab/acti
 ## KI-040 — Python module downloaded APK version not checked; stale completed-download file (Nov 24, 2026, 12:23 AM PHT)
 
 Source fix authored: prior `Check for updates` actually re-downloaded a full APK and offered installation irrespective of whether the APK version was older than the installed version; DownloadManager could claim successful transfer after the APK file was removed. Introduced signed+same-package APK version comparison, downgrade rejection, explicit update/reinstall labels and local-file missing failure. 5 JVM policy regressions. **CI and true Android download/install not yet verified**; T05 open.
+
+## KI-041 — Missing Python recovery UI not previously tested without installed companion (Nov 24, 2026, 12:26 AM PHT)
+
+The existing Android device smoke installed Python before app launch, so it could not prove missing-module/offline Run guidance. A new disposable emulator test launches the editor with no companion, selects Python, executes Offline Run, verifies error and in-app Manage Python > Download Python. **Source test added, no passing emulator proof yet**, no downloads or installation performed; T05 remains open.

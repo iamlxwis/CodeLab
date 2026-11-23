@@ -1,3 +1,9 @@
+## Nov 24, 2026 · 12:26 AM PHT — module recovery emulator QA
+
+- [ ] Confirm new `qa/missing_python_smoke.py` passes on API33 and API35, preserving successful legacy `qa/device_smoke.py` and release QA.
+- [ ] Add downloadable APK install/update end-to-end QA with Android system consent; do not report installation success based only on missing-module prompt tests.
+- [ ] Make security checks and module install/downgrade messages accessible with TalkBack.
+
 ## Nov 24, 2026 · 12:23 AM PHT — module upgrade guard checkpoint
 
 - [ ] Verify new `PythonModuleVersionPolicyTest` and Android signing/install workflows in CI; fix failures without weakening policies.

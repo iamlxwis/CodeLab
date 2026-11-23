@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 12:26 AM PHT
+
+Added missing-Python **device UI smoke** to the Android13/15 workflow before installed-companion smoke, checking offline Run guides users to the in-app module manager without silently downloading anything. Tests are not complete until Actions passes. Remember to record pause state with AM/PM timestamp before final ChatGPT reply.
+
 ## Nov 24, 2026 · 12:23 AM PHT checkpoint
 
 T05 source now contains `PythonModuleVersionPolicy` and JVM regressions. Prevent Python module downgrade (without changing Android's package signature checks), report completed transfer whose APK disappeared, and label actual full downloads accurately. CI must run before claiming verified. Continue T03 app audit + T05 Android runtime installation lifecycle. Session WORKING only until final turn; mark STOPPED at handoff with AM/PM timestamp.
