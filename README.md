@@ -24,14 +24,14 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**SESSION: STOPPED — interactive runtime-manager handoff** · Updated **Nov 24, 2026, 2:52 AM PHT**  
-**Phase A checkpoint:** Download manager for real signed Python companion, existing bundled engines preserved. **Optional modules shipped: 1 (Python).** **Remaining runtime work:** publish and verify separate JS/Lua/TypeScript/native toolchains. **Validation:** new [APK CI 45242235726](https://github.com/iamlxwis/CodeLab/actions/runs/45242235726) and [Android 13/15 smoke 45242235734](https://github.com/iamlxwis/CodeLab/actions/runs/45242235734) pending at handoff; no new release claimed until gates pass.
+**SESSION: STOPPED — interactive runtime-manager handoff** · Updated **Nov 24, 2026, 2:56 AM PHT**  
+**Phase A checkpoint:** Download manager for real signed Python companion, existing bundled engines preserved. **Optional modules shipped: 1 (Python).** **Remaining runtime work:** publish and verify separate JS/Lua/TypeScript/native toolchains. **Validation:** new [APK CI 45243583986](https://github.com/iamlxwis/CodeLab/actions/runs/45243583986) and [Android 13/15 smoke 45243583725](https://github.com/iamlxwis/CodeLab/actions/runs/45243583725) pending at handoff; no new release claimed until gates pass.
 
 **Current activity (one row, overwritten at each handoff):**
 
 | Updated (Philippine time, AM/PM) | Task | Action / result | Next |
 | --- | --- | --- | --- |
-| Nov 24, 2026, 2:52 AM | Phase A — offline language downloads | Implemented Language Manager Installed/Downloadable views, signed Python download status/progress and retry, Wi-Fi transfer policy, APK/cache size, cache clearing, Android-confirmed removal/reinstall path, and source/unit/device regression checks. JS/Lua/Java/SQL remain bundled; other packs not falsely labeled available. **CI pending; session STOPPED.** | Confirm build, signed-upgrade and API33/35 QA; test actual download/installer acceptance on a device; produce safely migratable optional JS/Lua/TypeScript/native runtimes. |
+| Nov 24, 2026, 2:56 AM | Phase A — offline language downloads | Implemented uncluttered Language Manager Installed/Downloads/Downloadable views, signed Python download status/progress and retry, Wi-Fi transfer policy, APK/cache size, cache clearing, Android-confirmed removal/reinstall path, and source/unit/device regression checks. JS/Lua/Java/SQL remain bundled; other packs not falsely labeled available. **CI pending; session STOPPED.** | Confirm build, signed-upgrade and API33/35 QA; test actual download/installer acceptance on a device; produce safely migratable optional JS/Lua/TypeScript/native runtimes. |
 
 **Remaining product gaps:** modular runtimes beyond Python; semantic LSP; editable inline folding/multi-cursor; PTY terminal; multi-language debugging; screen-anchored tutorial and full accessibility validation. See [implementation status](docs/IMPLEMENTATION_STATUS.md) and [project memory](docs/development/PROJECT_MEMORY.md).
 
