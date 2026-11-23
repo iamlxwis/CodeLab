@@ -4,6 +4,8 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P0 — build and runtime reliability
 
+- [ ] Verify expanded Android smoke: first-run guide, Glass/Minimal gallery, Python Language Manager installed-pack controls, run mode selection, and complete offline runtime suite. Source committed; CI pending.
+
 - [ ] Verify updated `qa/device_smoke.py` covers tutorial and Run mode selection and still passes full offline runtime journey. Changes committed; CI pending.
 
 - [x] Verify Python bundled-registry cleanup: [APK CI passed](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472) on `216a58aa`.

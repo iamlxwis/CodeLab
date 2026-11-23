@@ -55,3 +55,7 @@ Historically `WorkspaceModel.run()` silently selected cloud when no local engine
 ## 2026-11-23 — fixed mismatch in visual previews (awaiting CI)
 
 AppearanceGallery previously used five static mocked colors for style samples, which did not reflect live backgrounds and panel effects. Previews now render actual CodeLabTheme + CodeLabBackdrop + ClayPanel in each thumbnail; device/visual QA remains open.
+
+## 2026-11-23 — module dialog stacking issue fixed in source
+
+When a missing Python pack opened Languages with an initial selected language, the AlertDialog previously appeared in the composition before the ModalBottomSheet. The sheet could cover the details on initial navigation. The details are now composed after the sheet, and emulator QA covers a real Python module management dialog. CI pending.

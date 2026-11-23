@@ -1,3 +1,5 @@
+> **UI regression coverage (new source, CI pending):** Language-module details are now composed after the Languages bottom sheet so direct opening from a missing-module action cannot be hidden behind it. Android smoke now checks Glass/Minimal appearance and Python in-app installed/download/manage controls before existing offline runtime journeys.
+
 > **Gallery fidelity correction (awaiting CI):** Theme previews now compose the same CodeLabTheme, CodeLabBackdrop and ClayPanel pipeline as actual screens, rather than fixed invented sample colors. Changes respond to the requirement for genuine, consistent themes.
 
 > **Additional source fixes pending CI:** cap runtime downloads at 120 MB while downloading; allow uninstall of mismatched/incompatible engine packages; scroll tutorial under large font scaling; enforce no emoji characters in app source.

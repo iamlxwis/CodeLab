@@ -79,90 +79,6 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
         }
     }
 
-    inspected?.let { language ->
-        val engine = OfflineRuntimeRegistry.manifest(language.extension)
-        AlertDialog(onDismissRequest = { inspected = null },
-            title = { Text(language.name + " runtime") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(if (language.name == "Python") python.description
-                        else if (engine == null) RuntimePackCatalog.capability(language.name).label else if (detected[language.extension] == true)
-                        "Installed in this APK" else "Runtime unavailable",
-                        style = MaterialTheme.typography.titleMedium)
-                    Text(if (language.name == "Python") "CPython 3.13 · optional companion APK"
-                        else engine?.engine?.plus(" · ")?.plus(engine.version)
-                            ?: "Editing supported, execution requires a compatible online compiler.")
-                    Text(engine?.capabilities ?: RuntimePackCatalog.capability(language.name).detail,
-                        style = MaterialTheme.typography.bodySmall)
-                    Text(engine?.limitations ?: "The Android app does not bundle an offline toolchain for this language.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(if (language.name == "Python")
-                        "Download and manage Python here. Android confirms the final installation."
-                        else "Other engines remain bundled during modular migration.",
-                        style = MaterialTheme.typography.labelSmall)
-                    if (language.name == "Python") {
-                        if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
-                            transfer.stage == PythonModuleDownload.Stage.PAUSED) {
-                            if (transfer.total > 0L) {
-                                LinearProgressIndicator(progress = { transfer.progress },
-                                    modifier = Modifier.fillMaxWidth())
-                                Text("${transfer.received / 1024 / 1024} of ${transfer.total / 1024 / 1024} MB",
-                                    style = MaterialTheme.typography.labelSmall)
-                            } else LinearProgressIndicator(Modifier.fillMaxWidth())
-                            if (transfer.message.isNotEmpty()) Text(transfer.message,
-                                style = MaterialTheme.typography.bodySmall)
-                            TextButton(onClick = {
-                                module.cancel()
-                                downloadId = -1L
-                                transfer = PythonModuleDownload.Transfer(PythonModuleDownload.Stage.IDLE)
-                            }) { Text("Cancel download") }
-                        } else {
-                            if (transfer.stage == PythonModuleDownload.Stage.FAILED) {
-                                Text(transfer.message, color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodySmall)
-                            }
-                            if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED) {
-                                val verification = remember(downloadId, transfer.stage) { module.verify() }
-                                Text(verification ?: "Download complete · signature verified",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (verification == null) MaterialTheme.colorScheme.primary
-                                        else MaterialTheme.colorScheme.error)
-                                if (verification == null) Button(onClick = {
-                                    moduleMessage = module.install()
-                                }) { Text("Install module") }
-                            }
-                            Button(onClick = {
-                                moduleMessage = ""
-                                try {
-                                    downloadId = module.begin()
-                                    transfer = PythonModuleDownload.Transfer(
-                                        PythonModuleDownload.Stage.DOWNLOADING)
-                                } catch (e: Exception) {
-                                    moduleMessage = "Cannot start download: " + e.javaClass.simpleName
-                                }
-                            }) {
-                                Text(if (python.ready) "Check for updates" else
-                                    if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED)
-                                        "Download again" else "Download Python")
-                            }
-                            // Also allow removal of incompatible or older-signed packs.
-                            if (python.state != PythonModuleLocator.State.NOT_INSTALLED)
-                                OutlinedButton(onClick = {
-                                    moduleMessage = module.uninstall()
-                                }) { Text("Remove Python module") }
-                        }
-                        if (moduleMessage.isNotEmpty()) Text(moduleMessage,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        TextButton(onClick = {
-                            recheck++
-                            transfer = module.inspect()
-                        }) { Text("Refresh module status") }
-                    }
-                }
-            }, confirmButton = { TextButton(onClick = { inspected = null }) { Text("Close") } })
-    }
     ModalBottomSheet(onDismissRequest = close, sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         dragHandle = { BottomSheetDefaults.DragHandle() }) {
@@ -275,6 +191,91 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             }
         }
     }
+    inspected?.let { language ->
+        val engine = OfflineRuntimeRegistry.manifest(language.extension)
+        AlertDialog(onDismissRequest = { inspected = null },
+            title = { Text(language.name + " runtime") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(if (language.name == "Python") python.description
+                        else if (engine == null) RuntimePackCatalog.capability(language.name).label else if (detected[language.extension] == true)
+                        "Installed in this APK" else "Runtime unavailable",
+                        style = MaterialTheme.typography.titleMedium)
+                    Text(if (language.name == "Python") "CPython 3.13 · optional companion APK"
+                        else engine?.engine?.plus(" · ")?.plus(engine.version)
+                            ?: "Editing supported, execution requires a compatible online compiler.")
+                    Text(engine?.capabilities ?: RuntimePackCatalog.capability(language.name).detail,
+                        style = MaterialTheme.typography.bodySmall)
+                    Text(engine?.limitations ?: "The Android app does not bundle an offline toolchain for this language.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(if (language.name == "Python")
+                        "Download and manage Python here. Android confirms the final installation."
+                        else "Other engines remain bundled during modular migration.",
+                        style = MaterialTheme.typography.labelSmall)
+                    if (language.name == "Python") {
+                        if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
+                            transfer.stage == PythonModuleDownload.Stage.PAUSED) {
+                            if (transfer.total > 0L) {
+                                LinearProgressIndicator(progress = { transfer.progress },
+                                    modifier = Modifier.fillMaxWidth())
+                                Text("${transfer.received / 1024 / 1024} of ${transfer.total / 1024 / 1024} MB",
+                                    style = MaterialTheme.typography.labelSmall)
+                            } else LinearProgressIndicator(Modifier.fillMaxWidth())
+                            if (transfer.message.isNotEmpty()) Text(transfer.message,
+                                style = MaterialTheme.typography.bodySmall)
+                            TextButton(onClick = {
+                                module.cancel()
+                                downloadId = -1L
+                                transfer = PythonModuleDownload.Transfer(PythonModuleDownload.Stage.IDLE)
+                            }) { Text("Cancel download") }
+                        } else {
+                            if (transfer.stage == PythonModuleDownload.Stage.FAILED) {
+                                Text(transfer.message, color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall)
+                            }
+                            if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED) {
+                                val verification = remember(downloadId, transfer.stage) { module.verify() }
+                                Text(verification ?: "Download complete · signature verified",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (verification == null) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.error)
+                                if (verification == null) Button(onClick = {
+                                    moduleMessage = module.install()
+                                }) { Text("Install module") }
+                            }
+                            Button(onClick = {
+                                moduleMessage = ""
+                                try {
+                                    downloadId = module.begin()
+                                    transfer = PythonModuleDownload.Transfer(
+                                        PythonModuleDownload.Stage.DOWNLOADING)
+                                } catch (e: Exception) {
+                                    moduleMessage = "Cannot start download: " + e.javaClass.simpleName
+                                }
+                            }) {
+                                Text(if (python.ready) "Check for updates" else
+                                    if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED)
+                                        "Download again" else "Download Python")
+                            }
+                            // Also allow removal of incompatible or older-signed packs.
+                            if (python.state != PythonModuleLocator.State.NOT_INSTALLED)
+                                OutlinedButton(onClick = {
+                                    moduleMessage = module.uninstall()
+                                }) { Text("Remove Python module") }
+                        }
+                        if (moduleMessage.isNotEmpty()) Text(moduleMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        TextButton(onClick = {
+                            recheck++
+                            transfer = module.inspect()
+                        }) { Text("Refresh module status") }
+                    }
+                }
+            }, confirmButton = { TextButton(onClick = { inspected = null }) { Text("Close") } })
+    }
+
 }
 
 @Composable
