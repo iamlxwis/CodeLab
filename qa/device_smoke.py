@@ -75,8 +75,7 @@ def choose_language(name):
     tap_node(field)
     adb("shell", "input", "text", name)
     tap(name)
-    # Dismiss the search keyboard before interacting with the project name.
-    adb("shell", "input", "keyevent", "4")
+    # The sheet itself hides the search keyboard on selection.
 
 
 def main():
