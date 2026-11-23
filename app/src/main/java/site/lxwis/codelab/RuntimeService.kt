@@ -14,6 +14,7 @@ internal const val FINISH = 6
 internal const val DEBUG_PAUSED = 7
 internal const val DEBUG_RESUME = 8
 internal const val DEBUG_STEP = 9
+internal const val DEBUG_VARIABLES = 10
 internal fun packet(kind: Int, body: String = "", code: Int = 0) =
     Message.obtain(null, kind, code, 0).apply { data = Bundle().apply { putString("body", body) } }
 internal fun Message.body() = data.getString("body").orEmpty()
@@ -79,10 +80,12 @@ open class RuntimeService : Service() {
                 }
             }
             val io = object : JsEngine.Terminal {
-                override fun onLine(lineNumber: Int) {
+                override fun onLine(lineNumber: Int, variables: java.util.function.Supplier<String>) {
                     if (!debugEnabled || !(breakAtStart || stepping || lineNumber in breakpoints)) return
                     breakAtStart = false
                     flush()
+                    emit(DEBUG_VARIABLES, runCatching { variables.get().take(4096) }
+                        .getOrDefault("Variables unavailable."))
                     emit(DEBUG_PAUSED, lineNumber.toString())
                     stepping = debugActions.take()
                 }

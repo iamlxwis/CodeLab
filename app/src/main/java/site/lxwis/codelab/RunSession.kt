@@ -57,12 +57,15 @@ class RunSession(context: Context) {
         private set
     var pausedLine by mutableIntStateOf(0)
         private set
+    var debugVariables by mutableStateOf("")
+        private set
     val paused: Boolean get() = pausedLine > 0
     fun debugAction(step: Boolean) {
         if (!paused || !running) return
         try {
             worker?.send(packet(if (step) DEBUG_STEP else DEBUG_RESUME))
             pausedLine = 0
+            debugVariables = ""
             status = if (step) "Stepping" else "Running"
         } catch (_: RemoteException) { end("Debugger disconnected") }
     }
@@ -92,6 +95,7 @@ class RunSession(context: Context) {
         lastDebug = debug
         lastBreakpoints = breakpoints
         pausedLine = 0
+        debugVariables = ""
         running = true
         status = "Starting"
         val token = ++generation
@@ -100,6 +104,7 @@ class RunSession(context: Context) {
                 when (msg.what) {
                     OUTPUT -> transcript = (transcript + msg.body()).takeLast(70_000)
                     WAITING -> { waiting = true; status = "Waiting for input" }
+                    DEBUG_VARIABLES -> debugVariables = msg.body().take(4096)
                     DEBUG_PAUSED -> {
                         pausedLine = msg.body().toIntOrNull()?.coerceAtLeast(0) ?: 0
                         status = "Paused at line " + pausedLine
@@ -174,6 +179,7 @@ class RunSession(context: Context) {
         lastDebug = false
         lastBreakpoints = emptyList()
         pausedLine = 0
+        debugVariables = ""
         running = true
         waiting = false
         status = "Submitting to online compiler…"
@@ -243,6 +249,7 @@ class RunSession(context: Context) {
         running = false
         waiting = false
         pausedLine = 0
+        debugVariables = ""
         connection?.let { try { app.unbindService(it) } catch (_: IllegalArgumentException) {} }
         connection = null
         worker = null

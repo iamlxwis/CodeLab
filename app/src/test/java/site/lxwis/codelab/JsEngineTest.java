@@ -25,6 +25,21 @@ public class JsEngineTest {
         assertEquals("1\n", trace.out);
     }
 
+    @Test public void debuggerSuppliesBoundedLocalVariableSnapshots() {
+        java.util.List<String> snapshots = new java.util.ArrayList<>();
+        Capture trace = new Capture() {
+            @Override public void onLine(int line, java.util.function.Supplier<String> variables) {
+                snapshots.add(variables.get());
+            }
+        };
+        assertEquals(0, JsEngine.execute("locals.js",
+            "function total(n) {\n  var amount = n + 2;\n  print(amount);\n}\ntotal(3);",
+            trace, true));
+        assertFalse(snapshots.isEmpty());
+        assertTrue(snapshots.stream().allMatch(value -> value.length() <= 4096));
+        assertEquals("5\n", trace.out);
+    }
+
     @Test public void evaluatesExpressionsAndInput() {
         Capture capture = new Capture();
         assertEquals(0, JsEngine.execute("input.js", "let n = readLine('Name?'); print('hello', n); console.log([1,2,3].reduce((a,b)=>a+b,0)); console.error('warning');", capture));

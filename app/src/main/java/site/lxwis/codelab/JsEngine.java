@@ -17,6 +17,9 @@ public final class JsEngine {
         String read(String prompt);
         void checkpoint();
         default void onLine(int lineNumber) {}
+        default void onLine(int lineNumber, java.util.function.Supplier<String> variables) {
+            onLine(lineNumber);
+        }
     }
 
     public static int execute(String name, String source, Terminal io) {
@@ -36,10 +39,13 @@ public final class JsEngine {
                     cx.setDebugger(new Debugger() {
                         @Override public DebugFrame getFrame(Context context, DebuggableScript script) {
                             return new DebugFrame() {
+                                private Scriptable activation;
                                 @Override public void onEnter(Context c, Scriptable activation,
-                                        Scriptable thisObj, Object[] args) {}
+                                        Scriptable thisObj, Object[] args) {
+                                    this.activation = activation;
+                                }
                                 @Override public void onLineChange(Context c, int line) {
-                                    io.onLine(line);
+                                    io.onLine(line, () -> inspectFrame(activation, script));
                                 }
                                 @Override public void onExceptionThrown(Context c, Throwable error) {}
                                 @Override public void onExit(Context c, boolean thrown, Object result) {}
@@ -83,6 +89,37 @@ public final class JsEngine {
             io.write("Maximum call stack exceeded", true);
             return 1;
         }
+    }
+
+    /** Primitive local variables only. Never stringify user-created objects. */
+    static String inspectFrame(Scriptable activation, DebuggableScript script) {
+        if (activation == null) return "No local variables available.";
+        StringBuilder output = new StringBuilder();
+        int count = Math.min(script.getParamAndVarCount(), 32);
+        for (int i = 0; i < count; i++) {
+            String name = script.getParamOrVarName(i);
+            if (name == null || !name.matches("[A-Za-z_$][A-Za-z0-9_$]{0,79}")) continue;
+            try {
+                Object value = activation.get(name, activation);
+                if (value == Scriptable.NOT_FOUND) continue;
+                String rendered;
+                if (value == null) rendered = "null";
+                else if (value instanceof String) {
+                    String raw = (String) value;
+                    String escaped = raw.replace("\n", "\\n").replace("\r", "\\r")
+                        .replace("\t", "\\t");
+                    rendered = "\"" + escaped.substring(0, Math.min(escaped.length(), 120)) + "\"";
+                } else if (value instanceof Number || value instanceof Boolean) {
+                    rendered = String.valueOf(value);
+                } else if (value == Context.getUndefinedValue()) rendered = "undefined";
+                else rendered = "[object/function]";
+                if (output.length() + name.length() + rendered.length() + 4 > 4096) break;
+                output.append(name).append(" = ").append(rendered).append('\n');
+            } catch (RuntimeException ignored) {
+                // Debug display must not terminate the paused execution.
+            }
+        }
+        return output.length() == 0 ? "No local primitive variables available." : output.toString();
     }
 
     private static BaseFunction printer(Scriptable scope, Terminal io, boolean error) {

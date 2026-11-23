@@ -203,6 +203,20 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                     singleLine = true)
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            if (session.paused) {
+                Column(Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("JavaScript variables · line " + session.pausedLine,
+                        style = MaterialTheme.typography.titleSmall)
+                    SelectionContainer {
+                        Text(session.debugVariables.ifBlank { "No local primitive variables available." },
+                            fontFamily = FontFamily.Monospace,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.heightIn(max = 140.dp).verticalScroll(rememberScrollState()))
+                    }
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            }
             if (sqlResult != null) {
                 Row(Modifier.fillMaxWidth().padding(bottom = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     FilterChip(selected = tableMode, onClick = { tableMode = true },
