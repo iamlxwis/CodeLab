@@ -44,17 +44,17 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
             title = { Text(language.name + " runtime") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(if (engine == null) "No embedded runtime" else if (detected[language.extension] == true)
+                    Text(if (engine == null) RuntimePackCatalog.capability(language.name).label else if (detected[language.extension] == true)
                         "Installed in this APK" else "Runtime unavailable",
                         style = MaterialTheme.typography.titleMedium)
                     Text(engine?.engine?.plus(" · ")?.plus(engine.version)
                         ?: "Editing supported, execution requires a compatible online compiler.")
-                    Text(engine?.capabilities ?: "No offline compiler or interpreter bundled.",
+                    Text(engine?.capabilities ?: RuntimePackCatalog.capability(language.name).detail,
                         style = MaterialTheme.typography.bodySmall)
                     Text(engine?.limitations ?: "The Android app does not bundle an offline toolchain for this language.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("Offline runtimes are packaged with CodeLab; no runtime download is required.",
+                    Text("Bundled engines require no download. Optional compiler packs are not available yet.",
                         style = MaterialTheme.typography.labelSmall)
                 }
             }, confirmButton = { TextButton(onClick = { inspected = null }) { Text("Close") } })
@@ -147,7 +147,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
                                 language.local != null -> language.local
                                 cloud != null && model.isOnline -> "Online execution ready"
                                 !model.isOnline -> "Online only · no connection"
-                                else -> "Online execution not verified"
+                                else -> RuntimePackCatalog.capability(language.name).label
                             }, style = MaterialTheme.typography.labelSmall,
                                 maxLines = 2,
                                 color = if (cloud != null || localInstalled)

@@ -43,16 +43,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
     var demosOpen by rememberSaveable { mutableStateOf(false) }
     val isDemo = language in projectDemos
     val catalog = LanguageCatalog.entries.firstOrNull { it.name == language }
-    val runStatus = when {
-        language == "Web" -> "Ready for offline preview"
-        isDemo -> "Ready-made example project"
-        catalog?.local == "Offline beta" -> "Offline beta · limited Java interpreter"
-        catalog?.local == "Offline preview" -> "Offline preview"
-        catalog?.local != null -> "Ready offline · built in"
-        language in listOf("C", "C++", "Kotlin", "PHP", "Ruby") ->
-            "Compiler pack planned · not yet available"
-        else -> "Edit offline · runtime not installed"
-    }
+    val runStatus = if (isDemo) "Ready-made example project" else RuntimePackCatalog.capability(language).label
     val snippet = remember(language, starter) {
         when {
             isDemo -> "Includes example project files ready to explore."
