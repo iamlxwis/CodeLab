@@ -24,19 +24,21 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last source update:** Nov 24, 2026, 3:01 AM PHT · **Assistant work state: ACTIVE at last checkpoint** · **CI: independent, see live workflow links**
+**Last committed checkpoint:** Nov 24, 2026, 3:16 AM PHT · **Assistant: HANDOFF after this checkpoint** · **CI: check live Actions, not this timestamp**
 
-> **How to read this:** Timestamps show the last committed checkpoint, **not live activity or a heartbeat**. `ACTIVE` means implementation was in progress when that commit was written. `HANDED OFF` means the interactive session ended after that commit; it does **not** mean GitHub Actions stopped. A workflow can continue after a handoff. Always use the linked Actions runs for live build status. There is no background ChatGPT coding after a reply.
+**Read this first:** This tracker is a **commit log, not a live timer**. A checkpoint timestamp is when the README was last committed. `HANDOFF` means the assistant's current interactive turn ended; GitHub Actions may still run independently. A new chat can resume work from this checkpoint. No automatic assistant work is promised between messages.
 
-**Phase 1: Offline runtime modules** — management source partially implemented; Python is a genuine signed optional APK; JS/Lua/Java/SQL remain bundled. **Phase 2 is not started.**
+| Scope | Done / current state | Still required |
+| --- | --- | --- |
+| **CI Option B — Smart CI** | **Implemented:** source/build/QA/workflow-only triggers, docs-only commits skipped; fast Gradle build/unit/lint/security; manual API 35 device smoke; `cancel-in-progress: true`; explicit manual release publication after same-commit device gate | Confirm current CI build and Android 15 manual smoke; release only after gate |
+| **Phase 1 — Offline modules** | Python optional signed APK already published; JavaScript and Lua companion APK source, isolated services and signing/artifact pipeline added; bundled JS/Lua/Java/SQL preserved | **JS/Lua module downloader, authenticated execution routing, install/reinstall/removal UI, real device tests; TypeScript/native compiler toolchains not packaged** |
+| **Phase 2 — Editor** | Not started | Begin only when agreed Phase 1 acceptance is met |
 
-| Checkpoint (PHT) | Work status | Substantive change or verified result | Pending and next |
-| --- | --- | --- | --- |
-| Nov 24, 2026, 3:01 AM PHT | **ACTIVE at checkpoint** | Phase 1 resumed. Tracker separated human coding state from asynchronous CI state. Current source and runtime architecture under review. | Add real signed language packs and independent management, test build/device behavior, then write an accurate final handoff with explicit remaining tasks. |
+**Progress:** CI workflow optimization **implemented (verification pending)**. Phase 1 **partial, not complete**. **Current workstream:** JavaScript/Lua optional companion packaging and verification. **Next action:** inspect [fast CI run](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml), correct compiler issues, then integrate module discovery/downloading/execution; manually run [API 35 smoke](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml) at the release checkpoint.
 
-**Phase 1 acceptance:** signed package available for download, install/reinstall/removal through CodeLab with Android confirmation, persistent progress and storage, verified offline execution on supported Android devices; no source-project deletion or silent uploads. No unshipped engine is shown as installed. **Current count:** 1 optional signed runtime (Python); 2 bundled interpreters (JavaScript/Lua) slated for independent module migration; compiler-pack feasibility and acceptance pending.
+**CI policy:** Every meaningful source push gets one fast build; documentation-only commits do not trigger Android CI. Device smoke is manual on Android 15 only. Public `latest` release is updated **only** by a manual `Android APK` workflow dispatch with `publish_release=true`, after same-commit device smoke succeeds. Superseded workflow runs are cancelled.
 
-[Live APK build](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml) · [Live Android devices](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml) · [Full progress audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md)
+[Full audit](docs/development/PROGRESS_LOG.md) · [Project memory](docs/development/PROJECT_MEMORY.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md)
 
 ## Features
 

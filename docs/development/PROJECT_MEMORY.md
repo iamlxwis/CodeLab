@@ -1,3 +1,9 @@
+## Nov 24, 2026, 3:16 AM PHT — Option B Smart CI and JavaScript/Lua APK packaging
+
+Direct main commits: ca9b0f51 switches .github/workflows/android.yml to source-only paths (docs-only skipped), removes auto publication and expensive emulators from normal pushes, keeps compile/unit/lint/security/signature APK artifacts. Manual publish_release=true dispatch gates release on same-commit device smoke. .github/workflows/device.yml is manual workflow_dispatch only, API35 only, cancel-in-progress true. Release adds JS/Lua APK artifacts and signing/upgrade checks. Prior cc906c40 adds independent Android APK source for JS and Lua, with dedicated signature-permission-protected services; their downloader/UI and execution routing are NOT yet implemented, so do not claim installable working module UX. Core JS/Lua stay bundled.
+
+CI run 45247033903 is in progress at handoff; device smoke old run 45244890612 failed due to UI assertion wait_for JavaScript after filter selection, not due to emulator failure. Need fix test/UX and run API35 manual checkpoint. Only Python downloadable in the actual editor.
+
 ## Nov 24, 2026, 3:01 AM PHT — Phase 1 resumed; tracker transparency fix
 
 Explicit user request: fix confusing README stopped state (2:52 timestamp while another interactive turn continued), and complete remaining downloadable runtime scope. Implemented new checkpoint semantics: last source update, assistant state at that source update, separate CI links, explicit warning timestamps are not live. User prioritizes Phase 1 before Phase 2. Resume building real packs; preserve working core until replacements tested. Session ACTIVE at last checkpoint; final interaction requires HANDED OFF state and accurate remaining.

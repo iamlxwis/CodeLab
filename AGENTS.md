@@ -1,3 +1,7 @@
+## Nov 24, 2026, 3:16 AM PHT — Option B and Phase 1 handoff
+
+User explicitly selected Smart CI with source-only fast checks, docs-only skipped, API35-only manual device smoke, cancel-in-progress retained, and safe manual release gate. Implemented ca9b0f51. JS/Lua signed companion APK source in cc906c40; NOT yet wired to in-app downloader or execution. Current fast CI 45247033903 pending. Old API35 device run 45244890612 failed qa/device_smoke.py wait_for("JavaScript") after filter changes. Need correct UI test and run manual device smoke only at feature checkpoint. Docs-only commits should not trigger builds. Tracker shows last commit checkpoint, not live heartbeat; HANDOFF means interactive assistant stopped, not GitHub Actions. Phase 1 not complete; Phase 2 not started.
+
 ## Nov 24, 2026, 3:01 AM PHT: Tracker protocol correction / Phase 1 resumed
 
 User reported misleading STOPPED timestamps. README now explicitly labels the checkpoint as last commit, not a live heartbeat; `ACTIVE at checkpoint` only denotes state at that commit. Before responding at end of turn, write `HANDED OFF` with actual final commit timestamp, keep independent CI status separate. During active work update the row on substantive commits; code execution continues only until actual final reply. Never imply ongoing background work. Phase 1 JS/Lua optional modules and other verified language runtimes are still pending.
