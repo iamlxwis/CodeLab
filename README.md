@@ -23,25 +23,39 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**3 / 9 completed · 6 remaining · 1 in progress · 0 blocked**
+**Session:** **WORKING — this ChatGPT response is still executing**  
+**Last session change:** November 24, 2026 at 12:20 AM PHT (Philippine time, UTC+8)  
+**When I finish replying:** This status must be changed to **STOPPED — assistant handed off**. GitHub Actions may continue independently, but ChatGPT cannot keep committing after its turn ends.
 
-**Current task:** `T03` — Continue application-wide defect audit and regression coverage; `T05` runtime module verification next
+**3 / 9 completed · 6 remaining · 2 workstreams in progress · 0 blocked**
+
+**Current task:** `T03` — app reliability; `T05` — Python module download lifecycle. Source inspection underway.
 
 **Latest verified (2026-11-23):** [Production APK and signed upgrades: Passed Android 13/15](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) · [Device smoke: Passed Android 13/15](https://github.com/iamlxwis/CodeLab/actions/runs/45209632246) · [Download release](https://github.com/iamlxwis/CodeLab/releases/latest)
 
-| Task | Status |
-| --- | --- |
-| `T01` Permanent production APK signing | Done — actual APK signer verified |
-| `T02` Fix Android 15 online-run smoke | Done — API 33/35 device smoke passed |
-| `T03` Complete app-wide bug audit | In progress — cloud consent guarded/tested, remaining audit open |
-| `T04` Verify production-signed data-preserving upgrades | Done for API 33/35 emulators — `adb install -r`, project/theme retention and Python passed; physical-device check remains |
-| `T05` Validate Python module download/install/update | Queued |
-| `T06` Expand optional offline language modules | Queued |
-| `T07` Refine all five themes and app navigation | Queued |
-| `T08` Finish interactive tutorial and accessibility | Queued |
-| `T09` Complete full QA and release readiness | Queued |
+| Task | Status / latest verified milestone | Last change (PHT, AM/PM) |
+| --- | --- | --- |
+| `T01` Permanent production APK signing | DONE — actual signer matches permanent key | Nov 23, 2026 · 11:26 PM |
+| `T02` Android 15 online-run smoke | DONE — Android 13/15 device smoke passed | Nov 23, 2026 · 11:49 PM |
+| `T03` App-wide bug audit | IN PROGRESS — current reliability audit, source and regression tests | Nov 24, 2026 · 12:20 AM |
+| `T04` Data-preserving signed upgrades | DONE for API 33/35 emulators; physical-device validation remains | Nov 23, 2026 · 11:49 PM |
+| `T05` Python download/install/update | IN PROGRESS — download-state and recovery inspection; full Android verification outstanding | Nov 24, 2026 · 12:20 AM |
+| `T06` Additional offline modules | QUEUED — feasibility and real runtimes required | Not started |
+| `T07` Five-theme UI/UX refinement | QUEUED | Not started in this session |
+| `T08` Interactive tutorial and accessibility | QUEUED | Not started in this session |
+| `T09` Full QA and stable release readiness | QUEUED | Not started in this session |
 
-**Last audit:** 2026-11-23 — both signed upgrade and device smoke CI gates passed · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Recent task events (Philippine time, 12-hour clock)**
+
+| When | Task | Result |
+| --- | --- | --- |
+| Nov 23 · 11:49 PM | T02, T04 | Android 13/15 CI passed; signed release published |
+| Nov 24 · 12:18 AM | Session | Resumed after the previous chat reply ended |
+| Nov 24 · 12:20 AM | T03, T05 | Source inspection started; no new fix claimed yet |
+
+The complete append-only [task audit log](docs/development/PROGRESS_LOG.md) records commits, failures, tests and handoffs. Times are in **Asia/Manila**, written with **AM/PM**, not military time.
+
+**Last audit:** Nov 24, 2026 · 12:20 AM PHT — assistant resumed; inspecting T03/T05 · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.
@@ -59,7 +73,7 @@ From a project, open **Git**, then expand **GitHub sync** and configure an `owne
 
 Download **[CodeLab.apk](https://github.com/iamlxwis/CodeLab/releases/latest/download/CodeLab.apk)** on an Android 8.0+ device and open it. Allow installation from your browser or file manager if prompted.
 
-> **Before updating:** The permanent production signer was verified in [CI 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835), with actual APK certificate SHA-256 `c81d2aa1…c9e42392`. Earlier APKs were signed by rotating Android Debug certificates despite incorrect metadata. Back up and export projects before the **one-time reinstall** needed to move from a debug-signed version. Same-key in-place upgrade tests remain pending. Export projects before reinstalling. Java is an interpreter-backed beta; other languages may require an optional online compiler.
+> **Before updating:** The permanent production signer was verified in [CI 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835), with actual APK certificate SHA-256 `c81d2aa1…c9e42392`. Earlier APKs were signed by rotating Android Debug certificates despite incorrect metadata. Back up and export projects before the **one-time reinstall** needed to move from a debug-signed version. Same-key in-place upgrade **passed** on Android 13 and 15 emulators; physical-phone validation remains pending. Export projects before reinstalling. Java is an interpreter-backed beta; other languages may require an optional online compiler.
 
 ## Build
 

@@ -1,3 +1,7 @@
+## Session and audit protocol (Nov 24, 2026)
+
+This agent operates only during an interactive turn. Before its final chat reply, **update README Session to STOPPED — assistant handed off** with an exact Asia/Manila, 12-hour AM/PM timestamp; do not claim background coding. At the start of a new user-authorized turn, set WORKING and update the per-task timestamp. Log important task actions, CI failures, fixes, and handoff checkpoints in README and `docs/development/PROGRESS_LOG.md` in the same commit. GitHub Actions can continue independently; label CI as pending, not as agent working. Never fabricate progress or completion.
+
 ## Verified release and upgrade checkpoint — 2026-11-23
 
 - Main release workflow [45209632286](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) **PASSED** real existing-keystore certificates, APK/JVM/lint, API33 and API35 `adb install -r` upgrade acceptance for editor and companion, persisted project source and Clay appearance, real offline Python execution. Released `19123aa9`; versionCode `1286 -> 1288` for both APKs. Do not replace signing key.

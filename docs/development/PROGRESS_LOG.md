@@ -18,7 +18,7 @@ Short, append-only development checkpoints. The [README tracker](../../README.md
 
 ### Subsequent updates (append entries; never overwrite historical events)
 
-| Date (UTC) | Task | New state | What changed / proof |
+| When (historical rows in UTC; new events in Asia/Manila 12-hour AM/PM) | Task | New state | What changed / proof |
 | --- | --- | --- | --- |
 | 2026-11-23 | T01–T09 | Baseline recorded | Initial tracker created; earlier milestones summarized rather than inventing historical event logs |
 
@@ -42,3 +42,6 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | 2026-11-23 | T02 | Done | [Device smoke 45209632246](https://github.com/iamlxwis/CodeLab/actions/runs/45209632246) **success** in Android 13 and 15 emulator jobs, including Online-mode status corrected in `7acd475`. This does not imply a live external provider execution occurred. |
 | 2026-11-23 | T04 | Done for emulator acceptance | [Release CI 45209632286](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) **success** on API33/35 production-signed `adb install -r` tests; prior/current editor + Python versionCodes `1286 -> 1288`, same keystore signer, persisted test project source and Clay theme, verified companion and real offline Python. Publication succeeded at commit `19123aa9`. Physical handset upgrade outstanding, historical debug certificate requires backed-up migration. |
 | 2026-11-23 | T03 | In progress | Cloud consent guard `ca4ffc9` with JVM 12/12 branch coverage passed in release CI; full app-wide functional audit and live remote execution remain unverified. **Tracker: 3/9 complete (T01, T02, T04); 6 remaining, T03 active, T05–T09 queued; 0 blocked.** No unverified requirement silently closed. |
+
+| Nov 24, 2026 · 12:18 AM PHT | Session | Resumed | Prior turn stopped when the assistant responded, not because the app was finished. Starting a new interactive development session; no autonomous work occurs after the assistant's final reply. |
+| Nov 24, 2026 · 12:20 AM PHT | T03/T05 | In progress | Resumed repository inspection; validating app defects and Python module download/install state. No code or test completion claimed at this checkpoint; next action: implement verified change, run CI, then mark handoff STOPPED with an explicit timestamp. |

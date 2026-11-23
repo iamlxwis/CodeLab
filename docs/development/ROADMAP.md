@@ -1,3 +1,9 @@
+## Nov 24, 2026 — work session and audit timestamps
+
+- [x] README development tracker now distinguishes **WORKING** vs **STOPPED — assistant handed off**, and records task events in **Asia/Manila, 12-hour AM/PM**.
+- [ ] On every final response commit, mark **STOPPED** with local time and next exact action. Never leave stale WORKING when interaction ends.
+- [ ] Implement T03/T05 next: reproduce a real defect, fix it, add regression coverage, run CI, update README and append-only audit in the same commit. Preserve stable signing and signed-upgrade gate.
+
 ## Post-acceptance checkpoint (2026-11-23) — remaining priorities
 
 - [x] T01: real permanent-signer APK check passed, never rotate or replace release signing key ([CI](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835)).
