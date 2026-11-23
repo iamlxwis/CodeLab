@@ -4,6 +4,8 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P0 — build and runtime reliability
 
+- [ ] **KI-014:** Verify Languages sheet explicit Close action returns to project library after visiting Python details; previous [device fail](https://github.com/iamlxwis/CodeLab/actions/runs/45144260324). Source fix committed, CI pending.
+
 - [ ] **KI-013:** Retest Language Manager search with status panel hidden during search, ensuring Python row is visible/clickable; [previous failure](https://github.com/iamlxwis/CodeLab/actions/runs/45142776614). Source fix committed, CI pending.
 
 - [ ] Verify expanded Android smoke: first-run guide, Glass/Minimal gallery, Python Language Manager installed-pack controls, run mode selection, and complete offline runtime suite. Source committed; CI pending.

@@ -149,7 +149,7 @@ def main():
     wait_for("Check for updates")
     wait_for("Remove Python module")
     tap("Close")
-    adb("shell", "input", "keyevent", "4")
+    tap("Close languages")
     wait_for("New project")
     # Python is now a genuine CPython runtime. Run the starter with airplane mode on.
     tap("New project")

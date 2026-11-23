@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.WifiOff
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -93,6 +94,9 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                 }
                 Icon(if (model.isOnline) Icons.Default.Cloud else Icons.Default.WifiOff,
                     contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                IconButton(onClick = close) {
+                    Icon(Icons.Default.Close, contentDescription = "Close languages")
+                }
             }
             OutlinedTextField(search, { search = it },
                 modifier = Modifier.fillMaxWidth(), singleLine = true,
