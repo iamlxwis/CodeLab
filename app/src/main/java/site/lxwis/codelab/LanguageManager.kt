@@ -101,7 +101,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                 transfer.stage != PythonModuleDownload.Stage.IDLE)) ||
                 (optionalPacks.keys.any { it.label == language.name &&
                     (optionalStatuses[it]?.state != PythonModuleLocator.State.NOT_INSTALLED ||
-                     optionalPacks[it]?.cachedBytes() ?: 0L > 0L ||
+                     (optionalPacks[it]?.cachedBytes() ?: 0L) > 0L ||
                      optionalTransfers[it]?.stage != OptionalRuntimeDownload.Stage.IDLE) })
             "Downloadable" -> RuntimePackCatalog.isDownloadable(language.name)
             "Cloud ready" -> model.isOnline && model.cloudLanguages.containsKey(language.extension)

@@ -186,14 +186,14 @@ internal class OptionalRuntimeDownload(private val app: Context, private val pac
                 PythonModuleSignaturePolicy.State.DOWNLOAD_UNTRUSTED ->
                     "Module signature differs from CodeLab. Install both from the same release."
                 PythonModuleSignaturePolicy.State.INSTALLED_UNTRUSTED ->
-                    "Installed " + pack.label uses a different signing key. Remove Python module before installing the trusted download."
+                    "Installed " + pack.label + " uses a different signing key. Remove the old module before installing the trusted download."
                 PythonModuleSignaturePolicy.State.TRUSTED -> {
                     when (PythonModuleVersionPolicy.decide(
                         version(packageInfo), existingPack?.let { version(it) })) {
                         PythonModuleVersionPolicy.Decision.INVALID ->
                             pack.label + " module has an invalid version. Download it again."
                         PythonModuleVersionPolicy.Decision.DOWNGRADE ->
-                            "Downloaded " + pack.label is older than the installed runtime. Downgrades are blocked."
+                            "Downloaded " + pack.label + " is older than the installed runtime. Downgrades are blocked."
                         else -> null
                     }
                 }
@@ -222,7 +222,7 @@ internal class OptionalRuntimeDownload(private val app: Context, private val pac
                 app.startActivity(Intent(Intent.ACTION_VIEW)
                     .setDataAndType(uri, "application/vnd.android.package-archive")
                     .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK))
-                "Confirm " + pack.label installation in the Android system dialog."
+                "Confirm " + pack.label + " installation in the Android system dialog."
             }
         } catch (e: Exception) {
             "Cannot launch Android installer: " + e.javaClass.simpleName
