@@ -46,3 +46,7 @@ The original IDEA-010 requirement is now **verified complete on emulator** at `2
 ## 2026-11-23 clarification — module UX
 
 IDEA-011 records the user's specific correction: downloadable language modules must be installed, updated and removed *from inside CodeLab*, with visible progress; running the downloaded module must occur through the CodeLab editor/console. A browser redirect to a GitHub APK download does not satisfy this requirement. Preserve this item until real user-facing functionality passes device tests. Continue to preserve IDEA-001, IDEA-002 and IDEA-010 and their history.
+
+## 2026-11-23 QA coverage extension
+
+Source changes add an emulator UI journey for the persistent Run Offline / Run Online selector, verifying the selected menu state and returning to Offline before invoking the JavaScript runtime. This is added regression coverage for IDEA-002. Retain this item as in progress until the resulting emulator run passes.

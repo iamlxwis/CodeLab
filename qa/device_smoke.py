@@ -157,7 +157,14 @@ def main():
     snapshot("06-after-input")
     wait_for("print(6*7)", contains=True)
     # Primary Run honors the preferred entry file; explicitly choose this tab.
-    tap("Choose run target")
+    # Run modes are deliberate, never a silent fallback to cloud.
+    tap("Run mode and target · Offline")
+    wait_for("Offline · selected")
+    tap("Run online")
+    tap("Run mode and target · Online")
+    wait_for("Online · selected")
+    tap("Run offline")
+    tap("Run mode and target · Offline")
     tap("Run active · answer.js")
     wait_for("42", contains=True)
     wait_for("Exit 0", contains=True)
