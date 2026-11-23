@@ -1,3 +1,7 @@
+## 2026-11-23 — immediate workflow syntax repair
+
+[APK run 45180692671](https://github.com/iamlxwis/CodeLab/actions/runs/45180692671) failed at YAML validation because the first signing-workflow edit accidentally duplicated a script suffix. The workflow has been restored from source at `5503cb62` then re-applied with safe literal substitution to remove the duplication; new APK CI needed. No APK was published from failed YAML workflow. Do not claim release-version automation verified before new CI passes.
+
 ## 2026-11-23 — release update-signing patch (awaiting CI)
 
 After project library patch `5503cb62`, editor and Python APKs now read an increasing CI release `CODELAB_VERSION_CODE`, defaulting to 6/2 for local builds; GitHub Actions derives it from workflow run number. CI rejects partially configured signing secrets, warns on fallback-debug, blocks accidental replacement of a prior production-signed release with a fallback-debug release, and records version in build info. Owner must generate or reuse stable private keystore and set four GitHub Actions secrets (secure instructions in docs/INSTALLATION.md). Cannot assert update continuity until production-signing builds and physical-device upgrade tests pass. Prior verified APK/device CI `09e94e2c`; new CI status pending. Next: inspect latest jobs, correct failures, then guide owner through secrets.
