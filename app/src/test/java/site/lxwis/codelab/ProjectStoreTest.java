@@ -67,6 +67,12 @@ public class ProjectStoreTest {
         assertEquals("original", store.read("Second", "src/index.js"));
     }
 
+    @Test public void duplicateFileCreateNeverOverwritesExistingSource() throws Exception {
+        store.save("First", "main.js", "print('keep this');", true);
+        assertThrows(IOException.class, () -> store.createFile("First", "main.js"));
+        assertEquals("print('keep this');", store.read("First", "main.js"));
+    }
+
     @Test public void roundTripIncludesNestedFilesAndUtf8() throws Exception {
         store.createFile("First", "src/nested/app.js", "print('שלום');");
         ByteArrayOutputStream zip = new ByteArrayOutputStream();

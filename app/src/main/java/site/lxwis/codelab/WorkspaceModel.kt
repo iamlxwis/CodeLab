@@ -933,7 +933,17 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun select(path: String, create: Boolean = false, goToLine: Int? = null,
         runOnOpen: Boolean = false) {
         val p = project ?: return
-        if (!create && path !in files) return
+        if (!create && path !in files) {
+            error = "File no longer exists: $path"
+            return
+        }
+        if (create && path in files) {
+            error = "That name is already in use."
+            return
+        }
+        val previousTabs = tabs
+        val previousDirty = dirty
+        val previousPendingLine = pendingLine
         val fromFile = active
         val fromText = source
         val savePrevious = dirty && fromFile != null
@@ -949,6 +959,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         pendingLine = goToLine
         console = false
         preview = false
+        val selectingRevision = revision
         beginOperation()
         io.execute {
             val started = android.os.SystemClock.elapsedRealtime()
@@ -970,6 +981,17 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                 }
             } catch (e: Exception) {
                 main.post {
+                    // A failed optimistic switch must not leave an invalid tab or
+                    // obscure the previous buffer. Preserve any newer user edits.
+                    if (nav == navigationVersion && project == p &&
+                        active == path && revision == selectingRevision) {
+                        tabs = previousTabs
+                        active = fromFile
+                        source = fromText
+                        dirty = previousDirty
+                        pendingLine = previousPendingLine
+                        revision++
+                    }
                     error = e.localizedMessage ?: "Could not open file"
                     endOperation()
                 }

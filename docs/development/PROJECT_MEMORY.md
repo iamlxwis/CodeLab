@@ -1,3 +1,7 @@
+## 2026-11-23 — duplicate-file creation audit (source awaiting CI)
+
+Found another optimistic navigation failure: `WorkspaceModel.select(create=true)` switched tabs before validating a duplicate file name and did not restore the prior editor on I/O failure. Added preflight collision handling and stale-safe rollback on failed file switch, with data-retention unit test and emulator journey. Prior work already fixes duplicate-project creation. New source/device validation pending; current release signing awaits permanent owner secrets.
+
 ## 2026-11-23 — immediate workflow syntax repair
 
 [APK run 45180692671](https://github.com/iamlxwis/CodeLab/actions/runs/45180692671) failed at YAML validation because the first signing-workflow edit accidentally duplicated a script suffix. The workflow has been restored from source at `5503cb62` then re-applied with safe literal substitution to remove the duplication; new APK CI needed. No APK was published from failed YAML workflow. Do not claim release-version automation verified before new CI passes.

@@ -1,3 +1,4 @@
+- [ ] Regression: creating duplicate file cannot blank an editor tab or overwrite prior bytes. Android 13/15 smoke and JVM test.
 ## 2026-11-23 — update-signing acceptance gate
 
 - [ ] Confirm new APK CI reports increasing `Version code` and correct signing mode; inspect workflow logs for signing audit.
