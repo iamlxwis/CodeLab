@@ -192,3 +192,7 @@ Unselected color swatches were anonymous clickable 40dp circles; screen readers 
 ## KI-045 — appearance semantics property shadowing breaks compile (Nov 24, 2026 · 12:39 AM PHT)
 
 CI [45218655670](https://github.com/iamlxwis/CodeLab/actions/runs/45218655670) failed compile because new `semantics { selected = active }` targeted outer `selected: String` function parameter. Renamed outer parameter to `currentChoice` so receiver semantics receives Boolean. Retest CI required. This is a real source failure, not device regression; signing and previous release remain intact.
+
+## KI-046 — tutorial Skip lost on immediate process death (Nov 24, 2026 · 12:48 AM PHT)
+
+[Android 15 device run 45219173196](https://github.com/iamlxwis/CodeLab/actions/runs/45219173196) ended at tutorial resumed topic 3 instead of library after Skip plus fast force-stop/relaunch. Potential cause asynchronous preference apply; new code commits checked synchronously and smoke first asserts actual dismissal before termination. **Rerun pending; cause not yet conclusively proven.** Signing and previous release preserved.

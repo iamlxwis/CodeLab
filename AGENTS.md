@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 12:48 AM PHT
+
+T08 API35 failure: immediate process death after intentional Skip reopened topic3, despite Try-resume working. Persist guide flags using checked synchronous SharedPreferences.commit(), and QA now checks dismissal before force-stop. Rerun required; keep T08 open. Before final answer commit STOPPED session marker.
+
 ## Nov 24, 2026 · 12:39 AM PHT
 
 T07 Kotlin compile break caused by semantics property/selected String argument name collision; corrected to currentChoice. Verify next CI; do not claim test pass yet. Same kind of shadowing previously caused signing bug: avoid receiver property name reuse in Compose/Gradle DSLs.

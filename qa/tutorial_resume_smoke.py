@@ -26,6 +26,10 @@ def main():
     ui.snapshot("tutorial-resumes-after-try")
     # Deliberately skipping finishes; it must not reopen on every launch.
     ui.tap("Skip")
+    # Prove the guide actually closed before killing the process.
+    ui.wait_for("New project", timeout=25)
+    assert not any(n.attrib.get("text") == "Choose language and template"
+                   for n in ui.nodes()), "Skip did not close the guide"
     ui.adb("shell", "am", "force-stop", PACKAGE)
     ui.launch()
     ui.wait_for("New project", timeout=40)

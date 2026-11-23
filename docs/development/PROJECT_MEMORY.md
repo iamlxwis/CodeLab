@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 12:48 AM PHT — Android 15 tutorial completion persistence failure
+
+Device run 45219173196 failed tutorial resume smoke at wait for New project after intentional Skip and immediate force-stop/relaunch. Artifact XML still shows guide topic 3; Try-resume earlier in the same run succeeded. Source previously used SharedPreferences.apply() for both completion and resume-index, which can race immediate process termination. Changed to checked synchronous commit() before navigation and added explicit in-test wait to prove Skip closed the dialog before stop. Still unverified until next API33/35 run; do not attribute to source persistence until retest. T08 remains open. Session STOPPED marker required at final reply.
+
 ## Nov 24, 2026 · 12:39 AM PHT — T07 CI compilation failure identified and fixed
 
 Both 7db7e3e workflows failed Kotlin compilation in AppearanceGallery.kt:117 (`val cannot be reassigned`, Boolean cannot assign to String). This was an accidental name collision between SettingChoices `selected: String` argument and Compose semantics `selected` receiver property. Changed local parameter to `currentChoice` and retains `semantics { selected = active }`. Source correction pending CI. No release was published by failed run. Other tests never executed; do not treat T05/T08 tests as failed runtime acceptance or verified passing until next run. Continue T03/T05/T07/T08. Session must be set STOPPED before reply.

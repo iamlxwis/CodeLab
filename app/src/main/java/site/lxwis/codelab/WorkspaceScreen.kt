@@ -553,16 +553,20 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
     if (showTutorial) FirstRunTutorial(
         onFinish = {
-            tutorialPrefs.edit().putBoolean("complete", true)
-                .remove("resume-index").apply()
-            showTutorial = false
+            // A process killed after Skip must not discard asynchronous preference writes.
+            val saved = tutorialPrefs.edit().putBoolean("complete", true)
+                .remove("resume-index").commit()
+            if (saved) showTutorial = false
+            else m.error = "Could not save tutorial completion. Retry."
         },
         onTryAction = { action, resumeAt ->
-            // A real feature visit must NOT mark the tutorial completed.
-            tutorialPrefs.edit().putBoolean("complete", false)
-                .putInt("resume-index", resumeAt).apply()
-            showTutorial = false
-            openAction(action)
+            // Save the next topic durably before visiting a live CodeLab control.
+            val saved = tutorialPrefs.edit().putBoolean("complete", false)
+                .putInt("resume-index", resumeAt).commit()
+            if (saved) {
+                showTutorial = false
+                openAction(action)
+            } else m.error = "Could not save tutorial progress. Retry."
         },
         projectOpen = p != null,
         resumeFrom = tutorialPrefs.getInt("resume-index", 0)
