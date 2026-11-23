@@ -24,6 +24,7 @@ Updated: 2026-11-23. **This is the authoritative, durable list of user requests 
 | IDEA-008 | 2026-11-23 | Direct commits to main with frequent verification and handoff updates, unless user changes workflow | Approved | D-009; AGENTS.md |
 | IDEA-009 | 2026-11-23 | Support popular offline languages via modular engine packs, prioritize Python, JavaScript, Lua, C/C++, TypeScript, Java/Kotlin, PHP/Ruby, then feasibility for Go/Rust/C# | Approved | docs/ENGINE_PACKS.md; runtime packs not yet delivered |
 | IDEA-010 | 2026-11-23 | Python runtime must actually pass offline device execution, including stdout, stdin and error handling, rather than merely building | Verified complete | APK + emulator + connected instrumentation passed at `216a58aa` ([CI](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400)); physical-device coverage is a separate unresolved quality gate |
+| IDEA-011 | 2026-11-23 | **Native Spotify-style module management:** choose language, download with in-app progress, verify, run offline, update and remove inside CodeLab. The user must not be redirected to GitHub or manually manage separate APK files. Android-required installation confirmation may still be necessary for GitHub-distributed executable packages; show and manage that step from the CodeLab flow. | Approved | Correction to IDEA-001/002: prior Python download link UX is wrong; feature not implemented. Investigate Play Feature Delivery for store channel and verified package installer for standalone releases. |
 
 ## Revision history
 
@@ -39,3 +40,7 @@ No new approved user requirement was dropped or marked complete.
 ## 2026-11-23 verification milestone
 
 The original IDEA-010 requirement is now **verified complete on emulator** at `216a58aa`, with [passing APK](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472) and [passing device smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400). Preserve IDEA-010 as historical verification evidence. IDEA-001/002/003/004/005/006/007/008/009 remain tracked at their stated statuses; Python's success does not imply the full modular marketplace or end-to-end UI redesign is complete.
+
+## 2026-11-23 clarification — module UX
+
+IDEA-011 records the user's specific correction: downloadable language modules must be installed, updated and removed *from inside CodeLab*, with visible progress; running the downloaded module must occur through the CodeLab editor/console. A browser redirect to a GitHub APK download does not satisfy this requirement. Preserve this item until real user-facing functionality passes device tests. Continue to preserve IDEA-001, IDEA-002 and IDEA-010 and their history.

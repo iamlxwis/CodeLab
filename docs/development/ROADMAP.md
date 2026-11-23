@@ -15,6 +15,10 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P1 — optional module architecture (approved end state)
 
+- [ ] **IDEA-011 critical UX correction:** replace GitHub browser download with an in-app language module download/install/update/remove experience, progress, resumable downloads, integrity checks and truthful failure recovery. Android system installation confirmation is acceptable where technically mandatory, but no external manual APK workflow. Validate GitHub APK and Google Play distribution methods independently.
+- [ ] Expand bug audit beyond green CI: installation/uninstall/update/error states, quick-run/cloud/offline routing, project data durability, UI navigation and accessibility, and real-device compatibility. Record reproducible defects and test coverage in KNOWN_ISSUES.md.
+
+
 - [ ] Implement a versioned `EngineProvider` / capability contract and accurate installed/not-installed/loading/error states.
 - [ ] Choose supported Android distribution model for **GitHub APK**, with signed companion packages (or validated alternative); explicitly verify package identity/certificates, version and ABI. Consider Play on-demand features separately for a Play Store channel.
 - [ ] Authenticated, explicit and isolated IPC between core editor and each runtime package. Test cancellation, timeouts, bounded input/output and failure modes.

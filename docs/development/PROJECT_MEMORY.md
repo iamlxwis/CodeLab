@@ -1,3 +1,5 @@
+> **2026-11-23 user correction / urgent product requirement:** See [IDEA-011](IDEAS.md). The current Python button redirects to GitHub; this does NOT satisfy the requested Spotify-style *in-app* download/install/manage/run flow. Implement in-app progress, verification, install/update/remove and local execution. Platform-required Android confirmations for executable components may still be needed on standalone APKs; do not promise prohibited silent installs. User requested **discussion before implementation**. Current APK/emulator green at `9cd9a16c` but broader bug audit remains unperformed.
+
 > **Current canonical verification:** SHA `216a58aa` passed [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472) and [emulator](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400). Earlier section headings marked “unverified” are preserved historical snapshots and are superseded by this verified status.
 
 # CodeLab project memory — handoff snapshot
