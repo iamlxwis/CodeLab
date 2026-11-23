@@ -32,7 +32,7 @@ private val catalog = LanguageCatalog.entries
 fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null, close: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var search by rememberSaveable { mutableStateOf("") }
-    var filter by rememberSaveable { mutableStateOf("All") }
+    var filter by rememberSaveable { mutableStateOf("Installed") }
     var removePythonConfirm by remember { mutableStateOf(false) }
     var clearCacheConfirm by remember { mutableStateOf(false) }
     var wifiOnly by remember { mutableStateOf(false) }
@@ -86,6 +86,9 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             language.extension.contains(search, ignoreCase = true)) &&
         when (filter) {
             "Installed" -> detected[language.extension] == true
+            "Downloads" -> language.name == "Python" && (python.state !=
+                PythonModuleLocator.State.NOT_INSTALLED || cachedInstallerBytes > 0L ||
+                transfer.stage != PythonModuleDownload.Stage.IDLE)
             "Downloadable" -> RuntimePackCatalog.isDownloadable(language.name)
             "Cloud ready" -> model.isOnline && model.cloudLanguages.containsKey(language.extension)
             else -> true
@@ -110,13 +113,13 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                     Icon(Icons.Default.Close, contentDescription = "Close languages")
                 }
             }
-            OutlinedTextField(search, { search = it },
+            OutlinedTextField(search, { search = it; if (it.isNotBlank()) filter = "All" },
                 modifier = Modifier.fillMaxWidth(), singleLine = true,
                 leadingIcon = { Icon(Icons.Default.Code, contentDescription = null) },
                 label = { Text("Find a language") })
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("All", "Installed", "Downloadable", "Cloud ready").forEach { option ->
+                listOf("Installed", "Downloads", "Downloadable", "All", "Cloud ready").forEach { option ->
                     FilterChip(selected = filter == option, onClick = { filter = option },
                         label = { Text(option) })
                 }
@@ -128,9 +131,9 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             HorizontalDivider()
             LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(9.dp),
                 contentPadding = PaddingValues(bottom = 28.dp)) {
-                // Search results take precedence; the status panel otherwise
-                // pushes the first match below the bottom sheet viewport.
-                if (search.isBlank()) item {
+                // Separate transfer management from results so installed engines are
+                // immediately visible, even on small Android screens.
+                if (search.isBlank() && filter == "Downloads") item {
                     Text("DOWNLOAD MANAGER", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(8.dp))
@@ -181,6 +184,8 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         }) { Text("Clear cache") }
                     }
                     Spacer(Modifier.height(10.dp))
+                }
+                if (search.isBlank() && filter == "Cloud ready") item {
                     Text("EXECUTION AVAILABILITY", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(8.dp))
@@ -207,12 +212,11 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(16.dp))
-                    Text("LANGUAGE AVAILABILITY", style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(6.dp))
                 }
                 if (filteredLanguages.isEmpty()) item {
-                    Text("No languages match this filter.",
+                    Text(if (filter == "Downloads" && search.isBlank())
+                        "No downloaded optional modules. Open Downloadable to install Python."
+                        else "No languages match this filter.",
                         Modifier.padding(vertical = 24.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)

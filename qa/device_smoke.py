@@ -151,10 +151,11 @@ def main():
     tap("More tools and settings")
     tap("Languages")
     wait_for("Language Manager")
-    # Download manager must expose real offline/installed state, not placeholders.
-    wait_for("DOWNLOAD MANAGER")
+    # Download status no longer pushes installed languages below the screen.
     wait_for("Installed")
-    wait_for("Downloadable")
+    wait_for("JavaScript")
+    tap("Downloads")
+    wait_for("DOWNLOAD MANAGER")
     wait_for("Manage Python")
     wait_for("Wi-Fi only downloads")
     tap("Downloadable")
