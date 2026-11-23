@@ -54,7 +54,7 @@ class CodeAnalysisTest {
         assertEquals(751, Regex("\\bvalue\\b").findAll(updated).count())
         assertFalse(updated.contains("print(item)"))
         assertTrue(updated.contains("// item must remain unchanged"))
-        assertTrue(updated.contains("\\"item\\""))
+        assertTrue(updated.contains("\"item\""))
         assertEquals(120, CodeAnalysis.references(source, "item").size)
     }
 
