@@ -86,3 +86,5 @@ IDEA-018 CI note: Kotlin visibility mismatch from first source checkpoint correc
 IDEA-018 editor UI source now implements custom hex, preset CRUD, load and style defaults; CI/device validation pending.
 
 IDEA-019 visible execution-mode controls committed in source; run-mode persistence, consent, missing packs and large-font QA pending.
+
+IDEA-020 now has a 14-topic progressive hands-on guide with action shortcuts in source. Screen-anchored coach-mark highlight overlays and Android acceptance pending.

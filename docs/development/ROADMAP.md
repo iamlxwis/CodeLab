@@ -83,3 +83,5 @@ User approved direct commits to `main`. **In the same commit as implementation w
 - [ ] Test IDEA-018 AppearanceGallery custom accent validation, multi-style preset CRUD and persistence across app restart; check large-font screenshots.
 
 - [ ] Check Offline/Online chips and Module/Configure actions on emulator. Verify persisted state and Run buttons with 200% font; inspect source upload confirmation.
+
+- [ ] Validate FirstRunTutorial 14 topics, essential dismissal/replay, Try-it actions and font-scale behavior; add anchored highlights if needed.

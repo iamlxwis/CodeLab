@@ -102,3 +102,5 @@ New appearance/Projects/Import source has not yet passed Gradle, emulator screen
 KI-022: New appearance editor is not yet device-tested, and entering or editing colors/presets must undergo accessibility, contrast and persistence QA.
 
 KI-023: Visible run strip has not been validated at narrow widths or large font sizes; show module/provider statuses accurately and preserve explicit consent.
+
+KI-024: New tutorial and QA script are not emulator verified. True anchored coach-mark highlights are not yet available; interaction is via Try-it shortcuts. Test on Android 13/15.

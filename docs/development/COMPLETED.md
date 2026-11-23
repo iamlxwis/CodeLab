@@ -59,3 +59,5 @@ Source visibility fix applied after first CI compile failure; validation pending
 New appearance editor controls implemented in source, not verified by Gradle or device yet. IDEA-018 not marked complete.
 
 Source-only: Run mode chips and contextual status added next to editor Run workflow. Device acceptance pending.
+
+Source-only: 14-topic progressive tutorial and corresponding smoke steps; not accepted until CI/emulator passes.

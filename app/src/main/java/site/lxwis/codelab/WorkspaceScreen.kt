@@ -551,10 +551,14 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
         "appearance" -> AppearanceGallery(m) { dialog = "" }
     }
-    if (showTutorial) FirstRunTutorial {
-        tutorialPrefs.edit().putBoolean("complete", true).apply()
-        showTutorial = false
-    }
+    if (showTutorial) FirstRunTutorial(
+        onFinish = {
+            tutorialPrefs.edit().putBoolean("complete", true).apply()
+            showTutorial = false
+        },
+        onAction = { action -> openAction(action) },
+        projectOpen = p != null
+    )
     m.cloudPending?.let { filename ->
         val language = m.cloudLanguages[CloudJudge0.extension(filename)]
         if (language != null) {

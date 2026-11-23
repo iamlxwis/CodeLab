@@ -158,3 +158,5 @@ pack availability remains a PackageManager verification on Android devices.
 2026-11-23 — appearance editor now has immediate valid custom hex preview, named save/update/load/delete, deletion confirmation and restore defaults. Advanced density/motion options are progressively disclosed. Source commit pending Gradle/JVM/emulator QA. Next: Run strip and guide.
 
 2026-11-23 source: editor Run now has an adjacent always-visible Offline/Online chip row, active-mode status (available/missing module/cloud provider) and direct Languages configuration. File/entry run actions remain in the overflow. No source upload occurs on selecting Online; prior run-time confirmation remains. CI/device tests pending.
+
+2026-11-23 source: FirstRunTutorial now has 14 practical steps split into four essential and ten optional topics, with progress and contextual Try-it actions opening real screens; completion and replay remain wired in Studio. Device smoke selectors updated for new tutorial and run controls. This is not a system-level spotlight overlay; true screen-anchored coach marks remain pending. CI pending.
