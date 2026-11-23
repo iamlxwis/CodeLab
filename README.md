@@ -24,21 +24,21 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last committed checkpoint:** Nov 24, 4:14 AM PHT · **Assistant: WORKING at checkpoint** · **CI: six-pack source/feasibility pending**
+**Last committed checkpoint:** Nov 24, 2026, 4:20 AM PHT · **Assistant: WORKING at checkpoint** · **CI: API35 six-pack release checkpoint dispatched by this push**
 
 > This is a **commit checkpoint**, not a live clock or background agent. `HANDED OFF` means this interactive turn stopped after committing; independent GitHub Actions may still run. Each subsequent turn can resume from the [project memory](docs/development/PROJECT_MEMORY.md).
 
 | Workstream | Verified / implemented | Remaining before completion |
 | --- | --- | --- |
 | **CI Option B — Smart CI** | Source/build changes trigger fast compile, unit, lint and signed APK artifacts. Docs-only pushes skipped. Manual API 35 device smoke. `cancel-in-progress: true` retained. Manual release publication requires same-commit device success. | Validate full run and manually trigger API 35 smoke |
-| **Phase 1 — Runtime manager** | Six signed module projects in source and missing-runtime deep links; in-app Download buttons now require official GitHub release metadata confirming an uploaded APK with a safe size. Cached signed APKs remain installable. | Remote release discovery, new source CI and Android15 acceptance pending; PHP/Ruby/C/C++/Kotlin/Rust/Go/C# remain research or blocked. |
+| **Phase 1 — Runtime manager** | Six signed optional companion projects (Python, JavaScript, Lua, Java beta, TypeScript single-file, SQLite Android platform) built by CI; signed module manager and published-asset detection implemented. [Previous six-pack fast CI](https://github.com/iamlxwis/CodeLab/actions/runs/45256384445) **passed**. | Exact-head fast CI 45257846511 and newly dispatched API35 checkpoint must pass before public signed module release. C/C++/PHP/Ruby/Kotlin/Rust/Go/C# genuine offline engines remain undone or blocked in [feasibility](docs/development/LANGUAGE_FEASIBILITY.md). |
 | **Phase 2 — Editor intelligence** | Not started | Begin only after agreed Phase 1 completion gate |
 
 **Current counts:** Six optional module implementations in source, one historically confirmed public (Python); remaining five need published installer checks. Java beta is not javac; TS is single-file transpilation, SQLite uses Android platform.
 
 **Latest implementation:** Signed Java beta, TypeScript and SQLite companion sources plus direct missing-runtime entry points. Runtime stop/restart and output-limit race source fix [dcb1daed](https://github.com/iamlxwis/CodeLab/commit/dcb1daeda2fb1e8a494a26171a7ef30e8b32d6b9). New fast/device CI pending.
 
-**Next:** verify release asset API parsing/unit tests in fast CI, run API35 and publish six modules if gates pass; document compiler feasibility honestly.
+**Next:** watch [API35 checkpoint](https://github.com/iamlxwis/CodeLab/actions/workflows/phase1-checkpoint.yml), diagnose actual failures and only publish signed APK modules after same-SHA smoke; retain all unimplemented compiler requirements. Phase 1 not complete.
 
 [Compiler feasibility](docs/development/LANGUAGE_FEASIBILITY.md) · [Full audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Project memory](docs/development/PROJECT_MEMORY.md)
 

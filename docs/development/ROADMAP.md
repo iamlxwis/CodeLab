@@ -1,3 +1,10 @@
+## Nov 24, 2026, 4:20 AM PHT — Current Phase1 release checkpoint
+
+- [x] Fast six-pack source baseline dcb1daed passed [CI](https://github.com/iamlxwis/CodeLab/actions/runs/45256384445).
+- [ ] Current 34030469 asset-discovery/UX build and same-SHA API35 device smoke must pass; checkpoint workflow triggered with this commit.
+- [ ] Guarded production-signer release publication for Python, JavaScript, Lua, Java beta, TypeScript, SQLite; user physical download/update/reinstall remains delegated to owner.
+- [ ] Actual fully offline PHP/Ruby/C/C++/Java compiler/Kotlin/Go/Rust/C# remain blocked/untested; keep in scope/feasibility ledger.
+
 ## Nov 24, 4:14 AM PHT — Phase 1 broader offline language feasibility audit
 
 - [x] Record accurate Android feasibility and blockers for C/C++, Java/Kotlin full compilation, PHP/Ruby WASM, Go, Rust and C# in [LANGUAGE_FEASIBILITY.md](LANGUAGE_FEASIBILITY.md).
