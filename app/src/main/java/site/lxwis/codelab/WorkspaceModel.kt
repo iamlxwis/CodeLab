@@ -720,7 +720,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     // Explicit Save, lifecycle flush and project switches make the rename durable.
     fun flush() = saveAsync(durable = true)
 
-    fun openProject(name: String, create: Boolean = false, template: String = "JavaScript") {
+    fun openProject(name: String, create: Boolean = false, template: String = "JavaScript", starter: String = StarterExamples.BEGINNER) {
         flush()
         val nav = ++navigationVersion
         pinnedTabs = preferences.getStringSet("pinned:$name", emptySet())?.toSet()
@@ -733,7 +733,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         dirty = false
         revision++
         work {
-            if (create) store.createProject(name, template)
+            if (create) store.createProject(name, template, starter)
             val opened = persist(load(name, emptyList(), null, allowUnavailable = true))
             val names = store.projects()
             val commit: () -> Unit = {

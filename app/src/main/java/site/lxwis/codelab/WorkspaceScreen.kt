@@ -410,8 +410,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Text("Project: " + m.project.orEmpty())
             } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Close") } })
 
-        "newproject" -> CreateProjectDialog(cancel = { dialog = "" }) { name, template ->
-            m.openProject(name, true, template)
+        "newproject" -> GuidedProjectSheet(cancel = { dialog = "" }) { name, template, starter ->
+            m.openProject(name, true, template, starter)
             dialog = ""
         }
         "newfile", "newfolder", "rename", "renamefolder", "renameproject", "duplicateproject", "import", "importfile", "duplicate" -> {
