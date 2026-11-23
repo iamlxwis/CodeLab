@@ -19,7 +19,7 @@ CodeLab is a native Kotlin + Jetpack Compose Android code editor, intended to be
 - **Catalog:** Editing and starter examples work regardless of whether an execution module is installed. Do not conflate a recognized file type (JSON, Markdown, CSS) with an executable language.
 - **UX:** Professional vector icons only; **no emojis anywhere in CodeLab** (UI, copy, assets, docs intended for users). Minimal, Glass, Clay, AMOLED and Paper styles; prioritize clarity, accessible code contrast and performance over visual effects.
 - **Security:** Never submit source to an online compiler without user action/permission. Never load arbitrary untrusted downloaded executable code into the editor process. Signed/verifiable Android-compatible runtime packs must use isolated execution and authenticated IPC with size/time limits.
-- **Distribution:** Production signing is verified at a11d15ec (versionCode 1281). Preserve the existing signing key; older fallback-debug installs need a backed-up reinstall. Never present Gradle builds as proof emulator or real phone QA passed.
+- **Distribution (2026-11-23 correction):** APKs from a11d15e, 7acd475 and ee24cd3 actually had three different Android Debug signer certificates, despite `production` build metadata. Build-step signing credentials were missing from the Gradle environment. The workflow now passes the existing secrets into Gradle and compares both APK certificates with the permanent keystore before release. **Not verified until CI passes. Do not regenerate the existing key.** Old debug-signed installations need a backed-up one-time migration. Compilation does not prove emulator/phone QA.
 
 ## Development/commit discipline
 

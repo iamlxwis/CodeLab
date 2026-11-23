@@ -22,6 +22,10 @@ If you have already uninstalled CodeLab and Android reports `App not installed a
 - Check that CodeLab is not already installed in another Android user profile, work profile or cloned-app space.
 - If the installer still rejects it on a clean device, capture the specific `adb install` error code and device Android version; do not assume a signature conflict.
 
+## Critical correction: prior signing labels were wrong (2026-11-23)
+
+APK certificate inspection proved a11d15e, 7acd475 and ee24cd3 were signed with different Android Debug certificates despite release notes stating `production`. A GitHub Actions secret-scoping bug omitted passwords and alias from Gradle. The existing permanent keystore was not changed; the build step and pre-publication certificate check are now corrected in source, but their CI results must pass before production signing is verified. Prior debug-signed users must export their projects and complete a one-time backed-up migration. Never replace the permanent key.
+
 ## Signing policy
 
 The editor and Python runtime must be signed with the **same Android certificate**. A permanent stable signing key is required for reliable updates and companion verification. Configure the four GitHub Actions secrets named `CODELAB_KEYSTORE_B64`, `CODELAB_KEYSTORE_PASSWORD`, `CODELAB_KEY_ALIAS`, and `CODELAB_KEY_PASSWORD`. Never commit the keystore or passwords. Switching from previously distributed fallback-debug keys to a stable key requires a **one-time backed-up reinstall** because Android cannot migrate package signing identities automatically.

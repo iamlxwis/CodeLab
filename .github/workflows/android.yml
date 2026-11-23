@@ -49,6 +49,10 @@ jobs:
       - name: Static security regression gate
         run: python3 qa/security_gate.py
       - name: Build release, test, lint, and coverage report
+        env:
+          CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
+          CODELAB_KEY_ALIAS: ${{ secrets.CODELAB_KEY_ALIAS }}
+          CODELAB_KEY_PASSWORD: ${{ secrets.CODELAB_KEY_PASSWORD }}
         run: bash gradlew --no-daemon :app:assembleRelease :engine-python:assembleRelease :app:testDebugUnitTest :app:debugUnitTestCoverage :app:lintDebug
       - name: Upload quality reports
         if: always()
@@ -63,6 +67,33 @@ jobs:
         run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk'
       - name: Verify Python companion signature
         run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose engine-python/build/outputs/apk/release/engine-python-release.apk'
+      - name: Enforce actual production signing certificate
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
+          CODELAB_KEY_ALIAS: ${{ secrets.CODELAB_KEY_ALIAS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$CODELAB_SIGNING_MODE" == "production" ]]; then
+            [[ -f "$CODELAB_KEYSTORE_FILE" ]] || { echo "::error::Configured keystore missing"; exit 1; }
+            expected="$(keytool -exportcert -rfc -keystore "$CODELAB_KEYSTORE_FILE" \
+              -storepass "$CODELAB_KEYSTORE_PASSWORD" -alias "$CODELAB_KEY_ALIAS" |
+              openssl x509 -noout -fingerprint -sha256 |
+              cut -d= -f2 | tr -d ':[:space:]' | tr 'A-F' 'a-f')"
+            signer="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+            actual_editor="$("$signer" verify --print-certs app/build/outputs/apk/release/app-release.apk |
+              sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1)"
+            actual_python="$("$signer" verify --print-certs engine-python/build/outputs/apk/release/engine-python-release.apk |
+              sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1)"
+            if [[ -z "$expected" || "$actual_editor" != "$expected" || "$actual_python" != "$expected" ]]; then
+              echo "::error::Release APK signer does not match the configured permanent keystore; refusing to publish."
+              exit 1
+            fi
+            echo "Editor and Python release certificates match the existing production keystore."
+          else
+            echo "::warning::Fallback-debug signing; production signing not claimed."
+          fi
       - name: Audit upgrade signing compatibility
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:

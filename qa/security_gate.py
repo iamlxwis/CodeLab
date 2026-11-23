@@ -45,6 +45,13 @@ def inspect():
         errors.append("Python companion unexpectedly gained INTERNET permission")
     if 'android:allowBackup="false"' not in python_manifest:
         errors.append("Python companion must disable Android backup")
+    workflow = (ROOT / ".github/workflows/android.yml").read_text()
+    build = workflow.split("- name: Build release, test, lint, and coverage report", 1)
+    if len(build) != 2 or any(k not in build[1].split("- name:", 1)[0]
+        for k in ("CODELAB_KEYSTORE_PASSWORD", "CODELAB_KEY_ALIAS", "CODELAB_KEY_PASSWORD")):
+        errors.append("Production signing secrets missing from Gradle build step")
+    if "- name: Enforce actual production signing certificate" not in workflow:
+        errors.append("Release lacks actual signer-versus-keystore verification")
     source_dir = ROOT / "app/src/main"
     emoji = re.compile("[" + chr(0x1F300) + "-" + chr(0x1FAFF) + "]")
     for ext in ("*.kt", "*.java", "*.xml"):

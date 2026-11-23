@@ -23,15 +23,15 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**1 / 9 completed · 8 remaining · 2 in progress · 0 blocked**
+**0 / 9 completed · 9 remaining · 3 in progress · 0 blocked**
 
-**Current task:** `T04` — Signed upgrade and data-retention emulator gate, awaiting CI
+**Current task:** `T01` — Correct release APK signer; verification pending
 
-**Latest verified (2026-11-23):** [Production APK: Passed](https://github.com/iamlxwis/CodeLab/actions/runs/45194290919) · [Android 13: Passed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470) · [Android 15: Failed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470)
+**Latest verified (2026-11-23):** [APK passed but actual signer was Android Debug](https://github.com/iamlxwis/CodeLab/actions/runs/45201489255) · [Android 13: Passed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470) · [Android 15: Failed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470)
 
 | Task | Status |
 | --- | --- |
-| `T01` Permanent production APK signing | Done |
+| `T01` Permanent production APK signing | In progress — signer fix unverified |
 | `T02` Fix Android 15 online-run smoke | In progress — test fixed, awaiting CI |
 | `T03` Complete app-wide bug audit | Queued |
 | `T04` Verify production-signed data-preserving upgrades | In progress — QA gate committed, unverified |
@@ -41,7 +41,7 @@ Write, run, and manage projects from your phone.
 | `T08` Finish interactive tutorial and accessibility | Queued |
 | `T09` Complete full QA and release readiness | Queued |
 
-**Last audit:** 2026-11-23 · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** 2026-11-23 — signing discrepancy corrected in source · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.
@@ -59,7 +59,7 @@ From a project, open **Git**, then expand **GitHub sync** and configure an `owne
 
 Download **[CodeLab.apk](https://github.com/iamlxwis/CodeLab/releases/latest/download/CodeLab.apk)** on an Android 8.0+ device and open it. Allow installation from your browser or file manager if prompted.
 
-> **Before updating:** Production signing is configured. Older debug-signed installs generally need a **one-time backed-up reinstall**; later production-signed updates should preserve app data, pending device validation. Export projects before reinstalling. Java is an interpreter-backed beta; other languages may require an optional online compiler.
+> **Before updating:** Earlier releases falsely reported production signing; their actual certificates were rotating Android Debug signers. The corrected production-signing build is pending CI validation. Existing debug-signed installations require a **one-time backed-up reinstall** to move to the permanent identity. Export projects before uninstalling. Export projects before reinstalling. Java is an interpreter-backed beta; other languages may require an optional online compiler.
 
 ## Build
 

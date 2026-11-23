@@ -140,3 +140,7 @@ One-time keygen, authenticated encrypted artifact and local phone WebCrypto unlo
 ## KI-035 — signed release upgrade acceptance pending (2026-11-23)
 
 Production-key-only pre-publication API33/API35 `adb install -r` tests are now authored. They verify project source, Clay preferences and updated same-certificate Python module through real Android UI execution. No passing result is claimed until Actions reports it. Previous signer mismatch is explicitly skipped, not a successful upgrade; physical-device acceptance remains open.
+
+## KI-036 — misleading production metadata, Android Debug signer in released APKs (P0, 2026-11-23)
+
+Actual APK signing blocks for [a11d15e](https://github.com/iamlxwis/CodeLab/actions/runs/45194290919), [7acd475](https://github.com/iamlxwis/CodeLab/actions/runs/45200242402), [ee24cd3](https://github.com/iamlxwis/CodeLab/actions/runs/45201489255) have different `CN=Android Debug` certificate hashes (`514931a7`, `43dd76c8`, `ef86c79d` prefixes), despite `production` release metadata. Signing credentials configured in one workflow step did not reach Gradle, causing debug fallback. Passing existing secrets into build and enforcing keystore-versus-APK certificate match now authored; CI pending. **Do not regenerate permanent key.** Prior debug APKs need backed-up migration; two same-production-signer release builds have not passed upgrade QA.

@@ -1,3 +1,7 @@
+## Audit correction — 2026-11-23: revoke past signing verification
+
+Previous assertions that a11d15e was permanently production-signed relied on incorrect workflow metadata. Actual signing certificates of a11d15e, 7acd475 and ee24cd3 are distinct Android Debug signers. T01 is REOPENED. The new actual-signer gate and fixed Gradle signing env are not verified until fresh CI passes. Historical entries below retained for audit; contradictory completion claims are superseded.
+
 > **Current verified baseline**: `216a58aa` — [APK green](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472), [emulator green](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400). Earlier rows describing bundled Python and failing emulator are historical and superseded by this verification.
 
 # Completed work — implementation versus verification
