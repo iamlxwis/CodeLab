@@ -5,11 +5,12 @@ import org.junit.Test
 
 class RuntimePackCatalogTest {
     @Test fun onlyPackagedOptionalModulesAreListed() {
-        assertEquals(setOf("Python", "JavaScript", "Lua", "Java"), RuntimePackCatalog.downloadableLanguages())
+        assertEquals(setOf("Python", "JavaScript", "Lua", "Java", "TypeScript"), RuntimePackCatalog.downloadableLanguages())
         assertTrue(RuntimePackCatalog.isDownloadable("Python"))
         assertTrue(RuntimePackCatalog.isDownloadable("JavaScript"))
         assertTrue(RuntimePackCatalog.isDownloadable("Lua"))
         assertTrue(RuntimePackCatalog.isDownloadable("Java"))
+        assertTrue(RuntimePackCatalog.isDownloadable("TypeScript"))
         for (name in listOf("TypeScript", "C++", "Rust")) {
             assertFalse(name, RuntimePackCatalog.isDownloadable(name))
         }
@@ -20,7 +21,7 @@ class RuntimePackCatalogTest {
         assertNull(OfflineRuntimeRegistry.manifest("py"))
         assertEquals(RuntimePackCatalog.State.PACK_PLANNED,
             RuntimePackCatalog.capability("Python").state)
-        assertEquals(RuntimePackCatalog.State.CORE_PLANNED,
+        assertEquals(RuntimePackCatalog.State.PACK_PLANNED,
             RuntimePackCatalog.capability("TypeScript").state)
     }
 

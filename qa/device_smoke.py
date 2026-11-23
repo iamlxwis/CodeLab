@@ -111,13 +111,13 @@ def main():
     adb("install", "-r", str(companion))
     # Both optional interpreters must be installed before CodeLab so that
     # Android verifies their signature-permission IPC on a real API 35 device.
-    for engine in ("engine-js", "engine-lua", "engine-java"):
+    for engine in ("engine-js", "engine-lua", "engine-java", "engine-ts"):
         pack = next(Path(engine, "build/outputs/apk/debug").glob("*.apk"))
         adb("install", "-r", str(pack))
     adb("install", "-r", str(apk))
     adb("shell", "pm", "clear", PACKAGE)
     packages = adb("shell", "pm", "list", "packages")
-    for engine in ("python", "js", "lua", "java"):
+    for engine in ("python", "js", "lua", "java", "ts"):
         assert f"site.lxwis.codelab.engine.{engine}" in packages
     adb("shell", "cmd", "connectivity", "airplane-mode", "enable")
     adb("shell", "svc", "wifi", "disable")
@@ -177,6 +177,9 @@ def main():
     tap("Close")
     tap_text_result("Java")
     wait_for("Verified optional Java module installed", contains=True)
+    tap("Close")
+    tap_text_result("TypeScript")
+    wait_for("Verified optional TypeScript module installed", contains=True)
     tap("Close")
     tap("Installed")
     wait_for("executable engines", contains=True)
@@ -373,12 +376,25 @@ def main():
     wait_for("Hello from CodeLab!", contains=True)
     wait_for("Exit 0", contains=True)
     snapshot("09-java-beta")
+    tap("Project library")
+    wait_for("New project")
+    tap("New project")
+    choose_language("TypeScript")
+    tap_node(wait_for(field=True))
+    adb("shell", "input", "text", "TypeScriptSmoke")
+    tap("Create project")
+    wait_for("main.ts", contains=True)
+    tap("Run")
+    wait_for("Hello, CodeLab!", contains=True, timeout=30)
+    wait_for("Exit 0", contains=True)
+    snapshot("11-typescript")
+
 
     (OUT / "result.txt").write_text(
         "Passed: install, create, launch offline JavaScript, interactive input, "
         "computed output, normal exit, file creation, editing, tab switching, autosave, "
         "process restoration, rotation, SQLite execution, rendered HTML preview, offline Lua, " 
-        "Java beta execution, and real CPython execution in airplane mode.\n")
+        "Java beta execution, TypeScript single-file transpilation, and real CPython execution in airplane mode.\n")
 
 
 if __name__ == "__main__":

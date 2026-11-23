@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8">
+<script src="typescript.js"></script>
+<script>
+window.compileTs = function(source) {
+  try {
+    if (typeof ts === "undefined") throw new Error("Official TypeScript compiler unavailable");
+    var result = ts.transpileModule(source, {
+      fileName: "main.ts",
+      reportDiagnostics: true,
+      compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None }
+    });
+    var errors = (result.diagnostics || []).filter(function(d) {
+      return d.category === ts.DiagnosticCategory.Error;
+    });
+    if (errors.length) throw new Error(errors.slice(0, 3).map(function(d) {
+      return ts.flattenDiagnosticMessageText(d.messageText, "\n");
+    }).join("; "));
+    CodeLabBridge.complete(JSON.stringify({js: result.outputText}));
+  } catch (error) {
+    CodeLabBridge.complete(JSON.stringify({error: String(error.message || error).slice(0, 400)}));
+  }
+};
+</script></head><body></body></html>

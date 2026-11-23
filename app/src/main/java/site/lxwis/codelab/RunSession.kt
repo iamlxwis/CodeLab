@@ -78,7 +78,7 @@ class RunSession(context: Context) {
         breakpoints: List<Int> = emptyList()) {
         if (running) return
         transcript = ""
-        if (!name.endsWith(".js", true) && !name.endsWith(".sql", true) && !name.endsWith(".lua", true) && !name.endsWith(".java", true) && !name.endsWith(".py", true)) { status = "Run a .js, .py, .sql, .lua or .java file"; return }
+        if (!name.endsWith(".js", true) && !name.endsWith(".sql", true) && !name.endsWith(".lua", true) && !name.endsWith(".java", true) && !name.endsWith(".py", true) && !name.endsWith(".ts", true)) { status = "Run a .js, .py, .ts, .sql, .lua or .java file"; return }
         if (source.length > 128_000) { status = "Script exceeds 128,000 characters"; return }
         val pythonPack = if (name.endsWith(".py", true)) PythonModuleLocator.component(app) else null
         val optionalPack = when {
@@ -88,10 +88,16 @@ class RunSession(context: Context) {
                 OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.LUA)
             name.endsWith(".java", true) ->
                 OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.JAVA)
+            name.endsWith(".ts", true) ->
+                OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.TYPESCRIPT)
             else -> null
         }
         if (name.endsWith(".py", true) && pythonPack == null) {
             status = PythonModuleLocator.check(app).description
+            return
+        }
+        if (name.endsWith(".ts", true) && optionalPack == null) {
+            status = OptionalRuntimeLocator.check(app, OptionalRuntimeLocator.Pack.TYPESCRIPT).description
             return
         }
         if (debug && !name.endsWith(".js", true)) {

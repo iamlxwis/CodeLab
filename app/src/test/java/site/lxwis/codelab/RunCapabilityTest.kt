@@ -19,6 +19,8 @@ class RunCapabilityTest {
         assertEquals(RunCapability.Mode.UNAVAILABLE, RunCapability.forPath("main.ts").mode)
         assertEquals(RunCapability.Mode.ONLINE,
             RunCapability.forPath("main.ts", setOf("ts")).mode)
+        assertEquals(RunCapability.Mode.LOCAL,
+            RunCapability.forPath("main.ts", installedModules = setOf("ts")).mode)
         assertEquals(RunCapability.Mode.UNAVAILABLE,
             RunCapability.forPath("main.cpp", setOf("ts")).mode)
     }

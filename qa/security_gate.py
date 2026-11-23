@@ -19,7 +19,7 @@ def inspect():
     errors = []
     for root in (ROOT / "app/src", ROOT / "engine-python/src",
                  ROOT / "engine-js/src", ROOT / "engine-lua/src",
-                 ROOT / "engine-java/src", ROOT / ".github/workflows", ROOT / "docs"):
+                 ROOT / "engine-java/src", ROOT / "engine-ts/src", ROOT / ".github/workflows", ROOT / "docs"):
         if not root.exists():
             continue
         for path in root.rglob("*"):
@@ -40,7 +40,7 @@ def inspect():
         errors.append("Android backup policy unexpectedly relaxed")
     if 'android:isolatedProcess="true"' not in manifest:
         errors.append("Script runtime process isolation unexpectedly removed")
-    for module in ("engine-python", "engine-js", "engine-lua", "engine-java"):
+    for module in ("engine-python", "engine-js", "engine-lua", "engine-java", "engine-ts"):
         engine_manifest = (ROOT / module / "src/main/AndroidManifest.xml").read_text()
         if 'android:permission="site.lxwis.codelab.permission.BIND_ENGINE"' not in engine_manifest:
             errors.append(f"{module} companion must require signature-protected binding")

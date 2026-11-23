@@ -74,15 +74,17 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
         }
     }
     val python = remember(recheck) { PythonModuleLocator.check(context) }
-    val detected = remember(python.state) {
+    val detected = remember(python.state, recheck) {
         OfflineRuntimeRegistry.engines()
             .associateBy({ it.extension }, { OfflineRuntimeRegistry.locallyAvailable(it.extension) }) +
-            ("py" to python.ready)
+            ("py" to python.ready) +
+            ("ts" to OptionalRuntimeLocator.check(context, OptionalRuntimeLocator.Pack.TYPESCRIPT).ready)
     }
     val offlineEngineCount = OfflineRuntimeRegistry.engines().count {
         it.extension in setOf("js", "lua", "java", "sql") &&
             OfflineRuntimeRegistry.locallyAvailable(it.extension)
-    } + if (python.ready) 1 else 0
+    } + if (python.ready) 1 else 0 +
+        if (OptionalRuntimeLocator.check(context, OptionalRuntimeLocator.Pack.TYPESCRIPT).ready) 1 else 0
     val cachedInstallerBytes = remember(transfer, recheck) { module.cachedBytes() }
     val optionalPacks = remember(context) { OptionalRuntimeLocator.Pack.entries.associateWith {
         OptionalRuntimeDownload(context.applicationContext, it)
@@ -496,7 +498,11 @@ internal fun OptionalRuntimeManagerDialog(
             Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(status.description)
-                Text("Bundled " + pack.label + " remains available if this optional module is removed.",
+                Text(if (pack == OptionalRuntimeLocator.Pack.TYPESCRIPT)
+                    "Single-file TypeScript transpilation via bundled official compiler. " +
+                        "No static type checking, module resolution, Node.js or browser APIs. " +
+                        "This engine needs its optional module installed."
+                    else "Bundled " + pack.label + " remains available if this optional module is removed.",
                     style = MaterialTheme.typography.bodySmall)
                 Text("Installed APK: " + manager.installedApkBytes() / 1024 / 1024 +
                     " MB · cache: " + manager.cachedBytes() / 1024 / 1024 + " MB" +
@@ -555,8 +561,9 @@ internal fun OptionalRuntimeManagerDialog(
     )
     if (confirmRemove) AlertDialog(onDismissRequest = { confirmRemove = false },
         title = { Text("Remove " + pack.label + " module?") },
-        text = { Text("Android will ask to remove the optional runtime. Bundled execution " +
-            "and CodeLab projects remain unchanged.") },
+        text = { Text("Android will ask to remove the optional runtime. " +
+            (if (pack == OptionalRuntimeLocator.Pack.TYPESCRIPT) "TypeScript offline execution will stop; " else "Bundled execution will remain available; ") +
+            "CodeLab projects remain unchanged.") },
         confirmButton = { Button(onClick = {
             message = manager.uninstall(); confirmRemove = false
         }) { Text("Open Android uninstaller") } },

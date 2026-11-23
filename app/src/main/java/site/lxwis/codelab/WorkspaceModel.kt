@@ -140,6 +140,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun isLocalExecutable(path: String): Boolean =
         if (path.endsWith(".py", true)) PythonModuleLocator.installed(getApplication<Application>())
+        else if (path.endsWith(".ts", true)) OptionalRuntimeLocator.component(
+            getApplication<Application>(), OptionalRuntimeLocator.Pack.TYPESCRIPT) != null
         else RunCapability.forPath(path).mode == RunCapability.Mode.LOCAL
 
     fun cloudAvailable(path: String): Boolean =
@@ -1371,6 +1373,12 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             !PythonModuleLocator.installed(getApplication<Application>())) {
             error = PythonModuleLocator.check(getApplication<Application>()).description +
                 ". Download Python inside the Languages screen."
+            return
+        }
+        if (filename.endsWith(".ts", true) && !isLocalExecutable(filename)) {
+            error = OptionalRuntimeLocator.check(getApplication<Application>(),
+                OptionalRuntimeLocator.Pack.TYPESCRIPT).description +
+                ". Download TypeScript inside Languages to run offline."
             return
         }
         if (isLocalExecutable(filename)) {

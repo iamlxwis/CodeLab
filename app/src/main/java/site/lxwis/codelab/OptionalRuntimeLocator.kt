@@ -10,7 +10,8 @@ internal object OptionalRuntimeLocator {
                     val serviceName: String) {
         JAVASCRIPT("JavaScript", "JavaScript", "js", "JsRuntimeService"),
         LUA("Lua", "Lua", "lua", "LuaRuntimeService"),
-        JAVA("Java", "Java", "java", "JavaRuntimeService");
+        JAVA("Java", "Java", "java", "JavaRuntimeService"),
+        TYPESCRIPT("TypeScript", "TypeScript", "ts", "TsRuntimeService");
         val packageName get() = "site.lxwis.codelab.engine." + extension
         val serviceClass get() = packageName + "." + serviceName
         val downloadUrl get() =

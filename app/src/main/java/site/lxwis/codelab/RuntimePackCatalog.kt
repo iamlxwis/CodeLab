@@ -13,11 +13,10 @@ internal object RuntimePackCatalog {
 
     data class Capability(val state: State, val label: String, val detail: String)
 
-    private val corePlanned = mapOf(
-        "TypeScript" to "TypeScript compiler/transpiler plus a compatible local JavaScript engine."
-    )
+    private val corePlanned = emptyMap<String, String>()
     private val packsPlanned = mapOf(
         "Python" to "Separately signed optional Python 3.13 APK",
+        "TypeScript" to "Official TypeScript single-file transpiler plus Rhino companion (no type checking or module resolution)",
         "C" to "C/C++ native toolchain",
         "C++" to "C/C++ native toolchain",
         "Kotlin" to "Java/Kotlin compiler pack",
@@ -29,7 +28,7 @@ internal object RuntimePackCatalog {
     )
 
     /** Only signed release module sources belong in Downloadable; listing is not proof of public release availability. */
-    fun downloadableLanguages(): Set<String> = setOf("Python", "JavaScript", "Lua", "Java")
+    fun downloadableLanguages(): Set<String> = setOf("Python", "JavaScript", "Lua", "Java", "TypeScript")
 
     fun isDownloadable(language: String): Boolean = language in downloadableLanguages()
 
