@@ -1,12 +1,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- User-initiated GitHub companion runtime installation; requires Android confirmation. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <permission android:name="site.lxwis.codelab.permission.BIND_ENGINE"
         android:protectionLevel="signature"/>
     <uses-permission android:name="site.lxwis.codelab.permission.BIND_ENGINE"/>
     <queries><package android:name="site.lxwis.codelab.engine.python"/></queries>
     <application android:label="@string/app_name" android:icon="@drawable/ic_codelab"
         android:allowBackup="false" android:theme="@style/AppTheme" android:supportsRtl="true">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.runtimefiles"
+            android:exported="false" android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/runtime_paths"/>
+        </provider>
         <activity android:name=".MainActivity" android:exported="true" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

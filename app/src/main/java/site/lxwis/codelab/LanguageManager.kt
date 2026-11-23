@@ -1,7 +1,11 @@
 package site.lxwis.codelab
 
-import android.content.Intent
-import android.net.Uri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -30,7 +34,33 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
     var filter by rememberSaveable { mutableStateOf("All") }
     var inspected by remember { mutableStateOf<SupportedLanguage?>(null) }
     val context = LocalContext.current
+    val module = remember(context) { PythonModuleDownload(context.applicationContext) }
+    var downloadId by remember { mutableLongStateOf(module.lastJob()) }
+    var transfer by remember { mutableStateOf(module.inspect(downloadId)) }
+    var moduleMessage by remember { mutableStateOf("") }
     var recheck by remember { mutableIntStateOf(0) }
+    val lifecycle = LocalLifecycleOwner.current
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                recheck++
+                downloadId = module.lastJob()
+                transfer = module.inspect(downloadId)
+            }
+        }
+        lifecycle.lifecycle.addObserver(observer)
+        onDispose { lifecycle.lifecycle.removeObserver(observer) }
+    }
+    LaunchedEffect(downloadId) {
+        if (downloadId > 0L) {
+            do {
+                transfer = withContext(Dispatchers.IO) { module.inspect(downloadId) }
+                if (transfer.stage != PythonModuleDownload.Stage.DOWNLOADING &&
+                    transfer.stage != PythonModuleDownload.Stage.PAUSED) break
+                delay(650L)
+            } while (true)
+        }
+    }
     val python = remember(recheck) { PythonModuleLocator.check(context) }
     val detected = remember(python.state) {
         OfflineRuntimeRegistry.engines()
@@ -66,22 +96,65 @@ fun LanguageManagerSheet(model: WorkspaceModel, close: () -> Unit) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(if (language.name == "Python")
-                        "Install the signed Python pack. The module runs offline in its own Android sandbox."
+                        "Download and manage Python here. Android confirms the final installation."
                         else "Other engines remain bundled during modular migration.",
                         style = MaterialTheme.typography.labelSmall)
                     if (language.name == "Python") {
-                        if (!python.ready) {
-                            TextButton(onClick = {
-                                context.startActivity(Intent(Intent.ACTION_VIEW,
-                                    Uri.parse(PythonModuleLocator.DOWNLOAD_URL)))
-                            }) { Text("Download Python module") }
-                        } else {
-                            Text("Module installed. Uninstall through Android App settings.",
+                        if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
+                            transfer.stage == PythonModuleDownload.Stage.PAUSED) {
+                            if (transfer.total > 0L) {
+                                LinearProgressIndicator(progress = { transfer.progress },
+                                    modifier = Modifier.fillMaxWidth())
+                                Text("${transfer.received / 1024 / 1024} of ${transfer.total / 1024 / 1024} MB",
+                                    style = MaterialTheme.typography.labelSmall)
+                            } else LinearProgressIndicator(Modifier.fillMaxWidth())
+                            if (transfer.message.isNotEmpty()) Text(transfer.message,
                                 style = MaterialTheme.typography.bodySmall)
+                            TextButton(onClick = {
+                                module.cancel()
+                                downloadId = -1L
+                                transfer = PythonModuleDownload.Transfer(PythonModuleDownload.Stage.IDLE)
+                            }) { Text("Cancel download") }
+                        } else {
+                            if (transfer.stage == PythonModuleDownload.Stage.FAILED) {
+                                Text(transfer.message, color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall)
+                            }
+                            if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED) {
+                                val verification = remember(downloadId, transfer.stage) { module.verify() }
+                                Text(verification ?: "Download complete · signature verified",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = if (verification == null) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.error)
+                                if (verification == null) Button(onClick = {
+                                    moduleMessage = module.install()
+                                }) { Text("Install module") }
+                            }
+                            Button(onClick = {
+                                moduleMessage = ""
+                                try {
+                                    downloadId = module.begin()
+                                    transfer = PythonModuleDownload.Transfer(
+                                        PythonModuleDownload.Stage.DOWNLOADING)
+                                } catch (e: Exception) {
+                                    moduleMessage = "Cannot start download: " + e.javaClass.simpleName
+                                }
+                            }) {
+                                Text(if (python.ready) "Check for updates" else
+                                    if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED)
+                                        "Download again" else "Download Python")
+                            }
+                            if (python.ready) OutlinedButton(onClick = {
+                                moduleMessage = module.uninstall()
+                            }) { Text("Remove Python module") }
                         }
-                        TextButton(onClick = { recheck++ }) {
-                            Text("Recheck installation")
-                        }
+                        if (moduleMessage.isNotEmpty()) Text(moduleMessage,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        TextButton(onClick = {
+                            recheck++
+                            transfer = module.inspect()
+                        }) { Text("Refresh module status") }
                     }
                 }
             }, confirmButton = { TextButton(onClick = { inspected = null }) { Text("Close") } })

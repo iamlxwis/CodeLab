@@ -70,6 +70,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation("androidx.core:core:1.13.1")
     implementation("androidx.profileinstaller:profileinstaller:1.4.1")
     implementation("org.mozilla:rhino:1.7.15.1")
     implementation("org.luaj:luaj-jse:3.0.1")

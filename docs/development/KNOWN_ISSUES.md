@@ -37,3 +37,7 @@ APKs together, publish them as a pair and verify the runtime device journey.
 - KI-009 **resolved**: Removed Python from the core bundled-runtime inventory. All JVM tests passed in [APK CI](https://github.com/iamlxwis/CodeLab/actions/runs/45135511472).
 - KI-010 **resolved**: Web template appears as a searchable language-browser result without inventing a `Web` language entry. The full Web preview journey passed in [device CI](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400).
 - KI-002, KI-003, KI-004, KI-005, KI-006, KI-007, KI-008 remain **open/partial**: other engines bundled; no native module install/update/uninstall; no explicit Online/Offline selector; fallback debug signing; limited ABIs; incomplete design/physical-device QA. Do not mark these complete.
+
+## KI-011 — incomplete in-app module install acceptance (2026-11-23)
+
+GitHub-distributed APK now includes a Python in-app downloader with progress and certificate validation, but tests have not verified network transfer, system unknown-source approval, installation/update/uninstall failures or storage pressure. The existing fallback-debug release signature can differ between builds, so downloadable Python can be rejected when the editor was installed from a different run. This is **intentional fail-closed security behavior**, not a reason to loosen signature checks. Stable signing and clear recovery flow are still required. For Google Play, Play Feature Delivery is required instead of arbitrary downloaded executable APKs.

@@ -45,6 +45,10 @@ def inspect():
         errors.append("Python companion unexpectedly gained INTERNET permission")
     if 'android:allowBackup="false"' not in python_manifest:
         errors.append("Python companion must disable Android backup")
+    if 'androidx.core.content.FileProvider' not in manifest:
+        errors.append("Runtime APK installer must use scoped FileProvider")
+    if 'android:grantUriPermissions="true"' not in manifest:
+        errors.append("Runtime installer FileProvider must grant URI access")
     if 'android:protectionLevel="signature"' not in manifest:
         errors.append("Core must declare signature-level engine permission")
     return errors

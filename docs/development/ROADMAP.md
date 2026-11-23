@@ -15,7 +15,7 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P1 — optional module architecture (approved end state)
 
-- [ ] **IDEA-011 critical UX correction:** replace GitHub browser download with an in-app language module download/install/update/remove experience, progress, resumable downloads, integrity checks and truthful failure recovery. Android system installation confirmation is acceptable where technically mandatory, but no external manual APK workflow. Validate GitHub APK and Google Play distribution methods independently.
+- [ ] **IDEA-011:** Python now has in-app DownloadManager download/progress/cancel, signature verification and launch to Android-confirmed install/uninstall. Still needs real download/install/update/rollback/error-case device QA and production signing; separate Google Play-compliant dynamic feature delivery. Other languages pending.
 - [ ] Expand bug audit beyond green CI: installation/uninstall/update/error states, quick-run/cloud/offline routing, project data durability, UI navigation and accessibility, and real-device compatibility. Record reproducible defects and test coverage in KNOWN_ISSUES.md.
 
 
