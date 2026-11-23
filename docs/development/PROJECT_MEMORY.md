@@ -1,3 +1,7 @@
+## 2026-11-23 — API35 emulator smoke diagnosis
+
+[Device run 45181285928](https://github.com/iamlxwis/CodeLab/actions/runs/45181285928) failed on API35 at `qa/device_smoke.py:222`: expected `Internet connection required` after Online selection. Downloaded `device-smoke-evidence-api-35` and inspected actual accessibility XML. The app **correctly displays** `No online compiler for this file` alongside Online and Configure; the emulated network is validated even though the test toggled airplane mode (Android/emulator network state is not a reliable cloud-availability oracle). The QA assertion is now tolerant of either truthful unavailability reason. Fix is test-only, not a demonstrated app bug. New Android 13/15 CI required. Other source fixes and signing remain as previously recorded.
+
 ## 2026-11-23 — duplicate-file creation audit (source awaiting CI)
 
 Found another optimistic navigation failure: `WorkspaceModel.select(create=true)` switched tabs before validating a duplicate file name and did not restore the prior editor on I/O failure. Added preflight collision handling and stale-safe rollback on failed file switch, with data-retention unit test and emulator journey. Prior work already fixes duplicate-project creation. New source/device validation pending; current release signing awaits permanent owner secrets.

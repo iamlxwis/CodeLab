@@ -219,7 +219,10 @@ def main():
     # Run modes are deliberate, never a silent fallback to cloud.
     wait_for("Ready: local runtime")
     tap("Online")
-    wait_for("Internet connection required")
+    # The emulator can retain a validated default network even with its
+    # airplane toggle on. Both states are legitimate: no network or no
+    # configured cloud provider. Never assert one network state by UI text.
+    wait_for("Internet connection required", "No online compiler for this file")
     tap("Offline")
     wait_for("Ready: local runtime")
     tap("Run file and entry options")

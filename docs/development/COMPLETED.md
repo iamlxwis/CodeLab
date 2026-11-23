@@ -81,3 +81,5 @@ Project Favorites filtering, Recent sorting, filtered count/empty state and fail
 Added CI release versionCode monotonicity for both editor and Python, partially configured signing rejection, production-to-fallback publication protection, version in release manifest and mobile secure-key setup docs. In-place updates are **not yet verified** and continue to require repository-owner signing secrets.
 
 2026-11-23 source only: Added file-name collision preflight and stale-safe failed-switch recovery; awaiting full CI before claiming verified.
+
+Source checkpoint: corrected overly strict online-status smoke assertion after inspecting API35 failure screenshot/accessibility XML. Actual UI reported a valid absence of configured compiler; device retest pending.
