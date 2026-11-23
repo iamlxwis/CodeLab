@@ -35,11 +35,13 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     var filter by rememberSaveable { mutableStateOf("All") }
     var removePythonConfirm by remember { mutableStateOf(false) }
     var clearCacheConfirm by remember { mutableStateOf(false) }
+    var wifiOnly by remember { mutableStateOf(false) }
     var inspected by remember(initialLanguage) {
         mutableStateOf(catalog.firstOrNull { it.name == initialLanguage })
     }
     val context = LocalContext.current
     val module = remember(context) { PythonModuleDownload(context.applicationContext) }
+    LaunchedEffect(module) { wifiOnly = module.wifiOnly() }
     var downloadId by remember { mutableLongStateOf(module.lastJob()) }
     var transfer by remember { mutableStateOf(module.inspect(downloadId)) }
     var moduleMessage by remember { mutableStateOf("") }
@@ -72,8 +74,13 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             .associateBy({ it.extension }, { OfflineRuntimeRegistry.locallyAvailable(it.extension) }) +
             ("py" to python.ready)
     }
-    val offlineReadyCount = detected.values.count { it }
+    val offlineEngineCount = OfflineRuntimeRegistry.engines().count {
+        it.extension in setOf("js", "lua", "java", "sql") &&
+            OfflineRuntimeRegistry.locallyAvailable(it.extension)
+    } + if (python.ready) 1 else 0
     val cachedInstallerBytes = remember(transfer, recheck) { module.cachedBytes() }
+    val pythonApkBytes = remember(recheck) { module.installedApkBytes() }
+    val pythonVersionCode = remember(recheck) { module.installedVersionCode() }
     val filteredLanguages = catalog.filter { language ->
         (language.name.contains(search, ignoreCase = true) ||
             language.extension.contains(search, ignoreCase = true)) &&
@@ -114,7 +121,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         label = { Text(option) })
                 }
             }
-            Text("${filteredLanguages.size} matching · $offlineReadyCount locally available · " +
+            Text("${filteredLanguages.size} matching · $offlineEngineCount executable engines · " +
                 "Installer cache: ${cachedInstallerBytes / 1024 / 1024} MB",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -129,6 +136,23 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                     Spacer(Modifier.height(8.dp))
                     Text("Python: " + python.description,
                         style = MaterialTheme.typography.bodySmall)
+                    Text("Python package APK: ${pythonApkBytes / 1024 / 1024} MB" +
+                        (pythonVersionCode?.let { " · version code $it" } ?: "") +
+                        " · Installer cache: ${cachedInstallerBytes / 1024 / 1024} MB",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("Wi-Fi only downloads", style = MaterialTheme.typography.bodyMedium)
+                            Text("Applies to the next Python download",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(checked = wifiOnly, onCheckedChange = {
+                            wifiOnly = it
+                            module.setWifiOnly(it)
+                        })
+                    }
                     Text(when (transfer.stage) {
                         PythonModuleDownload.Stage.DOWNLOADING, PythonModuleDownload.Stage.PAUSED ->
                             "Python download: " + (if (transfer.total > 0L)
@@ -322,7 +346,9 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                                     moduleMessage = "Cannot start download: " + e.javaClass.simpleName
                                 }
                             }) {
-                                Text(if (python.ready) "Download latest Python" else
+                                Text(if (transfer.stage == PythonModuleDownload.Stage.FAILED)
+                                    "Retry Python download" else if (python.ready)
+                                    "Download latest Python" else
                                     if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED)
                                         "Download again" else "Download Python")
                             }

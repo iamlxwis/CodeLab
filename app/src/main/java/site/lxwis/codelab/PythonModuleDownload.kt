@@ -38,6 +38,30 @@ internal class PythonModuleDownload(private val app: Context) {
 
     fun lastJob(): Long = preferences.getLong("python-id", -1L)
 
+    /** System DownloadManager persists and resumes transfers while CodeLab is closed. */
+    fun wifiOnly(): Boolean = preferences.getBoolean("python-wifi-only", false)
+
+    fun setWifiOnly(enabled: Boolean) {
+        preferences.edit().putBoolean("python-wifi-only", enabled).apply()
+    }
+
+    /** Approximate installed APK bytes, NOT Android's full app-data/storage footprint. */
+    @Suppress("DEPRECATION")
+    fun installedApkBytes(): Long = runCatching {
+        val installed = app.packageManager.getApplicationInfo(PythonModuleLocator.PACKAGE_NAME, 0)
+        val base = File(installed.sourceDir).takeIf { it.isFile }?.length() ?: 0L
+        val splits = installed.splitSourceDirs?.sumOf { path ->
+            File(path).takeIf { it.isFile }?.length() ?: 0L
+        } ?: 0L
+        base + splits
+    }.getOrDefault(0L)
+
+    /** Version codes are used for update decisions; installed packages are checked for trust separately. */
+    @Suppress("DEPRECATION")
+    fun installedVersionCode(): Long? = runCatching {
+        version(app.packageManager.getPackageInfo(PythonModuleLocator.PACKAGE_NAME, 0))
+    }.getOrNull()
+
     /** Cached installer is NOT the installed runtime; never touch user projects. */
     fun cachedBytes(): Long = runCatching {
         file().takeIf { it.isFile }?.length() ?: 0L
@@ -80,7 +104,7 @@ internal class PythonModuleDownload(private val app: Context) {
             .setDescription("Optional offline Python runtime module")
             .setMimeType("application/vnd.android.package-archive")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setAllowedOverMetered(true)
+            .setAllowedOverMetered(!wifiOnly())
             .setDestinationInExternalFilesDir(app, Environment.DIRECTORY_DOWNLOADS, apkName)
         val id = manager.enqueue(request)
         preferences.edit().putLong("python-id", id).apply()
