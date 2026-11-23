@@ -83,8 +83,18 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     val optionalPacks = remember(context) { OptionalRuntimeLocator.Pack.entries.associateWith {
         OptionalRuntimeDownload(context.applicationContext, it)
     } }
-    val optionalTransfers = remember(recheck) {
-        optionalPacks.mapValues { it.value.inspect() }
+    var optionalTransfers by remember(optionalPacks) {
+        mutableStateOf(optionalPacks.mapValues { it.value.inspect() })
+    }
+    LaunchedEffect(optionalPacks, recheck) {
+        do {
+            optionalTransfers = withContext(Dispatchers.IO) {
+                optionalPacks.mapValues { it.value.inspect() }
+            }
+            if (optionalTransfers.values.none { it.stage == OptionalRuntimeDownload.Stage.DOWNLOADING ||
+                    it.stage == OptionalRuntimeDownload.Stage.PAUSED }) break
+            delay(800L)
+        } while (true)
     }
     val optionalStatuses = remember(recheck) {
         optionalPacks.keys.associateWith { OptionalRuntimeLocator.check(context, it) }
@@ -185,7 +195,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         transfer.stage == PythonModuleDownload.Stage.PAUSED)
                         LinearProgressIndicator(progress = { transfer.progress },
                             modifier = Modifier.fillMaxWidth())
-                    Text("JavaScript and Lua remain built into CodeLab as safe fallbacks. " +
+                    Text("JavaScript, Lua and Java beta remain built into CodeLab as safe fallbacks. " +
                         "Optional modules are verified before use. Unpublished compiler packs cannot be downloaded.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -478,7 +488,8 @@ internal fun OptionalRuntimeManagerDialog(
     AlertDialog(onDismissRequest = onDismiss,
         title = { Text(pack.label + " offline runtime") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(status.description)
                 Text("Bundled " + pack.label + " remains available if this optional module is removed.",
                     style = MaterialTheme.typography.bodySmall)
@@ -501,6 +512,7 @@ internal fun OptionalRuntimeManagerDialog(
                     OutlinedButton(onClick = {
                         manager.cancel()
                         transfer = manager.inspect()
+                        onRefresh()
                     }) { Text("Cancel download") }
                 } else {
                     if (transfer.stage == OptionalRuntimeDownload.Stage.DOWNLOADED) {
@@ -513,7 +525,7 @@ internal fun OptionalRuntimeManagerDialog(
                         }) { Text(if (status.ready) "Update or reinstall" else "Install module") }
                     }
                     Button(onClick = {
-                        message = runCatching { manager.begin(); "Download started" }
+                        message = runCatching { manager.begin(); onRefresh(); "Download started" }
                             .getOrElse { "Download failed: " + it.javaClass.simpleName }
                         transfer = manager.inspect()
                     }) { Text(if (transfer.stage == OptionalRuntimeDownload.Stage.FAILED)
@@ -550,6 +562,7 @@ internal fun OptionalRuntimeManagerDialog(
         confirmButton = { Button(onClick = {
             message = if (manager.clearCachedInstaller()) "Cache cleared" else "Cache clear failed"
             transfer = manager.inspect()
+            onRefresh()
             confirmCache = false
         }) { Text("Clear cache") } },
         dismissButton = { TextButton(onClick = { confirmCache = false }) { Text("Cancel") } })

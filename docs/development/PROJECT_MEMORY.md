@@ -1,3 +1,7 @@
+## Nov 24, 2026, 3:49 AM PHT — Phase 1 live module status and security
+
+Code source update: optional download progress is polled while active and refreshed from manager begin/cancel/cache actions; Java beta listed as bundled fallback, module dialogs scroll on phones. Security gate now scans every companion source and asserts signature-protected binding, no INTERNET permission and no backup for Python/JS/Lua/Java. Source CI and real network installation tests pending. User handles phone acceptance, not CI/build/security. Java beta is not javac; TypeScript/native and other compiler runtimes not shipped. Session WORKING at checkpoint.
+
 ## Nov 24, 2026, 3:48 AM PHT — Phase 1 Java beta build wiring
 
 Added :engine-java release/debug CI builds, signer checks, Java beta optional module catalog and Android 15 package/UI smoke assertions. Core bundled Java fallback is retained; beta is BeanShell rather than javac. CI and public release still unverified. Next: fix optional transfer-status polling, harden security gate, inspect new source CI and run device workflow. Session WORKING at checkpoint.

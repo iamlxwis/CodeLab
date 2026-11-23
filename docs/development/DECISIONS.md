@@ -38,3 +38,7 @@ D-024: User explicitly chose GitHub Actions instead of requiring Termux or a PC.
 ## 2026-11-23 — README progress tracker
 
 D-025: README is the owner's concise project status dashboard. Every substantive task state transition or checkpoint is recorded in the same commit in README, `docs/development/PROGRESS_LOG.md`, and `PROJECT_MEMORY.md`. Show done/remaining counts, exact current task, concise statuses and truthful linked CI, without emojis or inflated completion claims. The audit remains append-only; the tracker reflects committed progress, not uncommitted work.
+
+## Nov 24, 2026 — Phase 1 completion authorization
+
+D-026: User authorized completing the broader Phase 1 language-pack scope before Phase 2; user handles final physical Android testing and will report faults. Engineering still builds, checks and truthfully labels runtimes. Keep safe fallbacks until optional replacements proven. Label Java beta as BeanShell interpreter, never javac. Document blocked C/C++/Kotlin/Rust/Go/C# toolchains honestly.

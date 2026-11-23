@@ -216,3 +216,7 @@ Download signature verification formerly only compared the new APK to the editor
 ## KI-051 — rejected oversized edit generates phantom version history (Nov 24, 2026 · 1:54 AM PHT)
 
 ProjectStore.save used to snapshot the old file before writeText verified UTF-8 byte limits. Invalid huge/null editor buffers could therefore create misleading snapshots on failed saves. Validate first and add regression verifying file and history unchanged. CI pending.
+
+## Nov 24, 2026, 3:49 AM PHT — Java beta and offline pack acceptance pending
+
+New signed Java companion uses BeanShell; it cannot compile general Java classes. JavaScript/Lua/Java public companion APK availability and Android 15 test still need release evidence. In-app transfer progress now polls in source but real GitHub network download, package approval, reinstall, removal and error-state acceptance remain outstanding. No genuine TypeScript, PHP/Ruby, C/C++, Kotlin, Rust, Go or C# runtime is shipped.

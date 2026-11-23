@@ -1,3 +1,5 @@
+> **Nov 24, 2026, 3:49 AM PHT current source:** four companion projects (Python, JavaScript, Lua, Java beta) with manager and signed release integration. Only Python was previously confirmed public; new CI/publish pending. Java beta is an interpreter, not a compiler. Older historical notes below are superseded where contradictory.
+
 > **Verified milestone, 2026-11-23:** Python 3.13 is available as a separate 36.45 MB APK for the 3.53 MB editor, with signature-bound IPC and passing [offline emulator test](https://github.com/iamlxwis/CodeLab/actions/runs/45135511400) at source `216a58aa`. This is **not** yet a built-in installation manager, and all other optional language packs remain pending.
 
 # CodeLab modular offline execution: engineering contract

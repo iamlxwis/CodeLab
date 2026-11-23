@@ -85,3 +85,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 3:46 AM PHT | Phase 1 / IDEA-001, IDEA-009 | In progress; source only | New signed Java **beta** companion source, allowlisted IPC and optional route; bundled fallback preserved. CI/release integration and full javac remain open. |
 
 | Nov 24, 2026, 3:48 AM PHT | Phase 1 / IDEA-026 | Source integration in progress; CI pending | Added Java beta companion to CI build, signing, release APK, module catalog and Android15 smoke. This is not javac; no public APK confirmed. |
+
+| Nov 24, 2026, 3:49 AM PHT | Phase 1 / IDEA-011, IDEA-026 | Source improved, CI pending | Fixed JS/Lua/Java optional download progress refresh, small-screen manager scrolling, and extended companion manifest security gate. Full Phase 1 not done. |

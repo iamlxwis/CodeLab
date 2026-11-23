@@ -17,7 +17,9 @@ PATTERNS = {
 
 def inspect():
     errors = []
-    for root in (ROOT / "app/src", ROOT / ".github/workflows", ROOT / "docs"):
+    for root in (ROOT / "app/src", ROOT / "engine-python/src",
+                 ROOT / "engine-js/src", ROOT / "engine-lua/src",
+                 ROOT / "engine-java/src", ROOT / ".github/workflows", ROOT / "docs"):
         if not root.exists():
             continue
         for path in root.rglob("*"):
@@ -38,13 +40,14 @@ def inspect():
         errors.append("Android backup policy unexpectedly relaxed")
     if 'android:isolatedProcess="true"' not in manifest:
         errors.append("Script runtime process isolation unexpectedly removed")
-    python_manifest = (ROOT / "engine-python/src/main/AndroidManifest.xml").read_text()
-    if 'android:permission="site.lxwis.codelab.permission.BIND_ENGINE"' not in python_manifest:
-        errors.append("Python companion must require signature-protected binding")
-    if 'android.permission.INTERNET' in python_manifest:
-        errors.append("Python companion unexpectedly gained INTERNET permission")
-    if 'android:allowBackup="false"' not in python_manifest:
-        errors.append("Python companion must disable Android backup")
+    for module in ("engine-python", "engine-js", "engine-lua", "engine-java"):
+        engine_manifest = (ROOT / module / "src/main/AndroidManifest.xml").read_text()
+        if 'android:permission="site.lxwis.codelab.permission.BIND_ENGINE"' not in engine_manifest:
+            errors.append(f"{module} companion must require signature-protected binding")
+        if 'android.permission.INTERNET' in engine_manifest:
+            errors.append(f"{module} companion unexpectedly gained INTERNET permission")
+        if 'android:allowBackup="false"' not in engine_manifest:
+            errors.append(f"{module} companion must disable Android backup")
     workflow = (ROOT / ".github/workflows/android.yml").read_text()
     build = workflow.split("- name: Build release, test, lint, and coverage report", 1)
     if len(build) != 2 or any(k not in build[1].split("- name:", 1)[0]
