@@ -69,3 +69,7 @@ IDEA-014 records the four screenshots: titles, project names and overflow icons 
 ## 2026-11-23 — install reliability report
 
 IDEA-015 captures the user's screenshot of Android rejecting `CodeLab.apk` as an invalid package. Same-build APK verification and emulator install pass, but fallback debug signing can change across CI runs. Upgrade conflict is a leading hypothesis, not a proven diagnosis without Android package-manager error or device details.
+
+## 2026-11-23 — clean-install clarification
+
+IDEA-015 revision: user explicitly states their normal process is **uninstall old CodeLab first, install new CodeLab APK second**, and that had always worked. This changes triage priorities: prove a clean installation of the exact release variant, investigate download integrity and handset Android compatibility, and collect an exact installer failure code. Signature continuity remains a future upgradability issue but is not an established explanation for this incident.

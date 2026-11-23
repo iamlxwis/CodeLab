@@ -37,6 +37,7 @@ jobs:
           profile: pixel_2
           disable-animations: true
           script: |
+            python3 qa/clean_install_smoke.py
             python3 qa/device_smoke.py
             bash gradlew :app:connectedDebugAndroidTest
             python3 qa/performance_smoke.py

@@ -85,3 +85,7 @@ Source-stage mitigation: workflow compares new signer to previous public APK, re
 ## KI-018 — signing-audit workflow invalid YAML on first attempt
 
 [Workflow 45163194992](https://github.com/iamlxwis/CodeLab/actions/runs/45163194992) failed before any job was created after the initial signing-audit commit; inspected workflow source showed malformed multiline release-note assignments outside the YAML script indentation. Replaced them with single-line quoted shell assignments. **Retest required.**
+
+## KI-017 addendum — user rules out ordinary upgrade conflict
+
+User confirms that, as with earlier successful releases, they **uninstall the old app before installing the new version**. This substantially reduces the likelihood that two installed CodeLab versions' signing certificates are conflicting. Do not repeat the upgrade/signing hypothesis as the demonstrated cause. New source smoke tests **fresh install of the RELEASE variant** (not just debug install or release-over-debug), startup and captured screenshot on Android 35 emulator. Other platform versions, browser download integrity and the user's phone remain unverified; capture real install failure code before claiming a root cause.

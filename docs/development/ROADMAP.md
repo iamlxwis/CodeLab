@@ -4,7 +4,7 @@ Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.
 
 ## P0 — build and runtime reliability
 
-- [ ] **IDEA-015 / KI-017 — BLOCKER:** Resolve installer rejection. Verify release signer comparison and published APK provenance; set stable production signing secrets for future releases, then test Android upgrade on physical phone. Prior-project ZIP backups are mandatory before replacing incompatible old installs.
+- [ ] **IDEA-015 / KI-017 — BLOCKER:** Resolve clean-install rejection after user *already uninstalled* the previous CodeLab. New source QA explicitly clean-installs the release APK and checks launch on emulator (CI pending). Verify actual release download SHA-256/size, Android version and package installer failure code on phone; signing continuity is a separate future upgrade issue.
 - [ ] Check the source-stage release audit, corrected checksum packaging and latest tag alignment in the APK CI run triggered by this commit.
 
 

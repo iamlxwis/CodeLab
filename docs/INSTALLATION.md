@@ -10,6 +10,10 @@ A GitHub Actions fallback-debug build may use a different signing certificate fr
 
 If backup succeeds but updating fails, uninstall the previous CodeLab, download **CodeLab.apk** again from the same release page, install it, and import your saved project ZIPs. Install the matching Python module only if you need offline Python; its certificate must match CodeLab. If you cannot export a backup, **do not uninstall**.
 
+## Failure after uninstalling the old app
+
+If you have already uninstalled CodeLab and Android reports `App not installed as package appears to be invalid`, **a signing conflict with the removed app is not the leading explanation**. Do not repeatedly uninstall. Re-download the editor APK in full through another browser or GitHub's official release page, then open the local download with Android Files. Verify its size/hash against the release asset metadata. If it still fails, collect Android version and the precise installer error; the generic toast does not establish a specific cause.
+
 ## First installation fails too
 
 - Make sure the downloaded file is exactly **CodeLab.apk** and is not a browser error page, HTML file, partial download or **CodeLab-Python.apk**. Compare its SHA-256 with the release checksum file.
