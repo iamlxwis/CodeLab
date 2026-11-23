@@ -183,6 +183,12 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
         if (!focusMode || p == null) WorkspaceTopBar(m, p) { dialog = it }
+        if (p != null && !focusMode) RunModeStrip(m,
+            onLanguages = {
+                requestedLanguage = if (m.active?.endsWith(".py", true) == true) "Python" else null
+                dialog = "languages"
+            },
+            onProjectSettings = { dialog = "projectsettings" })
         if (p == null) {
             ProjectLibrary(m, motionMillis, { dialog = "newproject" },
                 { importZip.launch(arrayOf("*/*")) }, { dialog = "githubimport" },

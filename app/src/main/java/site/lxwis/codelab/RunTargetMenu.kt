@@ -7,6 +7,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.InfoOutline
+import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -15,16 +18,78 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
+/** A visible execution selection directly beneath the editor's Run control. */
+@Composable
+internal fun RunModeStrip(
+    m: WorkspaceModel, onLanguages: () -> Unit, onProjectSettings: () -> Unit
+) {
+    val active = m.active
+    val localReady = active?.let(m::isLocalExecutable) ?: false
+    val cloudReady = active?.let(m::cloudAvailable) ?: false
+    val preview = active?.endsWith(".html", true) == true ||
+        active?.endsWith(".htm", true) == true
+    val missingModule = m.executionMode == "Offline" &&
+        active != null && !localReady && !preview
+    val status = when {
+        m.runner.running -> "Executing " + m.executionMode.lowercase()
+        active == null -> "Open a file to run"
+        preview -> "Offline HTML preview"
+        m.executionMode == "Offline" && localReady -> "Ready: local runtime"
+        missingModule -> "Offline runtime not available for this file"
+        m.executionMode == "Online" && cloudReady -> "Online: source upload needs confirmation"
+        m.executionMode == "Online" && !m.isOnline -> "Internet connection required"
+        else -> "No online compiler for this file"
+    }
+    Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 5.dp)) {
+            Row(Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("RUN", style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                FilterChip(selected = m.executionMode == "Offline",
+                    onClick = { m.chooseExecutionMode("Offline") },
+                    enabled = !m.runner.running, modifier = Modifier.heightIn(min = 44.dp),
+                    label = { Text("Offline") },
+                    leadingIcon = { Icon(Icons.Default.Computer, null, Modifier.size(17.dp)) })
+                FilterChip(selected = m.executionMode == "Online",
+                    onClick = { m.chooseExecutionMode("Online") },
+                    enabled = !m.runner.running, modifier = Modifier.heightIn(min = 44.dp),
+                    label = { Text("Online") },
+                    leadingIcon = { Icon(Icons.Default.Cloud, null, Modifier.size(17.dp)) })
+                Spacer(Modifier.weight(1f))
+                RunTargetMenu(m, onProjectSettings)
+            }
+            Row(Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                Icon(if (missingModule || (m.executionMode == "Online" && !cloudReady))
+                    Icons.Default.InfoOutline else Icons.Default.CheckCircleOutline,
+                    contentDescription = null, modifier = Modifier.size(15.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(status, Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (missingModule || (m.executionMode == "Online" && !cloudReady)) {
+                    TextButton(onClick = onLanguages) {
+                        Text(if (missingModule) "Modules" else "Configure",
+                            style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            }
+        }
+    }
+}
+
 /** Explicit run source: clicking the primary Run action respects the entrypoint. */
 @Composable
 internal fun RunTargetMenu(m: WorkspaceModel, onProjectSettings: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     var showPicker by remember { mutableStateOf(false) }
     Box {
-        IconButton(
-            onClick = { expanded = true },
-            modifier = Modifier.size(48.dp)
-        ) { Icon(Icons.Default.ArrowDropDown, "Run mode and target · ${m.executionMode}") }
+        IconButton(onClick = { expanded = true }, modifier = Modifier.size(44.dp)) {
+            Icon(Icons.Default.MoreHoriz, "Run file and entry options")
+        }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             DropdownMenuItem(
                 text = { Text(if (m.executionMode == "Offline") "Offline · selected" else "Run offline") },

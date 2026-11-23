@@ -84,3 +84,5 @@ IDEA-015 revision: user explicitly states their normal process is **uninstall ol
 IDEA-018 CI note: Kotlin visibility mismatch from first source checkpoint corrected; build retry pending.
 
 IDEA-018 editor UI source now implements custom hex, preset CRUD, load and style defaults; CI/device validation pending.
+
+IDEA-019 visible execution-mode controls committed in source; run-mode persistence, consent, missing packs and large-font QA pending.

@@ -100,3 +100,5 @@ New appearance/Projects/Import source has not yet passed Gradle, emulator screen
 [APK 45169778823](https://github.com/iamlxwis/CodeLab/actions/runs/45169778823): `WorkspaceModel.kt:282:9 Property 'public' exposes its 'internal' type 'AppearanceRecipe'`. Scope corrected to `internal`; retest pending.
 
 KI-022: New appearance editor is not yet device-tested, and entering or editing colors/presets must undergo accessibility, contrast and persistence QA.
+
+KI-023: Visible run strip has not been validated at narrow widths or large font sizes; show module/provider statuses accurately and preserve explicit consent.

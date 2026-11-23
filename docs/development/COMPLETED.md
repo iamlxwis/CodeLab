@@ -57,3 +57,5 @@ No build/device acceptance is claimed; IDEAs 016–021 remain in progress/pendin
 Source visibility fix applied after first CI compile failure; validation pending. No completion claim.
 
 New appearance editor controls implemented in source, not verified by Gradle or device yet. IDEA-018 not marked complete.
+
+Source-only: Run mode chips and contextual status added next to editor Run workflow. Device acceptance pending.

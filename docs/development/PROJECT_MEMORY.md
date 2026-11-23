@@ -156,3 +156,5 @@ pack availability remains a PackageManager verification on Android devices.
 2026-11-23 CI follow-up: [APK run 45169778823](https://github.com/iamlxwis/CodeLab/actions/runs/45169778823) and [device run 45169778754](https://github.com/iamlxwis/CodeLab/actions/runs/45169778754) failed before tests: Kotlin exposed internal AppearanceRecipe through public WorkspaceModel property. Scoped that property to `internal`; rebuild pending. No device result claimed.
 
 2026-11-23 — appearance editor now has immediate valid custom hex preview, named save/update/load/delete, deletion confirmation and restore defaults. Advanced density/motion options are progressively disclosed. Source commit pending Gradle/JVM/emulator QA. Next: Run strip and guide.
+
+2026-11-23 source: editor Run now has an adjacent always-visible Offline/Online chip row, active-mode status (available/missing module/cloud provider) and direct Languages configuration. File/entry run actions remain in the overflow. No source upload occurs on selecting Online; prior run-time confirmation remains. CI/device tests pending.

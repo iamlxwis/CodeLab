@@ -124,8 +124,6 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                     }
                 }
             }
-            if (!m.runner.running && m.files.isNotEmpty())
-                RunTargetMenu(m, onProjectSettings = { onAction("projectsettings") })
         }
         if (project != null) {
             IconButton(onClick = {
