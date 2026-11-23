@@ -20,9 +20,17 @@ def adb(*args):
                           check=True, timeout=40).stdout.strip()
 
 def main():
+    # Measure the R8-optimized release, not the slower unoptimized debug build.
+    # The release APK uses the same CI fallback signing key on this device job.
+    apk = Path("app/build/outputs/apk/release/app-release.apk")
+    if not apk.is_file():
+        raise FileNotFoundError("Release APK required for motion benchmark")
+    adb("install", "-r", str(apk))
     old = adb("shell", "settings", "get", "global", "animator_duration_scale")
     stats = {
         "package": PACKAGE,
+        "apk_variant": "release",
+        "apk_bytes": apk.stat().st_size,
         "animation_scale": "1x",
         "scenario": "four real new-project sheet open/close transitions, six scroll swipes, emulator at 1x system animations",
         "frames": None,
@@ -69,6 +77,12 @@ def main():
                 100.0 * stats["janky_frames"] / stats["frames"], 2)
         else:
             stats["sample_quality"] = "fewer than 20 rendered frames; no valid jank rate"
+        stats["frame_time_percentiles_ms"] = {
+            str(percentile): int(match.group(1)) if (match := re.search(
+                rf"{percentile}th percentile:\s*(\d+)\s*ms", raw)) else None
+            for percentile in (50, 90, 95, 99)
+        }
+        stats["source"] = "R8-optimized release, Android emulator adb dumpsys gfxinfo"
         stats["device"] = adb("shell", "getprop", "ro.product.model")
     finally:
         if old in ("null", ""):

@@ -41,8 +41,17 @@ jobs:
           fi
       - name: Static security regression gate
         run: python3 qa/security_gate.py
-      - name: Build optimized release and test
-        run: bash gradlew --no-daemon :app:assembleRelease :app:testDebugUnitTest
+      - name: Build release, test, lint, and coverage report
+        run: bash gradlew --no-daemon :app:assembleRelease :app:testDebugUnitTest :app:debugUnitTestCoverage :app:lintDebug
+      - name: Upload quality reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodeLab-quality-reports
+          path: |
+            app/build/reports/jacoco/
+            app/build/reports/lint-results-debug.*
+          if-no-files-found: warn
       - name: Verify APK signature
         run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk'
       - uses: actions/upload-artifact@v4

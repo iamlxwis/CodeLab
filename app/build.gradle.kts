@@ -1,9 +1,11 @@
 import java.io.File
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("jacoco")
 }
 
 val keyFile = System.getenv("CODELAB_KEYSTORE_FILE")
@@ -26,6 +28,11 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true }
+    lint {
+        // Report existing warnings before enforcing a graduated error baseline.
+        abortOnError = false
+        warningsAsErrors = false
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -74,4 +81,29 @@ dependencies {
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.12.01"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+/** Unit-test coverage evidence, not a universal coverage threshold. */
+jacoco { toolVersion = "0.8.12" }
+
+tasks.register<JacocoReport>("debugUnitTestCoverage") {
+    dependsOn("testDebugUnitTest")
+    val excludes = listOf("**/R.class", "**/R$*.class", "**/BuildConfig.*", "**/*Test*.*")
+    classDirectories.setFrom(files(
+        fileTree(layout.buildDirectory.dir("tmp/kotlin-classes/debug").get().asFile) {
+            exclude(excludes)
+        },
+        fileTree(layout.buildDirectory.dir(
+            "intermediates/javac/debug/compileDebugJavaWithJavac/classes").get().asFile) {
+            exclude(excludes)
+        }
+    ))
+    sourceDirectories.setFrom(files("src/main/java"))
+    executionData.setFrom(fileTree(layout.buildDirectory.dir("jacoco").get().asFile) {
+        include("testDebugUnitTest.exec")
+    })
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
 }

@@ -22,6 +22,20 @@ public class ProjectStoreTest {
         store.createProject("First");
     }
 
+    @Test public void nearMaximumFileSurvivesSaveRestartAndBoundedSearch() throws Exception {
+        // A large source file exercises real on-disk persistence without
+        // claiming that an EditText can render multi-megabyte inputs smoothly.
+        String source = "const n = 1234;\n".repeat(16000);
+        assertTrue(source.getBytes(StandardCharsets.UTF_8).length > 220000);
+        assertTrue(source.getBytes(StandardCharsets.UTF_8).length < 262144);
+        store.save("First", "main.js", source, true);
+        store.remember("First", Collections.singletonList("main.js"), "main.js");
+        ProjectStore restored = new ProjectStore(root);
+        assertEquals(source, restored.read("First", "main.js"));
+        assertEquals("main.js", restored.restore().getActive());
+        assertEquals(200, restored.searchText("First", "const n = 1234", true).size());
+    }
+
     @Test public void failedSavePreservesPriorRevision() throws Exception {
         store.save("First", "main.js", "print('preserved');");
         char[] huge = new char[262145];
