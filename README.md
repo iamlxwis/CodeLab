@@ -25,7 +25,7 @@ Write, run, and manage projects from your phone.
 
 **0 / 9 completed · 9 remaining · 3 in progress · 0 blocked**
 
-**Current task:** `T01` — Correct release APK signer; verification pending
+**Current task:** `T01` — Fix Gradle signing DSL shadowing; new APK CI pending
 
 **Latest verified (2026-11-23):** [APK passed but actual signer was Android Debug](https://github.com/iamlxwis/CodeLab/actions/runs/45201489255) · [Android 13: Passed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470) · [Android 15: Failed](https://github.com/iamlxwis/CodeLab/actions/runs/45191732470)
 
@@ -41,7 +41,7 @@ Write, run, and manage projects from your phone.
 | `T08` Finish interactive tutorial and accessibility | Queued |
 | `T09` Complete full QA and release readiness | Queued |
 
-**Last audit:** 2026-11-23 — signing discrepancy corrected in source · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** 2026-11-23 — signing build failure diagnosed and corrected in source · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.

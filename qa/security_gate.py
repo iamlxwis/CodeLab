@@ -52,6 +52,11 @@ def inspect():
         errors.append("Production signing secrets missing from Gradle build step")
     if "- name: Enforce actual production signing certificate" not in workflow:
         errors.append("Release lacks actual signer-versus-keystore verification")
+    app_gradle = (ROOT / "app/build.gradle.kts").read_text()
+    if any(value not in app_gradle for value in (
+        "storePassword = releaseStorePassword", "keyAlias = releaseAlias",
+        "keyPassword = releaseEntryPassword")):
+        errors.append("Release SigningConfig uses ambiguous or missing credentials")
     source_dir = ROOT / "app/src/main"
     emoji = re.compile("[" + chr(0x1F300) + "-" + chr(0x1FAFF) + "]")
     for ext in ("*.kt", "*.java", "*.xml"):

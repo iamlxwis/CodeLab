@@ -9,12 +9,12 @@ plugins {
 }
 
 val keyFile = System.getenv("CODELAB_KEYSTORE_FILE")
-val keyPassword = System.getenv("CODELAB_KEYSTORE_PASSWORD")
-val keyAlias = System.getenv("CODELAB_KEY_ALIAS")
-val keyEntryPassword = System.getenv("CODELAB_KEY_PASSWORD")
+val releaseStorePassword = System.getenv("CODELAB_KEYSTORE_PASSWORD")
+val releaseAlias = System.getenv("CODELAB_KEY_ALIAS")
+val releaseEntryPassword = System.getenv("CODELAB_KEY_PASSWORD")
 val hasReleaseSigning = !keyFile.isNullOrBlank() &&
-    !keyPassword.isNullOrBlank() && !keyAlias.isNullOrBlank() &&
-    !keyEntryPassword.isNullOrBlank() && File(keyFile).isFile
+    !releaseStorePassword.isNullOrBlank() && !releaseAlias.isNullOrBlank() &&
+    !releaseEntryPassword.isNullOrBlank() && File(keyFile).isFile
 
 android {
     namespace = "site.lxwis.codelab"
@@ -44,9 +44,11 @@ android {
         if (hasReleaseSigning) {
             create("production") {
                 storeFile = File(requireNotNull(keyFile))
-                storePassword = keyPassword
-                keyAlias = keyAlias
-                keyPassword = keyEntryPassword
+                // Do not name outer variables like SigningConfig's properties:
+                // Kotlin DSL receiver shadowing silently assigned null here.
+                storePassword = releaseStorePassword
+                keyAlias = releaseAlias
+                keyPassword = releaseEntryPassword
             }
         }
     }
