@@ -6,7 +6,7 @@
     <permission android:name="site.lxwis.codelab.permission.BIND_ENGINE"
         android:protectionLevel="signature"/>
     <uses-permission android:name="site.lxwis.codelab.permission.BIND_ENGINE"/>
-    <queries><package android:name="site.lxwis.codelab.engine.python"/></queries>
+    <queries><package android:name="site.lxwis.codelab.engine.python"/><package android:name="site.lxwis.codelab.engine.js"/><package android:name="site.lxwis.codelab.engine.lua"/></queries>
     <application android:label="@string/app_name" android:icon="@drawable/ic_codelab"
         android:allowBackup="false" android:theme="@style/AppTheme" android:supportsRtl="true">
         <provider

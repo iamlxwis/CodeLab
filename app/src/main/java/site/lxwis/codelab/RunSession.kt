@@ -81,6 +81,13 @@ class RunSession(context: Context) {
         if (!name.endsWith(".js", true) && !name.endsWith(".sql", true) && !name.endsWith(".lua", true) && !name.endsWith(".java", true) && !name.endsWith(".py", true)) { status = "Run a .js, .py, .sql, .lua or .java file"; return }
         if (source.length > 128_000) { status = "Script exceeds 128,000 characters"; return }
         val pythonPack = if (name.endsWith(".py", true)) PythonModuleLocator.component(app) else null
+        val optionalPack = when {
+            name.endsWith(".js", true) ->
+                OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.JAVASCRIPT)
+            name.endsWith(".lua", true) ->
+                OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.LUA)
+            else -> null
+        }
         if (name.endsWith(".py", true) && pythonPack == null) {
             status = PythonModuleLocator.check(app).description
             return
@@ -152,13 +159,14 @@ class RunSession(context: Context) {
             val javaMode = name.endsWith(".java", true)
             val python = name.endsWith(".py", true)
             val intent = if (python) Intent().setComponent(requireNotNull(pythonPack))
+                else if (optionalPack != null) Intent().setComponent(optionalPack)
                 else Intent(app, when {
                     sql -> SqlRuntimeService::class.java
                     lua -> LuaRuntimeService::class.java
                     javaMode -> JavaRuntimeService::class.java
                     else -> RuntimeService::class.java
                 })
-            val bound = if (python || sql || Build.VERSION.SDK_INT < 29)
+            val bound = if (python || optionalPack != null || sql || Build.VERSION.SDK_INT < 29)
                 app.bindService(intent, listener, Context.BIND_AUTO_CREATE)
             else app.bindIsolatedService(intent, Context.BIND_AUTO_CREATE,
                 "run${java.util.UUID.randomUUID().toString().replace("-", "")}",

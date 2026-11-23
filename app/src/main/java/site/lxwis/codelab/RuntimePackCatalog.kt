@@ -29,7 +29,7 @@ internal object RuntimePackCatalog {
     )
 
     /** Only verified, actually published optional companions belong in Downloadable. */
-    fun downloadableLanguages(): Set<String> = setOf("Python")
+    fun downloadableLanguages(): Set<String> = setOf("Python", "JavaScript", "Lua")
 
     fun isDownloadable(language: String): Boolean = language in downloadableLanguages()
 

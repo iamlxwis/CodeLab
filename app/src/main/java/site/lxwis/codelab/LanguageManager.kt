@@ -34,6 +34,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     var search by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf("Installed") }
     var removePythonConfirm by remember { mutableStateOf(false) }
+    var optionalInspect by remember { mutableStateOf<OptionalRuntimeLocator.Pack?>(null) }
     var clearCacheConfirm by remember { mutableStateOf(false) }
     var wifiOnly by remember { mutableStateOf(false) }
     var inspected by remember(initialLanguage) {
@@ -79,6 +80,15 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             OfflineRuntimeRegistry.locallyAvailable(it.extension)
     } + if (python.ready) 1 else 0
     val cachedInstallerBytes = remember(transfer, recheck) { module.cachedBytes() }
+    val optionalPacks = remember(context) { OptionalRuntimeLocator.Pack.entries.associateWith {
+        OptionalRuntimeDownload(context.applicationContext, it)
+    } }
+    val optionalTransfers = remember(recheck) {
+        optionalPacks.mapValues { it.value.inspect() }
+    }
+    val optionalStatuses = remember(recheck) {
+        optionalPacks.keys.associateWith { OptionalRuntimeLocator.check(context, it) }
+    }
     val pythonApkBytes = remember(recheck) { module.installedApkBytes() }
     val pythonVersionCode = remember(recheck) { module.installedVersionCode() }
     val filteredLanguages = catalog.filter { language ->
@@ -86,9 +96,13 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             language.extension.contains(search, ignoreCase = true)) &&
         when (filter) {
             "Installed" -> detected[language.extension] == true
-            "Downloads" -> language.name == "Python" && (python.state !=
+            "Downloads" -> (language.name == "Python" && (python.state !=
                 PythonModuleLocator.State.NOT_INSTALLED || cachedInstallerBytes > 0L ||
-                transfer.stage != PythonModuleDownload.Stage.IDLE)
+                transfer.stage != PythonModuleDownload.Stage.IDLE)) ||
+                (optionalPacks.keys.any { it.label == language.name &&
+                    (optionalStatuses[it]?.state != PythonModuleLocator.State.NOT_INSTALLED ||
+                     optionalPacks[it]?.cachedBytes() ?: 0L > 0L ||
+                     optionalTransfers[it]?.stage != OptionalRuntimeDownload.Stage.IDLE) })
             "Downloadable" -> RuntimePackCatalog.isDownloadable(language.name)
             "Cloud ready" -> model.isOnline && model.cloudLanguages.containsKey(language.extension)
             else -> true
@@ -171,8 +185,8 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         transfer.stage == PythonModuleDownload.Stage.PAUSED)
                         LinearProgressIndicator(progress = { transfer.progress },
                             modifier = Modifier.fillMaxWidth())
-                    Text("JavaScript, Lua, Java beta and SQL remain built into CodeLab. " +
-                        "Unpublished compiler packs cannot be downloaded.",
+                    Text("JavaScript and Lua remain built into CodeLab as safe fallbacks. " +
+                        "Optional modules are verified before use. Unpublished compiler packs cannot be downloaded.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -182,6 +196,20 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         if (cachedInstallerBytes > 0L) OutlinedButton(onClick = {
                             clearCacheConfirm = true
                         }) { Text("Clear cache") }
+                    }
+                    OptionalRuntimeLocator.Pack.entries.forEach { pack ->
+                        val transfer = optionalTransfers[pack]
+                        val status = optionalStatuses[pack]
+                        Text(pack.label + ": " + (status?.description ?: "Unknown") +
+                            " · installer " + ((optionalPacks[pack]?.cachedBytes() ?: 0L) / 1024 / 1024) + " MB",
+                            style = MaterialTheme.typography.bodySmall)
+                        Text("Download: " + (transfer?.stage?.name ?: "IDLE") +
+                            (if (transfer != null && transfer.total > 0)
+                                " · " + (transfer.progress * 100).toInt() + "%" else ""),
+                            style = MaterialTheme.typography.labelSmall)
+                        OutlinedButton(onClick = { optionalInspect = pack }) {
+                            Text("Manage " + pack.label)
+                        }
                     }
                     Spacer(Modifier.height(10.dp))
                 }
@@ -226,7 +254,13 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                     val engine = OfflineRuntimeRegistry.manifest(language.extension)
                     val localInstalled = detected[language.extension] == true
                     Row(Modifier.fillMaxWidth().heightIn(min = 50.dp)
-                        .clickable { inspected = language },
+                        .clickable {
+                            val optional = OptionalRuntimeLocator.Pack.entries.firstOrNull {
+                                it.label == language.name
+                            }
+                            if (optional != null) optionalInspect = optional
+                            else inspected = language
+                        },
                         verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(19.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -267,6 +301,15 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                 }
             }
         }
+    }
+    optionalInspect?.let { pack ->
+        OptionalRuntimeManagerDialog(
+            pack = pack,
+            manager = requireNotNull(optionalPacks[pack]),
+            status = requireNotNull(optionalStatuses[pack]),
+            onDismiss = { optionalInspect = null; recheck++ },
+            onRefresh = { recheck++ }
+        )
     }
     inspected?.let { language ->
         val engine = OfflineRuntimeRegistry.manifest(language.extension)
@@ -405,6 +448,111 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             Text("Cancel")
         } })
 
+}
+
+
+@Composable
+internal fun OptionalRuntimeManagerDialog(
+    pack: OptionalRuntimeLocator.Pack,
+    manager: OptionalRuntimeDownload,
+    status: PythonModuleLocator.Status,
+    onDismiss: () -> Unit,
+    onRefresh: () -> Unit
+) {
+    var transfer by remember(pack) { mutableStateOf(manager.inspect()) }
+    var message by remember(pack) { mutableStateOf("") }
+    var confirmRemove by remember(pack) { mutableStateOf(false) }
+    var confirmCache by remember(pack) { mutableStateOf(false) }
+    var wifiOnly by remember(pack) { mutableStateOf(manager.wifiOnly()) }
+    LaunchedEffect(pack, transfer.stage) {
+        if (transfer.stage == OptionalRuntimeDownload.Stage.DOWNLOADING ||
+            transfer.stage == OptionalRuntimeDownload.Stage.PAUSED) {
+            while (true) {
+                delay(800L)
+                transfer = withContext(Dispatchers.IO) { manager.inspect() }
+                if (transfer.stage != OptionalRuntimeDownload.Stage.DOWNLOADING &&
+                    transfer.stage != OptionalRuntimeDownload.Stage.PAUSED) break
+            }
+        }
+    }
+    AlertDialog(onDismissRequest = onDismiss,
+        title = { Text(pack.label + " offline runtime") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(status.description)
+                Text("Bundled " + pack.label + " remains available if this optional module is removed.",
+                    style = MaterialTheme.typography.bodySmall)
+                Text("Installed APK: " + manager.installedApkBytes() / 1024 / 1024 +
+                    " MB · cache: " + manager.cachedBytes() / 1024 / 1024 + " MB" +
+                    (manager.installedVersionCode()?.let { " · version code " + it } ?: ""),
+                    style = MaterialTheme.typography.labelSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Wi-Fi only downloads", modifier = Modifier.weight(1f))
+                    Switch(checked = wifiOnly, onCheckedChange = {
+                        wifiOnly = it; manager.setWifiOnly(it)
+                    })
+                }
+                Text("Download: " + transfer.stage.name +
+                    if (transfer.total > 0L) " · " + (transfer.progress * 100).toInt() + "%" else "")
+                if (transfer.stage == OptionalRuntimeDownload.Stage.DOWNLOADING ||
+                    transfer.stage == OptionalRuntimeDownload.Stage.PAUSED) {
+                    LinearProgressIndicator(progress = { transfer.progress },
+                        modifier = Modifier.fillMaxWidth())
+                    OutlinedButton(onClick = {
+                        manager.cancel()
+                        transfer = manager.inspect()
+                    }) { Text("Cancel download") }
+                } else {
+                    if (transfer.stage == OptionalRuntimeDownload.Stage.DOWNLOADED) {
+                        val error = manager.verify()
+                        Text(error ?: "APK signature and package verified",
+                            color = if (error == null) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.error)
+                        if (error == null) Button(onClick = {
+                            message = manager.install()
+                        }) { Text(if (status.ready) "Update or reinstall" else "Install module") }
+                    }
+                    Button(onClick = {
+                        message = runCatching { manager.begin(); "Download started" }
+                            .getOrElse { "Download failed: " + it.javaClass.simpleName }
+                        transfer = manager.inspect()
+                    }) { Text(if (transfer.stage == OptionalRuntimeDownload.Stage.FAILED)
+                        "Retry download" else "Download " + pack.label) }
+                }
+                if (status.state != PythonModuleLocator.State.NOT_INSTALLED) {
+                    OutlinedButton(onClick = { confirmRemove = true }) {
+                        Text("Remove " + pack.label + " module")
+                    }
+                }
+                if (manager.cachedBytes() > 0) {
+                    TextButton(onClick = { confirmCache = true }) { Text("Clear installer cache") }
+                }
+                if (message.isNotEmpty()) Text(message, style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = {
+                    transfer = manager.inspect()
+                    onRefresh()
+                }) { Text("Refresh") }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+    )
+    if (confirmRemove) AlertDialog(onDismissRequest = { confirmRemove = false },
+        title = { Text("Remove " + pack.label + " module?") },
+        text = { Text("Android will ask to remove the optional runtime. Bundled execution " +
+            "and CodeLab projects remain unchanged.") },
+        confirmButton = { Button(onClick = {
+            message = manager.uninstall(); confirmRemove = false
+        }) { Text("Open Android uninstaller") } },
+        dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text("Cancel") } })
+    if (confirmCache) AlertDialog(onDismissRequest = { confirmCache = false },
+        title = { Text("Clear installer cache?") },
+        text = { Text("Only the downloaded APK is removed, never projects or installed engines.") },
+        confirmButton = { Button(onClick = {
+            message = if (manager.clearCachedInstaller()) "Cache cleared" else "Cache clear failed"
+            transfer = manager.inspect()
+            confirmCache = false
+        }) { Text("Clear cache") } },
+        dismissButton = { TextButton(onClick = { confirmCache = false }) { Text("Cancel") } })
 }
 
 @Composable
