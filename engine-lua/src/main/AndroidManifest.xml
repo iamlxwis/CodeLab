@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- No network, filesystem, or project storage permissions. -->
+    <application android:allowBackup="false" android:label="CodeLab Lua"
+        android:supportsRtl="true" android:theme="@android:style/Theme.Material.NoActionBar">
+        <service android:name=".LuaRuntimeService"
+            android:exported="true"
+            android:permission="site.lxwis.codelab.permission.BIND_ENGINE"
+            android:process=":runtime">
+            <meta-data android:name="site.lxwis.codelab.engine.PROTOCOL_VERSION" android:value="1"/>
+        </service>
+    </application>
+</manifest>
