@@ -33,7 +33,7 @@ internal object RuntimePackCatalog {
             State.BUNDLED, "Offline preview included", "HTML, CSS and JavaScript preview in Android WebView.")
         val extension = LanguageCatalog.extensionFor(language)
         val engine = extension?.let { OfflineRuntimeRegistry.manifest(it) }
-        if (engine != null && OfflineRuntimeRegistry.locallyAvailable(extension)) {
+        if (extension != null && engine != null && OfflineRuntimeRegistry.locallyAvailable(extension)) {
             val label = when (language) {
                 "Java" -> "Offline beta · full Java compiler not included"
                 "HTML", "CSS" -> "Offline preview included"
