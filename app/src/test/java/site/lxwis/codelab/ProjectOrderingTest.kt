@@ -7,14 +7,20 @@ class ProjectOrderingTest {
     private val names = listOf("Zulu", "Alpha", "Bravo")
     private val favorites = setOf("Bravo")
 
-    @Test fun favoritesSortKeepsNonFavoriteProjects() {
-        assertEquals(listOf("Bravo", "Alpha", "Zulu"),
-            orderedProjects(names, favorites, "Favorites"))
+    @Test fun favoritesOnlyShowsStarredProjects() {
+        assertEquals(listOf("Bravo"), orderedProjects(names, favorites, "Favorites"))
+        assertEquals(emptyList<String>(), orderedProjects(names, emptySet(), "Favorites"))
     }
 
-    @Test fun recentPreservesExistingOrderWithinFavoriteGroups() {
-        assertEquals(listOf("Bravo", "Zulu", "Alpha"),
-            orderedProjects(names, favorites, "Recent"))
+    @Test fun unstarImmediatelyRemovesProjectFromFavoritesView() {
+        assertEquals(listOf("Zulu", "Bravo"),
+            orderedProjects(names, setOf("Zulu", "Bravo"), "Favorites"))
+        assertEquals(listOf("Zulu"),
+            orderedProjects(names, setOf("Zulu"), "Favorites"))
+    }
+
+    @Test fun recentKeepsNewFirstOrderWithoutPinningFavorites() {
+        assertEquals(names, orderedProjects(names, favorites, "Recent"))
     }
 
     @Test fun alphabeticalSortsAreCaseInsensitive() {

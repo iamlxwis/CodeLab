@@ -115,3 +115,8 @@ KI-028: `qa/motion_smoke.py` contained obsolete tutorial selectors (`Start codin
 
 ## KI-029 — CI emulator post-restart text visibility / storage uncertainty
 Android 13 and Android 15 runs [45171811506](https://github.com/iamlxwis/CodeLab/actions/runs/45171811506) failed at `qa/device_smoke.py:235`: editor source not located by accessibility after force-stop. API35 screenshot shows near-zero-height source viewport in landscape and during IME; this does NOT yet establish content loss. Mitigation in CodeEditor uses compact-height layout; QA now reads saved file bytes with `run-as` and forces portrait for accessibility. Verify on new CI before closing. Real phone still unverified.
+
+## KI-028 and KI-029 — project library audit (2026-11-23)
+
+- KI-028: Favorites used a sorting comparator, not a filter, so nonfavorites appeared. Recent also pushed favorites above truly recent projects. Source fixes both and adds unit/emulator regression; CI pending.
+- KI-029: An optimistic new/open-project navigation could leave an empty editor after an I/O failure. Source restores library when the failing navigation is still current; CI/device regression pending.

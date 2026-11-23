@@ -99,3 +99,5 @@ IDEA-019 polish: eliminated duplicate hidden mode controls; choice remains visib
 IDEA-020: aligned motion QA with revised onboarding; pending two-API smoke.
 
 IDEA-021 evidence: Android 13+15 emulator jobs failed on text visibility after process restart; reproduced native-editor clipping in actual API35 screenshots. Source viewport responsive mitigation and authoritative file-byte QA added. Build retest pending.
+
+| IDEA-022 | 2026-11-23 | Audit app functions for failures/incorrect results, repair Favorites view and other reproducible issues, preserve regression coverage | In progress | Source fixes Favorites/Recent, failed-create recovery and new JVM/emulator tests; CI and broader path coverage pending. |

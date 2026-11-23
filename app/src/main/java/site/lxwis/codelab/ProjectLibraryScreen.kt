@@ -166,6 +166,9 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
     var projectSort by rememberSaveable { mutableStateOf("Recent") }
     LaunchedEffect(m.projects, m.project) { m.refreshProjectCardDetails() }
     val spacing = CodeLabSpacing.forDensity(m.interfaceDensity)
+    val visibleProjects = orderedProjects(
+        m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) },
+        m.favorites, projectSort)
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(
         horizontal = CodeLabSpacing.screen, vertical = CodeLabSpacing.large),
         verticalArrangement = Arrangement.spacedBy(spacing)) {
@@ -215,7 +218,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 }
             }
             Spacer(Modifier.height(12.dp))
-            val visibleCount = m.projects.count { it.contains(projectSearch.trim(), ignoreCase = true) }
+            val visibleCount = visibleProjects.size
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
                 Text("ON THIS DEVICE", fontSize = 11.sp, letterSpacing = 1.6.sp,
@@ -237,23 +240,23 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 }
             }
         }
-        if (projectSearch.isNotBlank() && m.projects.none { it.contains(projectSearch.trim(), ignoreCase = true) }) item {
+        if (visibleProjects.isEmpty() && m.projects.isNotEmpty()) item {
+            val noFavorites = projectSort == "Favorites" && m.projects.none { it in m.favorites }
             ClayPanel {
                 Column(Modifier.fillMaxWidth().padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.SearchOff, null, Modifier.size(26.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(if (noFavorites) Icons.Default.StarBorder else Icons.Default.SearchOff,
+                        null, Modifier.size(26.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(8.dp))
-                    Text("No matching projects", fontWeight = FontWeight.Medium)
-                    TextButton(onClick = { projectSearch = "" }) { Text("Clear search") }
+                    Text(if (noFavorites) "No favorites yet" else "No matching projects",
+                        fontWeight = FontWeight.Medium)
+                    TextButton(onClick = { projectSort = "Recent"; projectSearch = "" }) {
+                        Text("Show all projects")
+                    }
                 }
             }
         }
-        items(orderedProjects(
-            m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) },
-            m.favorites,
-            projectSort
-        ), key = { it }) { name ->
+        items(visibleProjects, key = { it }) { name ->
             val pressInteraction = remember(name) { MutableInteractionSource() }
             val isPressed by pressInteraction.collectIsPressedAsState()
             val pressScale by animateFloatAsState(

@@ -1,3 +1,9 @@
+## 2026-11-23 — active regression audit
+
+- [ ] Verify Favorites-only listing, counts, empty state and unstar behavior on API 33/35 plus JVM tests.
+- [ ] Verify duplicate-name project creation recovers to usable library and shows a clear error without losing files.
+- [ ] Verify APK release signing and upgrade/versionCode continuity, then configure production keystore secrets and test a real-device in-place update.
+
 # Active development roadmap
 
 Updated 2026-11-23. Ordered by dependencies, not feature marketing priority.

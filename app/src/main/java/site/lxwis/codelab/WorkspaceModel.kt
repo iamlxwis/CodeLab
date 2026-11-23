@@ -823,7 +823,10 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         source = ""
         dirty = false
         revision++
-        work {
+        work(onFailure = {
+            // Never strand the user in a nonexistent project when creation fails.
+            if (nav == navigationVersion && project == name) home()
+        }) {
             if (create) store.createProject(name, template, starter)
             val opened = persist(load(name, emptyList(), null, allowUnavailable = true))
             val names = store.projects()
