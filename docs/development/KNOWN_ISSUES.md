@@ -176,3 +176,7 @@ Source fix authored: prior `Check for updates` actually re-downloaded a full APK
 ## KI-041 — Missing Python recovery UI not previously tested without installed companion (Nov 24, 2026, 12:26 AM PHT)
 
 The existing Android device smoke installed Python before app launch, so it could not prove missing-module/offline Run guidance. A new disposable emulator test launches the editor with no companion, selects Python, executes Offline Run, verifies error and in-app Manage Python > Download Python. **Source test added, no passing emulator proof yet**, no downloads or installation performed; T05 remains open.
+
+## KI-042 — Interactive tutorial Try action falsely marked onboarding complete (Nov 24, 2026, 12:30 AM PHT)
+
+`FirstRunTutorial` called `onFinish()` when user tapped `Try it in CodeLab`, marking guide complete even though they were only visiting a real feature. Source fix saves next topic in `first-run-guide` preferences, leaves complete=false and allows returning through guide replay; Skip/Finish still deliberately completes. Added 3 JVM checkpoint tests; Android CI/large-font/TalkBack acceptance pending. T08 open.

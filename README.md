@@ -27,9 +27,9 @@ Write, run, and manage projects from your phone.
 **Last session change:** November 24, 2026 at 12:20 AM PHT (Philippine time, UTC+8)  
 **When I finish replying:** This status must be changed to **STOPPED — assistant handed off**. GitHub Actions may continue independently, but ChatGPT cannot keep committing after its turn ends.
 
-**3 / 9 completed · 6 remaining · 2 workstreams in progress · 0 blocked**
+**3 / 9 completed · 6 remaining · 3 workstreams in progress · 0 blocked**
 
-**Current task:** `T03` — app reliability; `T05` — Python module download lifecycle. Source inspection underway.
+**Current task:** T05 Python module tests, T08 resumable 14-topic tutorial, T03 reliability; CI verification pending.
 
 **Latest verified (2026-11-23):** [Production APK and signed upgrades: Passed Android 13/15](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) · [Device smoke: Passed Android 13/15](https://github.com/iamlxwis/CodeLab/actions/runs/45209632246) · [Download release](https://github.com/iamlxwis/CodeLab/releases/latest)
 
@@ -42,7 +42,7 @@ Write, run, and manage projects from your phone.
 | `T05` Python download/install/update | IN PROGRESS — version/downgrade tests + new Android 13/15 missing-module UI flow; CI pending | Nov 24, 2026 · 12:26 AM |
 | `T06` Additional offline modules | QUEUED — feasibility and real runtimes required | Not started |
 | `T07` Five-theme UI/UX refinement | QUEUED | Not started in this session |
-| `T08` Interactive tutorial and accessibility | QUEUED | Not started in this session |
+| `T08` Interactive tutorial and accessibility | IN PROGRESS — Try a feature now resumes next topic after returning; JVM tests pending CI | Nov 24, 2026 · 12:30 AM |
 | `T09` Full QA and stable release readiness | QUEUED | Not started in this session |
 
 **Recent task events (Philippine time, 12-hour clock)**
@@ -53,11 +53,12 @@ Write, run, and manage projects from your phone.
 | Nov 24 · 12:18 AM | Session | Resumed after the previous chat reply ended |
 | Nov 24 · 12:20 AM | T03, T05 | Source inspection started |
 | Nov 24 · 12:23 AM | T05 | Download recovery and safer Python update/reinstall policy added; CI pending |
-| Nov 24 · 12:26 AM | T05 | Added Android 13/15 real UI missing-Python prompt and Manage Python navigation smoke; CI pending |
+| Nov 24 · 12:26 AM | T05 | Added Android 13/15 missing-module navigation smoke; CI pending |
+| Nov 24 · 12:30 AM | T08 | Fixed Try-a-feature prematurely finishing onboarding; resume index is saved; regression tests added |
 
 The complete append-only [task audit log](docs/development/PROGRESS_LOG.md) records commits, failures, tests and handoffs. Times are in **Asia/Manila**, written with **AM/PM**, not military time.
 
-**Last audit:** Nov 24, 2026 · 12:26 AM PHT — T05 module recovery UI test added; CI pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
+**Last audit:** Nov 24, 2026 · 12:30 AM PHT — tutorial continuation implemented; CI pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.

@@ -1,3 +1,7 @@
+## Nov 24, 2026 · 12:30 AM PHT
+
+T08 source now separates temporarily exploring a live CodeLab action from actually completing onboarding. `first-run-guide.resume-index` preserves next topic across reopen/restart. JUnit tests added, CI pending. T05 download-version/missing-module updates still pending CI. Before final response, commit accurate STOPPED session marker and timestamp.
+
 ## Nov 24, 2026 · 12:26 AM PHT
 
 Added missing-Python **device UI smoke** to the Android13/15 workflow before installed-companion smoke, checking offline Run guides users to the in-app module manager without silently downloading anything. Tests are not complete until Actions passes. Remember to record pause state with AM/PM timestamp before final ChatGPT reply.

@@ -1,3 +1,9 @@
+## Nov 24, 2026 · 12:30 AM PHT — tutorial continuation checkpoint
+
+- [ ] Verify `TutorialProgressTest` and APK compile, then Android API33/API35 smoke with new resume-index behavior.
+- [ ] Add device flow that taps Try on a real first-launch topic, returns via More > Quick start guide, and confirms correct next topic; verify no false completion.
+- [ ] Test tutorial with large font, TalkBack and narrow-screen layouts; do not mark T08 complete until accessibility/immersive practical journeys pass.
+
 ## Nov 24, 2026 · 12:26 AM PHT — module recovery emulator QA
 
 - [ ] Confirm new `qa/missing_python_smoke.py` passes on API33 and API35, preserving successful legacy `qa/device_smoke.py` and release QA.

@@ -553,11 +553,19 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
     if (showTutorial) FirstRunTutorial(
         onFinish = {
-            tutorialPrefs.edit().putBoolean("complete", true).apply()
+            tutorialPrefs.edit().putBoolean("complete", true)
+                .remove("resume-index").apply()
             showTutorial = false
         },
-        onAction = { action -> openAction(action) },
-        projectOpen = p != null
+        onTryAction = { action, resumeAt ->
+            // A real feature visit must NOT mark the tutorial completed.
+            tutorialPrefs.edit().putBoolean("complete", false)
+                .putInt("resume-index", resumeAt).apply()
+            showTutorial = false
+            openAction(action)
+        },
+        projectOpen = p != null,
+        resumeFrom = tutorialPrefs.getInt("resume-index", 0)
     )
     m.cloudPending?.let { filename ->
         val language = m.cloudLanguages[CloudJudge0.extension(filename)]

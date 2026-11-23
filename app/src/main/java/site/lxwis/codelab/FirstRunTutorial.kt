@@ -32,7 +32,7 @@ private val guide = listOf(
         Icons.Default.Code, "newproject"),
     GuideStep("Import projects", "Bring an existing project into CodeLab",
         "Use Import for ZIP backups or public GitHub snapshots. Imports are copied to private project storage.",
-        Icons.Default.Archive),
+        Icons.Default.Archive, "importzip"),
     GuideStep("Navigate the editor", "Tabs and panels",
         "Switch between open tabs. Use the file explorer, project search and editor commands to navigate.",
         Icons.Default.Description, "files"),
@@ -65,15 +65,17 @@ private val guide = listOf(
         Icons.Default.FileUpload, "exportproject")
 )
 
-/** Four essential steps by default; the remaining ten topics are optional. */
+/** Four essential steps by default; remaining topics persist across try-a-feature detours. */
 @Composable
 internal fun FirstRunTutorial(
     onFinish: () -> Unit,
-    onAction: (String) -> Unit = {},
-    projectOpen: Boolean = false
+    onTryAction: (String, Int) -> Unit = { _, _ -> },
+    projectOpen: Boolean = false,
+    resumeFrom: Int = 0
 ) {
-    var index by rememberSaveable { mutableIntStateOf(0) }
-    var advanced by rememberSaveable { mutableStateOf(false) }
+    val start = TutorialProgress.restore(resumeFrom, guide.size)
+    var index by rememberSaveable { mutableIntStateOf(start) }
+    var advanced by rememberSaveable { mutableStateOf(TutorialProgress.showExtendedTopics(start)) }
     val current = guide[index]
     val total = if (advanced) guide.size else 4
     Dialog(onDismissRequest = onFinish,
@@ -106,11 +108,13 @@ internal fun FirstRunTutorial(
                 Text(current.instruction, style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 val canTry = current.action != null && (projectOpen ||
-                    current.action in setOf("newproject", "languages", "appearance", "actions"))
+                    current.action in setOf("newproject", "importzip", "languages", "appearance", "actions"))
                 if (canTry) {
                     OutlinedButton(onClick = {
-                        onFinish()
-                        current.action?.let(onAction)
+                        // Exploring a real feature is NOT completing or skipping the guide.
+                        current.action?.let { action ->
+                            onTryAction(action, TutorialProgress.afterTry(index, guide.size))
+                        }
                     }) {
                         Icon(Icons.Default.OpenInNew, contentDescription = null,
                             modifier = Modifier.size(17.dp))

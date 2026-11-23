@@ -105,7 +105,7 @@ internal fun WorkspaceActionsSheet(
         if (!projectOpen) add("languages", "Languages", "Explore CodeLab file support",
             "More tools", Icons.Default.Code)
         add("appearance", "Appearance", "Theme, accent and motion", "Settings", Icons.Default.Palette)
-        add("tutorial", "Quick start guide", "Replay the three-step tutorial", "Settings", Icons.Default.School)
+        add("tutorial", "Quick start guide", "Resume or replay the 14-topic guide", "Settings", Icons.Default.School)
         add("accessibility", "Accessibility", "Contrast, text and feedback", "Settings", Icons.Default.AccessibilityNew)
     }
     val query = search.trim()
