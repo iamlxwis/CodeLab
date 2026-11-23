@@ -287,6 +287,12 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                     val cloud = model.cloudLanguages[language.extension]
                     val engine = OfflineRuntimeRegistry.manifest(language.extension)
                     val localInstalled = detected[language.extension] == true
+                    val optionalPack = OptionalRuntimeLocator.Pack.entries.firstOrNull {
+                        it.extension == language.extension
+                    }
+                    val verifiedModuleLabel = optionalPack?.takeIf { optionalStatuses[it]?.ready == true }?.label
+                    val localLabel = LanguageRuntimeLabel.describe(localInstalled,
+                        engine, verifiedModuleLabel, cloud != null)
                     Row(Modifier.fillMaxWidth().heightIn(min = 50.dp)
                         .clickable {
                             val optional = OptionalRuntimeLocator.Pack.entries.firstOrNull {
@@ -307,8 +313,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                                         "Downloading Python · ${(transfer.progress * 100).toInt()}%"
                                      else python.description) +
                                     (if (cloud != null) " · Cloud ready" else "")
-                                localInstalled && cloud != null -> "Offline · " + engine!!.engine + " " + engine.version + " · Cloud ready"
-                                localInstalled -> "Offline · " + engine!!.engine + " " + engine.version
+                                localLabel != null -> localLabel
                                 engine != null -> "Offline runtime unavailable"
                                 language.local != null && cloud != null -> language.local + " · Online ready"
                                 language.local != null -> language.local

@@ -24,21 +24,21 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last committed checkpoint:** Nov 24, 2026, 4:23 AM PHT · **Assistant: WORKING at checkpoint** · **CI: Maven 429-safe API35 rerun dispatched**
+**Last committed checkpoint:** Nov 24, 4:38 AM PHT · **Assistant: WORKING at checkpoint** · **CI: TypeScript row crash fix and API35 retry**
 
 > This is a **commit checkpoint**, not a live clock or background agent. `HANDED OFF` means this interactive turn stopped after committing; independent GitHub Actions may still run. Each subsequent turn can resume from the [project memory](docs/development/PROJECT_MEMORY.md).
 
 | Workstream | Verified / implemented | Remaining before completion |
 | --- | --- | --- |
 | **CI Option B — Smart CI** | Fast compile/unit/lint/signed APK and six companions successfully built at [34030469](https://github.com/iamlxwis/CodeLab/actions/runs/45257846511). Normal source builds and manual API35 gate preserved; new retry wrapper targets upstream Maven HTTP 429 without ignoring compiler/test failures. | Re-run device acceptance on exact current SHA, then protected publication. |
-| **Phase 1 — Runtime manager** | Six separately signed runtime implementations in source (Python, JS, Lua, Java beta, TypeScript single-file, SQLite platform), official-asset-aware module manager; fast CI [34030469](https://github.com/iamlxwis/CodeLab/actions/runs/45257846511) **PASSED**. | [API35 45258495504](https://github.com/iamlxwis/CodeLab/actions/runs/45258495504) failed **before emulator** on Maven Central HTTP 429 for TypeScript WebJar. Retrying automatically; new device/public release pending, genuine other compilers unimplemented. |
+| **Phase 1 — Runtime manager** | Six signed module projects and source build [8bc7dc](https://github.com/iamlxwis/CodeLab/actions/runs/45258998628) **passed**. Inspected actual API35 device logcat + UI evidence: LanguageManager NPE on TypeScript row due core-only `engine!!` assumption. Replaced with null-safe signed-module-aware label and JVM regression tests. | [API35 45259024641](https://github.com/iamlxwis/CodeLab/actions/runs/45259024641) failed in LanguageManager; new retry checkpoint pending. No module release until same-SHA smoke passes; broad compiler packs still pending. |
 | **Phase 2 — Editor intelligence** | Not started | Begin only after agreed Phase 1 completion gate |
 
 **Current counts:** Six optional module implementations in source, one historically confirmed public (Python); remaining five need published installer checks. Java beta is not javac; TS is single-file transpilation, SQLite uses Android platform.
 
 **Latest implementation:** Signed Java beta, TypeScript and SQLite companion sources plus direct missing-runtime entry points. Runtime stop/restart and output-limit race source fix [dcb1daed](https://github.com/iamlxwis/CodeLab/commit/dcb1daeda2fb1e8a494a26171a7ef30e8b32d6b9). New fast/device CI pending.
 
-**Next:** check [new Phase1 checkpoint](https://github.com/iamlxwis/CodeLab/actions/workflows/phase1-checkpoint.yml) and device CI; guarded release only after same-commit API35 success, with individual module APKs. Phase 1 remains open.
+**Next:** verify JVM source build and same-SHA API35 can navigate module tabs without crashing, then protected public six-pack publication. Phase 1 not complete.
 
 [Compiler feasibility](docs/development/LANGUAGE_FEASIBILITY.md) · [Full audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Project memory](docs/development/PROJECT_MEMORY.md)
 

@@ -1,5 +1,5 @@
 # One-time explicit Phase 1 acceptance checkpoint. Not a standing source-push device trigger.
-# Six-pack retry after Maven Central HTTP 429 dependency-download failure; exact SHA device gate.
+# Six-pack retry after real API35 LanguageManager NPE; exact SHA device gate.
 # It runs only on creation/changes to THIS file; routine source pushes remain fast.
 # Retry after fixing persistent LazyColumn offset and confirming all companion packages.
 name: Phase 1 release checkpoint

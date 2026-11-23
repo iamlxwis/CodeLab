@@ -1,3 +1,9 @@
+## Nov 24, 4:38 AM PHT — Live API35 runtime manager crash
+
+- [x] Diagnose app-home crash from [device 45259024641](https://github.com/iamlxwis/CodeLab/actions/runs/45259024641): optional TypeScript row attempted to dereference absent bundled engine; source fixed, with JVM regression.
+- [ ] Check new fast JVM tests and API35 runtime-manager navigation without the TypeScript null dereference.
+- [ ] Only after exact-SHA API35 pass, publish all six signed APK companions via protected release. Real Android network download/reinstall/uninstall remains to verify.
+
 ## Nov 24, 2026, 4:23 AM PHT — Transient Maven Central throttling
 
 - [x] [Fast six-runtime CI 45257846511](https://github.com/iamlxwis/CodeLab/actions/runs/45257846511) passed Kotlin/Java compile, JVM tests, lint and signature checks.

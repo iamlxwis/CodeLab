@@ -232,3 +232,7 @@ New signed Java companion uses BeanShell; it cannot compile general Java classes
 ## Nov 24, 2026, 4:23 AM PHT — API35 Maven Central rate limit, CI retry pending
 
 [API35 45258495504](https://github.com/iamlxwis/CodeLab/actions/runs/45258495504) failed before test instrumentation with HTTP 429 resolving `org.webjars.npm:typescript:5.9.3` from Maven Central. Fast CI at the prior source [45257846511](https://github.com/iamlxwis/CodeLab/actions/runs/45257846511) passed with the same declared dependency. This is upstream throttle, not an observed runtime failure. Both workflows now retry only these errors up to three attempts with backoff; CI rerun pending. No release assets published by failed checkpoint.
+
+## Nov 24, 4:38 AM PHT — API35 LanguageManager TypeScript NPE (source fix, retest pending)
+
+[Device 45259024641](https://github.com/iamlxwis/CodeLab/actions/runs/45259024641) installed all six debug companion APKs and failed in `qa/device_smoke.py:165`, timed out waiting for DOWNLOAD MANAGER. Downloaded evidence; `last-window.xml` showed launcher, and Android logcat at 20:33:45 recorded `FATAL EXCEPTION main: java.lang.NullPointerException` in LazyColumn row composition. Cause: `localInstalled` true for optional `.ts`, but `OfflineRuntimeRegistry.manifest("ts")` null and `engine!!.engine` crashed. Fixed with `LanguageRuntimeLabel` and JVM regression, preserving signed module status semantics. **Retest pending**; do not describe as device verified.
