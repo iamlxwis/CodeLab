@@ -33,7 +33,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
-        run: gh workflow run device.yml --ref main
+        run: gh workflow run device.yml --repo "$GITHUB_REPOSITORY" --ref main
       - name: Require successful API 35 workflow on the exact commit
         env:
           GH_TOKEN: ${{ github.token }}
@@ -75,5 +75,5 @@ jobs:
             echo "::error::Source changed during QA; do not publish untested code."
             exit 1
           }
-          gh workflow run android.yml --ref main -f publish_release=true
+          gh workflow run android.yml --repo "$GITHUB_REPOSITORY" --ref main -f publish_release=true
           echo "Manual release workflow dispatched. It independently rechecks same-SHA device success and signing."
