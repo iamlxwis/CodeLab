@@ -53,7 +53,7 @@ jobs:
           CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
           CODELAB_KEY_ALIAS: ${{ secrets.CODELAB_KEY_ALIAS }}
           CODELAB_KEY_PASSWORD: ${{ secrets.CODELAB_KEY_PASSWORD }}
-        run: bash gradlew --no-daemon :app:assembleRelease :engine-python:assembleRelease :app:testDebugUnitTest :app:debugUnitTestCoverage :app:lintDebug
+        run: bash gradlew --no-daemon :app:assembleRelease :engine-python:assembleRelease :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin :app:debugUnitTestCoverage :app:lintDebug
       - name: Upload quality reports
         if: always()
         uses: actions/upload-artifact@v4

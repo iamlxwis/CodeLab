@@ -1,3 +1,9 @@
+## Single-entry README activity protocol — Nov 24, 2026
+
+The README contains exactly ONE current activity row. On meaningful code changes, CI result checks, failure fixes or handoffs, REPLACE that row with the newest timestamp, task, action/result and next step; use Asia/Manila timezone and 12-hour AM/PM. NEVER append a second historical event there. Keep history in Git commits, docs/development/PROGRESS_LOG.md and PROJECT_MEMORY.md. Separate interactive assistant activity from independent GitHub Actions status. Before the last reply, commit SESSION STOPPED — assistant handed off with the latest actual activity and time. Use docs-only [skip ci] for the final handoff, avoiding interruption to real CI.
+
+Last fix: invalid assertExists import in Android Compose UI test prevented device QA compilation on API33/API35 in CI 45223423018; remove import, keep assertion. Production APK CI 45223423186 passed without compiling instrumentation; new release gate explicitly compiles Android instrumentation test Kotlin before publishing. Only new CI will verify source fix.
+
 ## Nov 24, 2026 · 1:02 AM PHT
 
 T07/T04: after real signed upgrade on API33, Clay visibly retained but previous QA assertion relied on icon contentDescription="Selected" removed in accessibility change. The app now exposes stable `Clay style, selected` card label; signed-upgrade QA accepts new contextual or actual legacy icon aligned with Clay. New CI pending. Continue T03/T05/T07/T08; before final chat mark session STOPPED with AM/PM.

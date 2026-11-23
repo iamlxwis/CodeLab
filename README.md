@@ -23,48 +23,21 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Session:** **WORKING — this ChatGPT response is still executing**  
-**Last session change:** November 24, 2026 at 12:20 AM PHT (Philippine time, UTC+8)  
-**When I finish replying:** This status must be changed to **STOPPED — assistant handed off**. GitHub Actions may continue independently, but ChatGPT cannot keep committing after its turn ends.
+**SESSION: WORKING — interactive ChatGPT turn** · Updated **Nov 24, 2026, 1:36 AM PHT**  
+**Completed:** 3/9 · **Remaining:** 6 · **Active workstreams:** T03 / T05 / T07 / T08
 
-**3 / 9 completed · 6 remaining · 4 workstreams in progress · 0 blocked**
+**One live activity (the previous entry is replaced):**
 
-**Current task:** T05 module lifecycle, T08 tutorial, T07 appearance accessibility, T03 reliability; CI pending.
+| Updated (Philippine time, AM/PM) | Task | Action / result | Next |
+| --- | --- | --- | --- |
+| Nov 24, 2026 · 1:36 AM | T07 / T09 | Fixed AppearanceAccentAccessibilityTest invalid Kotlin import that failed Android 13/15 test compilation. Release CI now compiles Android instrumentation tests before APK publication. **New CI pending.** | Verify Android 13/15 tests and signed-upgrade release, then fix actual failures. |
 
-**Latest verified (2026-11-23):** [Production APK and signed upgrades: Passed Android 13/15](https://github.com/iamlxwis/CodeLab/actions/runs/45209632286) · [Device smoke: Passed Android 13/15](https://github.com/iamlxwis/CodeLab/actions/runs/45209632246) · [Download release](https://github.com/iamlxwis/CodeLab/releases/latest)
+**Verification:** [Last APK CI: passed](https://github.com/iamlxwis/CodeLab/actions/runs/45223423186) · [Last device CI: failed (test compile)](https://github.com/iamlxwis/CodeLab/actions/runs/45223423018) · [Latest release](https://github.com/iamlxwis/CodeLab/releases/latest)
 
-| Task | Status / latest verified milestone | Last change (PHT, AM/PM) |
-| --- | --- | --- |
-| `T01` Permanent production APK signing | DONE — actual signer matches permanent key | Nov 23, 2026 · 11:26 PM |
-| `T02` Android 15 online-run smoke | DONE — Android 13/15 device smoke passed | Nov 23, 2026 · 11:49 PM |
-| `T03` App-wide bug audit | IN PROGRESS — module error/recovery review and regressions | Nov 24, 2026 · 12:23 AM |
-| `T04` Data-preserving signed upgrades | DONE for API 33/35 emulators; physical-device validation remains | Nov 23, 2026 · 11:49 PM |
-| `T05` Python download/install/update | IN PROGRESS — missing-module UI passed API35; legacy QA labels fixed; retest pending | Nov 24, 2026 · 1:00 AM |
-| `T06` Additional offline modules | QUEUED — feasibility and real runtimes required | Not started |
-| `T07` Five-theme UI/UX refinement | IN PROGRESS — contextual selected-style semantics added; old/new upgrade QA assertions aligned, CI pending | Nov 24, 2026 · 1:02 AM |
-| `T08` Interactive tutorial and accessibility | IN PROGRESS — resume/Skip process-restart passed API35, API33/full accessibility pending | Nov 24, 2026 · 1:00 AM |
-| `T09` Full QA and stable release readiness | QUEUED | Not started in this session |
+**Remaining:** T03 app-wide defect audit; T05 Python module download/install/update/remove; T06 feasible additional offline runtimes; T07 comprehensive UI/themes/accessibility; T08 tutorial accessibility; T09 full QA and release readiness. T01/T02/T04 verified in CI; physical handset upgrade and live external cloud runs unverified.
 
-**Recent task events (Philippine time, 12-hour clock)**
+*This README shows one current action only. Previous events remain in [development memory](docs/development/PROJECT_MEMORY.md), [audit history](docs/development/PROGRESS_LOG.md) and Git commits. Assistant activity is limited to interactive sessions; GitHub Actions can keep running independently.*
 
-| When | Task | Result |
-| --- | --- | --- |
-| Nov 23 · 11:49 PM | T02, T04 | Android 13/15 CI passed; signed release published |
-| Nov 24 · 12:18 AM | Session | Resumed after the previous chat reply ended |
-| Nov 24 · 12:20 AM | T03, T05 | Source inspection started |
-| Nov 24 · 12:23 AM | T05 | Download recovery and safer Python update/reinstall policy added; CI pending |
-| Nov 24 · 12:26 AM | T05 | Added Android 13/15 missing-module navigation smoke; CI pending |
-| Nov 24 · 12:30 AM | T08 | Fixed premature completion; resume index and JVM tests added |
-| Nov 24 · 12:32 AM | T08 | Added Android 13/15 tutorial resume UI smoke; CI pending |
-| Nov 24 · 12:35 AM | T07 | Six accents labeled with selection semantics and 48dp targets |
-| Nov 24 · 12:39 AM | T07 | CI compiler error from selected-name shadowing diagnosed/fixed |
-| Nov 24 · 12:48 AM | T08 | Fixed Skip persistence by durable preference commit and dismissal check |
-| Nov 24 · 1:00 AM | T08, T05 | API35 tutorial/missing-Python tests passed; old Python button assertion updated |
-| Nov 24 · 1:02 AM | T07, T04 | API33 upgrade screenshot confirms Clay persisted; test expected obsolete icon; contextual style semantics and dual-version QA added |
-
-The complete append-only [task audit log](docs/development/PROGRESS_LOG.md) records commits, failures, tests and handoffs. Times are in **Asia/Manila**, written with **AM/PM**, not military time.
-
-**Last audit:** Nov 24, 2026 · 1:02 AM PHT — fixed signed-upgrade style-selection assertion and semantics; CI pending · [Task update history](docs/development/PROGRESS_LOG.md) · [Detailed roadmap](docs/development/ROADMAP.md)
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.
