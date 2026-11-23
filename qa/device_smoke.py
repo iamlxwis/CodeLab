@@ -162,7 +162,7 @@ def main():
     wait_for("Python")
     tap("Installed")
     wait_for("JavaScript")
-    tap("All")
+    # Searching automatically expands to All instead of hiding an edit-only language.
     search = wait_for(field=True)
     tap_node(search)
     adb("shell", "input", "text", "Python")

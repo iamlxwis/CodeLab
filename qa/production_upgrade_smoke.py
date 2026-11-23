@@ -145,7 +145,6 @@ def validate_persistence_and_python():
     ui.wait_for("Language Manager")
     ui.tap("Downloads")
     ui.wait_for("DOWNLOAD MANAGER")
-    ui.tap("All")
     ui.tap_node(ui.wait_for(field=True))
     ui.adb("shell", "input", "text", "Python")
     ui.adb("shell", "input", "keyevent", "4")
