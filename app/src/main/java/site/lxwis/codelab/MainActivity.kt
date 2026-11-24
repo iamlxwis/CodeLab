@@ -24,7 +24,8 @@ class MainActivity : ComponentActivity() {
                 appearance = model.appearance,
                 accentPreset = model.accent,
                 highContrast = model.highContrast,
-                largeInterfaceText = model.largeInterfaceText
+                largeInterfaceText = model.largeInterfaceText,
+                studio = model.studioAppearance
             ) { dark ->
                 SideEffect {
                     WindowCompat.getInsetsController(window, window.decorView).apply {

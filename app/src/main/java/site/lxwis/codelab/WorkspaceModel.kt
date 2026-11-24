@@ -220,6 +220,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         preferences.edit().putString("accent:$old", accent)
             .putString("mode:$old", appearance).apply()
         visualStyle = value
+        studioAppearance = StudioAppearance.decode(preferences.getString("studio:$value", null))
         accent = preferences.getString("accent:$value", AppearanceRecipes.defaultAccent(value))
             ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(value)
         appearance = preferences.getString("mode:$value", CodeLabVisualStyles.defaultMode(value))
@@ -306,6 +307,22 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(visualStyle)
     )
         private set
+    internal var studioAppearance by mutableStateOf(
+        StudioAppearance.decode(preferences.getString("studio:$visualStyle", null)))
+        private set
+    internal fun updateStudioAppearance(value: StudioAppearance) {
+        studioAppearance = value
+        preferences.edit().putString("studio:$visualStyle", value.encode()).apply()
+    }
+    internal fun importAppearanceRecipe(raw: String): Boolean {
+        val imported = AppearanceRecipes.decode(raw).firstOrNull() ?: return false
+        if (savedAppearanceRecipes.size >= AppearanceRecipes.LIMIT) return false
+        val copy = imported.copy(id = java.util.UUID.randomUUID().toString())
+        savedAppearanceRecipes = savedAppearanceRecipes + copy
+        preferences.edit().putString("saved-appearance-recipes",
+            AppearanceRecipes.encode(savedAppearanceRecipes)).apply()
+        return true
+    }
     internal var savedAppearanceRecipes by mutableStateOf(
         AppearanceRecipes.decode(preferences.getString("saved-appearance-recipes", "[]")))
         private set
@@ -316,7 +333,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val old = savedAppearanceRecipes.firstOrNull { it.id == editingId }
         if (old == null && savedAppearanceRecipes.size >= AppearanceRecipes.LIMIT) return false
         val recipe = AppearanceRecipe(old?.id ?: java.util.UUID.randomUUID().toString(),
-            clean, visualStyle, appearance, accent)
+            clean, visualStyle, appearance, accent, studioAppearance)
         savedAppearanceRecipes = if (old == null) savedAppearanceRecipes + recipe
             else savedAppearanceRecipes.map { if (it.id == old.id) recipe else it }
         preferences.edit().putString("saved-appearance-recipes",
@@ -329,6 +346,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         chooseVisualStyle(recipe.style)
         setMode(recipe.mode)
         chooseAccent(recipe.accent)
+        updateStudioAppearance(recipe.studio)
     }
 
     fun deleteAppearanceRecipe(id: String) {
@@ -340,6 +358,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun restoreAppearanceDefaults() {
         setMode(CodeLabVisualStyles.defaultMode(visualStyle))
         chooseAccent(AppearanceRecipes.defaultAccent(visualStyle))
+        updateStudioAppearance(StudioAppearance())
     }
     private var shellSession: WorkspaceShell? = null
     private var shellProject: String? = null

@@ -5,7 +5,8 @@ import org.json.JSONObject
 
 /** User-defined appearance recipes. Import from preferences is always validated and bounded. */
 internal data class AppearanceRecipe(
-    val id: String, val name: String, val style: String, val mode: String, val accent: String
+    val id: String, val name: String, val style: String, val mode: String, val accent: String,
+    val studio: StudioAppearance = StudioAppearance()
 )
 
 internal object AppearanceRecipes {
@@ -27,7 +28,8 @@ internal object AppearanceRecipes {
         for (i in 0 until minOf(array.length(), LIMIT)) {
             val obj = array.optJSONObject(i) ?: continue
             val candidate = AppearanceRecipe(obj.optString("id"), obj.optString("name"),
-                obj.optString("style"), obj.optString("mode"), obj.optString("accent"))
+                obj.optString("style"), obj.optString("mode"), obj.optString("accent"),
+                StudioAppearance.decode(obj.optString("studio")))
             if (candidate.id.length in 1..64 && validName(candidate.name) &&
                 validStyle(candidate.style) && candidate.mode in modes &&
                 validAccent(candidate.accent) && result.none { it.id == candidate.id }) result += candidate
@@ -43,7 +45,7 @@ internal object AppearanceRecipes {
                 recipe.id.length in 1..64) {
                 array.put(JSONObject().put("id", recipe.id).put("name", recipe.name)
                     .put("style", recipe.style).put("mode", recipe.mode)
-                    .put("accent", recipe.accent))
+                    .put("accent", recipe.accent).put("studio", recipe.studio.encode()))
             }
         }
         return array.toString()

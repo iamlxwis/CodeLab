@@ -20,7 +20,8 @@ import androidx.compose.ui.unit.dp
 internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val preset = CodeLabVisualStyles.canonical(style)
-    val background = when (preset) {
+    val customBackground = LocalStudioAppearance.current.background.isNotEmpty()
+    val background = if (customBackground) Brush.verticalGradient(listOf(scheme.background, scheme.background)) else when (preset) {
         "Crystal" -> if (dark)
             Brush.verticalGradient(listOf(Color(0xff101214), Color(0xff252a2e), Color(0xff14171a)))
             else Brush.verticalGradient(listOf(Color(0xfff8f9fa), Color(0xffdfe3e6), Color(0xfff2f4f5)))
@@ -32,7 +33,7 @@ internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable 
         else -> Brush.verticalGradient(listOf(scheme.background, scheme.background))
     }
     Box(Modifier.fillMaxSize().background(background)) {
-        if (preset == "Crystal" || preset == "Clay" || preset == "Sandstone") {
+        if (!customBackground && (preset == "Crystal" || preset == "Clay" || preset == "Sandstone")) {
             Canvas(Modifier.fillMaxSize()) {
                 val radius = maxOf(size.width, size.height * .58f)
                 if (preset == "Crystal") {

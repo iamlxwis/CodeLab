@@ -64,32 +64,30 @@ private fun StyleCard(choice: StyleSample, isSelected: Boolean, onClick: () -> U
                 CodeLabTheme(
                     themePreset = model.themePreset,
                     visualStyle = choice.name,
-                    appearance = model.appearance,
-                    accentPreset = model.accent,
+                    appearance = if (isSelected) model.appearance else CodeLabVisualStyles.defaultMode(choice.name),
+                    accentPreset = if (isSelected) model.accent else AppearanceRecipes.defaultAccent(choice.name),
                     highContrast = model.highContrast,
-                    largeInterfaceText = false
+                    largeInterfaceText = false,
+                    studio = if (isSelected) model.studioAppearance else StudioAppearance()
                 ) { dark ->
                     CodeLabBackdrop(choice.name, dark) {
                         Column(Modifier.fillMaxWidth().padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                                repeat(3) { index ->
-                                    Box(Modifier.size(6.dp).background(
-                                        MaterialTheme.colorScheme.primary.copy(
-                                            alpha = if (index == 0) 1f else .55f), CircleShape))
-                                }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Code, null, Modifier.size(13.dp),
+                                    tint = MaterialTheme.colorScheme.primary)
+                                Text("main.js", Modifier.weight(1f).padding(start = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface)
+                                Icon(Icons.Default.PlayArrow, null, Modifier.size(13.dp),
+                                    tint = MaterialTheme.colorScheme.primary)
                             }
                             ClayPanel {
-                                Column(Modifier.fillMaxWidth().padding(10.dp),
-                                    verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                                    Box(Modifier.fillMaxWidth(.75f).height(5.dp).background(
-                                        MaterialTheme.colorScheme.primary, CircleShape))
-                                    Box(Modifier.fillMaxWidth(.92f).height(4.dp).background(
-                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .45f),
-                                        CircleShape))
-                                    Box(Modifier.fillMaxWidth(.55f).height(4.dp).background(
-                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .45f),
-                                        CircleShape))
+                                Column(Modifier.fillMaxWidth().padding(6.dp)) {
+                                    Text("1  const x = 42;", fontFamily = FontFamily.Monospace,
+                                        fontSize = 9.sp, color = MaterialTheme.colorScheme.primary, maxLines = 1)
+                                    Text("2  print(x);", fontFamily = FontFamily.Monospace,
+                                        fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
                                 }
                             }
                         }
@@ -149,6 +147,18 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
     var notice by remember { mutableStateOf("") }
     var advanced by rememberSaveable { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<String?>(null) }
+    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    var importOpen by remember { mutableStateOf(false) }
+    var importText by rememberSaveable { mutableStateOf("") }
+    if (importOpen) AlertDialog(onDismissRequest = { importOpen = false },
+        title = { Text("Import appearance") },
+        text = { OutlinedTextField(importText, { importText = it.take(65536) },
+            label = { Text("Paste exported theme JSON") }, modifier = Modifier.fillMaxWidth()) },
+        confirmButton = { TextButton(onClick = {
+            notice = if (m.importAppearanceRecipe(importText)) "Appearance imported" else "Invalid theme or preset limit reached"
+            importOpen = false
+        }) { Text("Import") } },
+        dismissButton = { TextButton(onClick = { importOpen = false }) { Text("Cancel") } })
     Dialog(onDismissRequest = dismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -232,6 +242,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                                 })
                         }
                     }
+                    item { StudioAppearanceControls(m) }
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(Modifier.fillMaxWidth(),
@@ -243,6 +254,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
+                            TextButton(onClick = { importText = ""; importOpen = true }) { Text("Import appearance") }
                             Text("Load looks from any style, or save the current one.",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall)
@@ -273,6 +285,12 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                                         }) {
                                             Icon(Icons.Default.Edit,
                                                 contentDescription = "Edit " + recipe.name)
+                                        }
+                                        IconButton(onClick = {
+                                            clipboard.setText(androidx.compose.ui.text.AnnotatedString(AppearanceRecipes.encode(listOf(recipe))))
+                                            notice = "Theme JSON copied"
+                                        }) {
+                                            Icon(Icons.Default.Share, contentDescription = "Copy theme " + recipe.name)
                                         }
                                         IconButton(onClick = { pendingDelete = recipe.id }) {
                                             Icon(Icons.Default.DeleteOutline,

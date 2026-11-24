@@ -55,15 +55,16 @@ internal fun ClayPanel(
     val style = LocalCodeLabVisualStyle.current
     val shape = if (style == "Clay") CodeLabCorners.panel else MaterialTheme.shapes.large
     val colors = MaterialTheme.colorScheme
+    val studio = LocalStudioAppearance.current
     Surface(
-        modifier = if (style == "Clay") modifier.shadow(12.dp, shape, clip = false) else modifier,
+        modifier = if (style == "Clay") modifier.shadow(12.dp, shape, clip = false) else if (studio.shadow > 0) modifier.shadow(studio.shadow.dp, shape, clip = false) else modifier,
         shape = shape,
-        color = if (style == "Crystal") colors.surfaceContainer.copy(alpha = .72f)
+        color = if (style == "Crystal") colors.surfaceContainer.copy(alpha = studio.opacity / 100f)
             else colors.surfaceContainer,
         tonalElevation = if (style == "Clay") 2.dp else 0.dp,
         shadowElevation = if (style == "Clay") 3.dp else 0.dp,
         border = when (style) {
-            "Crystal" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
+            "Crystal" -> BorderStroke(studio.border.dp, Brush.linearGradient(listOf(
                 Color.White.copy(alpha = .58f),
                 colors.outlineVariant.copy(alpha = .28f))))
             "Clay" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
@@ -85,19 +86,20 @@ internal fun ClayActionCard(
     val style = LocalCodeLabVisualStyle.current
     val shape = if (style == "Clay") CodeLabCorners.card else MaterialTheme.shapes.large
     val colors = MaterialTheme.colorScheme
+    val studio = LocalStudioAppearance.current
     Surface(
         onClick = onClick,
-        modifier = if (style == "Clay") modifier.shadow(12.dp, shape, clip = false) else modifier,
+        modifier = if (style == "Clay") modifier.shadow(12.dp, shape, clip = false) else if (studio.shadow > 0) modifier.shadow(studio.shadow.dp, shape, clip = false) else modifier,
         enabled = true,
         interactionSource = interactionSource,
         shape = shape,
         color = if (style == "Crystal")
-            colors.surfaceContainerHigh.copy(alpha = .72f)
+            colors.surfaceContainerHigh.copy(alpha = studio.opacity / 100f)
             else colors.surfaceContainerHigh,
         tonalElevation = if (style == "Clay") CodeLabElevation.tonal else 0.dp,
         shadowElevation = if (style == "Clay") 9.dp else 0.dp,
         border = when (style) {
-            "Crystal" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
+            "Crystal" -> BorderStroke(studio.border.dp, Brush.linearGradient(listOf(
                 Color.White.copy(alpha = .55f), colors.outlineVariant.copy(alpha = .20f))))
             "Clay" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
                 Color.White.copy(alpha = .35f), colors.outlineVariant.copy(alpha = .55f))))

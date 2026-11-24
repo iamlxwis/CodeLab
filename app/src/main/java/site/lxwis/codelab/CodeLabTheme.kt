@@ -41,6 +41,7 @@ internal fun CodeLabTheme(
     accentPreset: String,
     highContrast: Boolean,
     largeInterfaceText: Boolean,
+    studio: StudioAppearance = StudioAppearance(),
     content: @Composable (Boolean) -> Unit
 ) {
     val dark = when (CodeLabVisualStyles.canonical(visualStyle)) {
@@ -49,9 +50,9 @@ internal fun CodeLabTheme(
         else -> appearance == "Dark" || (appearance == "System" && isSystemInDarkTheme())
     }
     // Do not allocate a new ColorScheme on unrelated editor recompositions.
-    val scheme = remember(themePreset, visualStyle, accentPreset, highContrast, dark) {
+    val scheme = remember(themePreset, visualStyle, accentPreset, highContrast, dark, studio) {
             val palette = if (dark) night else day
-            val base = when (CodeLabVisualStyles.canonical(visualStyle)) {
+            val presetBase = when (CodeLabVisualStyles.canonical(visualStyle)) {
                 "Obsidian" -> night.copy(
                     background = Color.Black, surface = Color.Black,
                     surfaceContainer = Color(0xff090909),
@@ -107,6 +108,25 @@ internal fun CodeLabTheme(
                     else -> palette
                 }
             }
+            fun color(value: String, fallback: Color) =
+                if (value.matches(Regex("#[0-9a-fA-F]{6}")))
+                    Color(0xff000000 or value.drop(1).toLong(16)) else fallback
+            val surface = color(studio.surface, presetBase.surface)
+            val background = color(studio.background, presetBase.background)
+            val ink = color(studio.foreground, presetBase.onSurface)
+            // Avoid illegible text on arbitrary custom colors, including imported themes.
+            fun readable(fg: Color, bg: Color): Color {
+                val a = fg.luminance(); val b = bg.luminance()
+                return if ((maxOf(a,b)+.05f)/(minOf(a,b)+.05f) >= 4.5f) fg
+                    else if (b > .179f) Color.Black else Color.White
+            }
+            val base = presetBase.copy(
+                background = background, surface = surface, onBackground = readable(ink, background),
+                onSurface = readable(ink, surface),
+                surfaceContainer = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceContainer,
+                surfaceContainerHigh = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceContainerHigh,
+                onSurfaceVariant = if (studio.surface.isNotEmpty() || studio.foreground.isNotEmpty())
+                    readable(ink, surface) else presetBase.onSurfaceVariant)
             val accent = when (accentPreset) {
                 "Blue" -> if (dark) Color(0xff8ab7fa) else Color(0xff245eaf)
                 "Violet" -> if (dark) Color(0xffc4b0ff) else Color(0xff6747b7)
@@ -153,23 +173,15 @@ internal fun CodeLabTheme(
                     fontSize = baseTypography.labelSmall.fontSize * textScale)
             )
     }
-    val shapes = remember(visualStyle) {
-        when (visualStyle) {
-            "Clay" -> Shapes(
-                extraSmall = RoundedCornerShape(12.dp), small = RoundedCornerShape(17.dp),
-                medium = RoundedCornerShape(22.dp), large = RoundedCornerShape(28.dp),
-                extraLarge = RoundedCornerShape(34.dp))
-            "AMOLED" -> Shapes(
-                extraSmall = RoundedCornerShape(5.dp), small = RoundedCornerShape(8.dp),
-                medium = RoundedCornerShape(12.dp), large = RoundedCornerShape(15.dp),
-                extraLarge = RoundedCornerShape(20.dp))
-            else -> Shapes(
-                extraSmall = RoundedCornerShape(7.dp), small = RoundedCornerShape(11.dp),
-                medium = RoundedCornerShape(15.dp), large = RoundedCornerShape(20.dp),
-                extraLarge = RoundedCornerShape(28.dp))
-        }
+    val shapes = remember(studio.corners) {
+        Shapes(extraSmall = RoundedCornerShape((studio.corners / 3).dp),
+            small = RoundedCornerShape((studio.corners / 2).dp),
+            medium = RoundedCornerShape((studio.corners * 3 / 4).dp),
+            large = RoundedCornerShape(studio.corners.dp),
+            extraLarge = RoundedCornerShape((studio.corners + 8).dp))
     }
-    CompositionLocalProvider(LocalCodeLabVisualStyle provides CodeLabVisualStyles.canonical(visualStyle)) {
+    CompositionLocalProvider(LocalCodeLabVisualStyle provides CodeLabVisualStyles.canonical(visualStyle),
+        LocalStudioAppearance provides studio) {
         MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes) {
             content(dark)
         }
@@ -189,3 +201,5 @@ internal fun CodeLabForegroundSurface(
         contentColor = MaterialTheme.colorScheme.onSurface, content = content
     )
 }
+
+internal val LocalStudioAppearance = androidx.compose.runtime.staticCompositionLocalOf { StudioAppearance() }
