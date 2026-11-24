@@ -167,7 +167,7 @@ internal fun CodeLabTheme(
         val family = when (studio.uiFont) {
             "System" -> FontFamily.Default
             "Serif" -> FontFamily.Serif
-            "Custom" -> ImportedFonts.load(fontContext, false)?.let { FontFamily(it) }
+            "Custom" -> ImportedFonts.load(fontContext, false, studio.uiFontRevision)?.let { FontFamily(it) }
                 ?: FontFamily(Font(R.font.inter))
             else -> FontFamily(Font(R.font.inter))
         }

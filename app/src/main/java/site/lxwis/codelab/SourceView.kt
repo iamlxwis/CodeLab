@@ -233,7 +233,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         if (editorFontChoice != fontKey) {
             editorFontChoice = fontKey
             typeface = when (style.editorFont) {
-                "Custom" -> ImportedFonts.load(context, true) ?: Typeface.MONOSPACE
+                "Custom" -> ImportedFonts.load(context, true, style.editorFontRevision) ?: Typeface.MONOSPACE
                 "System Mono" -> Typeface.MONOSPACE
                 else -> androidx.core.content.res.ResourcesCompat.getFont(context, R.font.jetbrains_mono)
                     ?: Typeface.MONOSPACE

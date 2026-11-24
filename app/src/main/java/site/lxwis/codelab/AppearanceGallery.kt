@@ -1,6 +1,12 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.BorderStroke
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
@@ -148,6 +154,42 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
     var advanced by rememberSaveable { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<String?>(null) }
     val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var exportId by rememberSaveable { mutableStateOf<String?>(null) }
+    val exportTheme = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        val recipe = m.savedAppearanceRecipes.firstOrNull { it.id == exportId }
+        if (uri != null && recipe != null) {
+            val json = AppearanceRecipes.encode(listOf(recipe))
+            scope.launch {
+                val ok = withContext(Dispatchers.IO) {
+                    runCatching { checkNotNull(context.contentResolver.openOutputStream(uri, "wt")).bufferedWriter().use { it.write(json) } }.isSuccess
+                }
+                notice = if (ok) "Theme exported. Imported font files remain local." else "Could not export theme"
+            }
+        }
+        exportId = null
+    }
+    val importTheme = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val json = withContext(Dispatchers.IO) {
+                runCatching {
+                    checkNotNull(context.contentResolver.openInputStream(uri)).bufferedReader().use { reader ->
+                        val buffer = CharArray(4096)
+                        val result = StringBuilder()
+                        while (true) {
+                            val n = reader.read(buffer)
+                            if (n < 0) break
+                            require(result.length + n <= 65_536)
+                            result.append(buffer, 0, n)
+                        }
+                        result.toString()
+                    }
+                }.getOrNull()
+            }
+            notice = if (json != null && m.importAppearanceRecipe(json)) "Appearance imported" else "Invalid or oversized theme file"
+        }
+    }
     var importOpen by remember { mutableStateOf(false) }
     var importText by rememberSaveable { mutableStateOf("") }
     if (importOpen) AlertDialog(onDismissRequest = { importOpen = false },
@@ -253,8 +295,11 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            TextButton(onClick = { importText = ""; importOpen = true }) { Text("Import appearance") }
-                            Text("Load looks from any style, or save the current one.",
+                            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                                TextButton(onClick = { importTheme.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) }) { Text("Import file") }
+                                TextButton(onClick = { importText = ""; importOpen = true }) { Text("Paste JSON") }
+                            }
+                            Text("Save or transfer a look. Custom font assets stay on this device.",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall)
                             m.savedAppearanceRecipes.forEach { recipe ->
@@ -286,10 +331,10 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                                                 contentDescription = "Edit " + recipe.name)
                                         }
                                         IconButton(onClick = {
-                                            clipboard.setText(androidx.compose.ui.text.AnnotatedString(AppearanceRecipes.encode(listOf(recipe))))
-                                            notice = "Theme JSON copied"
+                                            exportId = recipe.id
+                                            exportTheme.launch(recipe.name.replace(Regex("[^a-zA-Z0-9_-]"), "_") + ".json")
                                         }) {
-                                            Icon(Icons.Default.Share, contentDescription = "Copy theme " + recipe.name)
+                                            Icon(Icons.Default.FileDownload, contentDescription = "Export theme " + recipe.name)
                                         }
                                         IconButton(onClick = { pendingDelete = recipe.id }) {
                                             Icon(Icons.Default.DeleteOutline,

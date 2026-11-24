@@ -113,7 +113,7 @@ internal fun ClayActionCard(
 
 /** Neutral optical edge approximation, cached and omitted in lightweight mode. */
 @Composable
-private fun Modifier.glassHighlight(style: String, shape: RoundedCornerShape): Modifier {
+private fun Modifier.glassHighlight(style: String, shape: androidx.compose.ui.graphics.Shape): Modifier {
     val quality = LocalStudioAppearance.current.glassQuality
     if (style != "Crystal" || quality == "Lightweight") return this
     return this.clip(shape).drawWithCache {

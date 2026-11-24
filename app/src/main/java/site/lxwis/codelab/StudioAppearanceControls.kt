@@ -1,6 +1,7 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.platform.LocalContext
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 internal fun StudioAppearanceControls(m: WorkspaceModel) {
     var open by remember { mutableStateOf(false) }
+    var section by remember { mutableStateOf("Colors") }
     val s = m.studioAppearance
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -33,10 +35,10 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
         if (uri != null) {
             val editor = fontTarget
             scope.launch {
-                val ok = withContext(Dispatchers.IO) { ImportedFonts.install(context, uri, editor) }
-                if (ok) m.updateStudioAppearance(if (editor) m.studioAppearance.copy(editorFont = "Custom", editorFontRevision = System.currentTimeMillis())
-                    else m.studioAppearance.copy(uiFont = "Custom", uiFontRevision = System.currentTimeMillis()))
-                fontNotice = if (ok) "Custom font installed" else "Could not load this font (maximum 5 MB)"
+                val revision = withContext(Dispatchers.IO) { ImportedFonts.install(context, uri, editor) }
+                if (revision != null) m.updateStudioAppearance(if (editor) m.studioAppearance.copy(editorFont = "Custom", editorFontRevision = revision)
+                    else m.studioAppearance.copy(uiFont = "Custom", uiFontRevision = revision))
+                fontNotice = if (revision != null) "Custom font installed" else "Could not load this font (maximum 5 MB)"
             }
         }
     }
@@ -44,8 +46,14 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
         Text("Theme Studio", style = MaterialTheme.typography.titleLarge)
         StudioLivePreview()
         ThemeColor("Accent", MaterialTheme.colorScheme.primary) { m.chooseAccent(it) }
-        TextButton(onClick = { open = !open }) { Text(if (open) "Hide material controls" else "Customize materials") }
+        TextButton(onClick = { open = !open }) { Text(if (open) "Hide customization" else "Customize theme") }
         if (open) {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                listOf("Colors", "Materials", "Fonts", "Syntax").forEach { choice ->
+                    FilterChip(selected = choice == section, onClick = { section = choice }, label = { Text(choice) })
+                }
+            }
+            if (section == "Colors") {
             ThemeColor("Background", MaterialTheme.colorScheme.background) {
                 m.updateStudioAppearance(m.studioAppearance.copy(background = it))
             }
@@ -70,6 +78,8 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
             ThemeColor("Text", MaterialTheme.colorScheme.onSurface) {
                 m.updateStudioAppearance(m.studioAppearance.copy(foreground = it))
             }
+            }
+            if (section == "Materials") {
             StudioSlider("Corner radius", s.corners, 4f..32f) { m.updateStudioAppearance(m.studioAppearance.copy(corners = it)) }
             Text("Glass quality")
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -82,6 +92,8 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
             StudioSlider("Glass opacity", s.opacity, 35f..100f) { m.updateStudioAppearance(m.studioAppearance.copy(opacity = it)) }
             StudioSlider("Glass border", s.border, 0f..3f) { m.updateStudioAppearance(m.studioAppearance.copy(border = it)) }
             StudioSlider("Panel shadow", s.shadow, 0f..12f) { m.updateStudioAppearance(m.studioAppearance.copy(shadow = it)) }
+            }
+            if (section == "Fonts") {
             Text("Typography", style = MaterialTheme.typography.titleMedium)
             Text("Interface font")
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -102,6 +114,8 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
                 Text(if (s.editorFont == "Custom") "Replace custom editor font" else "Import editor font")
             }
             if (fontNotice.isNotBlank()) Text(fontNotice, style = MaterialTheme.typography.bodySmall)
+            }
+            if (section == "Syntax") {
             Text("Syntax colors", style = MaterialTheme.typography.titleMedium)
             fun ink(value: String, fallback: Color) = if (value.isEmpty()) fallback else Color(android.graphics.Color.parseColor(value))
             ThemeColor("Comments", ink(s.comments, Color(0xff91a09d))) {
@@ -116,7 +130,8 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
             ThemeColor("Keywords", ink(s.keywords, Color(0xffb8acff))) {
                 m.updateStudioAppearance(m.studioAppearance.copy(keywords = it))
             }
-            TextButton(onClick = { m.updateStudioAppearance(StudioAppearance()) }) { Text("Reset material overrides") }
+            }
+            TextButton(onClick = { m.updateStudioAppearance(StudioAppearance()) }) { Text("Reset theme overrides") }
         }
     }
 }
@@ -178,7 +193,16 @@ private fun ThemeColor(label: String, color: Color, onChange: (String) -> Unit) 
         AlertDialog(onDismissRequest = { open = false }, title = { Text(label) }, text = {
             Column(Modifier.heightIn(max = 390.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Box(Modifier.fillMaxWidth().height(44.dp).background(Color(red, green, blue), RoundedCornerShape(12.dp)))
+                val sample = Color(red, green, blue)
+                Surface(color = sample, shape = MaterialTheme.shapes.large,
+                    contentColor = studioReadable(MaterialTheme.colorScheme.onSurface, sample)) {
+                    Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("Aa", style = MaterialTheme.typography.headlineMedium)
+                        Spacer(Modifier.width(12.dp))
+                        Text("Preview", Modifier.weight(1f))
+                        Text(hex, style = MaterialTheme.typography.labelMedium)
+                    }
+                }
                 Text(hex, style = MaterialTheme.typography.titleMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     listOf("RGB", "HSL", "HEX").forEach { option ->
