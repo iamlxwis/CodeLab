@@ -98,6 +98,18 @@ fun CodeEditor(
     var settings by remember { mutableStateOf(false) }
     var toolsMenu by remember { mutableStateOf(false) }
     var snippetsMenu by remember { mutableStateOf(false) }
+    var snippetQuery by remember { mutableStateOf("") }
+    var snippetSaveDialog by remember { mutableStateOf(false) }
+    var snippetTitle by remember { mutableStateOf("") }
+    var snippetSelection by remember { mutableStateOf("") }
+    var snippetError by remember { mutableStateOf("") }
+    var savedSnippets by remember {
+        mutableStateOf(SavedSnippetCodec.decode(preferences.getString("saved-snippets-v1", "")))
+    }
+    fun persistSnippets(items: List<StoredSnippet>) {
+        savedSnippets = items
+        preferences.edit().putString("saved-snippets-v1", SavedSnippetCodec.encode(items)).apply()
+    }
     var outlineMenu by remember { mutableStateOf(false) }
     var referenceMenu by remember { mutableStateOf(false) }
     var renameDialog by remember { mutableStateOf(false) }
@@ -116,6 +128,39 @@ fun CodeEditor(
     var showLineNumbers by remember { mutableStateOf(preferences.getBoolean("line-numbers", true)) }
     var showActiveLine by remember { mutableStateOf(preferences.getBoolean("active-line", true)) }
     var result by remember { mutableStateOf("") }
+    if (snippetSaveDialog) AlertDialog(
+        onDismissRequest = { snippetSaveDialog = false },
+        title = { Text("Save selected code") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(snippetTitle, { snippetTitle = it.take(60); snippetError = "" },
+                    modifier = Modifier.fillMaxWidth(), label = { Text("Snippet name") },
+                    singleLine = true)
+                Text("${snippetSelection.length} characters selected · saved on this device",
+                    style = MaterialTheme.typography.bodySmall)
+                if (snippetError.isNotBlank()) Text(snippetError,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = snippetTitle.isNotBlank() && snippetSelection.isNotEmpty(),
+                onClick = {
+                    val next = SavedSnippetCodec.add(savedSnippets,
+                        StoredSnippet(snippetTitle.trim(), snippetSelection))
+                    if (next == null) snippetError =
+                        "Use a unique name; up to 24 snippets of 4,096 characters are supported."
+                    else {
+                        persistSnippets(next)
+                        snippetSaveDialog = false
+                        snippetTitle = ""
+                    }
+                }) { Text("Save snippet") }
+        },
+        dismissButton = {
+            TextButton(onClick = { snippetSaveDialog = false }) { Text("Cancel") }
+        }
+    )
     if (customizeShortcuts) AlertDialog(onDismissRequest = { customizeShortcuts = false },
         title = { Text("Customize mobile shortcuts") },
         text = {
@@ -624,6 +669,46 @@ fun CodeEditor(
             Box {
                 EditorIcon(Icons.Default.AutoAwesome, "Insert code snippets") { snippetsMenu = true }
                 DropdownMenu(expanded = snippetsMenu, onDismissRequest = { snippetsMenu = false }) {
+                    OutlinedTextField(snippetQuery, { snippetQuery = it.take(80) },
+                        modifier = Modifier.width(290.dp).padding(horizontal = 9.dp),
+                        label = { Text("Search snippets") }, singleLine = true)
+                    DropdownMenuItem(text = { Text("Save selected code…") },
+                        onClick = {
+                            val selected = view?.let { editor ->
+                                val start = editor.selectionStart
+                                val end = editor.selectionEnd
+                                if (start >= 0 && end > start)
+                                    editor.text?.subSequence(start, end)?.toString().orEmpty()
+                                else ""
+                            }.orEmpty()
+                            if (selected.isEmpty() || selected.length > SavedSnippetCodec.MAX_BODY)
+                                snippetError = "Select 1 to 4,096 characters in the editor first."
+                            else {
+                                snippetSelection = selected
+                                snippetTitle = ""
+                                snippetError = ""
+                                snippetsMenu = false
+                                snippetSaveDialog = true
+                            }
+                        })
+                    if (snippetError.isNotBlank() && !snippetSaveDialog)
+                        Text(snippetError, Modifier.padding(horizontal = 12.dp),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall)
+                    savedSnippets.filter { snippetQuery.isBlank() ||
+                        it.title.contains(snippetQuery, ignoreCase = true) }.forEach { entry ->
+                        DropdownMenuItem(
+                            text = { Text("Saved · " + entry.title) },
+                            enabled = !readOnly,
+                            onClick = { view?.insertAtSelection(entry.body); snippetsMenu = false },
+                            trailingIcon = {
+                                IconButton(onClick = {
+                                    persistSnippets(SavedSnippetCodec.remove(savedSnippets, entry.title))
+                                }) { Icon(Icons.Default.DeleteOutline, "Delete snippet ${entry.title}") }
+                            }
+                        )
+                    }
+                    if (snippetQuery.isBlank() && savedSnippets.isNotEmpty()) HorizontalDivider()
                     listOf(
                         "Kotlin · function" to "fun example() {\n    \n}",
                         "Kotlin · data class" to "data class Item(val id: Int, val name: String)",
@@ -665,7 +750,9 @@ fun CodeEditor(
                         "SQL · join" to "SELECT a.id, b.name\nFROM table_a AS a\nINNER JOIN table_b AS b ON b.id = a.id;",
                         "Lua · table" to "local config = {\n    enabled = true,\n    name = 'Example'\n}",
                         "Shell · loop" to "for file in *.txt; do\n  echo \"processing file\"\ndone"
-                    ).forEach { (label, snippet) ->
+                    ).filter { (label, _) ->
+                        snippetQuery.isBlank() || label.contains(snippetQuery, ignoreCase = true)
+                    }.forEach { (label, snippet) ->
                         DropdownMenuItem(text = { Text(label) }, enabled = !readOnly,
                             onClick = {
                                 view?.insertAtSelection(snippet)

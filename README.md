@@ -27,17 +27,17 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Phase | Phase 3 — Project Management & Developer Workflow |
-| Status | **IN PROGRESS** (implementation committed, source CI pending) |
+| Status | **IN PROGRESS** (source code pushed; CI pending) |
 | Workstreams completed | **0/7 verified** |
 | Workstreams remaining | **7** |
-| Current workstream | **3 — GitHub Sync; 4 — Imports & Backups; 5 — Productivity; 6 — Performance; 7 — Reliability & Security** |
-| Last verified commit | [`9f0fe2313b60`](https://github.com/iamlxwis/CodeLab/commit/9f0fe2313b60240679d17dd72b758cfba79eb87f) (last pushed checkpoint; CI pending) |
-| CI status | **Pending** for this Phase 3 batch; earlier Phase 2 CI [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) passed |
-| Last activity | Nov 24, 2026 · 5:21 PM PHT |
+| Current workstream | **5 — Developer Productivity; source verification across WS1–WS7** |
+| Last verified commit | [`ae4ad81291b9`](https://github.com/iamlxwis/CodeLab/commit/ae4ad81291b999089f1853c119d6f4d760735b08) (prior pushed checkpoint, CI unverified) |
+| CI status | **Pending** for latest Phase 3 code; earlier Phase 2 CI [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) passed |
+| Last activity | Nov 24, 2026, 5:24 PM PHT |
 
-**Current activity:** Nov 24, 2026 · 5:21 PM PHT — Implemented transactional multi-file imports, ZIP metadata guards, GitHub tracking/error handling, command discovery, and stale-result protection.
+**Current activity:** Nov 24, 2026, 5:24 PM PHT — Added searchable built-in and saved snippets, selection-only snippet creation, controlled deletion, and persistence regression tests.
 
-> One current activity only; [historical progress log](docs/development/PROGRESS_LOG.md) and [project memory](docs/development/PROJECT_MEMORY.md) preserve checkpoints. All seven workstreams remain unverified until the required source CI and workstream review; physical-device acceptance belongs to the owner.
+> Only one current activity in README. The [progress log](docs/development/PROGRESS_LOG.md) and [memory](docs/development/PROJECT_MEMORY.md) retain history. No Phase 3 workstream is counted verified until source CI passes and the complete workstream is reviewed. Physical-phone acceptance is owner-led.
 
 [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Roadmap](docs/ROADMAP.md) · [GitHub Actions](https://github.com/iamlxwis/CodeLab/actions)
 

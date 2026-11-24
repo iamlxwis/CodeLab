@@ -1,3 +1,17 @@
+# Phase 3 checkpoint — Nov 24, 2026, 5:24 PM PHT
+
+- **Current phase / status:** Phase 3 IN PROGRESS; 0/7 fully verified, seven remaining. Current implementation: WS5 snippet management; source CI outstanding.
+- **Previous pushed main SHA:** `ae4ad81291b999089f1853c119d6f4d760735b08`; latest source SHA is the commit containing this checkpoint and must be verified through GitHub Actions.
+- **Latest known successful CI:** [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) for Phase 2. Phase 3 source workflows [45364077560](https://github.com/iamlxwis/CodeLab/actions/runs/45364077560) and [45364508033](https://github.com/iamlxwis/CodeLab/actions/runs/45364508033) were pending or cancelled by subsequent source commits; confirm actual outcomes rather than guessing.
+- **Implemented but not yet accepted:** WS1 explicit recently opened order; WS2 index-only unstage; WS3 upstream tracking + safe GitHub errors; WS4 staged atomic bulk import, ZIP safeguards; WS5 command search and selected-text saved snippets; WS6 stale async metadata results; WS7 transactional import/remote protections with failure tests.
+- **Modified now:** `Editor.kt` plus new `SavedSnippetCodec.kt` and `SavedSnippetCodecTest.kt`, README.md, PROGRESS_LOG.md, PROJECT_MEMORY.md. Prior implementation changed ProjectStore, WorkspaceModel, GitWorkspace, GitPanels, CommandDiscovery and their tests.
+- **Known risks/blockers:** compile/JVM/Android CI must verify exact newest source SHA; no local Android SDK or reachable git clone; owner accepts on real phone. Saved snippets are local per-app device preferences, not cloud/shared or project-specific.
+- **Next exact action:** inspect latest GitHub Actions Android APK run for current SHA, fix any JVM or Kotlin compile error, then audit all seven workstreams against requirements; update tracker with actual CI result and accurate counts. Do not mark source complete without build evidence.
+- **Restrictions:** Commit directly main, no PRs, no Android emulator smoke, six offline language packs and existing online mappings preserved, no advanced Phase2 features, source-only CI Option B + cancel-in-progress + three artifacts; release signing gates unchanged.
+- **Continuation:** Fetch remote main, read README/log/memory, inspect latest CI and source; resume from latest verified checkpoint without reimplementing existing features; maintain only one README activity entry and append concise log rows at each substantive commit.
+
+---
+
 # Phase 3 checkpoint — Nov 24, 2026 · 5:21 PM PHT
 
 - **Phase / status:** Phase 3 IN PROGRESS; no complete workstream certified, **0/7 verified**, 7 remain.
