@@ -52,6 +52,7 @@ internal fun WorkspaceActionsSheet(
     onDismiss: () -> Unit
 ) {
     var search by rememberSaveable { mutableStateOf("") }
+    var editQuick by rememberSaveable { mutableStateOf(false) }
     var section by rememberSaveable { mutableStateOf<String?>(null) }
     val all = buildList {
         fun add(id: String, name: String, description: String, section: String, icon: ImageVector) {
@@ -138,19 +139,12 @@ internal fun WorkspaceActionsSheet(
                 }
                 IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, "Close actions") }
             }
-            OutlinedTextField(search, { search = it }, modifier = Modifier.fillMaxWidth(),
-                singleLine = true, shape = RoundedCornerShape(14.dp),
-                leadingIcon = { Icon(Icons.Default.Search, null) },
-                placeholder = { Text(if (section == "Settings") "Search settings" else "Search actions") })
+            CodeLabSearch(search, { search = it }, if (section == "Settings") "Search settings" else "Search actions")
             if (section == null && query.isBlank()) {
-                Text("QUICK ACTIONS", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Pin and reorder actions", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
-                    TextButton(onClick = { section = "Settings" }) { Text("Settings") }
+                    Text("Pinned actions", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                    TextButton(onClick = { editQuick = !editQuick }) { Text(if (editQuick) "Done" else "Edit") }
                 }
-                Text("BROWSE", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (section == null && query.isBlank()) {
                 LazyColumn(Modifier.weight(1f),
@@ -161,14 +155,18 @@ internal fun WorkspaceActionsSheet(
                             Icon(item.icon, null, Modifier.size(20.dp))
                             Text(item.name, Modifier.weight(1f).clickable { act(item.id) }.padding(8.dp),
                                 style = MaterialTheme.typography.labelLarge)
+                            if (editQuick) {
                             IconButton(onClick = { onMoveQuick(item.id, -1) }, enabled = quickActions.firstOrNull() != item.id) {
                                 Icon(Icons.Default.ArrowUpward, "Move ${item.name} earlier")
                             }
                             IconButton(onClick = { onMoveQuick(item.id, 1) }, enabled = quickActions.lastOrNull() != item.id) {
                                 Icon(Icons.Default.ArrowDownward, "Move ${item.name} later")
                             }
+                            IconButton(onClick = { onToggleQuick(item.id) }) { Icon(Icons.Default.Close, "Unpin ${item.name}") }
+                            } else Icon(Icons.Default.ChevronRight, null, Modifier.size(19.dp))
                         }
                     }
+                    item { Text("Browse", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     items(sections) { group ->
                         Surface(onClick = { section = group.title },
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,

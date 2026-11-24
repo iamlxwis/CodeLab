@@ -178,3 +178,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 6:59:18 PM PHT | Build recovery | In progress | CI 45379503511 failed debug/release compile due to missing dp import in WorkspaceEditorPane.kt; import restored. |
 
 | Nov 24, 2026, 7:01:05 PM PHT | Editor/import/onboarding polish | Source | Incremental document index and tests, keyboard-aware shortcuts, import metadata review and conflict guard, resume guide controls. CI pending. |
+
+| Nov 24, 2026, 7:03:58 PM PHT | Navigation and visual refinement | Source | Shared search, independent favorites/sort, compact project choices, explicit execution segment, startup motion and glass highlight. CI pending. |

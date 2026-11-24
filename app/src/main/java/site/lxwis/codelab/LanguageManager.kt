@@ -153,15 +153,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                     Icon(Icons.Default.Close, contentDescription = "Close languages")
                 }
             }
-            OutlinedTextField(
-                value = search,
-                onValueChange = { search = it; if (it.isNotBlank()) filter = "All" },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                placeholder = { Text("Search languages") },
-                shape = RoundedCornerShape(14.dp)
-            )
+            CodeLabSearch(search, { search = it; if (it.isNotBlank()) filter = "All" }, "Search languages")
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Available", "Installed", "All").forEach { option ->
                     FilterChip(selected = filter == option, onClick = { filter = option },

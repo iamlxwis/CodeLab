@@ -93,10 +93,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                 }
             }
             if (browsing) {
-                OutlinedTextField(query, { query = it },
-                    Modifier.fillMaxWidth(), singleLine = true,
-                    leadingIcon = { Icon(Icons.Default.Search, null) },
-                    placeholder = { Text("Search languages and file types") })
+                CodeLabSearch(query, { query = it }, "Search languages and file types")
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     FilterChip(offlineOnly, onClick = { offlineOnly = !offlineOnly },
                         label = { Text("Included offline") })
@@ -183,20 +180,21 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Text("Language", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                                items(quickLanguages) { choice ->
-                                    val selected = language == choice
-                                    Surface(onClick = { language = choice },
-                                        color = if (selected) MaterialTheme.colorScheme.primaryContainer
-                                            else MaterialTheme.colorScheme.surfaceContainerLow,
-                                        border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-                                            else null,
-                                        shape = RoundedCornerShape(16.dp)) {
-                                        Column(Modifier.width(100.dp).padding(9.dp),
-                                            verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                                            FileTypeIcon("file." + (LanguageCatalog.extensionFor(choice) ?: "html"), Modifier.size(23.dp))
-                                            Text(choice, maxLines = 1,
-                                                style = MaterialTheme.typography.titleSmall)
+                            quickLanguages.take(if (guided) 8 else 4).chunked(2).forEach { choices ->
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    choices.forEach { choice ->
+                                        val selected = language == choice
+                                        Surface(onClick = { language = choice }, modifier = Modifier.weight(1f),
+                                            color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
+                                            border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null,
+                                            shape = MaterialTheme.shapes.medium) {
+                                            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 8.dp),
+                                                verticalAlignment = Alignment.CenterVertically) {
+                                                FileTypeIcon("file." + (LanguageCatalog.extensionFor(choice) ?: "html"), Modifier.size(20.dp))
+                                                Text(choice, Modifier.weight(1f).padding(start = 6.dp), maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelLarge)
+                                                if (selected) Icon(Icons.Default.Check, null, Modifier.size(16.dp))
+                                            }
                                         }
                                     }
                                 }

@@ -35,9 +35,7 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                     IconButton(onClick = close) { Icon(Icons.Default.ArrowBack, "Close settings") }
                     Text("Settings", Modifier.weight(1f), style = MaterialTheme.typography.headlineMedium)
                 }
-                OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), singleLine = true,
-                    placeholder = { Text("Search settings") }, leadingIcon = { Icon(Icons.Default.Search, null) },
-                    shape = MaterialTheme.shapes.large)
+                CodeLabSearch(query, { query = it }, "Search settings")
                 Spacer(Modifier.height(12.dp))
                 LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     groups.forEach { group ->

@@ -1,6 +1,8 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.BoxScope
@@ -57,7 +59,7 @@ internal fun ClayPanel(
     val colors = MaterialTheme.colorScheme
     val studio = LocalStudioAppearance.current
     Surface(
-        modifier = if (style == "Clay") modifier.shadow(12.dp, shape, clip = false) else if (studio.shadow > 0) modifier.shadow(studio.shadow.dp, shape, clip = false) else modifier,
+        modifier = modifier.glassHighlight(style, shape).then(if (studio.shadow > 0) Modifier.shadow(studio.shadow.dp, shape, clip = false) else Modifier),
         shape = shape,
         color = if (style == "Crystal") colors.surfaceContainer.copy(alpha = studio.opacity / 100f)
             else colors.surfaceContainer,
@@ -89,7 +91,7 @@ internal fun ClayActionCard(
     val studio = LocalStudioAppearance.current
     Surface(
         onClick = onClick,
-        modifier = if (style == "Clay") modifier.shadow(12.dp, shape, clip = false) else if (studio.shadow > 0) modifier.shadow(studio.shadow.dp, shape, clip = false) else modifier,
+        modifier = modifier.glassHighlight(style, shape).then(if (studio.shadow > 0) Modifier.shadow(studio.shadow.dp, shape, clip = false) else Modifier),
         enabled = true,
         interactionSource = interactionSource,
         shape = shape,
@@ -107,4 +109,19 @@ internal fun ClayActionCard(
             else -> null
         }
     ) { content() }
+}
+
+/** Neutral optical edge approximation, cached and omitted in lightweight mode. */
+@Composable
+private fun Modifier.glassHighlight(style: String, shape: RoundedCornerShape): Modifier {
+    val quality = LocalStudioAppearance.current.glassQuality
+    if (style != "Crystal" || quality == "Lightweight") return this
+    return this.clip(shape).drawWithCache {
+        val shine = Brush.verticalGradient(listOf(Color.White.copy(alpha = .12f),
+            Color.Transparent, Color.Transparent, Color.White.copy(alpha = .045f)))
+        onDrawWithContent {
+            drawContent()
+            drawRect(shine)
+        }
+    }
 }

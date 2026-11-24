@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,25 +41,24 @@ internal fun RunModeStrip(
         m.executionMode == "Online" && !m.isOnline -> "Internet connection required"
         else -> "No online compiler for this file"
     }
-    var modesOpen by remember { mutableStateOf(false) }
     val colors = MaterialTheme.colorScheme
     val toolbar = studioColor(LocalStudioAppearance.current.navigationBackground, colors.surfaceContainer)
     Surface(color = toolbar, contentColor = studioReadable(colors.onSurface, toolbar)) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Box {
-                TextButton(onClick = { modesOpen = true }, enabled = !m.runner.running) {
-                    Icon(if (m.executionMode == "Offline") Icons.Default.Computer else Icons.Default.Cloud,
-                        null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(5.dp))
-                    Text(m.executionMode)
-                    Icon(Icons.Default.ArrowDropDown, null, Modifier.size(16.dp))
-                }
-                DropdownMenu(expanded = modesOpen, onDismissRequest = { modesOpen = false }) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Surface(shape = MaterialTheme.shapes.large, color = colors.surfaceContainerHigh) {
+                Row(Modifier.padding(2.dp)) {
                     listOf("Offline", "Online").forEach { mode ->
-                        DropdownMenuItem(text = { Text(mode) }, onClick = {
-                            m.chooseExecutionMode(mode); modesOpen = false
-                        }, leadingIcon = { Icon(if (mode == "Offline") Icons.Default.Computer else Icons.Default.Cloud, null) })
+                        val selected = mode == m.executionMode
+                        Surface(onClick = { m.chooseExecutionMode(mode) }, enabled = !m.runner.running,
+                            modifier = Modifier.heightIn(min = 48.dp).widthIn(min = 56.dp),
+                            color = if (selected) colors.primaryContainer else Color.Transparent,
+                            shape = MaterialTheme.shapes.medium) {
+                            Box(Modifier.padding(horizontal = 5.dp), contentAlignment = Alignment.Center) {
+                                Text(mode, color = if (selected) colors.onPrimaryContainer else colors.onSurface,
+                                    style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                            }
+                        }
                     }
                 }
             }
@@ -79,7 +79,7 @@ internal fun RunTargetMenu(m: WorkspaceModel, onProjectSettings: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     var showPicker by remember { mutableStateOf(false) }
     Box {
-        IconButton(onClick = { expanded = true }, modifier = Modifier.size(44.dp)) {
+        IconButton(onClick = { expanded = true }, modifier = Modifier.size(48.dp)) {
             Icon(Icons.Default.MoreHoriz, "Run file and entry options")
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {

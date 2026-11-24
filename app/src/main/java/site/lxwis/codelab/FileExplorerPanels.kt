@@ -85,7 +85,7 @@ internal fun FileExplorerSheet(
 ) {
     var search by rememberSaveable(m.project) { mutableStateOf("") }
     var expanded by remember(m.project, initialDirectory) {
-        mutableStateOf(initialDirectory.trim('/').split('/').filter { it.isNotBlank() }
+        mutableStateOf((initialDirectory.ifBlank { m.active?.substringBeforeLast('/', "").orEmpty() }).trim('/').split('/').filter { it.isNotBlank() }
             .runningFold("") { prefix, part -> prefix + part + "/" }.drop(1).toSet())
     }
     var menuFor by remember { mutableStateOf<String?>(null) }
@@ -108,18 +108,11 @@ internal fun FileExplorerSheet(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                TextButton(onClick = onNewFolder, enabled = true) { Text("Folder") }
-                FilledTonalButton(onClick = onNew, shape = RoundedCornerShape(11.dp)) {
-                    Icon(Icons.Default.Add, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("File")
-                }
+                IconButton(onClick = onNewFolder) { Icon(Icons.Default.CreateNewFolder, "New folder") }
+                IconButton(onClick = onNew) { Icon(Icons.Default.NoteAdd, "New file") }
                 IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Close explorer") }
             }
-            OutlinedTextField(search, { search = it }, Modifier.fillMaxWidth(),
-                singleLine = true, placeholder = { Text("Search files") },
-                leadingIcon = { Icon(Icons.Default.Search, null) },
-                shape = RoundedCornerShape(12.dp))
+            CodeLabSearch(search, { search = it }, "Search files")
             LazyColumn(Modifier.fillMaxWidth().weight(1f),
                 verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 items(rows, key = { if (it.folder) "folder:" + it.path else "file:" + it.path }) { row ->
@@ -171,7 +164,8 @@ internal fun FileExplorerSheet(
                             DropdownMenu(expanded = menuFor == file, onDismissRequest = { menuFor = null }) {
                                 DropdownMenuItem(text = { Text("Rename / move") },
                                     onClick = { menuFor = null; onRename(file) })
-                                DropdownMenuItem(text = { Text("Delete") },
+                                DropdownMenuItem(text = { Text("Move to trash", color = MaterialTheme.colorScheme.error) },
+                                    leadingIcon = { Icon(Icons.Default.DeleteOutline, null, tint = MaterialTheme.colorScheme.error) },
                                     onClick = { menuFor = null; onDelete(file) })
                             }
                         }

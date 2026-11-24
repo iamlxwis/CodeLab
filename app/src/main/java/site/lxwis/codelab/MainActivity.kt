@@ -6,6 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelProvider
@@ -19,6 +24,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val motion = rememberCodeLabMotion(model.motionPreference, model.motionIntensity, model.motionSpeed, model.springIntensity)
+            val entrance = remember { Animatable(1f) }
+            LaunchedEffect(Unit) {
+                if (motion.millis(240) > 0) { entrance.snapTo(.82f); entrance.animateTo(1f, tween(motion.millis(240))) }
+            }
             CodeLabTheme(
                 themePreset = model.themePreset,
                 visualStyle = model.visualStyle,
@@ -35,7 +44,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 CodeLabBackdrop(model.visualStyle, dark, motion.millis(300)) {
-                    CodeLabForegroundSurface(Modifier.fillMaxSize()) {
+                    CodeLabForegroundSurface(Modifier.fillMaxSize().graphicsLayer { alpha = entrance.value }) {
                         Studio(model, Modifier.windowInsetsPadding(WindowInsets.safeDrawing).imePadding())
                     }
                 }

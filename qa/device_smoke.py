@@ -268,7 +268,6 @@ def main():
     # Primary Run honors the preferred entry file; explicitly choose this tab.
     # Run modes are deliberate, never a silent fallback to cloud.
     wait_for("Ready: local runtime")
-    tap("Offline")  # Open the explicit mode selector.
     tap("Online")
     # The emulator can retain a validated default network even with its
     # airplane toggle on. Both states are legitimate: no network or no
@@ -276,7 +275,6 @@ def main():
     # airplane mode implies the app cannot access an online compiler.
     wait_for("Internet connection required", "No online compiler for this file",
              "Online: source upload needs confirmation")
-    tap("Online")  # Open the mode selector again.
     tap("Offline")
     wait_for("Ready: local runtime")
     tap("Run file and entry options")

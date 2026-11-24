@@ -156,14 +156,11 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
 
 @Composable
 private fun Mark(modifier: Modifier) {
-    val ink = MaterialTheme.colorScheme.onPrimaryContainer
-    Canvas(modifier.background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(9.dp)).padding(7.dp)) {
-        val w = size.width
-        val h = size.height
-        fun stroke(a: Float,b: Float,c: Float,d: Float) = drawLine(ink, Offset(w*a,h*b), Offset(w*c,h*d), w*.095f, StrokeCap.Round)
-        stroke(.72f,.20f,.34f,.20f); stroke(.34f,.20f,.15f,.39f)
-        stroke(.15f,.39f,.15f,.61f); stroke(.15f,.61f,.34f,.80f); stroke(.34f,.80f,.72f,.80f)
-        stroke(.53f,.38f,.53f,.65f); stroke(.53f,.65f,.88f,.65f)
+    Surface(modifier, color = MaterialTheme.colorScheme.primaryContainer,
+        shape = RoundedCornerShape(10.dp)) {
+        Icon(androidx.compose.ui.res.painterResource(R.drawable.ic_codelab_splash_mark),
+            contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer,
+            modifier = Modifier.fillMaxSize().padding(2.dp))
     }
 }
 
@@ -177,10 +174,12 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
     var importOptions by rememberSaveable { mutableStateOf(false) }
     var projectSearch by rememberSaveable { mutableStateOf("") }
     var projectSort by rememberSaveable { mutableStateOf("Recent") }
+    var favoritesOnly by rememberSaveable { mutableStateOf(false) }
+    var sortOpen by remember { mutableStateOf(false) }
     LaunchedEffect(m.projects, m.project) { m.refreshProjectCardDetails() }
     val spacing = CodeLabSpacing.forDensity(m.interfaceDensity)
     val visibleProjects = orderedProjects(
-        m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) },
+        m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) && (!favoritesOnly || it in m.favorites) },
         m.favorites, projectSort)
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(
         horizontal = CodeLabSpacing.screen, vertical = CodeLabSpacing.large),
@@ -205,24 +204,26 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 }
             }
             Spacer(Modifier.height(12.dp))
-            OutlinedTextField(value = projectSearch, onValueChange = { projectSearch = it },
-                modifier = Modifier.fillMaxWidth(), singleLine = true,
-                shape = RoundedCornerShape(18.dp),
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (projectSearch.isNotEmpty()) IconButton(onClick = { projectSearch = "" }) {
-                        Icon(Icons.Default.Close, contentDescription = "Clear project search")
+            CodeLabSearch(projectSearch, { projectSearch = it }, "Find a project")
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(selected = favoritesOnly, onClick = { favoritesOnly = !favoritesOnly },
+                    label = { Text("Favorites") },
+                    leadingIcon = { Icon(if (favoritesOnly) Icons.Default.Star else Icons.Default.StarBorder, null, Modifier.size(17.dp)) })
+                Spacer(Modifier.weight(1f))
+                Box {
+                    TextButton(onClick = { sortOpen = true }) {
+                        Icon(Icons.Default.Sort, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(projectSort)
+                        Icon(Icons.Default.ArrowDropDown, null, Modifier.size(18.dp))
                     }
-                },
-                placeholder = { Text("Find a project") })
-            Spacer(Modifier.height(6.dp))
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(listOf("Recent", "Favorites", "A–Z", "Z–A")) { option ->
-                    FilterChip(selected = projectSort == option, onClick = { projectSort = option },
-                        label = { Text(option) },
-                        leadingIcon = if (projectSort == option)
-                            ({ Icon(Icons.Default.Check, contentDescription = null, Modifier.size(16.dp)) })
-                            else null)
+                    DropdownMenu(expanded = sortOpen, onDismissRequest = { sortOpen = false }) {
+                        listOf("Recent", "A–Z", "Z–A").forEach { choice ->
+                            DropdownMenuItem(text = { Text(choice) }, onClick = { projectSort = choice; sortOpen = false },
+                                trailingIcon = if (projectSort == choice) ({ Icon(Icons.Default.Check, null) }) else null)
+                        }
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -241,7 +242,10 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 }
             }
         }
-        if (m.projects.isEmpty()) item {
+        if (m.busy && m.projects.isEmpty()) item {
+            WorkspaceSkeleton(3)
+        }
+        if (m.projects.isEmpty() && !m.busy) item {
             ClayPanel {
                 Column(Modifier.fillMaxWidth().padding(20.dp)) {
                     Text("No projects yet", fontWeight = FontWeight.Medium)
@@ -253,7 +257,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
             }
         }
         if (visibleProjects.isEmpty() && m.projects.isNotEmpty()) item {
-            val noFavorites = projectSort == "Favorites" && m.projects.none { it in m.favorites }
+            val noFavorites = favoritesOnly && m.projects.none { it in m.favorites }
             ClayPanel {
                 Column(Modifier.fillMaxWidth().padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally) {
@@ -262,7 +266,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                     Spacer(Modifier.height(8.dp))
                     Text(if (noFavorites) "No favorites yet" else "No matching projects",
                         fontWeight = FontWeight.Medium)
-                    TextButton(onClick = { projectSort = "Recent"; projectSearch = "" }) {
+                    TextButton(onClick = { projectSort = "Recent"; projectSearch = ""; favoritesOnly = false }) {
                         Text("Show all projects")
                     }
                 }

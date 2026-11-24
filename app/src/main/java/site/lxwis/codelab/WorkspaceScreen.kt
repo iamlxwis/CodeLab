@@ -690,7 +690,10 @@ private fun PanelButton(text: String, active: Boolean, motionMillis: Int, click:
 @Composable
 private fun HomeNavigation(onAction: (String) -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val navigation = studioColor(LocalStudioAppearance.current.navigationBackground, colors.surfaceContainerHigh)
+    val studio = LocalStudioAppearance.current
+    val navigation = studioColor(studio.navigationBackground, colors.surfaceContainerHigh).let {
+        if (LocalCodeLabVisualStyle.current == "Crystal") it.copy(alpha = studio.opacity / 100f) else it
+    }
     Surface(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
         shape = RoundedCornerShape(28.dp), color = navigation,
         contentColor = studioReadable(colors.onSurface, navigation),
