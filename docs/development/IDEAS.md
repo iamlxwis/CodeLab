@@ -169,3 +169,8 @@ Next: cumulative build/error checking after this source implementation pass, the
 ## Build and direct APK delivery resumed — Nov 24, 2026, 9:39:00 PM PHT
 
 Owner authorized the deferred build/error-check pass and requested a direct app download link. Added regression coverage for complete workspace profiles and theme typography sizes/legacy defaults; cumulative Android CI next. Existing explicit release checkpoint can dispatch manual API35 smoke and guarded publication on the same SHA; retain all release/signing guards and do not publish an older APK as the new source. Next: inspect compiler/test failures and fix them; then run the existing guarded checkpoint.
+
+
+### UI10-001 — Nov 25, 2026, 12:27 AM PHT
+
+Owner-supplied UI 10/10 quality specification: 1 chrome, 5 key row, 6 syntax, 3 language label, 4 preview, 2 header, 7 responsive, 8 launch, 9 platform, 10 consistency. No new product features except the explicit opt-in system color choice. Preserve existing preferences, accessibility, motion policy, dependencies, signing and security. Pending acceptance, not complete. UI 10/10 source checkpoint: toolbar collapse/overflow, symbol keys, new native syntax token inks, redundant header search removal, language-label cleanup, segmented preview, responsive thresholds and default launch color; 8 workstreams touched, none accepted; build/device checks pending; platform polish, localization, theme QA and actual 12-line measurement remain.

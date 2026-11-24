@@ -199,7 +199,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
         if (!focusMode || p == null) WorkspaceTopBar(m, p) { dialog = it }
-        if (p != null && !focusMode) RunModeStrip(m,
+        if (p != null && !focusMode && !keyboardEditing) RunModeStrip(m,
             onLanguages = {
                 val ext = m.active?.substringAfterLast('.', "")?.lowercase()
                 requestedLanguage = if (ext == "py") "Python"
@@ -233,7 +233,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 }) {
                     Icon(Icons.Default.FolderOpen, "Browse files or swipe right")
                 }
-                if (m.files.isNotEmpty() && LocalConfiguration.current.screenWidthDp >= 820) {
+                if (m.files.isNotEmpty() && WorkspaceSizeClass.of(LocalConfiguration.current.screenWidthDp) == WorkspaceSizeClass.Expanded) {
                     IconButton(onClick = { m.chooseExplorerPinned(!explorerPinned) },
                         modifier = Modifier.size(38.dp)) {
                         Icon(if (explorerPinned) Icons.Default.VerticalSplit else Icons.Default.ViewSidebar,
@@ -276,7 +276,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 IconButton(onClick = { dialog = "newfile" }) { Icon(Icons.Default.Add, "Add file") }
             }
             BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
-                val wide = maxWidth >= 820.dp
+                val widthClass = WorkspaceSizeClass.of(maxWidth.value.toInt())
+                val wide = widthClass != WorkspaceSizeClass.Compact
                 val phoneSplit = !wide && m.phoneSplitEnabled &&
                     (m.console || m.preview) && !focusMode
                 val editorPane: @Composable (Modifier) -> Unit = { pane ->
@@ -309,7 +310,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         outputPane(Modifier.weight((100 - m.phoneSplitPercent).toFloat()).fillMaxWidth())
                     }
                 } else {
-                    val showSidebar = wide && explorerPinned && !focusMode && !wideOutputExpanded
+                    val showSidebar = widthClass == WorkspaceSizeClass.Expanded && explorerPinned && !focusMode && !wideOutputExpanded
                     val wideSplit = wide && !wideOutputExpanded && (m.console || m.preview)
                     val panelWidth = (maxWidth - (if (showSidebar) 225.dp else 0.dp) - 48.dp).coerceAtLeast(1.dp)
                     val panelWidthPx = with(LocalDensity.current) { panelWidth.toPx() }
@@ -386,10 +387,10 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             if (!focusMode && !keyboardEditing) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 PanelButton("Editor", !m.console && !m.preview, motionMillis) { m.chooseOutputMaximized(false); m.console = false; m.preview = false }
-                PanelButton("Console", m.console && (!m.phoneSplitEnabled || LocalConfiguration.current.screenWidthDp >= 820), motionMillis) {
+                PanelButton("Console", m.console && (!m.phoneSplitEnabled || WorkspaceSizeClass.of(LocalConfiguration.current.screenWidthDp) != WorkspaceSizeClass.Compact), motionMillis) {
                     m.choosePhoneSplitEnabled(false); m.console = true; m.preview = false
                 }
-                if (LocalConfiguration.current.screenWidthDp < 820) {
+                if (WorkspaceSizeClass.of(LocalConfiguration.current.screenWidthDp) == WorkspaceSizeClass.Compact) {
                     PhoneSplitToggle(m.phoneSplitEnabled && (m.console || m.preview)) {
                         val next = !(m.phoneSplitEnabled && (m.console || m.preview))
                         m.choosePhoneSplitEnabled(next)
@@ -399,24 +400,6 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 }
                 if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
                     PanelButton("Preview", m.preview, motionMillis) { m.chooseOutputMaximized(false); m.console = false; m.preview = true }
-                val languageLabel = when {
-                    m.active?.endsWith(".js", true) == true -> "JavaScript"
-                    m.active?.endsWith(".sql", true) == true -> "SQLite"
-                    m.active?.endsWith(".lua", true) == true -> "Lua"
-                    m.active?.endsWith(".java", true) == true -> "Java · beta"
-                    m.active?.endsWith(".html", true) == true -> "HTML"
-                    m.active?.let(m::cloudAvailable) == true -> "Cloud available"
-                    else -> "Text · cloud setup"
-                }
-                if (m.showEditorStatus) AnimatedContent(targetState = languageLabel,
-                    transitionSpec = {
-                        fadeIn(tween(motionMillis)) togetherWith fadeOut(tween(motionMillis))
-                    }, label = "language-label") { value ->
-                    Text(value, Modifier.padding(start = 18.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
                 QuickActionsBar(m.quickEditorActions, onAction = ::openAction)
             }
         }

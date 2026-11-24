@@ -23,6 +23,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.res.stringResource
+import androidx.compose.material.icons.filled.List
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
 import java.io.ByteArrayInputStream
@@ -71,14 +75,24 @@ fun HtmlPreview(project: String, path: String, source: String, modifier: Modifie
             Icon(Icons.Default.Devices, null, Modifier.size(18.dp)
                 .align(Alignment.CenterVertically),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            listOf("Auto", "Phone", "Tablet", "Desktop").forEach { choice ->
-                FilterChip(selected = viewport == choice,
-                    onClick = { viewport = choice },
-                    label = { Text(choice) })
+            val choices = listOf("Auto", "Phone", "Tablet", "Desktop")
+            SingleChoiceSegmentedButtonRow {
+                choices.forEachIndexed { index, choice ->
+                    val stateLabel = stringResource(if (viewport == choice) R.string.preview_selected else R.string.preview_not_selected)
+                    SegmentedButton(selected = viewport == choice, onClick = { viewport = choice },
+                        shape = SegmentedButtonDefaults.itemShape(index, choices.size),
+                        modifier = Modifier.heightIn(min = 48.dp).semantics { stateDescription = stateLabel }) {
+                        Text(choice)
+                    }
+                }
             }
-            FilterChip(selected = consoleVisible,
-                onClick = { consoleVisible = !consoleVisible },
-                label = { Text("Log") })
+            val logState = stringResource(if (consoleVisible) R.string.preview_log_visible else R.string.preview_log_hidden)
+            OutlinedIconToggleButton(checked = consoleVisible, onCheckedChange = { consoleVisible = it },
+                modifier = Modifier.size(48.dp).semantics { stateDescription = logState }) {
+                BadgedBox(badge = { if (messages.isNotEmpty()) Badge { Text(messages.size.toString()) } }) {
+                    Icon(Icons.Default.List, stringResource(R.string.preview_log))
+                }
+            }
         }
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
         HorizontalDivider()

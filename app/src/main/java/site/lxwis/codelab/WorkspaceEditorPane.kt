@@ -63,6 +63,7 @@ internal fun WorkspaceEditorPane(
                 onSelectionChange = onSelection,
                 showStatusBar = m.showEditorStatus,
                 motionMillis = motion.millis(170),
+                touchFeedback = m.touchFeedback,
                 workspaceToolbar = m.editorToolbarIds,
                 onWorkspaceToolbarChange = m::chooseEditorToolbar,
                 modifier = Modifier.fillMaxSize()

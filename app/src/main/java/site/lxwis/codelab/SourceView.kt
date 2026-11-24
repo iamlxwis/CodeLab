@@ -32,6 +32,7 @@ private class SyntaxInk(color: Int) : ForegroundColorSpan(color)
 
 internal class SourceView(context: Context, filename: String) : EditText(context) {
     var changed: ((String) -> Unit)? = null
+    var scrollDirectionChanged: ((Int) -> Unit)? = null
     var selectionChanged: ((Int, Int) -> Unit)? = null
     private var codeWrapped: Boolean? = null
     private val bookmarks = sortedSetOf<Int>()
@@ -727,7 +728,10 @@ internal class SourceView(context: Context, filename: String) : EditText(context
 
     override fun onScrollChanged(l: Int, t: Int, oldl: Int, oldt: Int) {
         super.onScrollChanged(l, t, oldl, oldt)
-        if (ready && t != oldt) scheduleHighlight(false)
+        if (ready && t != oldt) {
+            scheduleHighlight(false)
+            scrollDirectionChanged?.invoke(t - oldt)
+        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -807,6 +811,10 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             if (i in colors.indices && hex.matches(Regex("#[0-9a-fA-F]{6}")))
                 colors[i] = android.graphics.Color.parseColor(hex)
         }
+        for (i in 4 until colors.size) {
+            if (EditorSyntaxPolicy.contrast(colors[i], paper) < 4.5)
+                colors[i] = currentTextColor
+        }
         highlightTask = highlightWorker.submit(Runnable {
             val marks = ArrayList<HighlightMark>()
             fun add(from: Int, to: Int, kind: Int) {
@@ -843,7 +851,8 @@ internal class SourceView(context: Context, filename: String) : EditText(context
                         value[0] == '"' || value[0] == '\'' || value[0] == '`' -> 1
                         value[0].isDigit() -> 2
                         value.lowercase() in keywords -> 3
-                        else -> continue
+                        else -> EditorSyntaxPolicy.identifierKind(fragment, token.range.first, token.range.last + 1)
+                            ?: continue
                     }
                     add(token.range.first, token.range.last + 1, kind)
                 }
@@ -875,11 +884,11 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         private val cssNames = Regex("""[a-zA-Z_-][\w-]*(?=\s*:)""")
         private val tokenPattern  = """//[^\n]*|/\*[\s\S]*?(?:\*/|$)|"(?:\\.|[^"\\\n])*+"?|'(?:\\.|[^'\\\n])*+'?|`(?:\\.|[^`\\])*+`?|\b(?:0[xX][0-9a-fA-F]+|\d+(?:\.\d+)?)\b|[a-zA-Z_][a-zA-Z_0-9]*"""
         private val keywords = "async await break case catch class const continue debugger default delete do else export extends false finally for from function if import in instanceof interface let new null of return static super switch this throw true try typeof undefined var void while with yield def elif except lambda pass none print console log select where insert create table into values order by join update set delete and or end local then repeat until fun val object when package public private int char float double struct bool return func println puts echo using namespace string cout std printf include int main fn mut impl enum trait pub use mod async await go defer chan type map nil var let class struct self this try catch else if do end".split(' ').toSet()
-        private val darkInk = intArrayOf(0xff91a09d.toInt(),0xffa9dda4.toInt(),0xffe7b381.toInt(),0xffb8acff.toInt())
-        private val lightInk = intArrayOf(0xff58675e.toInt(),0xff246632.toInt(),0xff8b501b.toInt(),0xff64449b.toInt())
-        private val neonDarkInk = intArrayOf(0xff768597.toInt(),0xff6ee7b7.toInt(),0xfff9a8d4.toInt(),0xff93c5fd.toInt())
-        private val neonLightInk = intArrayOf(0xff637084.toInt(),0xff107353.toInt(),0xffa72f71.toInt(),0xff295ca6.toInt())
-        private val monoDarkInk = intArrayOf(0xff808b96.toInt(),0xffbfcbd5.toInt(),0xffdce3e9.toInt(),0xff9aaabb.toInt())
-        private val monoLightInk = intArrayOf(0xff687580.toInt(),0xff485663.toInt(),0xff303b45.toInt(),0xff566575.toInt())
+        private val darkInk = intArrayOf(0xff91a09d.toInt(),0xffa9dda4.toInt(),0xffe7b381.toInt(),0xffb8acff.toInt(),0xff8bd5ed.toInt(),0xffe2c3fa.toInt(),0xffa7c9a2.toInt())
+        private val lightInk = intArrayOf(0xff58675e.toInt(),0xff246632.toInt(),0xff8b501b.toInt(),0xff64449b.toInt(),0xff125f78.toInt(),0xff714590.toInt(),0xff386333.toInt())
+        private val neonDarkInk = intArrayOf(0xff768597.toInt(),0xff6ee7b7.toInt(),0xfff9a8d4.toInt(),0xff93c5fd.toInt(),0xff67e8f9.toInt(),0xffe9d5ff.toInt(),0xffbef264.toInt())
+        private val neonLightInk = intArrayOf(0xff637084.toInt(),0xff107353.toInt(),0xffa72f71.toInt(),0xff295ca6.toInt(),0xff155e75.toInt(),0xff7e226e.toInt(),0xff426818.toInt())
+        private val monoDarkInk = intArrayOf(0xff808b96.toInt(),0xffbfcbd5.toInt(),0xffdce3e9.toInt(),0xff9aaabb.toInt(),0xffc6d1dd.toInt(),0xffe3e8ed.toInt(),0xffa9b7c5.toInt())
+        private val monoLightInk = intArrayOf(0xff687580.toInt(),0xff485663.toInt(),0xff303b45.toInt(),0xff566575.toInt(),0xff415365.toInt(),0xff303b45.toInt(),0xff526170.toInt())
     }
 }

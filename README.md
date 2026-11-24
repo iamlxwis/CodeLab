@@ -27,16 +27,16 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **ACTIVE — cumulative build/error checks and APK delivery** |
-| Current-pass checks | Passed Android release build, unit tests, instrumentation compilation, lint and signing checks |
+| Status | **ACTIVE — UI 10/10 source refinement; validation pending** |
+| Current-pass checks | Not yet run for UI 10/10 source; baseline Android APK passed, device and guarded release failed |
 | Source coverage | **37/37 decisions mapped; 8/8 audited implementation gaps addressed** — validation is separate |
-| Current workstream | Reimagined decision implementation and acceptance |
+| Current workstream | UI 10/10: 8/10 workstreams touched, 0/10 accepted, 10/10 pending acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [1e5bb5d — complete implementation pass](https://github.com/iamlxwis/CodeLab/actions/runs/45405666239) |
-| Next to build | Rerun API35 with corrected accessible navigation; publish guarded APK; physical-device acceptance |
-| Last activity | Nov 24, 2026, 10:29:52 PM PHT |
+| Latest verified build | [6d81def Android APK](https://github.com/iamlxwis/CodeLab/actions/runs/45414788437); [device failed](https://github.com/iamlxwis/CodeLab/actions/runs/45414804243) |
+| Next to build | Finish UI refinement and run Gradle, instrumentation and device visual checks |
+| Last activity | Nov 25, 2026, 12:27 AM PHT |
 
-**Current activity:** Nov 24, 2026, 10:29:52 PM PHT — Six themes and native preview reached on API35; correcting off-screen sample-console navigation and exact-run retry selection, then continuing guarded APK delivery.
+**Current activity:** Nov 25, 2026, 12:27 AM PHT — UI 10/10 source checkpoint: toolbar collapse/overflow, symbol keys, new native syntax token inks, redundant header search removal, language-label cleanup, segmented preview, responsive thresholds and default launch color; 8 workstreams touched, none accepted; build/device checks pending; platform polish, localization, theme QA and actual 12-line measurement remain.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

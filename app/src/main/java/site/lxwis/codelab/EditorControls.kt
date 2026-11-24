@@ -20,6 +20,13 @@ import android.view.inputmethod.BaseInputConnection
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.background
@@ -114,6 +121,43 @@ internal fun EditorAction(label: String, onClick: () -> Unit) {
     TextButton(onClick = onClick, contentPadding = PaddingValues(horizontal = 9.dp),
         modifier = Modifier.defaultMinSize(minWidth = 44.dp)) {
         Text(label, style = MaterialTheme.typography.labelMedium, fontFamily = FontFamily.Monospace)
+    }
+}
+
+@Composable
+internal fun EditorKey(label: String, motionMillis: Int, touchFeedback: Boolean, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val haptics = LocalHapticFeedback.current
+    val colors = MaterialTheme.colorScheme
+    val background by animateColorAsState(
+        if (pressed) colors.primaryContainer else colors.surfaceContainerHigh,
+        tween(motionMillis), label = "key-surface")
+    val arrow = when (label) {
+        "←" -> Icons.Default.ArrowBack
+        "→" -> Icons.Default.ArrowForward
+        "↑" -> Icons.Default.ArrowUpward
+        "↓" -> Icons.Default.ArrowDownward
+        else -> null
+    }
+    val description = when (label) {
+        "←" -> stringResource(R.string.editor_cursor_left)
+        "→" -> stringResource(R.string.editor_cursor_right)
+        "↑" -> stringResource(R.string.editor_cursor_up)
+        "↓" -> stringResource(R.string.editor_cursor_down)
+        else -> label
+    }
+    Surface(onClick = {
+        if (touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        onClick()
+    }, modifier = Modifier.width(68.dp).height(48.dp),
+        shape = CodeLabCorners.iconTile, color = background, interactionSource = interaction) {
+        Box(contentAlignment = Alignment.Center) {
+            if (arrow != null) Icon(arrow, description, Modifier.size(20.dp), tint = colors.onSurface)
+            else Text(label, style = MaterialTheme.typography.labelMedium,
+                fontFamily = FontFamily.Monospace, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                color = colors.onSurface, maxLines = 1)
+        }
     }
 }
 

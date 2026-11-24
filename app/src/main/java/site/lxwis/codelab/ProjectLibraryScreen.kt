@@ -106,8 +106,9 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                 Text(title, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            if (project != null) Text(if (m.dirty) "Saving changes…" else "Local workspace",
-                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (project != null) Text(if (m.dirty) "Saving changes…" else m.active?.substringAfterLast('/') ?: "Local workspace",
+                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (project != null && (m.runner.running || m.active != null)) {
             Button(
@@ -118,7 +119,7 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                 },
                 interactionSource = interaction,
                 modifier = Modifier.graphicsLayer { scaleX = scale; scaleY = scale },
-                shape = RoundedCornerShape(11.dp),
+                shape = CodeLabCorners.iconTile,
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -143,9 +144,6 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                 if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 m.flush()
             }) { Icon(Icons.Default.Save, "Save file") }
-            IconButton(onClick = { onAction("projectsearch") }) {
-                Icon(Icons.Default.Search, "Search project")
-            }
         }
         IconButton(onClick = { onAction("actions") }) {
             Icon(Icons.Default.MoreVert, "More tools and settings")
