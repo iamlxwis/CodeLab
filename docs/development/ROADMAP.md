@@ -1,3 +1,10 @@
+## Nov 24, 9:39 AM PHT — TypeScript Android execution confirmed; device assertion corrected
+
+- [x] [Android15 run 45304317096](https://github.com/iamlxwis/CodeLab/actions/runs/45304317096) built all six optional modules and executed TypeScript `main.ts` in airplane mode. Console displayed **`Hello from CodeLab!`** and **`Exit 0`**. Previous TS5047 fixed.
+- [x] The device smoke failed because its assertion still expected `Hello, CodeLab!` (different punctuation/text), not due to runtime behavior. Inspected the exact test's visible UI tail and [ProjectStore.java](../../app/src/main/java/site/lxwis/codelab/ProjectStore.java): default TypeScript starter is `const message: string = 'Hello from CodeLab!'; console.log(message);`.
+- [x] Corrected expected output; added API35 assertion that the on-device source actually contains `: string` and JVM fixture coverage for the same default project.
+- [ ] Run next exact-SHA API35 and instrument/performance/accessibility gates; release stays gated. Full C/C++/Java compiler/Kotlin/PHP/Ruby/Go/Rust/C# packs remain open.
+
 ## Nov 24, 9:20 AM PHT — TS5.9 compiler option correction with real APK evidence
 
 - [x] Source failure diagnosed from [API35 45261469481](https://github.com/iamlxwis/CodeLab/actions/runs/45261469481) and downloaded artifact: TypeScript console printed `Option 'isolatedModules' can only be used when either option '--module' is provided or option 'target' is 'ES2015' or higher.` App returned Exit 1, **not** an Android crash.

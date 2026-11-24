@@ -25,6 +25,15 @@ public class StarterExamplesTest {
         assertTrue(count >= 90);
     }
 
+    @Test public void defaultTypeScriptStarterUsesActualTypeAnnotations() throws Exception {
+        ProjectStore store = new ProjectStore(folder.newFolder("typed"));
+        store.createProject("Typed", "TypeScript", StarterExamples.BEGINNER);
+        String source = store.read("Typed", "main.ts");
+        assertTrue("Real TypeScript starter should have an erased type annotation",
+            source.contains("const message: string"));
+        assertTrue(source.contains("console.log(message)"));
+    }
+
     @Test public void helloAndBlankAreDifferentAndPreserveFileType() throws Exception {
         ProjectStore store = new ProjectStore(folder.newFolder("modes"));
         store.createProject("HelloPython", "Python", StarterExamples.HELLO);

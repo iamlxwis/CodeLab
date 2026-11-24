@@ -240,3 +240,7 @@ New signed Java companion uses BeanShell; it cannot compile general Java classes
 ## Nov 24, 9:20 AM PHT — TS5047 transpileModule default option bug (source fix pending CI)
 
 [Android 15 45261469481](https://github.com/iamlxwis/CodeLab/actions/runs/45261469481) reached TypeScript launch, then `Exit 1` with official compiler TS5047 diagnostic: `isolatedModules` requires CommonJS/ES2015 module or ES2015+ target. Source changed from ModuleKind.None to ModuleKind.CommonJS while keeping ES5 output; verified standalone with the exact APK bundled TypeScript compiler. New CI/device regression pending. This does not provide CommonJS imports, Node APIs or project-wide TS type checks.
+
+## Nov 24, 9:39 AM PHT — TypeScript smoke expectation divergence (corrected; rerun pending)
+
+[API35 45304317096](https://github.com/iamlxwis/CodeLab/actions/runs/45304317096) has TypeScript engine real `Exit 0` and console `Hello from CodeLab!`; QA incorrectly expected `Hello, CodeLab!` from the different generic template. `ProjectStore.java` confirms the TypeScript beginner starter has a typed `const message: string` declaration. QA now checks that annotated source exists on the actual emulator before running, and expects the real output. Full Android15 suite and release remain pending on the next commit.

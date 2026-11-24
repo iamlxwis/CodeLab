@@ -391,8 +391,15 @@ def main():
     adb("shell", "input", "text", "TypeScriptSmoke")
     tap("Create project")
     wait_for("main.ts", contains=True)
+    # ProjectStore's Beginner template contains a real TypeScript type annotation;
+    # assert the exact on-device file before trusting the runtime output.
+    typed_source = adb("shell", "run-as", PACKAGE, "cat",
+                       "files/workspace/projects/TypeScriptSmoke/main.ts")
+    assert "const message: string" in typed_source, (
+        "TypeScript starter must contain a real type annotation")
+    (OUT / "typescript-starter.txt").write_text(typed_source)
     tap("Run")
-    wait_for("Hello, CodeLab!", contains=True, timeout=30)
+    wait_for("Hello from CodeLab!", contains=True, timeout=30)
     wait_for("Exit 0", contains=True)
     snapshot("11-typescript")
 
