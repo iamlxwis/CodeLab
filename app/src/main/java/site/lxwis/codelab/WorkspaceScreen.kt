@@ -101,7 +101,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var selectedSnippetLine by remember { mutableIntStateOf(1) }
     val focusMode = m.focusMode && m.project != null
     val explorerPinned = m.explorerPinned
-    var wideOutputExpanded by rememberSaveable { mutableStateOf(false) }
+    val wideOutputExpanded = m.outputMaximized
     val context = androidx.compose.ui.platform.LocalContext.current
     val tutorialPrefs = remember(context) {
         context.getSharedPreferences("first-run-guide", android.content.Context.MODE_PRIVATE)
@@ -114,7 +114,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     val keyboardEditing = WindowInsets.ime.getBottom(LocalDensity.current) > 0 &&
         !m.console && !m.preview
     val activity = context as? ComponentActivity
-    DisposableEffect(activity, focusMode) {
+    DisposableEffect(activity, focusMode, m.systemStatusVisible) {
         val window = activity?.window
         val previousFlags = window?.decorView?.systemUiVisibility ?: 0
         if (focusMode) {
@@ -128,6 +128,10 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
                     View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
             }
+        }
+        if (!focusMode && !m.systemStatusVisible) {
+            if (Build.VERSION.SDK_INT >= 30) window?.insetsController?.hide(PlatformWindowInsets.Type.statusBars())
+            else window?.decorView?.systemUiVisibility = previousFlags or View.SYSTEM_UI_FLAG_FULLSCREEN
         }
         onDispose {
             if (Build.VERSION.SDK_INT >= 30) {
@@ -158,7 +162,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         if (it != null) { incoming = it.toString(); dialog = "import" }
     }
     val p = m.project
-    LaunchedEffect(p) { wideOutputExpanded = false }
+    LaunchedEffect(m.project, m.console, m.preview, m.outputMaximized, m.busy) { m.rememberWorkspacePanels() }
     LaunchedEffect(m.active) {
         selectedSnippet = ""
         selectedSnippetLine = 1
@@ -203,6 +207,12 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 dialog = "languages"
             },
             onProjectSettings = { dialog = "projectsettings" })
+        if (p != null && !focusMode && !keyboardEditing) ContextualTip(
+            if (m.console) "console" else "workspace",
+            if (m.console) "Console controls" else "Workspace navigation",
+            if (m.console) "Filter errors or warnings, drag the divider to resize, or double-tap the console header to maximize."
+                else "Swipe the title or status strip to change files. Open Explorer to manage files; long-press tab handles for actions.",
+            onGuide = { showTutorial = true })
         if (p == null) {
             Box(Modifier.weight(1f)) { ProjectLibrary(m, motionMillis, { dialog = "newproject" },
                 { importZip.launch(arrayOf("*/*")) }, { dialog = "githubimport" },
@@ -240,6 +250,10 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 LazyRow(Modifier.weight(1f), state = tabScroll,
                     verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
+                        Box(Modifier.animateItem(
+                            fadeInSpec = if (motionMillis > 0) tween(motionMillis) else null,
+                            placementSpec = if (motionMillis > 0) tween(motionMillis) else null,
+                            fadeOutSpec = if (motionMillis > 0) tween(motionMillis) else null)) {
                         WorkspaceTab(path = path, active = m.active == path,
                             pinned = path in m.pinnedTabs,
                             dirty = m.isTabDirty(path),
@@ -255,6 +269,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             onCloseAll = { m.closeOtherTabs(null) },
                             onMove = { m.reorderTab(path, it) },
                             onReveal = { selected = path; dialog = "filereveal" })
+                        }
                     }
                 }
                 if (m.tabs.size > 1) OpenTabsMenu(m.tabs, m.active, m::select)
@@ -276,8 +291,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 }
                 val outputPane: @Composable (Modifier) -> Unit = { pane ->
                     if (m.console) RunConsole(m.runner, pane, m.active, m.files,
-                        onToggleMaximize = { if (wide) wideOutputExpanded = !wideOutputExpanded
-                            else m.choosePhoneSplitEnabled(!m.phoneSplitEnabled) },
+                        onToggleMaximize = { if (wide) m.chooseOutputMaximized(!wideOutputExpanded)
+                            else { m.chooseOutputMaximized(m.phoneSplitEnabled); m.choosePhoneSplitEnabled(!m.phoneSplitEnabled) } },
                         onNotice = { message ->
                             snackbarScope.launch { snackbarHost.showSnackbar(message) }
                         }, motionMillis = motionMillis) { path, line ->
@@ -370,7 +385,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }
             if (!focusMode && !keyboardEditing) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                PanelButton("Editor", !m.console && !m.preview, motionMillis) { wideOutputExpanded = false; m.console = false; m.preview = false }
+                PanelButton("Editor", !m.console && !m.preview, motionMillis) { m.chooseOutputMaximized(false); m.console = false; m.preview = false }
                 PanelButton("Console", m.console && (!m.phoneSplitEnabled || LocalConfiguration.current.screenWidthDp >= 820), motionMillis) {
                     m.choosePhoneSplitEnabled(false); m.console = true; m.preview = false
                 }
@@ -383,7 +398,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }
                 }
                 if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
-                    PanelButton("Preview", m.preview, motionMillis) { wideOutputExpanded = false; m.console = false; m.preview = true }
+                    PanelButton("Preview", m.preview, motionMillis) { m.chooseOutputMaximized(false); m.console = false; m.preview = true }
                 val languageLabel = when {
                     m.active?.endsWith(".js", true) == true -> "JavaScript"
                     m.active?.endsWith(".sql", true) == true -> "SQLite"
@@ -588,21 +603,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
-        "performance" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" },
-            title = { Text("Performance diagnostics") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("Last workspace I/O: " + m.lastOperationName)
-                    Text(m.lastOperationMillis.toString() + " ms", fontFamily = FontFamily.Monospace)
-                    Text("Last local save: " + m.lastSaveMillis + " ms",
-                        fontFamily = FontFamily.Monospace)
-                    Text("Editor buffer: " + m.source.toByteArray(Charsets.UTF_8).size + " bytes")
-                    Text("Project files: " + m.files.size)
-                    Text("Numbers are captured from actual local operations on this device. Not synthetic benchmarks.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
+        "performance" -> PerformancePanel(m) { dialog = "" }
         "panels" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" },
             title = { Text("Workspace panels") },
             text = {
@@ -633,6 +634,11 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = m.showEditorStatus, onCheckedChange = m::chooseEditorStatus)
                         Text("Show editor status bar")
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Show Android status bar", Modifier.weight(1f))
+                        Switch(m.systemStatusVisible, m::chooseSystemStatusVisible,
+                            modifier = Modifier.semantics { contentDescription = "Show Android status bar" })
                     }
                     TextButton(onClick = { dialog = "layoutpresets" }) { Text("Save or restore layouts") }
                 }

@@ -321,6 +321,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
                 else LogicalLines(sourceSnapshot)
                 updateGutterWidth()
                 if (ready) refreshBracket()
+                if (!syncing && changed != null) PerformanceRecorder.recordEditFrame()
                 if (!syncing) changed?.invoke(sourceSnapshot)
                 // Editable moves existing spans as users edit. Changes *after* our
                 // viewport window cannot affect tokens already painted there.

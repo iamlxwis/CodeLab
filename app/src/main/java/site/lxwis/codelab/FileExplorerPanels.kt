@@ -115,6 +115,7 @@ internal fun FileExplorerSheet(
                 ReimaginedSheetSizeButton(state)
                 IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Close explorer") }
             }
+            ContextualTip("files", "Manage project files", "Expand folders, search by path, or open a file menu to rename, move or remove it. Use the create controls for new files and folders.")
             CodeLabSearch(search, { search = it }, "Search files")
             LazyColumn(Modifier.fillMaxWidth().weight(1f),
                 verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -144,7 +145,7 @@ internal fun FileExplorerSheet(
                                 CodeLabDropdownMenu(expanded = menuFor == folder, onDismissRequest = { menuFor = null }) {
                                     DropdownMenuItem(text = { Text("Rename / move") },
                                         onClick = { menuFor = null; onRenameFolder(folder) })
-                                    DropdownMenuItem(text = { Text("Move to trash") },
+                                    DropdownMenuItem(text = { Text("Move to trash", color = MaterialTheme.colorScheme.error) },
                                         onClick = { menuFor = null; onDeleteFolder(folder) })
                                 }
                             }
@@ -201,7 +202,7 @@ internal fun ProjectSearchDialog(m: WorkspaceModel, onDismiss: () -> Unit,
     var folder by rememberSaveable { mutableStateOf("") }
     var kind by remember { mutableStateOf<ProjectFileKind?>(null) }
     val grouped = m.searchHits.groupBy { it.path }
-    CodeLabAlertDialog(onDismissRequest = onDismiss, title = { Text("Search project") },
+    CodeLabToolDialog(onDismissRequest = onDismiss, title = { Text("Search project") },
         text = {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(query, { query = it; m.clearSearchHits() },
@@ -259,7 +260,7 @@ internal fun TrashDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
         confirmButton = { TextButton(onClick = { m.emptyTrash(); confirmEmpty = false }) {
             Text("Delete permanently", color = MaterialTheme.colorScheme.error)
         } }, dismissButton = { TextButton(onClick = { confirmEmpty = false }) { Text("Cancel") } })
-    CodeLabAlertDialog(onDismissRequest = onDismiss, title = { Text("Recently deleted") },
+    CodeLabToolDialog(onDismissRequest = onDismiss, title = { Text("Recently deleted") },
         text = {
             Column {
                 Text("Deleted projects and files remain on this device until emptied.",
@@ -302,7 +303,7 @@ internal fun FileHistoryDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
             restoreId = null
         }) { Text("Restore") } },
         dismissButton = { TextButton(onClick = { restoreId = null }) { Text("Cancel") } })
-    CodeLabAlertDialog(onDismissRequest = onDismiss,
+    CodeLabToolDialog(onDismissRequest = onDismiss,
         title = { Text("File history") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -383,7 +384,7 @@ internal fun ProjectReplaceDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
             onDismiss()
         }) { Text("Replace all") } },
         dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } })
-    CodeLabAlertDialog(onDismissRequest = onDismiss,
+    CodeLabToolDialog(onDismissRequest = onDismiss,
         title = { Text("Replace across project") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()),

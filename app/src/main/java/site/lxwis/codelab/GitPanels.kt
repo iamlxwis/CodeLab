@@ -89,7 +89,7 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
             remoteInput = state.remoteUrl.removePrefix("https://github.com/").removeSuffix(".git")
         }
     }
-    CodeLabAlertDialog(onDismissRequest = dismiss,
+    CodeLabToolDialog(onDismissRequest = dismiss,
         title = { Text("Git · local history") },
         text = {
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),

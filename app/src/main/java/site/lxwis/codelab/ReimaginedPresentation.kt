@@ -12,6 +12,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -49,6 +51,7 @@ private fun modalEntrance(): Modifier {
 internal fun CodeLabDialog(onDismissRequest: () -> Unit,
     properties: DialogProperties = DialogProperties(), content: @Composable () -> Unit) {
     androidx.compose.ui.window.Dialog(onDismissRequest, properties = properties) {
+        ConfigureModalWindow()
         Box(modalEntrance(), propagateMinConstraints = true) { content() }
     }
 }
@@ -65,9 +68,11 @@ internal fun CodeLabAlertDialog(
     textContentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
     tonalElevation: Dp = 0.dp, properties: DialogProperties = DialogProperties()
 ) {
+    val decoratedTitle: (@Composable () -> Unit)? = if (title == null) null else ({ ConfigureModalWindow(); title() })
+    val decoratedText: (@Composable () -> Unit)? = if (text == null) null else ({ ConfigureModalWindow(); text() })
     androidx.compose.material3.AlertDialog(onDismissRequest, confirmButton,
         modifier = modifier.then(modalEntrance()), dismissButton = dismissButton,
-        icon = icon, title = title, text = text, shape = shape, containerColor = containerColor,
+        icon = icon, title = decoratedTitle, text = decoratedText, shape = shape, containerColor = containerColor,
         iconContentColor = iconContentColor, titleContentColor = titleContentColor,
         textContentColor = textContentColor, tonalElevation = tonalElevation, properties = properties)
 }
@@ -107,7 +112,7 @@ internal fun CodeLabDropdownMenu(
         AnimatedVisibility(visible, enter = fadeIn(tween(motion.millis(120))) +
             scaleIn(tween(motion.millis(150)), initialScale = .96f, transformOrigin = TransformOrigin(1f, 0f)),
             exit = fadeOut(tween(motion.millis(90)))) {
-            Surface(modifier.widthIn(min = 112.dp, max = (configuration.screenWidthDp.dp - 24.dp).coerceAtMost(320.dp))
+            Surface(modifier.widthIn(min = 112.dp, max = (configuration.screenWidthDp.dp - 24.dp).coerceIn(112.dp, 320.dp))
                 .semantics { paneTitle = "Context actions" }
                 .onPreviewKeyEvent { event ->
                     if (event.type != KeyEventType.KeyDown) false else when (event.key) {
@@ -122,6 +127,54 @@ internal fun CodeLabDropdownMenu(
                     .width(IntrinsicSize.Max).verticalScroll(scrollState).focusGroup().padding(vertical = 6.dp),
                     content = content)
             }
+        }
+    }
+}
+
+/** Full pages for substantial tools; confirmations continue to use centered alerts. */
+@Composable
+internal fun CodeLabToolDialog(onDismissRequest: () -> Unit, confirmButton: @Composable () -> Unit,
+    title: (@Composable () -> Unit)? = null, text: (@Composable () -> Unit)? = null,
+    dismissButton: (@Composable () -> Unit)? = null, modifier: Modifier = Modifier) {
+    CodeLabDialog(onDismissRequest, DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        Surface(modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding().padding(horizontal = 16.dp)) {
+                Row(Modifier.fillMaxWidth().heightIn(min = 56.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    IconButton(onClick = onDismissRequest) {
+                        Icon(androidx.compose.material.icons.Icons.Default.ArrowBack, "Close tool")
+                    }
+                    Box(Modifier.weight(1f)) { ProvideTextStyle(MaterialTheme.typography.headlineSmall) { title?.invoke() } }
+                }
+                HorizontalDivider()
+                Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = 12.dp)) { text?.invoke() }
+                HorizontalDivider()
+                Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.End) {
+                    dismissButton?.invoke()
+                    confirmButton()
+                }
+            }
+        }
+    }
+}
+
+internal val LocalModalStatusVisible = staticCompositionLocalOf { true }
+
+@Composable
+private fun ConfigureModalWindow() {
+    val view = androidx.compose.ui.platform.LocalView.current
+    val window = (view.parent as? DialogWindowProvider)?.window
+    val light = MaterialTheme.colorScheme.background.luminance() > .179f
+    val motion = workspaceMotion()
+    val statusVisible = LocalModalStatusVisible.current
+    SideEffect {
+        if (window != null) {
+            androidx.core.view.WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = light
+                isAppearanceLightNavigationBars = light
+                if (statusVisible) show(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+                else hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+            }
+            if (motion.millis(180) == 0) window.setWindowAnimations(0)
         }
     }
 }

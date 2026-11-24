@@ -153,6 +153,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                     Icon(Icons.Default.Close, contentDescription = "Close languages")
                 }
             }
+            ContextualTip("runtime-packs", "Offline runtime packs", "Open a language for verified availability and download requirements. Android confirms installation; online execution still needs source-upload approval.")
             CodeLabSearch(search, { search = it; if (it.isNotBlank()) filter = "All" }, "Search languages")
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Available", "Installed", "All").forEach { option ->
@@ -352,7 +353,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     }
     inspected?.let { language ->
         val engine = OfflineRuntimeRegistry.manifest(language.extension)
-        CodeLabAlertDialog(onDismissRequest = { inspected = null },
+        CodeLabToolDialog(onDismissRequest = { inspected = null },
             title = { Text(language.name + " runtime") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

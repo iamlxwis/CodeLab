@@ -4,7 +4,7 @@ Updated Nov 24, 2026, 9:00:54 PM PHT. **ACTIVE — implementation first; testing
 
 ## Current priority
 
-Owner now requires completing the approved source implementation BEFORE any testing/build wait. Four of eight audited source gaps implemented: shared presentations, native preview, typography sizing, coding accessory ordering. Next four: layouts/system bars, contextual guidance, loading/accessibility polish, opt-in performance instrumentation. Use [skip ci] commits during this pass; keep workflow and release safeguards unchanged. Do not claim these new changes are tested.
+Owner now requires completing the approved source implementation BEFORE any testing/build wait. All eight audited source gaps are now implemented: shared presentations, native preview, typography sizing, coding accessory ordering, complete layouts/system bars, contextual guidance, loading/accessibility polish and opt-in performance instrumentation. Final per-decision source coverage record is next; builds/tests remain deferred. Use [skip ci] commits during this pass; keep workflow and release safeguards unchanged. Do not claim these new changes are tested.
 
 ## Approved scope
 
@@ -66,3 +66,10 @@ Owner explicitly deferred testing until the 37-decision implementation is finish
 ### Source checkpoint — Nov 24, 2026, 9:00:54 PM PHT
 
 Implementation-only, tests/build deferred by owner. Closed 4/8 source gaps: application motion supplied to all modal/alert/anchored-menu entry points with keyboard navigation; native SourceView editor in Theme Studio preview; independent UI scale/editor size encoded into theme recipes and consumed by real UI/editor including pinch and Settings changes; accessible reorder controls for custom coding accessory symbols with saved order. Next: complete layouts and system bars, contextual guidance, loading/accessibility polish and real opt-in performance instrumentation. Existing workflows/release gates untouched; no verified-result claim for this source.
+
+
+### Source completion checkpoint — Nov 24, 2026, 9:12:27 PM PHT
+
+Implementation-only: 8/8 audited source gaps now implemented, without running builds/tests. Full layout profiles retain output selection/maximization, Android/editor status bars, focus, panel sizes, toolbar and coding accessory preferences, with legacy nullable-field compatibility and live keyboard updates. Contextual discovery for workspace/console/files/themes/runtimes is dismissible, persistent, globally optional and replayable. Substantial Git/search/history/trash/layout/toolbar/language-detail screens now use full tool pages; destructive confirmations stay centered, choices stay in anchored animated menus. Skeleton/search/tab/icon motion and larger-font status layout use the shared motion policy. Modal window icons and status-bar visibility follow actual app appearance.
+
+Opt-in performance instrumentation records actual activity-first-draw, edit/action-to-next-frame callbacks, main-window frame durations/refresh-budget overruns and editor-process PSS. It is bounded to 512 samples, runs only while foreground and enabled, stores no source and sends nothing. No performance result or speedup is claimed before later measurement. First four source gaps (native preview, typography, shared motion and shortcut ordering) were committed in 16556e4. Next: complete per-decision source coverage record and handoff with testing deferred per owner; no new APK is represented as built. Workflows, runtime architecture and release safeguards unchanged.

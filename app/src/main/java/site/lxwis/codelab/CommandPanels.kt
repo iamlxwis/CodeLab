@@ -17,7 +17,7 @@ internal fun CommandPaletteDialog(m: WorkspaceModel, dismiss: () -> Unit,
     execute: (String) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
     val choices = rankWorkspaceCommands(query, workspaceCommandCatalog, m.recentCommandIds)
-    CodeLabAlertDialog(onDismissRequest = dismiss, title = { Text("Command palette") },
+    CodeLabToolDialog(onDismissRequest = dismiss, title = { Text("Command palette") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 OutlinedTextField(query, { query = it },

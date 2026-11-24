@@ -71,7 +71,7 @@ internal fun EditorStatusBar(
     val previous by rememberUpdatedState(onPreviousTab)
     val next by rememberUpdatedState(onNextTab)
     val threshold = with(androidx.compose.ui.platform.LocalDensity.current) { 56.dp.toPx() }
-    Row(Modifier.fillMaxWidth().height(38.dp)
+    Row(Modifier.fillMaxWidth().heightIn(min = 38.dp)
         .pointerInput(fileKey, threshold) {
             detectHorizontalDragGestures(onDragStart = { tabSwipe = 0f },
                 onDragEnd = {
@@ -86,12 +86,13 @@ internal fun EditorStatusBar(
         .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(status.label + " · " + status.lineCount + " lines",
+        Text(status.label + " · " + status.lineCount + " lines", Modifier.weight(1f), maxLines = 2,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text((if (readOnly) "READ ONLY · " else "") +
             (if (wordWrap) "Wrap · " else "") + "UTF-8 · " +
-            filename.substringAfterLast('.', "text").uppercase(),
+            filename.substringAfterLast('.', "text").uppercase(), Modifier.weight(1f), maxLines = 2,
+            textAlign = androidx.compose.ui.text.style.TextAlign.End,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }

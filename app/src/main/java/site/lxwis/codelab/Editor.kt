@@ -177,6 +177,10 @@ fun CodeEditor(
                 "indent-tabs" -> useTabs = preferences.getBoolean(key, false)
                 "symbol-toolbar" -> symbols = preferences.getBoolean(key, true)
                 "shortcut-layout" -> shortcutLayout = preferences.getString(key, "Standard") ?: "Standard"
+                "custom-shortcuts" -> {
+                    customShortcuts = preferences.getString(key, "")?.split(" ")?.filter { it in availableShortcuts }?.distinct() ?: emptyList()
+                    if (!customizeShortcuts) draftShortcuts = customShortcuts
+                }
                 "keyboard-only-symbols" -> keyboardOnlySymbols = preferences.getBoolean(key, false)
                 "auto-hide-hardware-toolbar" -> hideToolbarOnHardware = preferences.getBoolean(key, false)
             }

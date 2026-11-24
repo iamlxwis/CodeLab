@@ -55,11 +55,16 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                         val matches = settingsDestinations.filter { it.name.contains(query, true) || it.detail.contains(query, true) }
                         if (matches.isEmpty()) item { Text("No matching settings", style = MaterialTheme.typography.bodyMedium) }
                         items(matches, key = { it.id }) { row ->
+                            Box(Modifier.animateItem(
+                                fadeInSpec = if (workspaceMotion().millis(140) > 0) androidx.compose.animation.core.tween(workspaceMotion().millis(140)) else null,
+                                placementSpec = if (workspaceMotion().millis(140) > 0) androidx.compose.animation.core.tween(workspaceMotion().millis(140)) else null,
+                                fadeOutSpec = if (workspaceMotion().millis(140) > 0) androidx.compose.animation.core.tween(workspaceMotion().millis(140)) else null)) {
                             SettingsLink(row.name, row.detail, row.icon) {
                                 when (row.id) {
                                     "appearance", "studio", "languages" -> onAction(row.id)
                                     else -> page = row.id
                                 }
+                            }
                             }
                         }
                     } else item {
@@ -98,13 +103,14 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                                     Text("Optional runtime packs use Android package installation and signature verification. Downloads never grant permission to upload projects.")
                                 }
                                 "help" -> {
+                                    FeatureDiscoverySettings()
                                     Text("CodeLab — Reimagined", style = MaterialTheme.typography.titleLarge)
                                     val context = androidx.compose.ui.platform.LocalContext.current
                                     val version = remember(context) { context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty() }
                                     Text("Version " + version, style = MaterialTheme.typography.bodySmall)
                                     SettingsLink("Quick start guide", "Replay practical lessons and try real features", Icons.Default.School) { onAction("tutorial") }
                                     SettingsLink("Accessibility", "Contrast, interface text and touch feedback", Icons.Default.AccessibilityNew) { onAction("accessibility") }
-                                    if (m.project != null) SettingsLink("Performance diagnostics", "Actual local save and workspace timings", Icons.Default.Speed) { onAction("performance") }
+                                    SettingsLink("Performance diagnostics", "Actual local save and workspace timings", Icons.Default.Speed) { onAction("performance") }
                                     SettingsLink("Licenses & acknowledgements", "Bundled font, icon and runtime notices", Icons.Default.Description) { onAction("licenses") }
                                     Text("Inter and JetBrains Mono use the SIL Open Font License. Third-party runtime notices are included with the app.", style = MaterialTheme.typography.bodySmall)
                                 }
@@ -216,7 +222,7 @@ private fun EditorPreferenceControls(keyboard: Boolean) {
 internal fun WorkspaceLayoutPresets(m: WorkspaceModel, close: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var notice by remember { mutableStateOf("") }
-    CodeLabAlertDialog(onDismissRequest = close, title = { Text("Workspace layouts") }, text = {
+    CodeLabToolDialog(onDismissRequest = close, title = { Text("Workspace layouts") }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(name, { name = it.take(64) }, label = { Text("Layout name") }, singleLine = true)
             Button(enabled = name.isNotBlank(), onClick = {

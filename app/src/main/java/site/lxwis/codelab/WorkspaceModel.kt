@@ -91,15 +91,54 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         preferences.edit().putBoolean("focus-mode", value).apply()
         rememberProjectLayout()
     }
+    var systemStatusVisible by mutableStateOf(preferences.getBoolean("system-status-visible", true))
+        private set
+    fun chooseSystemStatusVisible(value: Boolean) {
+        systemStatusVisible = value
+        preferences.edit().putBoolean("system-status-visible", value).apply()
+        rememberProjectLayout()
+    }
+    var outputMaximized by mutableStateOf(false)
+        private set
+    fun chooseOutputMaximized(value: Boolean) { outputMaximized = value; rememberProjectLayout() }
+    private var restoringLayout = false
+    private var desiredOutput: String? = null
+    internal fun rememberWorkspacePanels() {
+        if (!busy && active != null) rememberProjectLayout()
+    }
+    private fun restoreDesiredOutput() {
+        val mode = desiredOutput ?: return
+        desiredOutput = null
+        console = mode == "Console"
+        preview = mode == "Preview" && (active?.endsWith(".html", true) == true || active?.endsWith(".htm", true) == true)
+    }
+    private val keyboardLayoutListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key in setOf("shortcut-layout", "custom-shortcuts", "symbol-toolbar", "keyboard-only-symbols") && !restoringLayout)
+            rememberProjectLayout()
+    }
     internal var savedWorkspaceLayouts by mutableStateOf(WorkspaceLayout.decode(preferences.getString("workspace-layouts", null)))
         private set
     private fun currentLayout(name: String) = WorkspaceLayout(name, phoneSplitEnabled, phoneSplitPercent,
-        panelSplitPercent, showEditorStatus, interfaceDensity, quickEditorActions, editorToolbarIds, explorerPinned, focusMode)
+        panelSplitPercent, showEditorStatus, interfaceDensity, quickEditorActions, editorToolbarIds, explorerPinned, focusMode,
+        systemStatusVisible, if (console) "Console" else if (preview) "Preview" else "Editor", outputMaximized,
+        editorPreferences.getString("shortcut-layout", "Standard"), editorPreferences.getString("custom-shortcuts", "Tab { } ( ) ;"),
+        editorPreferences.getBoolean("symbol-toolbar", true), editorPreferences.getBoolean("keyboard-only-symbols", false))
     private fun rememberProjectLayout() {
+        if (restoringLayout) return
         val name = project ?: return
         preferences.edit().putString("project-layout:$name", currentLayout(name).json().toString()).apply()
     }
     private fun applyWorkspaceLayout(value: WorkspaceLayout) {
+        restoringLayout = true
+        value.systemStatus?.let { systemStatusVisible = it; preferences.edit().putBoolean("system-status-visible", it).apply() }
+        value.maximized?.let { outputMaximized = it }
+        desiredOutput = value.output
+        val keyboard = editorPreferences.edit()
+        value.keyboardLayout?.let { keyboard.putString("shortcut-layout", it) }
+        value.keyboardSymbols?.let { keyboard.putString("custom-shortcuts", it) }
+        value.accessory?.let { keyboard.putBoolean("symbol-toolbar", it) }
+        value.keyboardOnly?.let { keyboard.putBoolean("keyboard-only-symbols", it) }
+        keyboard.apply()
         phoneSplitEnabled = value.phoneSplit
         phoneSplitPercent = value.phonePercent
         panelSplitPercent = value.tabletPercent
@@ -119,6 +158,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             .putInt("phone-split-percent", value.phonePercent).putInt("panel-split", value.tabletPercent)
             .putBoolean("show-editor-status", value.status).putString("density", value.density)
             .putString("quick-editor", value.actions.joinToString(",")).apply()
+        restoringLayout = false
     }
     private fun loadProjectLayout(name: String) {
         val raw = preferences.getString("project-layout:$name", null) ?: return
@@ -133,7 +173,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         return true
     }
     internal fun restoreNamedLayout(name: String) {
-        savedWorkspaceLayouts.firstOrNull { it.name == name }?.let { applyWorkspaceLayout(it); rememberProjectLayout() }
+        savedWorkspaceLayouts.firstOrNull { it.name == name }?.let { applyWorkspaceLayout(it); restoreDesiredOutput(); rememberProjectLayout() }
     }
     internal fun deleteNamedLayout(name: String) {
         savedWorkspaceLayouts = savedWorkspaceLayouts.filterNot { it.name == name }
@@ -895,6 +935,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     init {
+        editorPreferences.registerOnSharedPreferenceChangeListener(keyboardLayoutListener)
         updateNetwork()
         try { connectivity.registerDefaultNetworkCallback(connectivityCallback) }
         catch (_: Exception) { cloudError = "Unable to monitor internet connection" }
@@ -965,6 +1006,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         dirty = keepEdits
         if (key != null) openBuffers[key] = source
         preview = false
+        restoreDesiredOutput()
         revision++
     }
 
@@ -1086,6 +1128,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                     runner.stop()
                     console = false
                     apply(opened)
+                    restoreDesiredOutput()
                 }
             }
             commit
@@ -1635,6 +1678,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         cloudIo.shutdownNow()
         try { connectivity.unregisterNetworkCallback(connectivityCallback) } catch (_: Exception) {}
         runner.close()
+        editorPreferences.unregisterOnSharedPreferenceChangeListener(keyboardLayoutListener)
         super.onCleared()
     }
 }

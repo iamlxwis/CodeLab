@@ -21,7 +21,9 @@ import androidx.lifecycle.ViewModelProvider
 class MainActivity : ComponentActivity() {
     private lateinit var model: WorkspaceModel
     override fun onCreate(savedInstanceState: Bundle?) {
+        val launchStarted = android.os.SystemClock.elapsedRealtimeNanos()
         super.onCreate(savedInstanceState)
+        PerformanceRecorder.beginLaunch(this, launchStarted)
         model = ViewModelProvider(this)[WorkspaceModel::class.java]
         // Transparent system bars; content still accounts for safeDrawing and IME insets.
         enableEdgeToEdge()
@@ -48,7 +50,8 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 CompositionLocalProvider(LocalWorkspaceMotion provides motion,
-                    LocalStudioAppearanceUpdater provides { value -> model.updateStudioAppearance(value) }) {
+                    LocalStudioAppearanceUpdater provides { value -> model.updateStudioAppearance(value) },
+                    LocalModalStatusVisible provides (model.systemStatusVisible && !(model.focusMode && model.project != null))) {
                 CodeLabBackdrop(model.visualStyle, dark, motion.millis(300)) {
                     CodeLabForegroundSurface(Modifier.fillMaxSize().graphicsLayer { alpha = entrance.value }) {
                         Studio(model, Modifier.windowInsetsPadding(WindowInsets.safeDrawing).imePadding())
@@ -58,12 +61,17 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    override fun onStart() {
+        super.onStart()
+        PerformanceRecorder.onStart(this)
+    }
     override fun onPause() {
         model.flush()
         super.onPause()
     }
 
     override fun onStop() {
+        PerformanceRecorder.onStop()
         if (model.dirty) model.flush()
         super.onStop()
     }

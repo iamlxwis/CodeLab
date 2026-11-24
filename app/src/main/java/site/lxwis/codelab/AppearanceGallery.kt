@@ -467,7 +467,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
                     m.deleteAppearanceRecipe(id)
                     if (editingId == id) { editingId = null; recipeName = "" }
                     pendingDelete = null
-                }) { Text("Delete") }
+                }) { Text("Delete", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { pendingDelete = null }) { Text("Cancel") }

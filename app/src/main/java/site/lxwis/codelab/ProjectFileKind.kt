@@ -5,6 +5,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.Modifier
 import java.util.Locale
 
@@ -33,6 +36,8 @@ internal fun projectFileKind(path: String): ProjectFileKind {
 @Composable
 internal fun FileTypeIcon(path: String, modifier: Modifier = Modifier, selected: Boolean = false) {
     val extension = path.substringAfterLast('/').substringAfterLast('.', "").lowercase(Locale.ROOT)
+    val iconTint by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary
+        else MaterialTheme.colorScheme.onSurfaceVariant, tween(workspaceMotion().millis(140)), label = "file-icon-state")
     val logo = when (extension) {
         "js", "jsx", "mjs", "cjs" -> R.drawable.ic_lang_javascript
         "ts", "tsx" -> R.drawable.ic_lang_typescript
@@ -58,8 +63,7 @@ internal fun FileTypeIcon(path: String, modifier: Modifier = Modifier, selected:
     if (logo != null) {
         // Monochrome glyphs inherit the readable theme foreground; active tabs use accent.
         Icon(androidx.compose.ui.res.painterResource(logo), contentDescription = null,
-            modifier = modifier, tint = if (selected) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant)
+            modifier = modifier, tint = iconTint)
         return
     }
     val icon = when (projectFileKind(path)) {
@@ -75,7 +79,6 @@ internal fun FileTypeIcon(path: String, modifier: Modifier = Modifier, selected:
         imageVector = icon,
         contentDescription = null,
         modifier = modifier,
-        tint = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant
+        tint = iconTint
     )
 }

@@ -48,6 +48,7 @@ internal fun StudioAppearanceControls(m: WorkspaceModel, initiallyOpen: Boolean 
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Theme Studio", style = MaterialTheme.typography.titleLarge)
+        ContextualTip("theme-studio", "Customize your workspace", "Edit the real code sample, choose component colors and typography, then save a named theme below. Existing themes can be renamed, duplicated and exported.")
         StudioLivePreview(m)
         ThemeColor("Accent", studioColor(m.accent, MaterialTheme.colorScheme.primary)) { m.chooseAccent(it) }
         TextButton(onClick = { open = !open }) { Text(if (open) "Hide customization" else "Customize theme") }
