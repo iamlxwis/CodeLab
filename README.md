@@ -27,16 +27,16 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **ACTIVE — implementation first; testing deferred by owner** |
-| Session source checks | **5/5 implementation batches passed Android CI**; build evidence is separate from device acceptance |
-| Implementation queue | **8/8 audited source gaps implemented; testing deferred**; all 37 decisions mapped in the ledger |
+| Status | **SOURCE PASS COMMITTED — testing deferred by owner** |
+| Current-pass checks | **Not run** — no build, tests or device smoke in this implementation-first pass |
+| Source coverage | **37/37 decisions mapped; 8/8 audited implementation gaps addressed** — validation is separate |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [03ef032 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) · [APK artifact](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920947097) |
-| Next to build | Source-wide completion review against all 37 decisions; compile/error and device checks deferred until after implementation |
-| Last activity | Nov 24, 2026, 9:12:27 PM PHT |
+| Latest verified build | [03ef032 — earlier baseline](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404); does **not** include the new implementation pass |
+| Next to build | Deferred cumulative build/error checks, then visual, runtime, persistence, accessibility and performance validation |
+| Last activity | Nov 24, 2026, 9:16:04 PM PHT |
 
-**Current activity:** Nov 24, 2026, 9:12:27 PM PHT — Remaining layouts, contextual guidance, loading/accessibility polish and opt-in performance recording implemented; all eight source gaps closed, testing remains deferred.
+**Current activity:** Nov 24, 2026, 9:16:04 PM PHT — SESSION STOPPED: implementation-first source pass committed at 2fded2e; all eight audited source gaps addressed across the 37-decision ledger, with builds/tests deferred.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

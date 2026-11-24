@@ -4,8 +4,52 @@ Owner approved one comprehensive update, without numbered development phases. Th
 
 **Approved contract:** [All 37 decisions and associated requirements](REIMAGINED_SPEC.md).
 **Latest verified source:** [03ef032](https://github.com/iamlxwis/CodeLab/commit/03ef0325cf68de989add4622796bc9c0450191e3), [CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) — success; [APK artifact](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920947097).
-**Current source:** `03ef0325cf68de989add4622796bc9c0450191e3`; cumulative source CI passed. Session stopped at Nov 24, 2026, 8:44:57 PM PHT.
-**Acceptance:** **0/37 fully accepted**; API35 and physical acceptance for this redesign remain unverified. Historical 0/10 workstreams are an earlier grouping, not the decision denominator.
+**Current source:** [2fded2e](https://github.com/iamlxwis/CodeLab/commit/2fded2e4e36dd27b7f1fb70b102e64ff580dadbd); latest implementation-first pass is unbuilt and untested by owner instruction.
+**Current order:** source implementation first; testing/acceptance deferred. Prior baseline CI is historical and does not verify the new source.
+
+## Current 37-decision source coverage
+
+Every decision has a source implementation or retained QA/delivery infrastructure below. This is an implementation checkpoint, **not a claim that all associated behavior is verified**. The owner explicitly requires implementation before testing. Decisions 20 and 36 include execution/acceptance requirements deferred by that instruction; decision 29 measurements need later real usage. No new build, test, screenshot or APK result is claimed for this pass.
+
+| Decision | Approved choice | Source implementation / infrastructure |
+| --- | --- | --- |
+| 01 | Apple Pro + Liquid Glass | CodeLabTheme, neutral CodeLabBackdrop, shared themed presentation and adaptive workspace |
+| 02 | Complete Theme Studio | Theme presets, live native editor preview, component overrides, save/rename/duplicate/import/export |
+| 03 | Replace old theme presentation | CodeLabVisualStyles canonical presets and legacy preference aliases; additive JSON fields |
+| 04 | Adaptive navigation | HomeNavigation, compact editor controls, explorer sheet, responsive wide workspace and tool pages |
+| 05 | Apple Fluid | Shared LocalWorkspaceMotion, interruptible modal entrances, custom anchored-menu transitions and keyboard navigation |
+| 06 | Six presets and unlimited custom themes | Exact approved base colors; uncapped recipes and stable lazy saved-theme rows |
+| 07 | Adaptive dashboard | ProjectLibraryScreen list/grid, favorites/recent metadata, icons, sorting, search and row actions |
+| 08 | Adaptive editor | Keyboard-aware WorkspaceEditorPane, customizable pinned toolbar and source-first focus layout |
+| 09 | Quick and guided creation | GuidedProjectSheet modes, language/template preview, verified runtime labels and explicit execution mode |
+| 10 | CodeLab monogram | Launcher/splash vector assets, native animated mark and coordinated app entrance |
+| 11 | All 12 Theme Studio capabilities | RGB/HEX/HSL, component/material/syntax controls, fonts/sizes, real editable SourceView preview, JSON and system mode |
+| 12 | Motion and subtle haptics | Configurable native touch feedback and system/app reduced-motion-aware custom animation policy |
+| 13 | Developer console | RunConsole status, severity/text filters, warning/error styling, resizing, expansion, copy/export/history |
+| 14 | Expandable file explorer | Nested folders via explorerRows, active-file reveal, search, create/actions and expandable native sheet |
+| 15 | Nine Settings groups | ReimaginedSettings searchable destinations and dedicated configuration/tool pages |
+| 16 | Adaptive onboarding | FirstRunTutorial, real isolated-runtime InteractiveCodeLesson and persistent dismissible/replayable contextual tips |
+| 17 | All eight gestures | SourceView pinch; editor/title swipe; explorer reveal; project swipe; tab drag/menus; panel resize; console double-tap; alternatives retained |
+| 18 | Explicit adaptive execution | RunModeStrip/RunTargetMenu, verified companion snapshots, explicit creation mode and OnlineRunConfirmation |
+| 19 | Adaptive glass | Native backdrop approximation, manual quality, transparency/blur/edges/shadows and battery/low-RAM fallback |
+| 20 | Strict visual QA infrastructure | Existing screenshot/device/accessibility/font/motion scripts retained; execution deferred by owner |
+| 21 | Custom typography | Licensed Inter/JetBrains Mono, independent custom imports and saved UI/editor sizes consumed by real views |
+| 22 | Contextual professional icons | 19 licensed language-logo vectors, rounded app icons, animated selected tint and accessible surrounding labels |
+| 23 | Language pack library | LanguageManager search/filter/details, actual signed-pack states, install/download controls and progress |
+| 24 | Contextual presentation | Full pages for substantial tools, centered confirmations, expandable action sheets and real anchored animated menus |
+| 25 | All nine workspace controls | WorkspaceLayout stores toolbar/pins/density/proportions/focus/editor+system status/output/maximize/coding-accessory preferences per project/named layout |
+| 26 | Motion customization | Reduced/Standard/Fluid; persisted speed/spring/intensity/transitions, glass and haptic controls; system reduction precedence |
+| 27 | Accessibility implementation | Semantic loading/selection/control descriptions, popup arrow/Escape navigation, large-text status sizing and gesture alternatives |
+| 28 | Obsidian default | Pure black #000000 default with changeable saved presets |
+| 29 | Adaptive performance instrumentation | Incremental editor work, bounded lazy lists, adaptive glass and opt-in foreground-only real frame/input/launch/PSS recorder |
+| 30 | Preserve functionality and data | Existing tools/engines/projects/security retained; preference/layout JSON additions preserve legacy values |
+| 31 | Files-style import/export | ImportReviewDialog/DocumentPreview/ExportReviewDialog with guarded copies, conflicts and actual progress/notifications |
+| 32 | Animated splash | Native animated monogram, app entrance and reduced-motion custom-transition behavior; no artificial wait |
+| 33 | All 12 editor enhancements | Native gutter/active line/indent/brackets/syntax/selection, logos, reorderable keyboard accessory, animated tabs, dirty/cursor/IME status |
+| 34 | All 12 app polish enhancements | Shared page/alert/menu layer, animated skeleton/search/icon/tab changes, empty states, destructive styles and adaptive system bars |
+| 35 | Continuous tracking | One README current activity, PHT AM/PM timestamps, separate history, source-vs-validation ledger and current continuation memory |
+| 36 | Quality and APK delivery configuration | Existing build/signing/release/device gates retained; new-source build, error checks and installable APK execution deferred |
+| 37 | CodeLab — Reimagined | One comprehensive update; canonical approved contract and persistent source implementation ledger |
 
 | Workstream | Source changes | Unfinished / verification |
 | --- | --- | --- |
@@ -22,7 +66,7 @@ Owner approved one comprehensive update, without numbered development phases. Th
 
 ## Continuation
 
-1. Cumulative CI passed at 03ef032 (run 45395252404); exact artifacts are linked above. Proceed to manual API35 and visual/functional acceptance instead of rebuilding completed source unnecessarily.
+1. Resume latest source 2fded2e. The eight audited implementation gaps are addressed. Next is the deferred compile/error-check and quality pass; do not restart implementation from old CI baseline 03ef032.
 2. Keep the existing production signing, six optional runtime packs, explicit online upload approval, and source-only CI with cancel-in-progress. Do not change unrelated IDE features.
 3. Finish the open items above; audit all screens against the owner-approved Reimagined specification, including all 37 design decisions and the editor/application polish lists.
 4. Run Android 15/API35 device smoke manually on the same implementation source when appropriate; inspect rendered screens, test data-preserving upgrade, runtime and editor regressions, and record measured performance instead of inventing it.
@@ -90,7 +134,7 @@ Source implementation: nine approved Settings destinations, searchable navigatio
 Device blocker: connector has no workflow-dispatch operation, gh is unauthenticated, and the fallback GitHub browser is signed out. No workflow configuration or release safeguards changed. Next: inspect exact-source CI, fix failures, complete language icon/onboarding gaps and obtain API35 visual/runtime/performance evidence. Physical acceptance remains with owner.
 
 
-## Authoritative 37-decision source audit
+## Historical 37-decision source audit (superseded by current source coverage)
 
 The full owner specification was supplied in the current session. This matrix supersedes earlier statements that decision labels were unavailable. **Source** means inspected implementation exists; **Partial** means a known source gap remains; **Unverified** means acceptance evidence is missing. No decision is fully accepted on the redesigned app yet (0/37); this is separate from passing source CI. Existing grouped 0/10 device workstreams are historical grouping, not the decision denominator.
 
@@ -199,3 +243,12 @@ Implementation-only, tests/build deferred by owner. Closed 4/8 source gaps: appl
 Implementation-only: 8/8 audited source gaps now implemented, without running builds/tests. Full layout profiles retain output selection/maximization, Android/editor status bars, focus, panel sizes, toolbar and coding accessory preferences, with legacy nullable-field compatibility and live keyboard updates. Contextual discovery for workspace/console/files/themes/runtimes is dismissible, persistent, globally optional and replayable. Substantial Git/search/history/trash/layout/toolbar/language-detail screens now use full tool pages; destructive confirmations stay centered, choices stay in anchored animated menus. Skeleton/search/tab/icon motion and larger-font status layout use the shared motion policy. Modal window icons and status-bar visibility follow actual app appearance.
 
 Opt-in performance instrumentation records actual activity-first-draw, edit/action-to-next-frame callbacks, main-window frame durations/refresh-budget overruns and editor-process PSS. It is bounded to 512 samples, runs only while foreground and enabled, stores no source and sends nothing. No performance result or speedup is claimed before later measurement. First four source gaps (native preview, typography, shared motion and shortcut ordering) were committed in 16556e4. Next: complete per-decision source coverage record and handoff with testing deferred per owner; no new APK is represented as built. Workflows, runtime architecture and release safeguards unchanged.
+
+
+## Implementation-first handoff — Nov 24, 2026, 9:16:04 PM PHT
+
+SESSION STOPPED; no background coding continues. Source checkpoints 16556e4b2bdd44a929ccd6f98ea67ac2a1317f64 and 2fded2e4e36dd27b7f1fb70b102e64ff580dadbd implement all eight audited source gaps, with all 37 decisions mapped to concrete source or retained QA/delivery infrastructure. No build, automated test, device smoke, screenshot inspection or performance experiment was run during this pass. [skip ci] commits defer automatic checks without changing workflows, cancellation, signing or release gates. The previous request to start manual API35 testing is superseded by the owner's implementation-first instruction for this pass.
+
+New source: shared app-motion dialogs, full tool pages, actual anchored animated/keyboard-navigable menus; native editable Theme Studio preview and persisted independent typography sizes; reorderable coding shortcuts; full named/per-project output/system-bar/accessory layouts with live updates; persistent optional/replayable contextual discovery; animated loading/search/icon/tab polish and scalable status layout; bounded opt-in foreground-only performance instrumentation. Real performance measurements and the quality execution portions of decisions 20/29/36 remain deferred, not falsely complete.
+
+Next: cumulative build/error checking after this source implementation pass, then the deferred functional/visual/device/accessibility/performance work. No APK includes the current changes yet. Continue from the latest source, preserve existing data/capabilities/security/runtime architecture and the complete approved contract.

@@ -1,75 +1,41 @@
 # CodeLab — Reimagined: current continuation record
 
-Updated Nov 24, 2026, 9:00:54 PM PHT. **ACTIVE — implementation first; testing deferred by owner.** History: [PROGRESS_LOG.md](PROGRESS_LOG.md), [older session archive](PROJECT_MEMORY_ARCHIVE.md). This record supersedes obsolete pending-build statements in the archive.
+Nov 24, 2026, 9:16:04 PM PHT — **SESSION STOPPED: source implementation pass committed; testing deferred by owner.** No background coding continues.
 
-## Current priority
+## Latest owner instruction
 
-Owner now requires completing the approved source implementation BEFORE any testing/build wait. All eight audited source gaps are now implemented: shared presentations, native preview, typography sizing, coding accessory ordering, complete layouts/system bars, contextual guidance, loading/accessibility polish and opt-in performance instrumentation. Final per-decision source coverage record is next; builds/tests remain deferred. Use [skip ci] commits during this pass; keep workflow and release safeguards unchanged. Do not claim these new changes are tested.
+Finish implementing the approved 37 decisions before testing. Do not stop implementation to request device/CI testing. This implementation pass deliberately ran no builds, automated tests, device smoke or performance experiments and used [skip ci] commits. Existing workflow/release safety rules remain unchanged. Earlier requests to start manual API35 testing were superseded for this pass.
 
-## Approved scope
+## Current source
 
-[REIMAGINED_SPEC.md](REIMAGINED_SPEC.md) contains all 37 approved decisions and associated requirements. One comprehensive redesign, no numbered phases or unrelated expansion. Requested thinking level: medium. Direct main commits. Do not restart planning or ask repeated approval for approved requirements.
+- Latest implementation: `2fded2e4e36dd27b7f1fb70b102e64ff580dadbd` — [source commit](https://github.com/iamlxwis/CodeLab/commit/2fded2e4e36dd27b7f1fb70b102e64ff580dadbd).
+- Prior source checkpoint: `16556e4b2bdd44a929ccd6f98ea67ac2a1317f64` (first four gaps).
+- **8/8 audited source gaps addressed; all 37 decisions mapped** in [REIMAGINED.md](REIMAGINED.md). Full approved requirements: [REIMAGINED_SPEC.md](REIMAGINED_SPEC.md).
+- This is source coverage, not verified acceptance of every associated requirement. Decisions 20/36 execution and decision 29 real measurements remain deferred.
+- The new source has **not been compiled or tested**. There is **no rebuilt APK** containing these new changes.
+- Last verified earlier baseline is 03ef032, [CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404). Its APK excludes this implementation pass; do not present it as the new app.
 
-## Exact source and evidence
+## Eight completed source gaps
 
-- Latest verified implementation: `03ef0325cf68de989add4622796bc9c0450191e3`. [Android CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) **passed**.
-- Unexpired artifacts: [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920947097), [six optional runtime packs](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920553470), [quality reports](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920463844). These are Actions artifacts, not a newly published public release.
-- Passed: release compilation, JVM tests, instrumentation Kotlin compilation, lint, static security/artifact/release-gate tests, packaged TypeScript, APK and pack signature checks. Instrumentation was compiled, **not executed**.
-- Five definitive source CI passes: bb5172d/45390387550, f2990a9/45391600449, 2b04bd1/45392971931, 97e31ad/45394263948, 03ef032/45395252404. No deliberately interrupted preceding source builds.
-- No uncommitted source remains. Later documentation commits do not alter app source.
-- Source-only CI skipped actual production-certificate enforcement, signed-upgrade audit, device prerequisite and public release. Do not infer those results.
-- **0/37 decisions fully accepted.** Build/source evidence is separate from API35, screenshots, runtime integration, accessibility, measured performance and physical-device acceptance. Historical 0/10 workstreams were an earlier grouping.
-- Local Gradle download failed (Network is unreachable); no local Android SDK/adb. Static security gate, eight Python artifact/release checks and XML parsing of 19 logos passed. These are not device results.
+1. Shared app motion for modal pages/alerts and true anchored popups, including keyboard arrow/Escape navigation and adaptive modal system bars; substantial Git/search/history/trash/layout/toolbar/language details now have full tool pages.
+2. Theme Studio uses actual editable SourceView with real syntax/gutter/selection/font rendering, independent JS/Python sample state, selected file icons and explicitly labelled sample console.
+3. UI scale and editor text size persist in StudioAppearance/theme JSON, affect actual app/editor/preview, and cooperate with Settings and pinch changes. Legacy themes inherit existing editor size.
+4. Coding accessory symbols can be selected and reordered with accessible earlier/later actions; actual saved order is retained.
+5. WorkspaceLayout profiles retain focus/density/proportions/toolbars, editor and Android status bars, active output/maximization and keyboard accessory selection/order/visibility. Nullable added fields preserve old layouts; live preferences update mounted editors.
+6. Contextual discovery for workspace/console/files/themes/runtimes is persistent, dismissible, optional and replayable in Help. Editing/running practice and the existing complete guide remain available.
+7. App-wide source polish: animated skeleton/search/icon/tab states, shared contextual presentation, destructive styling, large-font-friendly status rows, keyboard-aware tool pages and contextual tips hidden during typing.
+8. Opt-in foreground-only PerformanceRecorder uses real first-draw/input/action frame callbacks, Window frame durations/refresh budget and editor-process PSS. Bounded 512-frame ring; no source retention, network, timer or background polling. Actual results await later usage and validation.
 
-## Implemented in this session
+## Next task
 
-1. Searchable nine-category Settings, editor/keyboard/storage/privacy/help pages, direct Theme Studio and offline license reader.
-2. Mounted editor views observe preferences without resetting unsaved buffers/cursors.
-3. Reduced/Standard/Fluid presets; persisted speed/intensity/spring/None-Fade-Slide; theme JSON compatibility, reduced-motion precedence, shared custom-transition policy.
-4. Real interactive code practice using CodeEditor and existing RunSession isolation. Actual output-based completion; run stops on dismissal; guide topic retained; no simulated output or upload.
-5. Nineteen language-logo vectors, licensed fonts/icons and notices. Simple Icons CC0 pinned d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97; Devicon Java MIT.
-6. Focus mode in named/per-project layouts with legacy field compatibility.
-7. Distinct warning/error prefixes, severity/text filters, readable colors, raw copy/export and cross-line ANSI retained. Warning updates consistent across app JS, JS pack and TS pack without changing architecture.
-8. Explicit theme rename/duplicate preserving all recipe fields and new copy IDs; contextual menus and direct Studio scroll target.
-9. Exact approved Crystal/Sandstone base colors and neutral backdrop; no Sandstone decorative lines; zero glass border removes stroke; live battery-saver fallback without polling.
-10. Verified-pack availability shared across guided creation, editor selector and run picker; TypeScript remains visible under Runnable only when verified installed; lifecycle refresh; selected-state/accessibility semantics. No automatic online/offline switching.
-11. Stable lazy saved-theme rows instead of composing the entire unlimited collection; no measured speedup claimed.
-12. Full approved contract, per-decision audit, source/build/device distinction and PHT tracker.
+Perform the deferred cumulative build/error-check pass now that these source gaps are implemented, then functional, screenshot/theme/screen-size/IME/gesture/persistence/runtime/accessibility/performance acceptance. Do not claim verified completion or a new installable APK before that work. Do not restart old completed source work merely because its tests have not run.
 
-## Deferred verification (after the implementation queue is finished)
+## Persistent rules
 
-1. Confirm current main app sources still match verified 03ef032, then start existing manual Android 15/API35 device smoke. Do not rebuild completed source without a new reason.
-2. Inspect real screenshots of every screen, all six themes, small phone/tablet/landscape, IME and enlarged fonts. Check actual versus preview fidelity; fix observed defects. Material contextual/control animations still need reduced-motion acceptance.
-3. Test all eight gestures and accessible alternatives, Android/text-selection conflicts, toolbar customization and named/per-project layouts/focus through restart/rename.
-4. Execute practice lesson and actual offline/approved online runs; verify pack lifecycle, project/file operations, import/export conflicts, theme/font transfer, component changes and persistence.
-5. Record TalkBack, keyboard, touch-target and contrast evidence plus actual startup/typing/frame/memory measurements. Old screenshots/performance results do not establish redesigned-app acceptance.
-6. Physical-device acceptance remains with owner. Preserve same-commit device/signing prerequisites before public release.
+One comprehensive update, not numbered development phases. Requested thinking level: medium. Direct main commits, no unrelated expansion, no UI emojis. Preserve all user projects/capabilities, six runtime packs, explicit upload consent, encrypted credentials, production signer/release safeguards, source-only CI, cancel-in-progress and manual Android 15/API35 smoke policy. [skip ci] here defers checks; it does not bypass publishing gates.
 
-## Verification blocker
+README keeps one concise activity, completed/remaining source distinction and next-to-build in Philippine UTC+8, 12-hour AM/PM. History: PROGRESS_LOG.md and PROJECT_MEMORY_ARCHIVE.md; new owner requests stay in IDEAS. Keep source implementation separate from build/device/physical acceptance. The GitHub connector can publish changes but cannot dispatch manual workflows; shell clone/fetch work, shell push is unauthenticated, browser fallback was signed out. Do not use those facts as a reason to stop future source implementation.
 
-Connector has no workflow-dispatch operation; local git/gh have no push/dispatch credential; browser fallback is signed out. Latest observed device run is historical 45306690201 at b4adaa9. User was asked to start the existing manual workflow; no response or refusal was assumed. Do not change triggers, bypass gates or fabricate a device pass. Authorized GitHub connector mutations work; shell clone/fetch work but shell push does not.
+## Continuation prompt
 
-## Guardrails and continuation
-
-Keep every existing capability/project/runtime/privacy protection, six packs, explicit source-upload consent, encrypted credentials, production signer/release gates, source-only CI, cancel-in-progress and manual API35 policy. No unrelated features, phases or UI emojis. New ideas belong in IDEAS until verified complete.
-
-Maintain one concise README current activity plus next-to-build at meaningful checkpoints, PHT UTC+8 with 12-hour AM/PM. History in PROGRESS_LOG; current evidence in REIMAGINED; mark STOPPED at handoff. Never imply background coding after a final response.
-
-Reusable prompt: Continue CodeLab — Reimagined in iamlxwis/CodeLab main using REIMAGINED_SPEC.md, README, REIMAGINED.md and PROJECT_MEMORY.md. Inspect current source and Actions; resume verified 03ef032 and complete manual API35/visual/functional/accessibility/performance acceptance with evidence-driven fixes. All 37 decisions are approved. Commit directly to main, preserve functionality/data/runtime/security/optimized CI/manual device testing, and update the single README activity and next-to-build in 12-hour Philippine time. Separate source/build/emulator/physical acceptance; do not claim complete without evidence.
-
-
-## Implementation-first instruction — Nov 24, 2026, 8:56:25 PM PHT
-
-Owner explicitly deferred testing until the 37-decision implementation is finished. Stop waiting on CI/device verification; implement remaining source gaps now. Use [skip ci] implementation checkpoints without altering workflow triggers, cancellation policy or release/signing safeguards. No tests, smoke runs or builds are requested during this implementation pass; do not mark untested results verified. Source queue: shared motion-aware modal/menu layer; editable native Theme Studio preview; component typography controls; reorderable coding accessory; full per-project/named layouts and system-bar preference; contextual guidance; consistent loading/search/accessibility polish; real opt-in performance instrumentation. Existing source remains intact. Next: first four source gaps, then remaining four in the same sitting.
-
-
-### Source checkpoint — Nov 24, 2026, 9:00:54 PM PHT
-
-Implementation-only, tests/build deferred by owner. Closed 4/8 source gaps: application motion supplied to all modal/alert/anchored-menu entry points with keyboard navigation; native SourceView editor in Theme Studio preview; independent UI scale/editor size encoded into theme recipes and consumed by real UI/editor including pinch and Settings changes; accessible reorder controls for custom coding accessory symbols with saved order. Next: complete layouts and system bars, contextual guidance, loading/accessibility polish and real opt-in performance instrumentation. Existing workflows/release gates untouched; no verified-result claim for this source.
-
-
-### Source completion checkpoint — Nov 24, 2026, 9:12:27 PM PHT
-
-Implementation-only: 8/8 audited source gaps now implemented, without running builds/tests. Full layout profiles retain output selection/maximization, Android/editor status bars, focus, panel sizes, toolbar and coding accessory preferences, with legacy nullable-field compatibility and live keyboard updates. Contextual discovery for workspace/console/files/themes/runtimes is dismissible, persistent, globally optional and replayable. Substantial Git/search/history/trash/layout/toolbar/language-detail screens now use full tool pages; destructive confirmations stay centered, choices stay in anchored animated menus. Skeleton/search/tab/icon motion and larger-font status layout use the shared motion policy. Modal window icons and status-bar visibility follow actual app appearance.
-
-Opt-in performance instrumentation records actual activity-first-draw, edit/action-to-next-frame callbacks, main-window frame durations/refresh-budget overruns and editor-process PSS. It is bounded to 512 samples, runs only while foreground and enabled, stores no source and sends nothing. No performance result or speedup is claimed before later measurement. First four source gaps (native preview, typography, shared motion and shortcut ordering) were committed in 16556e4. Next: complete per-decision source coverage record and handoff with testing deferred per owner; no new APK is represented as built. Workflows, runtime architecture and release safeguards unchanged.
+Continue iamlxwis/CodeLab main from 2fded2e, using the full approved REIMAGINED_SPEC.md and current source coverage in REIMAGINED.md. The implementation-first pass addressed eight audited source gaps across the 37 decisions without running checks. Next perform cumulative compile/error checking, then deferred functional/visual/accessibility/performance/device acceptance and fixes. Preserve existing capabilities/data/runtime/privacy/release/CI policies, commit directly to main, and keep the README/current memory accurate in 12-hour PHT. Do not falsely mark source-only additions as verified or link the old APK as the new app.
