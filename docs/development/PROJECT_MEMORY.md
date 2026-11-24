@@ -1,3 +1,17 @@
+# Phase 3 CI checkpoint — Nov 24, 2026 · 5:27 PM PHT
+
+- **Source SHA being verified:** `c0fd4d7f841a79bebdc7dbc74746ed6270b7d4c0`.
+- **Current CI status:** CI RUNNING, [Android APK 45365272240](https://github.com/iamlxwis/CodeLab/actions/runs/45365272240), observed in_progress/none.
+- **Latest known successful source CI before Phase 3:** Phase 2 Android APK [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) on `399a1380`.
+- **Counts:** 0/7 accepted source workstreams until CI result and full code review; seven still awaiting certification.
+- **Source modifications:** WS1 recent project order, WS2 selective Git unstage, WS3 origin branch tracking and redacted transport errors, WS4 atomic imports/ZIP restrictions, WS5 custom saved snippets plus command palette search, WS6 faster switcher ordering and reduced search allocations, WS7 regression/failure checks. Prior project memory below has file-by-file details.
+- **Known blocker:** exact-SHA Android build/test result pending; no local Android SDK. Owner performs physical-device acceptance and optional modules testing.
+- **Next action:** inspect CI 45365272240; if failed, fetch job logs, correct source and rerun. If passed, review seven workstreams, update verified counts and archive CI evidence; do not mark complete prematurely.
+- **CI constraints:** preserve Option B, cancel-in-progress, three artifacts, no emulator/device smoke, stable signing/release safety, all six offline packs and existing runtimes.
+- **Continuation:** fetch main and tracker log/memory, check run and newest source before changing anything. Commit to main with one README activity sentence and append history.
+
+---
+
 # Phase 3 checkpoint — Nov 24, 2026 · 5:26 PM PHT
 
 - **Current status:** Phase 3 IN PROGRESS; 0/7 workstreams source/CI verified; seven remain subject to final review. Performance workstream is active.
