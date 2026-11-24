@@ -1,8 +1,6 @@
-# One-time explicit Phase 1 acceptance checkpoint. Not a standing source-push device trigger.
-# Six-pack retry after verified TypeScript Exit 0 + corrected actual starter text assertion; exact SHA device gate.
-# It runs only on creation/changes to THIS file; routine source pushes remain fast.
-# Retry after fixing persistent LazyColumn offset and confirming all companion packages.
-name: Phase 1 release checkpoint
+# Explicit Reimagined APK delivery checkpoint; routine source pushes remain fast.
+# Owner authorized cumulative checks and APK delivery on Nov 24, 2026.
+name: Guarded release checkpoint
 on:
   push:
     branches: [main]

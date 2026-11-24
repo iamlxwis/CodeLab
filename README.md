@@ -28,15 +28,15 @@ Write, run, and manage projects from your phone.
 | --- | --- |
 | Update | CodeLab — Reimagined |
 | Status | **ACTIVE — cumulative build/error checks and APK delivery** |
-| Current-pass checks | Starting cumulative Android build, unit tests, instrumentation compilation and lint |
+| Current-pass checks | Passed Android release build, unit tests, instrumentation compilation, lint and signing checks |
 | Source coverage | **37/37 decisions mapped; 8/8 audited implementation gaps addressed** — validation is separate |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [03ef032 — earlier baseline](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404); does **not** include the new implementation pass |
-| Next to build | Fix cumulative build errors; run existing guarded API35/release checkpoint and publish direct APK |
-| Last activity | Nov 24, 2026, 9:39:00 PM PHT |
+| Latest verified build | [1e5bb5d — complete implementation pass](https://github.com/iamlxwis/CodeLab/actions/runs/45405666239) |
+| Next to build | Run exact-commit Android 15 smoke; guarded publication; then physical-device acceptance |
+| Last activity | Nov 24, 2026, 9:45:33 PM PHT |
 
-**Current activity:** Nov 24, 2026, 9:39:00 PM PHT — Owner approved cumulative checks and direct APK delivery; starting source CI with layout/typography regressions, then guarded Android 15 release.
+**Current activity:** Nov 24, 2026, 9:45:33 PM PHT — Cumulative Android CI passed; starting the explicit same-commit API35/release checkpoint and holding main stable until its gate finishes.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

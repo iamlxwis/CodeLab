@@ -1,5 +1,17 @@
 # CodeLab — Reimagined: current continuation record
 
+Nov 24, 2026, 9:45:33 PM PHT — **ACTIVE: cumulative build passed; guarded APK delivery underway.**
+
+Latest owner request authorizes checks and asks for a direct APK download. Source implementation covered eight audited gaps across 37 decisions in 16556e4/2fded2e; Android CI now passed at 1e5bb5d. Full contract: REIMAGINED_SPEC.md; source/acceptance ledger: REIMAGINED.md.
+
+The explicit existing phase1-checkpoint.yml mechanism dispatches manual Android 15/API35 and then android.yml publish_release=true, retaining same-SHA device and permanent signing gates. Main must remain stable until its exact-SHA gate finishes. Do not link the old public APK as this update. Next inspect device run and guarded publication, fix real failures, then verify new CodeLab.apk and update final memory. Physical-device, comprehensive visual/animation and measured performance acceptance remain pending; do not claim 37/37 verified.
+
+Preserve direct-main workflow, cancel-in-progress, optimized source-only CI, manual API35 smoke, runtime/data/privacy/signing protections. README single current activity uses 12-hour PHT. Prior implementation handoff below is historical and superseded by this authorization.
+
+---
+
+# CodeLab — Reimagined: current continuation record
+
 Nov 24, 2026, 9:16:04 PM PHT — **SESSION STOPPED: source implementation pass committed; testing deferred by owner.** No background coding continues.
 
 ## Latest owner instruction
