@@ -149,3 +149,20 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026 · 5:32 PM PHT | Phase 3 / WS2 Git | CI FAILED → FIXING; 0/7 accepted | Exact source c0fd4d7f841a [Android APK run 45365272240](https://github.com/iamlxwis/CodeLab/actions/runs/45365272240) completed 174 JVM tests, 1 failed: `GitWorkspaceTest.unstagingOnUnbornBranchPreservesWorkingFilesAndOtherStagedPaths` at test line 85 with JGitInternalException/EOFException due to committing an unwritten index. Replaced editor.finish + bare index.commit with editor.commit, which writes and publishes index atomically; new source CI pending. All other build/test stages not declared passed. |
 
 | Nov 24, 2026 · 5:37 PM PHT | Phase 3 / WS1–WS7 | COMPLETED — 7/7 source/CI verified; physical acceptance pending | [Exact source 55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b) passed [Android APK run 45366121115](https://github.com/iamlxwis/CodeLab/actions/runs/45366121115); build, tests, lint, signature checks, TypeScript packaging and all three named artifacts succeeded. Prior failed CI 45365272240 was fixed in GitWorkspace `editor.commit()`; latest run passed. Existing offline packs and CI Option B preserved; no emulator run. Next owner phone QA and optional live GitHub/network checks. |
+
+
+### CodeLab — Reimagined (source checkpoint audit)
+
+| When (PHT; commit metadata) | Checkpoint | State | Evidence |
+| --- | --- | --- | --- |
+| 24 Nov 2026, 18:31:58 PHT | docs: start CodeLab Reimagined live tracker | Source committed; acceptance pending | [0b2bfb2](https://github.com/iamlxwis/CodeLab/commit/0b2bfb2ec0e3c29b96840cb96665243710eaa1ca) |
+| 24 Nov 2026, 18:32:51 PHT | feat: introduce Reimagined visual presets and compact project hierarchy | Source committed; acceptance pending | [e236a56](https://github.com/iamlxwis/CodeLab/commit/e236a56e808f8610723cd46d9c93022d95a2d168) |
+| 24 Nov 2026, 18:34:00 PHT | feat: persist Theme Studio materials, preview real editor and transfer presets | Source committed; acceptance pending | [e8a3051](https://github.com/iamlxwis/CodeLab/commit/e8a30514d18652adfc3821550a8cbde6b93114a8) |
+| 24 Nov 2026, 18:35:00 PHT | feat: refine editor gutter, project setup, run controls and output panels | Source committed; acceptance pending | [4c9f1de](https://github.com/iamlxwis/CodeLab/commit/4c9f1dedb2b1a555ad1346f0fa00b034fba61332) |
+| 24 Nov 2026, 18:37:04 PHT | feat: brand CodeLab Reimagined, bundle licensed fonts and expand Theme Studio | Source committed; acceptance pending | [b525a73](https://github.com/iamlxwis/CodeLab/commit/b525a73ed1001162e5157b47694d7ea4700f781e) |
+| 24 Nov 2026, 18:39:07 PHT | feat: personalize workspace layouts, organize settings and add adaptive rendering | Source committed; acceptance pending | [6219843](https://github.com/iamlxwis/CodeLab/commit/6219843c1b326524c67d8d5225f71cb0bbc180d6) |
+| 24 Nov 2026, 18:42:42 PHT | Preserve uncapped custom themes and validate font and color updates | Source committed; acceptance pending | [9a5f0c7](https://github.com/iamlxwis/CodeLab/commit/9a5f0c7689928ec3aec6a5ba4f85827df358ed48) |
+| 24 Nov 2026, 18:43:08 PHT | Add user-controlled animation speed and spring response with reduced-motion support | Source committed; acceptance pending | [cac8108](https://github.com/iamlxwis/CodeLab/commit/cac81084326e3000359536f8238b9a9976f8cae0) |
+| 24 Nov 2026, 18:43:35 PHT | Refine language badges, adaptive launcher and project import destinations | Source committed; acceptance pending | [95a4acb](https://github.com/iamlxwis/CodeLab/commit/95a4acb1fe1f6e52f4b803018cc486501d67fc2c) |
+| 24 Nov 2026, 18:44:34 PHT | Present expandable file tree and add hierarchy and gutter regression tests | Source committed; acceptance pending | [f23d62f](https://github.com/iamlxwis/CodeLab/commit/f23d62ff5388f48898db625030a81f018b80b553) |
+| 24 Nov 2026, 18:45 PHT | Acceptance ledger | Partial; build pending; 0/10 accepted | [Exact source CI](https://github.com/iamlxwis/CodeLab/actions/runs/45377658562) · [Remaining work](REIMAGINED.md) |

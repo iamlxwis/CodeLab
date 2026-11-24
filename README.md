@@ -27,15 +27,15 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **IN PROGRESS** — owner authorized implementation |
+| Status | **PARTIAL — source committed, verification pending** |
 | Workstreams accepted | **0/10** — verification pending |
-| Current workstream | Workspace personalization, settings and rendering |
+| Current workstream | Exact-source CI, remaining visual fidelity and device acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Last activity | 24 Nov 2026, 18:38 PHT |
+| Last activity | 24 Nov 2026, 18:45 PHT |
 
-**Current activity:** 24 Nov 2026, 18:38 PHT — Added saved/per-project layouts, toolbar ordering, grid view, grouped settings, adaptive backdrop rendering and tutorial transitions in source; CI and device validation pending.
+**Current activity:** 24 Nov 2026, 18:45 PHT — Committed Reimagined source through [f23d62f](https://github.com/iamlxwis/CodeLab/commit/f23d62ff5388f48898db625030a81f018b80b553); [APK CI](https://github.com/iamlxwis/CodeLab/actions/runs/45377658562) running, acceptance and remaining fidelity work open.
 
-> One current activity sentence. [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
+> One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 
 ## Features
 

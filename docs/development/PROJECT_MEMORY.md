@@ -1,3 +1,14 @@
+# CodeLab — Reimagined checkpoint — 24 Nov 2026, 18:45 PHT
+
+- Owner authorized a single comprehensive Apple-inspired redesign, not a new phase. Direct commits on main.
+- Source through `f23d62ff5388f48898db625030a81f018b80b553`; exact source Android CI [45377658562](https://github.com/iamlxwis/CodeLab/actions/runs/45377658562) is running. No Reimagined APK or device acceptance yet verified. All 10 workstreams have changes or a source baseline, **0/10 accepted**.
+- See [Reimagined implementation and acceptance ledger](REIMAGINED.md) for the precise scope and pending requirements. Preserve all prior working runtime, storage, Git, signing and CI capabilities.
+- Next exact action: inspect build/test result, fix failures, then complete remaining UI fidelity and device validation. Do not mark source or prior release as accepted. Preserve one timestamped current activity in README and append milestone evidence to PROGRESS_LOG.
+
+---
+
+## Previous baseline (historical)
+
 # Phase 3 final source/CI checkpoint — Nov 24, 2026 · 5:37 PM PHT
 
 - **Phase / verified status:** Phase 3 COMPLETED at agreed source/CI level. **7/7 workstreams verified; 0 remaining source workstreams.** Owner Android physical-device acceptance remains outstanding.
