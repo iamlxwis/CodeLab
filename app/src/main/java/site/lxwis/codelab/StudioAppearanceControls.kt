@@ -45,11 +45,11 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Theme Studio", style = MaterialTheme.typography.titleLarge)
         StudioLivePreview(m)
-        ThemeColor("Accent", MaterialTheme.colorScheme.primary) { m.chooseAccent(it) }
+        ThemeColor("Accent", studioColor(m.accent, MaterialTheme.colorScheme.primary)) { m.chooseAccent(it) }
         TextButton(onClick = { open = !open }) { Text(if (open) "Hide customization" else "Customize theme") }
         if (open) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                listOf("Colors", "Materials", "Fonts", "Syntax").forEach { choice ->
+                listOf("Colors", "Materials", "Fonts", "Syntax", "Motion").forEach { choice ->
                     FilterChip(selected = choice == section, onClick = { section = choice }, label = { Text(choice) })
                 }
             }
@@ -131,7 +131,22 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
                 m.updateStudioAppearance(m.studioAppearance.copy(keywords = it))
             }
             }
-            TextButton(onClick = { m.updateStudioAppearance(StudioAppearance()) }) { Text("Reset theme overrides") }
+            if (section == "Motion") {
+                Text("Motion", style = MaterialTheme.typography.titleMedium)
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    listOf("System", "Full", "Reduced").forEach { choice ->
+                        FilterChip(selected = m.motionPreference == choice, onClick = { m.chooseMotion(choice) },
+                            label = { Text(choice) })
+                    }
+                }
+                StudioSlider("Intensity (%)", m.motionIntensity, 0f..100f, m::chooseMotionIntensity)
+                StudioSlider("Speed (%)", m.motionSpeed, 50f..200f, m::chooseMotionSpeed)
+                StudioSlider("Spring (%)", m.springIntensity, 0f..100f, m::chooseSpringIntensity)
+                Text("Try the preview tabs and Output button to see motion. Saved looks retain these settings; reduced motion takes precedence.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            TextButton(onClick = { m.updateStudioAppearance(StudioAppearance()) }) { Text("Reset color, material and font overrides") }
         }
     }
 }
@@ -293,8 +308,8 @@ private fun StudioLivePreview(m: WorkspaceModel) {
             }
             Surface(color = editor, contentColor = ink, shape = MaterialTheme.shapes.medium) {
                 Column(Modifier.fillMaxWidth().padding(6.dp)) {
-                    val lines = if (python) listOf("# Main program", "answer = 42", "print(answer)")
-                        else listOf("// Main program", "const answer = 42;", "print(answer);")
+                    val lines = if (python) listOf("# Main program", "answer = 42", "print(\"Hello\", answer)")
+                        else listOf("// Main program", "const answer = 42;", "print(\"Hello\", answer);")
                     lines.forEachIndexed { index, line ->
                         val fill = if (selectedLine == index) selectedSurface else editor
                         Surface(onClick = { selectedLine = index }, color = fill,
@@ -315,7 +330,11 @@ private fun StudioLivePreview(m: WorkspaceModel) {
                                             segment("42", studioColor(s.numbers, c.primary))
                                             if (!python) append(";")
                                         }
-                                        else -> segment(line, ink)
+                                        else -> {
+                                            segment("print(", ink)
+                                            segment("\"Hello\"", studioColor(s.strings, c.primary))
+                                            segment(if (python) ", answer)" else ", answer);", ink)
+                                        }
                                     }
                                 }
                                 Text(code, fontFamily = font, style = MaterialTheme.typography.bodySmall)
@@ -330,7 +349,7 @@ private fun StudioLivePreview(m: WorkspaceModel) {
                 Surface(color = console, contentColor = studioReadable(c.onSurface, console), shape = MaterialTheme.shapes.medium) {
                     Column(Modifier.fillMaxWidth().padding(10.dp)) {
                         Text("Sample output", style = MaterialTheme.typography.labelMedium)
-                        Text("42", fontFamily = font)
+                        Text("Hello 42", fontFamily = font)
                         Text("Preview only · no code executed", style = MaterialTheme.typography.labelSmall)
                     }
                 }

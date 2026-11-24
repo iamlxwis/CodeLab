@@ -6,8 +6,24 @@ import org.json.JSONObject
 /** User-defined appearance recipes. Import from preferences is validated; import payload size is bounded separately. */
 internal data class AppearanceRecipe(
     val id: String, val name: String, val style: String, val mode: String, val accent: String,
-    val studio: StudioAppearance = StudioAppearance()
+    val studio: StudioAppearance = StudioAppearance(),
+    val motion: ThemeMotionRecipe? = null
 )
+
+/** Legacy recipes omit motion and must not change existing accessibility preferences. */
+internal data class ThemeMotionRecipe(val preference: String, val intensity: Int, val speed: Int, val spring: Int) {
+    fun json() = JSONObject().put("preference", preference).put("intensity", intensity)
+        .put("speed", speed).put("spring", spring)
+    companion object {
+        fun decode(json: JSONObject?): ThemeMotionRecipe? {
+            if (json == null) return null
+            val preference = json.optString("preference").takeIf { it in listOf("System", "Full", "Reduced") }
+                ?: return null
+            return ThemeMotionRecipe(preference, json.optInt("intensity", 100).coerceIn(0, 100),
+                json.optInt("speed", 100).coerceIn(50, 200), json.optInt("spring", 35).coerceIn(0, 100))
+        }
+    }
+}
 
 internal object AppearanceRecipes {
     private fun validStyle(value: String) = CodeLabVisualStyles.accepts(value)
@@ -29,7 +45,7 @@ internal object AppearanceRecipes {
             val obj = array.optJSONObject(i) ?: continue
             val candidate = AppearanceRecipe(obj.optString("id"), obj.optString("name"),
                 obj.optString("style"), obj.optString("mode"), obj.optString("accent"),
-                StudioAppearance.decode(obj.optString("studio")))
+                StudioAppearance.decode(obj.optString("studio")), ThemeMotionRecipe.decode(obj.optJSONObject("motion")))
             if (candidate.id.length in 1..64 && validName(candidate.name) &&
                 validStyle(candidate.style) && candidate.mode in modes &&
                 validAccent(candidate.accent) && ids.add(candidate.id)) result += candidate
@@ -45,7 +61,8 @@ internal object AppearanceRecipes {
                 recipe.id.length in 1..64) {
                 array.put(JSONObject().put("id", recipe.id).put("name", recipe.name)
                     .put("style", recipe.style).put("mode", recipe.mode)
-                    .put("accent", recipe.accent).put("studio", recipe.studio.encode()))
+                    .put("accent", recipe.accent).put("studio", recipe.studio.encode())
+                    .put("motion", recipe.motion?.json() ?: JSONObject.NULL))
             }
         }
         return array.toString()

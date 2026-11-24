@@ -194,3 +194,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 7:17:59 PM PHT | Workspace and theme fidelity | Source committed; CI pending | Layout toolbar/explorer persistence, legacy compatibility tests, interactive preview using chosen editor font and component colors. |
 
 | Nov 24, 2026, 7:19:22 PM PHT | Contrast and adaptive panels | Source committed; CI pending | Theme foreground/primary contrast, console text, system bar icons, tablet divider and maximize, accessible panel range actions, instrumentation assertions. |
+
+| Nov 24, 2026, 7:21:33 PM PHT | Saved theme motion and preview | Source committed; CI pending | Motion serialization, bounded import, explicit Reduced preference guard, syntax sample and device smoke selector coverage. |

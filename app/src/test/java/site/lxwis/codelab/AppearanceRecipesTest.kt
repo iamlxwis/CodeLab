@@ -49,4 +49,18 @@ class AppearanceRecipesTest {
         assertEquals(entries.size,
             AppearanceRecipes.decode(AppearanceRecipes.encode(entries)).size)
     }
+    @Test fun motionRecipeRoundTripAndLegacyCompatibility() {
+        val original = AppearanceRecipe("motion", "Quiet", "Crystal", "System", "Mono",
+            StudioAppearance(), ThemeMotionRecipe("Reduced", 0, 80, 10))
+        assertEquals(listOf(original), AppearanceRecipes.decode(AppearanceRecipes.encode(listOf(original))))
+        val legacy = AppearanceRecipe("legacy", "Old", "Glass", "Dark", "Mono")
+        assertNull(AppearanceRecipes.decode(AppearanceRecipes.encode(listOf(legacy))).single().motion)
+    }
+
+    @Test fun importedMotionBoundsAndInvalidMode() {
+        val json = org.json.JSONObject("""{"preference":"Full","intensity":-10,"speed":999,"spring":101}""")
+        assertEquals(ThemeMotionRecipe("Full", 0, 200, 100), ThemeMotionRecipe.decode(json))
+        assertNull(ThemeMotionRecipe.decode(org.json.JSONObject("""{"preference":"Unknown"}""")))
+    }
+
 }

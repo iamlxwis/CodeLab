@@ -111,7 +111,7 @@ def tap_text_result(name):
 
 def choose_language(name):
     """Choose from the searchable language browser, not an off-screen quick card."""
-    tap("Change")
+    tap_node(scroll_to("Change", "Browse all languages"))
     field = wait_for(field=True)
     tap_node(field)
     adb("shell", "input", "text", name)
@@ -174,6 +174,11 @@ def main():
         adb("shell", "input", "swipe", str(w//2), str(int(h*.3)),
             str(w//2), str(int(h*.8)), "350")
     select_style("Obsidian")
+    tap_node(scroll_to("Output"))
+    wait_for("Sample output")
+    wait_for("Hello 42")
+    snapshot("theme-interactive-preview")
+    tap_node(scroll_to("Hide"))
     tap("Done")
     wait_for("New project")
     # The Python pack is installed by this smoke run; verify native in-app

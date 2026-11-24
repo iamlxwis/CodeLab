@@ -31,9 +31,9 @@ Write, run, and manage projects from your phone.
 | Workstreams accepted | **0/10 fully device-accepted** — source and CI verified separately |
 | Current workstream | Theme and workspace fidelity; device regression preparation |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Last activity | Nov 24, 2026, 7:19:22 PM PHT |
+| Last activity | Nov 24, 2026, 7:21:33 PM PHT |
 
-**Current activity:** Nov 24, 2026, 7:19:22 PM PHT — Added contrast-safe custom colors and adaptive system bars, corrected console ink, and added tablet drag/maximize plus accessible split controls. Next: compile and Android device regression.
+**Current activity:** Nov 24, 2026, 7:21:33 PM PHT — Theme Studio motion settings now round-trip through saved looks and JSON, legacy recipes preserve current motion, and smoke checks cover interactive preview. Next: cumulative compilation and manual API35 smoke.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

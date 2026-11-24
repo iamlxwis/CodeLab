@@ -444,7 +444,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         if (!AppearanceRecipes.validName(clean)) return false
         val old = savedAppearanceRecipes.firstOrNull { it.id == editingId }
         val recipe = AppearanceRecipe(old?.id ?: java.util.UUID.randomUUID().toString(),
-            clean, visualStyle, appearance, accent, studioAppearance)
+            clean, visualStyle, appearance, accent, studioAppearance,
+            ThemeMotionRecipe(motionPreference, motionIntensity, motionSpeed, springIntensity))
         savedAppearanceRecipes = if (old == null) savedAppearanceRecipes + recipe
             else savedAppearanceRecipes.map { if (it.id == old.id) recipe else it }
         preferences.edit().putString("saved-appearance-recipes",
@@ -458,6 +459,14 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         setMode(recipe.mode)
         chooseAccent(recipe.accent)
         updateStudioAppearance(recipe.studio)
+        recipe.motion?.let { motion ->
+            // A saved theme may reduce motion, but must never enable motion after a user
+            // has explicitly selected the app's Reduced accessibility setting.
+            if (motionPreference != "Reduced") chooseMotion(motion.preference)
+            chooseMotionIntensity(motion.intensity)
+            chooseMotionSpeed(motion.speed)
+            chooseSpringIntensity(motion.spring)
+        }
     }
 
     fun deleteAppearanceRecipe(id: String) {

@@ -317,7 +317,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                                             tint = MaterialTheme.colorScheme.primary)
                                         Column(Modifier.weight(1f)) {
                                             Text(recipe.name, style = MaterialTheme.typography.titleSmall)
-                                            Text(recipe.style + " · " + recipe.accent,
+                                            Text(recipe.style + " · " + recipe.accent + (recipe.motion?.let { " · " + it.preference } ?: ""),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
