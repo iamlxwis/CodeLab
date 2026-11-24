@@ -27,15 +27,15 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **ACTIVE — verified-pack selector correction; new CI pending** |
+| Status | **BUILD RUNNING — verified-pack selectors and cumulative redesign fixes** |
 | Decisions accepted | **0/37 fully accepted** — 37 require current visual/function/device evidence; source and CI tracked separately |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [2b04bd1 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931) · [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14919328907) |
 | Next to build | Verify installed-runtime selector correction; then API35-driven visual, gesture, persistence, accessibility and performance fixes |
-| Last activity | Nov 24, 2026, 8:30:42 PM PHT |
+| Last activity | Nov 24, 2026, 8:33:19 PM PHT |
 
-**Current activity:** Nov 24, 2026, 8:30:42 PM PHT — Theme/palette CI passed; corrected installed TypeScript visibility and actual runtime availability in creation/run selectors, cumulative CI next.
+**Current activity:** Nov 24, 2026, 8:33:19 PM PHT — Exact-source [CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) running for 97e31ad; prior theme/palette build passed, manual API35 run still unavailable.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

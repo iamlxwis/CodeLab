@@ -1,6 +1,6 @@
 # CodeLab — Reimagined: current continuation record
 
-Updated Nov 24, 2026, 8:24:17 PM PHT. Session ACTIVE at this checkpoint; README records the final session state. Historical checkpoint text has been preserved without deletion in [PROJECT_MEMORY_ARCHIVE.md](PROJECT_MEMORY_ARCHIVE.md); milestone history is [PROGRESS_LOG.md](PROGRESS_LOG.md). This file supersedes obsolete pending-build claims in that archive.
+Updated Nov 24, 2026, 8:33:19 PM PHT. Session ACTIVE at this checkpoint; README records the final session state. Historical checkpoint text has been preserved without deletion in [PROJECT_MEMORY_ARCHIVE.md](PROJECT_MEMORY_ARCHIVE.md); milestone history is [PROGRESS_LOG.md](PROGRESS_LOG.md). This file supersedes obsolete pending-build claims in that archive.
 
 ## Approved scope
 
@@ -8,7 +8,8 @@ Read [REIMAGINED_SPEC.md](REIMAGINED_SPEC.md): the complete owner-approved 37 de
 
 ## Current source and evidence
 
-- Latest implementation: `2b04bd19f0e17f697baf325ff1a08b8a51e27b0f`; [exact-source Android CI 45392971931](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931) running at this checkpoint. Query Actions before claiming results.
+- Latest implementation: `97e31ad2668de8cb127c7c1bc9a171d16cd7e013`; [exact-source CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) running at this checkpoint. Query Actions before claiming results.
+- Verified `2b04bd19f0e17f697baf325ff1a08b8a51e27b0f`: [CI 45392971931](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931) passed; [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14919328907), [packs](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14920606010), [reports](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14920615908). Theme duplicate/rename, palette and adaptive effects compiled and JVM-tested; device QA not run.
 - Verified implementation `f2990a971982f54f14568c1ce65a10186c291e5c`: [CI 45391600449](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449) passed release builds, JVM tests, instrumentation Kotlin compilation, lint, security and signature checks. [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449/artifacts/14919956476), [six packs](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449/artifacts/14919582010), [reports](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449/artifacts/14919048305).
 - Previous `bb5172d7957f1584a39cf4679e893f4b6d6e60f1`: [CI 45390387550](https://github.com/iamlxwis/CodeLab/actions/runs/45390387550) passed settings/motion/live-editor preference source.
 - No redesigned-source API35 emulator or physical-device acceptance in this session. **0/37 fully accepted**, distinct from implemented source and passing Android builds. Earlier 0/10 workstreams were a grouping, not a count of decisions.
