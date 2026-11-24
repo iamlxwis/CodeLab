@@ -63,6 +63,15 @@ class CodeAnalysisTest {
         assertEquals(120, CodeAnalysis.references(source, "item", language = "kt").size)
     }
 
+    @Test fun referenceMenuRanksNearestLexicalOccurrences() {
+        val source = "val item = 1\nuse(item)\n// item\nuse(item)\n"
+        val nearEnd = CodeAnalysis.nearbyReferences(source, "item",
+            source.lastIndexOf("item"), language = "kt")
+        assertEquals(3, nearEnd.size)
+        assertEquals(4, nearEnd.first().line)
+        assertEquals(1, CodeAnalysis.renamePreview(source, "item", "kt", 1).size)
+    }
+
     @Test fun renameUpdatesAllOccurrencesBeyondReferenceDisplayCap() {
         val source = buildString {
             append("val item = 0\n")

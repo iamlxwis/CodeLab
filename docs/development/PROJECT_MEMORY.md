@@ -1,3 +1,7 @@
+## Nov 24, 2026, 2:12 PM PHT — Phase 2 source checkpoint
+
+Current scope remains six easy/medium tasks. Committed nearest-first lexical references, safe snapshot-based rename line previews, quick-switch open files ordered by recent visits. New CodeAnalysis JUnit regression; exact-source CI pending. README holds exactly one timestamped current activity line and count, replaced in each substantive commit. No LSP, multi-cursor, runtime expansion, device smoke. Owner performs physical testing.
+
 ## Nov 24, 2026, 2:06 PM PHT — Phase 2 checkpoint protocol
 
 Owner requires exactly **one** current README activity sentence with date/time in Asia/Manila, replaced on every substantive implementation commit. Prior events go into PROGRESS_LOG, not a growing README list. Scope six new easy/medium tasks: contextual autocomplete; symbol/reference navigation; rename preview; folding/diagnostics; quick file switching; verification/docs. Count only verified evidence; label CI pending separately. No physical-device/emulator work by assistant, no new languages, no hard editor features. Last Android APK CI 45336987696 succeeded before this tracker commit. Assistant changes require explicit commit; do not imply background activity.

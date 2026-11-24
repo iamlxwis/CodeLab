@@ -24,15 +24,15 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Phase 2 · Easy/medium editor improvements** — **0/6 verified**, **6 remaining** (new scoped batch; previous editor improvements already passed [CI](https://github.com/iamlxwis/CodeLab/actions/runs/45314217793)).
+**Phase 2 · Easy/medium editor batch:** **0/6 verified · 6 remaining** (new scoped batch; source changes for 4 areas committed, CI pending).
 
-**Current activity · Nov 24, 2026 · 2:06 PM PHT:** Established the single-line commit checkpoint and scoped the next six editor improvements; implementation follows.
+**Current activity · Nov 24, 2026 · 2:12 PM PHT:** Committed lexical reference ordering, safe rename line previews, recent-first tab switching and regression tests; awaiting source checks.
 
-**Status:** COMMITTED · [Latest APK CI](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml) · Last verified UX/artifact build: [0350fad6](https://github.com/iamlxwis/CodeLab/actions/runs/45336987696).
+**Status:** COMMITTED / CI PENDING · [Current Android build](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml) · [Prior passing build](https://github.com/iamlxwis/CodeLab/actions/runs/45336987696).
 
-> This line is the **latest commit checkpoint**, not a continuously running agent or live progress feed. Each substantive commit **replaces** the activity line with one concise sentence and the actual Asia/Manila timestamp. Git history and [progress audit](docs/development/PROGRESS_LOG.md) retain prior events. CI success and physical-device acceptance are separate; the owner handles all phone testing.
+> This line is the latest **committed checkpoint**, not continuous background work. Every substantive commit **replaces this single activity sentence** with an Asia/Manila timestamp. Prior entries live in the [progress audit](docs/development/PROGRESS_LOG.md). A committed feature is not counted as verified until its checks pass. Physical-device testing is performed by the owner.
 
-**Remaining:** Contextual autocomplete; symbol/reference navigation; rename change preview; folding/diagnostics refinements; quick file switching; source verification/docs closeout. No LSP, multi-cursor, compiler packs, or emulator testing.
+**Next:** Inspect source CI; finish contextual autocomplete and folding/diagnostics, then synchronize evidence and close the batch. No LSP, multi-cursor, runtime expansion or device smoke.
 
 [Development audit](docs/development/PROGRESS_LOG.md) · [Project memory](docs/development/PROJECT_MEMORY.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md)
 

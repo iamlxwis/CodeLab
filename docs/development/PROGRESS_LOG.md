@@ -127,3 +127,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026 | CI / UX | Source committed, CI pending | Eight separate workflow artifact entries consolidated to three: CodeLab-APK, CodeLab-Offline-Packs (six APKs and SHA256SUMS), CodeLab-CI-Reports. Added no-emulator workflow safety tests. Individual signed release APK files and same-commit API35 publication gate preserved. |
 
 | 2026-11-24 2:06 PM PHT | Phase 2 easy/medium | 0/6 new batch verified | Introduced one replaceable README activity line; six remaining tasks scoped separately from earlier verified editor enhancements; physical testing remains with owner. |
+
+| 2026-11-24 2:12 PM PHT | Phase 2 easy/medium | 0/6 verified; CI pending | Added lexical reference nearest-first listing, preview of affected rename lines with source-change guard, and recent-first open tab switcher. JVM regression added; user remains physical tester. |

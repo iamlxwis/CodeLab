@@ -227,6 +227,19 @@ internal object CodeAnalysis {
         ).take(25).map { it.key }
     }
 
+    /** Show nearby lexical hits first, without including strings or comments. */
+    fun nearbyReferences(source: String, identifier: String, caret: Int,
+        cap: Int = 120, language: String = ""): List<Reference> =
+        references(source, identifier, cap = 500, language = language)
+            .sortedWith(compareBy<Reference> {
+                kotlin.math.abs(it.index - caret.coerceIn(0, source.length))
+            }.thenBy { it.index }).take(cap.coerceIn(1, 500))
+
+    /** Bounded preview of the exact lines that lexical rename would affect. */
+    fun renamePreview(source: String, identifier: String, language: String = "",
+        limit: Int = 8): List<Reference> =
+        references(source, identifier, cap = limit.coerceIn(1, 500), language = language)
+
     /** Complete-file count for explicit user confirmation, not the capped reference UI. */
     fun renameCount(source: String, identifier: String, language: String = ""): Int {
         if (!identifier.matches(Regex("[A-Za-z_][A-Za-z_0-9]*"))) return 0

@@ -109,16 +109,30 @@ internal fun WorkspaceTab(
 @Composable
 internal fun OpenTabsMenu(tabs: List<String>, active: String?, onSelect: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
+    val recent = remember { mutableStateListOf<String>() }
+    LaunchedEffect(active, tabs) {
+        recent.removeAll { it !in tabs }
+        if (active != null && active in tabs) {
+            recent.remove(active)
+            recent.add(0, active)
+        }
+    }
+    val ordered = (recent + tabs).distinct().filter { it in tabs }
     Box {
         IconButton(onClick = { expanded = true }, modifier = Modifier.size(48.dp)) {
-            Icon(Icons.Default.List, "All open tabs")
+            Icon(Icons.Default.List, "Quick switch open files")
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            tabs.forEach { path ->
+            ordered.forEach { path ->
                 DropdownMenuItem(
                     text = { Text(if (path == active) "✓ $path" else path,
                         maxLines = 2, overflow = TextOverflow.Ellipsis) },
-                    onClick = { expanded = false; onSelect(path) }
+                    onClick = {
+                        expanded = false
+                        recent.remove(path)
+                        recent.add(0, path)
+                        onSelect(path)
+                    }
                 )
             }
         }

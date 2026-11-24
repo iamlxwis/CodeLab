@@ -102,6 +102,8 @@ fun CodeEditor(
     var referenceMenu by remember { mutableStateOf(false) }
     var renameDialog by remember { mutableStateOf(false) }
     var renameValue by remember { mutableStateOf("") }
+    var renameOriginal by remember { mutableStateOf("") }
+    var renameSnapshot by remember { mutableStateOf("") }
     var renameError by remember { mutableStateOf("") }
     var foldPreview by remember { mutableStateOf(false) }
     var foldSnapshot by remember { mutableStateOf("") }
@@ -151,15 +153,21 @@ fun CodeEditor(
                 OutlinedTextField(renameValue, { renameValue = it; renameError = "" },
                     label = { Text("New identifier") }, singleLine = true)
                 val editorSource = view?.text?.toString().orEmpty()
-                val original = view?.let {
-                    CodeAnalysis.identifierAt(editorSource, it.selectionStart)
-                }
-                if (original != null) {
-                    val count = CodeAnalysis.renameCount(editorSource, original,
+                if (renameOriginal.isNotEmpty()) {
+                    val count = CodeAnalysis.renameCount(renameSnapshot, renameOriginal,
                         filename.substringAfterLast('.', ""))
                     Text("$count code occurrence(s) in this file will be updated. Strings and comments are excluded.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    CodeAnalysis.renamePreview(renameSnapshot, renameOriginal,
+                        filename.substringAfterLast('.', "")).forEach { reference ->
+                        Text("Line ${reference.line} · ${reference.preview}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1)
+                    }
+                    if (count > 8) Text("And ${count - 8} more occurrences…",
+                        style = MaterialTheme.typography.labelSmall)
                 }
                 if (renameError.isNotBlank())
                     Text(renameError, color = MaterialTheme.colorScheme.error)
@@ -168,12 +176,13 @@ fun CodeEditor(
         confirmButton = { TextButton(onClick = {
             val editor = view
             if (editor != null) {
-                val oldName = CodeAnalysis.identifierAt(
-                    editor.text.toString(), editor.selectionStart)
-                if (oldName == null) renameError = "No identifier at cursor."
-                else try {
+                if (editor.text.toString() != renameSnapshot) {
+                    renameError = "File changed since preview. Close and reopen Rename."
+                } else if (renameOriginal.isEmpty()) {
+                    renameError = "No identifier selected."
+                } else try {
                     editor.replaceFromUser(CodeAnalysis.lexicalRename(
-                        editor.text.toString(), oldName, renameValue,
+                        renameSnapshot, renameOriginal, renameValue,
                         filename.substringAfterLast('.', "")))
                     renameDialog = false
                 } catch (ex: IllegalArgumentException) {
@@ -407,7 +416,8 @@ fun CodeEditor(
                     val editor = view
                     val source = editor?.text?.toString().orEmpty()
                     val name = editor?.let { CodeAnalysis.identifierAt(source, it.selectionStart) }
-                    val refs = name?.let { CodeAnalysis.references(source, it,
+                    val refs = name?.let { CodeAnalysis.nearbyReferences(source, it,
+                        editor?.selectionStart ?: 0,
                         language = filename.substringAfterLast('.', "")) }.orEmpty()
                     if (refs.isEmpty()) DropdownMenuItem(text = { Text("Place cursor on an identifier") },
                         enabled = false, onClick = {})
@@ -424,7 +434,11 @@ fun CodeEditor(
                 "Rename identifier in current file") {
                 val editor = view
                 val source = editor?.text?.toString().orEmpty()
-                renameValue = editor?.let { CodeAnalysis.identifierAt(source, it.selectionStart) }.orEmpty()
+                renameOriginal = editor?.let {
+                    CodeAnalysis.identifierAt(source, it.selectionStart)
+                }.orEmpty()
+                renameSnapshot = source
+                renameValue = renameOriginal
                 renameError = ""
                 renameDialog = renameValue.isNotBlank() && !readOnly
             }
