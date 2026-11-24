@@ -49,7 +49,7 @@ class CodeAnalysisTest {
             "val message = \"renderString\"\n" +
             "val renderClose = 2\n" +
             "ren\n"
-        val candidates = CodeAnalysis.wordCompletions(source, source.length, "kt")
+        val candidates = CodeAnalysis.wordCompletions(source, source.lastIndexOf("ren") + 3, "kt")
         assertEquals(listOf("renderClose", "renderFar"), candidates)
         assertEquals(2, CodeAnalysis.renameCount(source, "renderClose", "kt") +
             CodeAnalysis.renameCount(source, "renderFar", "kt"))
