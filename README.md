@@ -27,16 +27,16 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **SESSION STOPPED — source CI passed; device acceptance pending** |
+| Status | **ACTIVE — implementation first; testing deferred by owner** |
 | Session source checks | **5/5 implementation batches passed Android CI**; build evidence is separate from device acceptance |
-| Decisions accepted | **0/37 fully accepted** — 37 require current visual/function/device evidence; source and CI tracked separately |
+| Implementation queue | **0/8 remaining source gaps closed in this session**; all 37 decisions mapped in the ledger |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [03ef032 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) · [APK artifact](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920947097) |
-| Next to build | Run manual API35 acceptance, inspect real screenshots and fix remaining visual, gesture, persistence, accessibility and performance defects |
-| Last activity | Nov 24, 2026, 8:44:57 PM PHT |
+| Next to build | Shared motion-aware dialogs/menus, native Theme Studio preview, keyboard ordering, complete layouts, contextual guidance and performance instrumentation |
+| Last activity | Nov 24, 2026, 8:56:25 PM PHT |
 
-**Current activity:** Nov 24, 2026, 8:44:57 PM PHT — SESSION STOPPED: cumulative source 03ef032 passed [CI](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) and APK upload; next manual API35 acceptance, with no background coding continuing.
+**Current activity:** Nov 24, 2026, 8:56:25 PM PHT — Implementing remaining approved source requirements across all 37 decisions; tests and build checks are deferred until implementation is finished.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

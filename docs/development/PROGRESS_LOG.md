@@ -276,3 +276,8 @@ New source covered nine Settings categories/live editor preferences, motion cont
 **Acceptance remains 0/37 fully accepted.** Latest observed device run 45306690201 is historical source b4adaa9, not this redesign. Connector lacks manual dispatch; CLI is unauthenticated and browser signed out. User was asked to start the existing API35 workflow; no response or refusal was assumed. No background coding continues.
 
 **Next unfinished task:** manual Android 15/API35 smoke on current main, inspect real screenshots and failures, fix screen/motion/gesture/accessibility/persistence/runtime/file regressions, record actual startup/typing/frame/memory measurements, then physical acceptance. Material control motion and full screen fidelity remain unverified. Resume from PROJECT_MEMORY.md and REIMAGINED_SPEC.md; do not restart planning or bypass release gates.
+
+
+## Implementation-first instruction — Nov 24, 2026, 8:56:25 PM PHT
+
+Owner explicitly deferred testing until the 37-decision implementation is finished. Stop waiting on CI/device verification; implement remaining source gaps now. Use [skip ci] implementation checkpoints without altering workflow triggers, cancellation policy or release/signing safeguards. No tests, smoke runs or builds are requested during this implementation pass; do not mark untested results verified. Source queue: shared motion-aware modal/menu layer; editable native Theme Studio preview; component typography controls; reorderable coding accessory; full per-project/named layouts and system-bar preference; contextual guidance; consistent loading/search/accessibility polish; real opt-in performance instrumentation. Existing source remains intact. Next: first four source gaps, then remaining four in the same sitting.

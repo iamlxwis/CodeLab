@@ -150,3 +150,8 @@ Status: In progress. All 37 decisions supplied by owner are authoritative; super
 
 
 R37 checkpoint — Nov 24, 2026, 8:44:57 PM PHT: source 03ef032 passed CI 45395252404; full contract in REIMAGINED_SPEC.md, acceptance 0/37 fully accepted. Status remains In progress pending API35, visual/functional/accessibility/performance and physical acceptance. Continue from PROJECT_MEMORY.md; retain approved requirements.
+
+
+## Implementation-first instruction — Nov 24, 2026, 8:56:25 PM PHT
+
+Owner explicitly deferred testing until the 37-decision implementation is finished. Stop waiting on CI/device verification; implement remaining source gaps now. Use [skip ci] implementation checkpoints without altering workflow triggers, cancellation policy or release/signing safeguards. No tests, smoke runs or builds are requested during this implementation pass; do not mark untested results verified. Source queue: shared motion-aware modal/menu layer; editable native Theme Studio preview; component typography controls; reorderable coding accessory; full per-project/named layouts and system-bar preference; contextual guidance; consistent loading/search/accessibility polish; real opt-in performance instrumentation. Existing source remains intact. Next: first four source gaps, then remaining four in the same sitting.
