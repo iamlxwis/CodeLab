@@ -12,6 +12,11 @@ internal data class PaletteCommand(
 internal val workspaceCommandCatalog = listOf(
     PaletteCommand("newproject", "Create project"),
     PaletteCommand("newfile", "Create file", requiresProject = true),
+    PaletteCommand("importzip", "Import project ZIP"),
+    PaletteCommand("importmany", "Import multiple files", requiresProject = true),
+    PaletteCommand("exportproject", "Export project backup", requiresProject = true),
+    PaletteCommand("switchproject", "Switch project", requiresProject = true),
+    PaletteCommand("workspacecommands", "Offline workspace commands", requiresProject = true),
     PaletteCommand("newfolder", "Create folder", requiresProject = true),
     PaletteCommand("files", "Browse files", requiresProject = true),
     PaletteCommand("run-active", "Run active file", "Ctrl+Enter", requiresFile = true),
@@ -59,9 +64,11 @@ internal fun rankWorkspaceCommands(
     commands: List<PaletteCommand>,
     recent: List<String>
 ): List<PaletteCommand> = commands.mapNotNull { command ->
-    val score = fuzzyActionScore(query.trim(), command.label)
-        ?: fuzzyActionScore(query.trim(), command.id.replace('-', ' '))
-        ?: return@mapNotNull null
+    val score = listOfNotNull(
+        fuzzyActionScore(query.trim(), command.label),
+        fuzzyActionScore(query.trim(), command.id.replace('-', ' ')),
+        command.shortcut?.let { fuzzyActionScore(query.trim(), it) }
+    ).maxOrNull() ?: return@mapNotNull null
     val index = recent.indexOf(command.id)
     val bonus = if (index < 0) 0 else 80 - index.coerceAtMost(7) * 10
     command to score + bonus

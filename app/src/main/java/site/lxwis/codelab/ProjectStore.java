@@ -471,6 +471,10 @@ public final class ProjectStore {
     public synchronized void importSingleFile(String project, String path, InputStream input) throws IOException {
         File target = resolve(project(project), path);
         requireNew(target);
+        importFileContent(target, path, input);
+    }
+
+    private void importFileContent(File target, String path, InputStream input) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         transfer(input, output, importLimitFor(path));
         byte[] bytes = output.toByteArray();
@@ -492,6 +496,53 @@ public final class ProjectStore {
                 .decode(ByteBuffer.wrap(bytes, start, bytes.length - start)).toString();
         }
         writeText(target, content);
+    }
+
+    @FunctionalInterface
+    public interface ImportStreamOpener {
+        InputStream open(int index) throws IOException;
+    }
+
+    /**
+     * Stage all selected imports outside the project and publish only after every
+     * source is readable and validated. Never overwrite a current project file.
+     */
+    public synchronized void importFilesAtomically(String projectName,
+            List<String> paths, ImportStreamOpener opener) throws IOException {
+        if (paths == null || paths.isEmpty() || paths.size() > 100 ||
+                new HashSet<>(paths).size() != paths.size())
+            throw new IOException("Choose 1 to 100 distinct files.");
+        if (opener == null) throw new IOException("File source is unavailable.");
+        File base = project(projectName);
+        File stage = Files.createTempDirectory(scratch.toPath(), "bulk-").toFile();
+        List<File> published = new ArrayList<>();
+        try {
+            for (int i = 0; i < paths.size(); i++) {
+                String path = paths.get(i);
+                File destination = resolve(base, path);
+                requireNew(destination);
+                File staged = resolve(stage, path);
+                ensureDir(staged.getParentFile());
+                try (InputStream input = opener.open(i)) {
+                    if (input == null) throw new IOException("Cannot open source file.");
+                    importFileContent(staged, path, input);
+                }
+            }
+            for (String path : paths) {
+                File destination = resolve(base, path);
+                moveNew(resolve(stage, path), destination);
+                published.add(destination);
+            }
+        } catch (IOException | RuntimeException failure) {
+            // Only files published by this operation may be rolled back.
+            for (File file : published) {
+                try { Files.deleteIfExists(file.toPath()); }
+                catch (IOException cleanupFailure) { failure.addSuppressed(cleanupFailure); }
+            }
+            throw failure;
+        } finally {
+            clean(stage);
+        }
     }
 
     public synchronized void exportSingleFile(String project, String path, OutputStream output) throws IOException {
@@ -915,6 +966,17 @@ public final class ProjectStore {
         return total;
     }
 
+    private static void validateArchiveEntry(String path) throws IOException {
+        String lower = path.toLowerCase(Locale.ROOT);
+        String[] parts = lower.split("/", -1);
+        for (String part : parts)
+            if (part.equals(".git")) throw new IOException("Git repository metadata cannot be imported.");
+        if (lower.equals(".codelab") || lower.equals(".codelab/project.properties")) return;
+        for (String part : parts)
+            if (part.equals(".codelab"))
+                throw new IOException("Unexpected application metadata in archive.");
+    }
+
     public synchronized String importZip(String name, InputStream stream) throws IOException {
         File dest = new File(projects, segment(name));
         requireNew(dest);
@@ -931,6 +993,7 @@ public final class ProjectStore {
                     ZipEntry entry = entries.nextElement();
                     String path = entry.getName();
                     if (entry.isDirectory()) path = path.substring(0, path.length() - 1);
+                    validateArchiveEntry(path);
                     File file = resolve(stage, path);
                     if (!seen.add(path)) throw new IOException("Duplicate archive entry.");
                     if (entry.isDirectory()) { ensureDir(file); continue; }

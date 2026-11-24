@@ -594,9 +594,12 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     internal var projectCardDetails by mutableStateOf<Map<String, ProjectCardDetail>>(emptyMap())
         private set
 
-    /** Collect metadata on the I/O executor, never while Compose draws a project card. */
+    private var projectCardsGeneration = 0
+
+    /** Collect metadata on I/O; ignore stale results after project navigation. */
     fun refreshProjectCardDetails() {
         val current = projects.toList()
+        val generation = ++projectCardsGeneration
         io.execute {
             val cards = current.associateWith { name ->
                 val metadata = runCatching { store.metadata(name) }.getOrNull()
@@ -604,7 +607,10 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                 ProjectCardDetail(metadata?.template?.take(42) ?: "Local project",
                     count, metadata?.description?.take(80).orEmpty())
             }
-            main.post { projectCardDetails = cards }
+            main.post {
+                if (generation == projectCardsGeneration && projects == current)
+                    projectCardDetails = cards
+            }
         }
     }
     var project by mutableStateOf<String?>(null)
@@ -1169,9 +1175,10 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val p = project ?: return
         if (uris.isEmpty()) return
         work {
+            require(uris.size <= 100) { "Choose up to 100 files per import." }
             val resolver = getApplication<Application>().contentResolver
             val existing = store.files(p).toMutableSet()
-            val imported = mutableListOf<String>()
+            val names = mutableListOf<String>()
             uris.forEachIndexed { index, uri ->
                 val display = resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME),
                     null, null, null)?.use { cursor ->
@@ -1181,20 +1188,23 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                     .replace(Regex("[^A-Za-z0-9._ -]"), "_")
                     .trim().take(100).ifBlank { "import-${index + 1}.txt" }
                 val stem = sanitized.substringBeforeLast('.', sanitized)
-                val extension = if (sanitized.contains('.')) "." + sanitized.substringAfterLast('.') else ""
+                val extension = if (sanitized.contains('.'))
+                    "." + sanitized.substringAfterLast('.') else ""
                 var name = sanitized
                 var counter = 2
                 while (name in existing) {
                     name = "${stem}-${counter++}${extension}"
                 }
-                requireNotNull(resolver.openInputStream(uri)) { "Cannot open source file" }
-                    .use { store.importSingleFile(p, name, it) }
                 existing.add(name)
-                imported.add(name)
+                names.add(name)
             }
-            val last = imported.last()
-            val opened = persist(load(p, tabs + imported, last))
-            val commit: () -> Unit = { apply(opened); console = false }
+            store.importFilesAtomically(p, names) { index ->
+                resolver.openInputStream(uris[index])
+                    ?: throw java.io.IOException("Cannot open source file.")
+            }
+            val last = names.last()
+            val opened = persist(load(p, tabs + names, last))
+            val commit: () -> Unit = { if (project == p) { apply(opened); console = false } }
             commit
         }
     }

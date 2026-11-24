@@ -1,3 +1,19 @@
+# Phase 3 checkpoint — Nov 24, 2026 · 5:21 PM PHT
+
+- **Phase / status:** Phase 3 IN PROGRESS; no complete workstream certified, **0/7 verified**, 7 remain.
+- **Prior verified pushed SHA:** `9f0fe2313b60240679d17dd72b758cfba79eb87f`. The commit containing this checkpoint is in GitHub history; exact-source CI needed before verified completion.
+- **Last known successful CI:** [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953), Phase 2. First Phase 3 source run [45364077560](https://github.com/iamlxwis/CodeLab/actions/runs/45364077560) was running at inspection time; later run may cancel it per CI Option B.
+- **Changed in WS1–WS2:** project last-open ordering via `ProjectStore.remember`; staged-file removal in JGit for both unborn and existing HEAD, without editing working files; UI and JVM tests.
+- **Changed in WS3–WS7:** Git tracking after confirmed remote pull/push, redacted lower-level transport failures; staged atomic multi-file import and rollback on publish errors; reject .git or extraneous .codelab archive entries; expanded command palette coverage and shortcut matching; guard against stale project-card metadata callback.
+- **Files modified this checkpoint:** `ProjectStore.java`, `WorkspaceModel.kt`, `GitWorkspace.kt`, `GitPanels.kt`, `CommandDiscovery.kt`, `ProjectStoreTest.java`, `CommandDiscoveryTest.kt`, `GitWorkspaceTest.kt`, README.md, PROGRESS_LOG.md, PROJECT_MEMORY.md.
+- **Completed workstreams:** None fully verified. Partial source progress across WS1–WS7, with broader integration/review and exact-SHA CI outstanding.
+- **Known blockers/risks:** no local Android SDK or public-network git clone in this session. GitHub Actions source compile/tests are authoritative; preserve failed CI evidence. Physical-device testing owner only.
+- **Architecture/constraints:** existing JGit/Kotlin/Compose, atomic ProjectStore writes and encrypted credential vault preserved. Six offline packs intact, no new runtimes/editor advanced Phase 2 features. Keep CI Option B: source-only fast workflow, cancel-in-progress, APK/offline-packs/reports artifacts, manual-only Android15 device smoke and existing signer gates.
+- **Next exact action:** inspect latest main Android APK CI (not prior-SHA CI), fix any compile/test failure, then audit completeness of WS1–WS7 before increasing counts; write one README current activity and append log/memory in same atomic commit.
+- **Resume instruction:** Fetch latest `main` SHA, README, PROGRESS_LOG, PROJECT_MEMORY, source and runs. Continue without duplicating verified code; commit directly to main; no PRs or emulator tests. Mark PAUSED if unable to complete.
+
+---
+
 # Phase 3 checkpoint — Nov 24, 2026 · 5:19 PM PHT
 
 - **Phase / status:** Phase 3, IN PROGRESS; **0/7 workstreams verified**, 7 remaining; WS1 Project Management and WS2 Git Integration have unverified changes.

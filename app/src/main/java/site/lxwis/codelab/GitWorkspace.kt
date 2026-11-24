@@ -19,7 +19,8 @@ internal class GitWorkspace(private val folder: File) {
     data class Snapshot(val initialized: Boolean, val branch: String,
                         val branches: List<String>, val changes: List<Change>,
                         val commits: List<Revision>, val staged: List<String> = emptyList(),
-                        val remoteUrl: String? = null, val unsafeRemote: Boolean = false)
+                        val remoteUrl: String? = null, val unsafeRemote: Boolean = false,
+                        val trackingBranch: String? = null)
 
     private val gitFolder get() = File(folder, ".git")
 
@@ -61,8 +62,14 @@ internal class GitWorkspace(private val folder: File) {
             val remoteUrl = configUrl?.takeIf {
                 runCatching { GitHubRemoteAddress.requireConfigured(it) }.isSuccess
             }
-            Snapshot(true, git.repository.branch, names, changes, commits, staged,
-                remoteUrl, configUrl != null && remoteUrl == null)
+            val branch = git.repository.branch
+            val trackingRemote = git.repository.config.getString("branch", branch, "remote")
+            val trackingRef = git.repository.config.getString("branch", branch, "merge")
+            val tracking = if (remoteUrl != null && trackingRemote == "origin" &&
+                trackingRef?.startsWith("refs/heads/") == true)
+                "origin/" + trackingRef.removePrefix("refs/heads/") else null
+            Snapshot(true, branch, names, changes, commits, staged,
+                remoteUrl, configUrl != null && remoteUrl == null, tracking)
         }
     }
 
@@ -148,20 +155,39 @@ internal class GitWorkspace(private val folder: File) {
     private fun credentials(token: String) =
         UsernamePasswordCredentialsProvider("x-access-token", token)
 
+    /** Never surface a JGit transport exception that might contain a credential. */
+    private fun <T> guardedRemote(operation: () -> T): T = try {
+        operation()
+    } catch (e: IllegalArgumentException) {
+        throw e
+    } catch (e: IllegalStateException) {
+        throw e
+    } catch (_: Exception) {
+        throw IllegalStateException(
+            "GitHub request failed. Check connectivity, token permissions and remote status before retrying.")
+    }
+
+    private fun trackOrigin(git: Git, branch: String) {
+        val config = git.repository.config
+        config.setString("branch", branch, "remote", "origin")
+        config.setString("branch", branch, "merge", "refs/heads/$branch")
+        config.save()
+    }
+
     /** Fetch moves only refs/remotes/origin; it never changes working files. */
-    fun fetchGitHub(token: String): String = open { git ->
+    fun fetchGitHub(token: String): String = guardedRemote { open { git ->
         checkedRemote(git)
         val command = git.fetch().setRemote("origin").setTimeout(30)
         if (token.isNotBlank()) command.setCredentialsProvider(credentials(token))
         command.call()
         "Fetched remote branches. Your files are unchanged."
-    }
+    } }
 
     /**
      * Pull may update source files; only performed after explicit confirmation.
      * Never perform a merge commit, rebase or overwrite dirty local work.
      */
-    fun pullFastForwardGitHub(token: String): String = open { git ->
+    fun pullFastForwardGitHub(token: String): String = guardedRemote { open { git ->
         checkedRemote(git)
         require(git.status().call().isClean) {
             "Commit or remove local modifications before pulling."
@@ -178,11 +204,12 @@ internal class GitWorkspace(private val folder: File) {
         if (token.isNotBlank()) command.setCredentialsProvider(credentials(token))
         val result = command.call()
         check(result.isSuccessful) { "Pull was not fast-forward. Your local commits were preserved." }
+        trackOrigin(git, branch)
         "Fast-forward pull finished on $branch."
-    }
+    } }
 
     /** An explicit, single-branch, non-force push; server rejection is an error. */
-    fun pushGitHub(token: String): String = open { git ->
+    fun pushGitHub(token: String): String = guardedRemote { open { git ->
         checkedRemote(git)
         require(token.isNotBlank()) { "Save a GitHub access token before pushing." }
         require(git.status().call().isClean) {
@@ -205,8 +232,9 @@ internal class GitWorkspace(private val folder: File) {
             it.status == RemoteRefUpdate.Status.OK ||
                 it.status == RemoteRefUpdate.Status.UP_TO_DATE
         }) { "GitHub rejected the push (possibly a non-fast-forward update)." }
+        trackOrigin(git, branch)
         "Pushed branch $branch without force."
-    }
+    } }
 
     fun createBranch(name: String) {
         require(name.matches(Regex("[A-Za-z0-9][A-Za-z0-9._/-]{0,79}")) &&

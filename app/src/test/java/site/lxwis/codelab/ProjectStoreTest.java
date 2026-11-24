@@ -108,6 +108,34 @@ public class ProjectStoreTest {
         return raw.toByteArray();
     }
 
+    @Test public void bulkImportIsTransactionalAndCannotOverwriteExistingFiles() throws Exception {
+        String before = store.read("First", "main.js");
+        assertThrows(IOException.class, () ->
+            store.importFilesAtomically("First", Arrays.asList("new.js", "broken.js"), index -> {
+                if (index == 0) return new ByteArrayInputStream("new".getBytes(StandardCharsets.UTF_8));
+                throw new IOException("Simulated provider read failure");
+            }));
+        assertFalse(store.files("First").contains("new.js"));
+        assertFalse(store.files("First").contains("broken.js"));
+        assertThrows(IOException.class, () ->
+            store.importFilesAtomically("First", Collections.singletonList("main.js"),
+                index -> new ByteArrayInputStream("overwrite".getBytes(StandardCharsets.UTF_8))));
+        assertEquals(before, store.read("First", "main.js"));
+        store.importFilesAtomically("First", Arrays.asList("a.js", "b.js"),
+            index -> new ByteArrayInputStream(("source-" + index).getBytes(StandardCharsets.UTF_8)));
+        assertEquals("source-0", store.read("First", "a.js"));
+        assertEquals("source-1", store.read("First", "b.js"));
+    }
+
+    @Test public void archiveCannotInjectGitOrUnexpectedAppMetadata() throws Exception {
+        for (String path : Arrays.asList(".git/config", "src/.git/hooks/pre-commit",
+                ".codelab/credentials", "src/.codelab/config")) {
+            assertThrows(IOException.class, () ->
+                store.importZip("Unsafe", new ByteArrayInputStream(zip(path, new byte[]{1}))));
+            assertFalse(store.projects().contains("Unsafe"));
+        }
+    }
+
     @Test public void invalidArchivesNeverPublishPartialProjects() throws Exception {
         for (String path : Arrays.asList("../escape", "a/../../escape", "/outside", "C:\\foo", "a//b")) {
             byte[] archive = zip(path, new byte[]{1});

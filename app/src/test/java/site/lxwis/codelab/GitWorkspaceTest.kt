@@ -46,6 +46,21 @@ class GitWorkspaceTest {
         }
     }
 
+    @Test fun configuredTrackingIsReportedWithoutNetworkAccess() {
+        val folder = temporary.newFolder("tracking")
+        val git = GitWorkspace(folder)
+        git.init()
+        git.configureGitHubRemote("openai/example")
+        val branch = git.inspect().branch
+        org.eclipse.jgit.api.Git.open(folder).use { handle ->
+            val config = handle.repository.config
+            config.setString("branch", branch, "remote", "origin")
+            config.setString("branch", branch, "merge", "refs/heads/$branch")
+            config.save()
+        }
+        assertEquals("origin/$branch", git.inspect().trackingBranch)
+    }
+
     @Test fun onlySelectedPathsAreCommitted() {
         val folder = temporary.newFolder("selective")
         val git = GitWorkspace(folder)

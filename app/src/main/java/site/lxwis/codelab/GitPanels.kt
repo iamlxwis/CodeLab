@@ -102,6 +102,11 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                 } else {
                     Text("Branch · " + state.branch, fontFamily = FontFamily.Monospace,
                         style = MaterialTheme.typography.titleSmall)
+                    state.trackingBranch?.let { upstream ->
+                        Text("Tracking · $upstream",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     Row(Modifier.horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(enabled = true, onClick = m::gitRefresh) { Text("Refresh") }

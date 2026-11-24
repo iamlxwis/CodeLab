@@ -16,6 +16,14 @@ class CommandDiscoveryTest {
         assertEquals("git", ranked.first().id)
     }
 
+    @Test fun shortcutsAndProjectBackupActionsAreDiscoverable() {
+        assertEquals("save", rankWorkspaceCommands("Ctrl+S",
+            workspaceCommandCatalog, emptyList()).first().id)
+        assertEquals("exportproject", rankWorkspaceCommands("project backup",
+            workspaceCommandCatalog, emptyList()).first().id)
+        assertTrue(workspaceCommandCatalog.any { it.id == "importmany" && it.requiresProject })
+    }
+
     @Test fun quickActionsAreUniqueAndLimitedToSix() {
         val initial = listOf("a", "b")
         assertEquals(listOf("a", "b", "c"), updatedQuickActionIds(initial, "c"))
