@@ -27,16 +27,16 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **ACTIVE — UI 10/10 refinement; cumulative source validation pending** |
-| Current-pass checks | Not yet run for UI 10/10 source; baseline Android APK passed, device and guarded release failed |
+| Status | **SESSION STOPPED — assistant handed off; CI independent** |
+| Current-pass checks | [Cumulative Android APK run](https://github.com/iamlxwis/CodeLab/actions/runs/45438526779) pending; no new verified build |
 | Source coverage | **37/37 decisions mapped; 8/8 audited implementation gaps addressed** — validation is separate |
 | Current workstream | UI 10/10: 10/10 workstreams touched, 0/10 accepted, 10/10 pending acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [6d81def Android APK](https://github.com/iamlxwis/CodeLab/actions/runs/45414788437); [device failed](https://github.com/iamlxwis/CodeLab/actions/runs/45414804243) |
 | Next to build | Check cumulative Gradle, finish remaining localization and consistency, validate toolbar/IME/back and screenshots |
-| Last activity | Nov 25, 2026, 12:32 AM PHT |
+| Last activity | Nov 25, 2026, 12:33:50 AM PHT |
 
-**Current activity:** Nov 25, 2026, 12:32 AM PHT — UI10-001 source checkpoint: enforce usable medium-width split ranges, add preference-gated panel and handle haptics, keep preview log toggle fixed beside scrollable viewport choices, localize touched preview/header copy, add preview control regression and maximize keyboard space. Source-only; latest cumulative Gradle and emulator acceptance still required. Existing signing and security gates unchanged.
+**Current activity:** Nov 25, 2026, 12:33:50 AM PHT — SESSION STOPPED — UI10-001 handoff. Source commits 852ef2e, bfe7366, f61a774 address portions of all ten workstreams; 0/10 accepted, 10/10 still require validation. Cumulative Android APK run 45438526779 pending at handoff. No new release, device screenshots, measured 12-line viewport, predictive gesture proof, complete localization or comprehensive consistency audit. Preserve approved pure-black Obsidian default; saved light palette applies to activity window but OS starting splash still needs validation. Next inspect exact-run Gradle build/JVM/instrumentation compilation/lint, fix failures, complete toolbar/language UI regression coverage, back audit and remaining design cleanup, then manual API35 and three-size/two-theme screenshots. Existing signing, data and security gates preserved. No assistant coding continues after this checkpoint.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

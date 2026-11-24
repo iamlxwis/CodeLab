@@ -86,3 +86,8 @@ UI refinement source follow-up: opt-in API31 Material You mode, persisted new sy
 ### Nov 25, 2026, 12:32 AM PHT — UI10-001 refinement
 
 UI10-001 source checkpoint: enforce usable medium-width split ranges, add preference-gated panel and handle haptics, keep preview log toggle fixed beside scrollable viewport choices, localize touched preview/header copy, add preview control regression and maximize keyboard space. Source-only; latest cumulative Gradle and emulator acceptance still required. Existing signing and security gates unchanged.
+
+
+### Nov 25, 2026, 12:33:50 AM PHT — UI10-001 handoff
+
+SESSION STOPPED — UI10-001 handoff. Source commits 852ef2e, bfe7366, f61a774 address portions of all ten workstreams; 0/10 accepted, 10/10 still require validation. Cumulative Android APK run 45438526779 pending at handoff. No new release, device screenshots, measured 12-line viewport, predictive gesture proof, complete localization or comprehensive consistency audit. Preserve approved pure-black Obsidian default; saved light palette applies to activity window but OS starting splash still needs validation. Next inspect exact-run Gradle build/JVM/instrumentation compilation/lint, fix failures, complete toolbar/language UI regression coverage, back audit and remaining design cleanup, then manual API35 and three-size/two-theme screenshots. Existing signing, data and security gates preserved. No assistant coding continues after this checkpoint.
