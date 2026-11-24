@@ -80,6 +80,11 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var requestedLanguage by rememberSaveable { mutableStateOf<String?>(null) }
     var selected by rememberSaveable { mutableStateOf("") }
     val snackbarHost = remember { SnackbarHostState() }
+    LaunchedEffect(m.transferNotice) {
+        val notice = m.transferNotice ?: return@LaunchedEffect
+        snackbarHost.showSnackbar(notice)
+        m.clearTransferNotice()
+    }
     LaunchedEffect(m.undoDeletion?.id) {
         val deleted = m.undoDeletion ?: return@LaunchedEffect
         val result = snackbarHost.showSnackbar(deleted.label,
@@ -141,12 +146,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         }
     }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { it?.let(m::export) }
-    var folderImportName by rememberSaveable { mutableStateOf("") }
+    var folderImportUri by rememberSaveable { mutableStateOf<String?>(null) }
     val importTree = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null && folderImportName.isNotBlank()) {
-            m.importExternalFolder(uri, folderImportName)
-            folderImportName = ""
-        }
+        if (uri != null) { folderImportUri = uri.toString(); dialog = "folderreview" }
     }
     val importZip = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) {
         if (it != null) { incoming = it.toString(); dialog = "import" }
@@ -162,8 +164,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             "importfile" -> importFile.launch(arrayOf("*/*"))
             "importmany" -> importMany.launch(arrayOf("*/*"))
             "importzip" -> importZip.launch(arrayOf("*/*"))
-            "exportcurrent" -> m.active?.let { exportFile.launch(it.substringAfterLast('/')) }
-            "exportproject" -> p?.let { export.launch(it + ".zip") }
+            "folderimport" -> importTree.launch(null)
+            "exportcurrent" -> if (m.active != null) dialog = "exportfilereview"
+            "exportproject" -> if (p != null) dialog = "exportprojectreview"
             "rename", "duplicate" -> m.active?.let { selected = it; dialog = action }
             "projectreplace" -> { m.clearReplaceSummary(); dialog = action }
             "history" -> { m.refreshHistory(); dialog = action }
@@ -201,7 +204,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 { importZip.launch(arrayOf("*/*")) }, { dialog = "githubimport" },
                 { selected = it; dialog = "renameproject" },
                 { selected = it; dialog = "deleteproject" },
-                { selected = it; dialog = "duplicateproject" }, importFolder = { dialog = "folderimport" }) }
+                { selected = it; dialog = "duplicateproject" }, importFolder = { openAction("folderimport") }) }
             HomeNavigation { openAction(it) }
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -411,7 +414,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
-                Text("Updating local workspace…", style = MaterialTheme.typography.labelSmall,
+                Text(m.transferLabel ?: "Updating local workspace…", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -524,12 +527,22 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             text = { Text("$selected and its files can be recovered from Recently deleted.") },
             confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Move to trash", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
-        "folderimport" -> NameDialog("Import folder as project", "", "Project name",
-            "MyExternalProject", { dialog = "" }) { name ->
-                folderImportName = name
-                dialog = ""
-                importTree.launch(null)
+        "folderreview" -> folderImportUri?.let { source ->
+            ImportReviewDialog(Uri.parse(source), true, m.projects, { dialog = ""; folderImportUri = null }, folder = true) { name ->
+                m.importExternalFolder(Uri.parse(source), name)
+                dialog = ""; folderImportUri = null
             }
+        }
+        "exportfilereview" -> m.active?.let { path ->
+            ExportReviewDialog(path.substringAfterLast('/'), listOf(path), false, { dialog = "" }) {
+                dialog = ""; exportFile.launch(path.substringAfterLast('/'))
+            }
+        }
+        "exportprojectreview" -> p?.let { project ->
+            ExportReviewDialog(project + ".zip", m.files, true, { dialog = "" }) {
+                dialog = ""; export.launch(project + ".zip")
+            }
+        }
         "githubimport" -> GitHubImportDialog(m) { dialog = "" }
         "httpsinspector" -> HttpInspectorSheet { dialog = "" }
         "devtools" -> DeveloperToolbox { dialog = "" }

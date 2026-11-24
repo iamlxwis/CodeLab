@@ -32,10 +32,10 @@ Write, run, and manage projects from your phone.
 | Current workstream | Theme/toolbar persistence and panel contrast verification |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [e9be726 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708) |
-| Next to build | Device smoke corrections, Files-style import/export fidelity and UI acceptance | 
-| Last activity | Nov 24, 2026, 7:22:49 PM PHT |
+| Next to build | Cumulative APK verification, manual API35 regression and remaining visual acceptance | 
+| Last activity | Nov 24, 2026, 7:25:56 PM PHT |
 
-**Current activity:** Nov 24, 2026, 7:22:49 PM PHT — [Cumulative CI](https://github.com/iamlxwis/CodeLab/actions/runs/45383476477) verifies workspace toolbar/explorer persistence, interactive theme preview, contrast, tablet panel resizing and theme motion recipes at [52fbd6f](https://github.com/iamlxwis/CodeLab/commit/52fbd6fa51a53551d2807393d32da2c0df490ad4); API35 device smoke remains manual.
+**Current activity:** Nov 24, 2026, 7:25:56 PM PHT — Added bounded document/ZIP previews, folder and export review, actionable name validation, and operation-specific transfer feedback; locally tested preview logic, cumulative Android build pending.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

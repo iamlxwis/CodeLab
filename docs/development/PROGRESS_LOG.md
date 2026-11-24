@@ -198,3 +198,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 7:21:33 PM PHT | Saved theme motion and preview | Source committed; CI pending | Motion serialization, bounded import, explicit Reduced preference guard, syntax sample and device smoke selector coverage. |
 
 | Nov 24, 2026, 7:22:49 PM PHT | Cumulative fidelity CI | in_progress; device pending | [CI 45383476477](https://github.com/iamlxwis/CodeLab/actions/runs/45383476477) at 52fbd6f; prior verified build e9be726. Next: CI fixes, manual device smoke, remaining import/export and visual acceptance. |
+
+| Nov 24, 2026, 7:25:56 PM PHT | Files-style import/export | Source; local preview logic PASS | Seven local Kotlin preview checks (ZIP expansion/entry limits, bounded text, binary and UTF-16); read-only preview, existing import validator retained, folder/export review and transfer feedback. Android integration pending. |

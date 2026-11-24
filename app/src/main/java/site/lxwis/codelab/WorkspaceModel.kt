@@ -804,6 +804,29 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         private set
     var dirty by mutableStateOf(false)
         private set
+    internal var transferLabel by mutableStateOf<String?>(null)
+        private set
+    internal var transferNotice by mutableStateOf<String?>(null)
+        private set
+    private var transferGeneration = 0
+    internal fun clearTransferNotice() { transferNotice = null }
+
+    private fun transfer(label: String, success: String, task: () -> (() -> Unit)) {
+        val generation = ++transferGeneration
+        transferLabel = label
+        transferNotice = null
+        work(onFailure = { if (generation == transferGeneration) transferLabel = null }) {
+            val result = task()
+            val completion: () -> Unit = {
+                result()
+                if (generation == transferGeneration) {
+                    transferLabel = null
+                    transferNotice = success
+                }
+            }
+            completion
+        }
+    }
     var busy by mutableStateOf(false)
         private set
     var console by mutableStateOf(false)
@@ -1027,7 +1050,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun importExternalFolder(uri: Uri, targetProject: String) {
         val app = getApplication<Application>()
-        work {
+        transfer("Importing folder…", "Folder imported") {
             ExternalFolderImporter.copyToProject(app, uri, targetProject, store)
             val names = store.projects()
             val opened = persist(load(targetProject, emptyList(), null, allowUnavailable = true))
@@ -1041,7 +1064,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun importPublicGitHub(slug: String, targetProject: String) {
-        work {
+        transfer("Importing repository…", "Repository imported") {
             GitHubSnapshotImporter.importPublic(store, slug, targetProject)
             val names = store.projects()
             val opened = persist(load(targetProject, emptyList(), null, allowUnavailable = true))
@@ -1287,7 +1310,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun export(uri: Uri) {
         val p = project ?: return
-        work {
+        transfer("Exporting project…", "Project exported") {
             val resolver = getApplication<Application>().contentResolver
             requireNotNull(resolver.openOutputStream(uri, "wt")) { "Cannot open destination" }.use { store.exportZip(p, it) }
             val commit: () -> Unit = {}
@@ -1298,7 +1321,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun exportFile(uri: Uri) {
         val p = project ?: return
         val path = active ?: return
-        work {
+        transfer("Exporting file…", "File exported") {
             val resolver = getApplication<Application>().contentResolver
             requireNotNull(resolver.openOutputStream(uri, "wt")) { "Cannot open destination" }
                 .use { store.exportSingleFile(p, path, it) }
@@ -1309,7 +1332,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     fun importFile(uri: Uri, name: String) {
         val p = project ?: return
-        work {
+        transfer("Importing file…", "File imported") {
             val resolver = getApplication<Application>().contentResolver
             requireNotNull(resolver.openInputStream(uri)) { "Cannot open source file" }
                 .use { store.importSingleFile(p, name, it) }
@@ -1322,7 +1345,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun importFiles(uris: List<Uri>) {
         val p = project ?: return
         if (uris.isEmpty()) return
-        work {
+        transfer("Importing files…", "Files imported") {
             require(uris.size <= 100) { "Choose up to 100 files per import." }
             val resolver = getApplication<Application>().contentResolver
             val existing = store.files(p).toMutableSet()
@@ -1473,7 +1496,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun importArchive(name: String, uri: Uri) {
-        work {
+        transfer("Importing ZIP archive…", "Project imported") {
             val resolver = getApplication<Application>().contentResolver
             val p = requireNotNull(resolver.openInputStream(uri)) { "Cannot open archive" }.use { store.importZip(name, it) }
             val opened = persist(load(p, emptyList(), null, allowUnavailable = true))
