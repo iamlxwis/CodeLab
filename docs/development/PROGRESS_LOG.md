@@ -263,3 +263,16 @@ New source: the gallery previously composed every saved theme inside one LazyCol
 
 
 Nov 24, 2026, 8:38:05 PM PHT — Cumulative source 03ef0325cf68de989add4622796bc9c0450191e3 is under CI 45395252404; four earlier source batches passed and no source CI was deliberately interrupted. Next: definitive build/artifacts, then manual API35 and physical acceptance; no current-source device run observed.
+
+
+## Session handoff — Nov 24, 2026, 8:44:57 PM PHT
+
+**SESSION STOPPED — assistant handed off.** Exact cumulative implementation `03ef0325cf68de989add4622796bc9c0450191e3` passed [Android CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404). Successful: app/six-pack release compilation, JVM tests, instrumentation Kotlin compilation, lint, static security, release/artifact-gate tests, packaged TypeScript exercise, APK and optional-runtime signatures, report/APK/pack uploads. All five implementation batches passed definitive Android CI; preceding builds were allowed to conclude.
+
+Unexpired artifacts: [CodeLab-APK](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920947097), [CodeLab-Offline-Packs](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920553470), [CodeLab-CI-Reports](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920463844). Source-only CI skipped production-certificate enforcement, signed-upgrade audit, manual-device prerequisite and public release. No tested install/upgrade, emulator/physical acceptance, public release or measured performance is claimed.
+
+New source covered nine Settings categories/live editor preferences, motion controls, real isolated-runtime practice, 19 licensed logos/notices, focus-layout persistence, console severity controls, explicit theme rename/duplicate, exact palette/adaptive glass, verified pack-aware selectors and lazy saved-theme rows. Workflows/dependencies remain unchanged; runtime architecture, six packs, consent, data and signing safeguards preserved.
+
+**Acceptance remains 0/37 fully accepted.** Latest observed device run 45306690201 is historical source b4adaa9, not this redesign. Connector lacks manual dispatch; CLI is unauthenticated and browser signed out. User was asked to start the existing API35 workflow; no response or refusal was assumed. No background coding continues.
+
+**Next unfinished task:** manual Android 15/API35 smoke on current main, inspect real screenshots and failures, fix screen/motion/gesture/accessibility/persistence/runtime/file regressions, record actual startup/typing/frame/memory measurements, then physical acceptance. Material control motion and full screen fidelity remain unverified. Resume from PROJECT_MEMORY.md and REIMAGINED_SPEC.md; do not restart planning or bypass release gates.

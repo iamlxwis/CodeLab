@@ -27,15 +27,16 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **BUILD RUNNING — cumulative Reimagined source and lazy theme list** |
+| Status | **SESSION STOPPED — source CI passed; device acceptance pending** |
+| Session source checks | **5/5 implementation batches passed Android CI**; build evidence is separate from device acceptance |
 | Decisions accepted | **0/37 fully accepted** — 37 require current visual/function/device evidence; source and CI tracked separately |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [97e31ad — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) · [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948/artifacts/14920642082) |
-| Next to build | Verify cumulative lazy theme-list build; then source-matched API35 fidelity, interaction and accessibility fixes |
-| Last activity | Nov 24, 2026, 8:38:05 PM PHT |
+| Latest verified build | [03ef032 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) · [APK artifact](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920947097) |
+| Next to build | Run manual API35 acceptance, inspect real screenshots and fix remaining visual, gesture, persistence, accessibility and performance defects |
+| Last activity | Nov 24, 2026, 8:44:57 PM PHT |
 
-**Current activity:** Nov 24, 2026, 8:38:05 PM PHT — Exact-source [CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) running for 03ef032; four preceding source batches passed, API35 acceptance remains pending.
+**Current activity:** Nov 24, 2026, 8:44:57 PM PHT — SESSION STOPPED: cumulative source 03ef032 passed [CI](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) and APK upload; next manual API35 acceptance, with no background coding continuing.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

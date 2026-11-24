@@ -3,8 +3,8 @@
 Owner approved one comprehensive update, without numbered development phases. This ledger distinguishes committed source changes from tested acceptance.
 
 **Approved contract:** [All 37 decisions and associated requirements](REIMAGINED_SPEC.md).
-**Latest verified source:** [97e31ad](https://github.com/iamlxwis/CodeLab/commit/97e31ad2668de8cb127c7c1bc9a171d16cd7e013), [CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) — success.
-**Current source:** `03ef0325cf68de989add4622796bc9c0450191e3`; [CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) running at this checkpoint.
+**Latest verified source:** [03ef032](https://github.com/iamlxwis/CodeLab/commit/03ef0325cf68de989add4622796bc9c0450191e3), [CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) — success; [APK artifact](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920947097).
+**Current source:** `03ef0325cf68de989add4622796bc9c0450191e3`; cumulative source CI passed. Session stopped at Nov 24, 2026, 8:44:57 PM PHT.
 **Acceptance:** **0/37 fully accepted**; API35 and physical acceptance for this redesign remain unverified. Historical 0/10 workstreams are an earlier grouping, not the decision denominator.
 
 | Workstream | Source changes | Unfinished / verification |
@@ -18,11 +18,11 @@ Owner approved one comprehensive update, without numbered development phases. Th
 | Explorer and tools | Expandable file tree, contextual operations, grouped search/settings, language-specific badges | 19 licensed language-logo glyphs added; inspect all existing tool/dialog screens; verify tree and file operations |
 | Workspace personalization | Named and per-project layouts, reorderable quick actions, density and status bar options | Verify persistence, project rename/reopen, phone/tablet/landscape and all selected gesture behaviors |
 | Onboarding and motion | Updated guide, animated transitions, press springs, speed/intensity, reduced-motion policy, backdrop quality modes | Real interactive code practice added; tutorial and consistent motion across every screen still need device inspection; Android blur is a backdrop approximation, not Apple optical rendering |
-| Quality and delivery | Added recipe, hierarchy and logical-line tests; existing CI retained | Compile, unit tests, lint, installable artifact, API35 smoke, physical-device UX, accessibility, screenshots and measured startup/typing/frame times remain outstanding |
+| Quality and delivery | Added recipe, hierarchy and logical-line tests; existing CI retained | Compile, JVM tests, lint and APK artifacts passed at the latest source above; API35 smoke, physical-device UX, accessibility, screenshots and measured performance remain outstanding |
 
 ## Continuation
 
-1. Cumulative CI passed at e9be726; verify artifacts remain available, then proceed to manual device acceptance.
+1. Cumulative CI passed at 03ef032 (run 45395252404); exact artifacts are linked above. Proceed to manual API35 and visual/functional acceptance instead of rebuilding completed source unnecessarily.
 2. Keep the existing production signing, six optional runtime packs, explicit online upload approval, and source-only CI with cancel-in-progress. Do not change unrelated IDE features.
 3. Finish the open items above; audit all screens against the owner-approved Reimagined specification, including all 37 design decisions and the editor/application polish lists.
 4. Run Android 15/API35 device smoke manually on the same implementation source when appropriate; inspect rendered screens, test data-preserving upgrade, runtime and editor regressions, and record measured performance instead of inventing it.
@@ -169,3 +169,16 @@ Local static security, eight release/artifact Python tests and diff checks passe
 Exact source 97e31ad2668de8cb127c7c1bc9a171d16cd7e013 passed [CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948); [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948/artifacts/14920642082), packs 14920337964, reports 14920756656. Compilation, JVM tests, instrumentation compilation, lint, packaged TypeScript and signatures passed. Device execution remains unverified.
 
 New source: the gallery previously composed every saved theme inside one LazyColumn item. Saved themes now use individual lazy rows keyed by persistent recipe IDs, preserving all contextual operations and the unlimited saved-theme collection. This structurally bounds composed off-screen rows; no measured device performance improvement is claimed. Source build pending. Next: definitive cumulative CI and APK artifacts; manual API35 visual/gesture/runtime/persistence/accessibility/performance acceptance remains required. No new manual run observed; user was asked to start existing workflow because the connector cannot dispatch it.
+
+
+## Session handoff — Nov 24, 2026, 8:44:57 PM PHT
+
+**SESSION STOPPED — assistant handed off.** Exact cumulative implementation `03ef0325cf68de989add4622796bc9c0450191e3` passed [Android CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404). Successful: app/six-pack release compilation, JVM tests, instrumentation Kotlin compilation, lint, static security, release/artifact-gate tests, packaged TypeScript exercise, APK and optional-runtime signatures, report/APK/pack uploads. All five implementation batches passed definitive Android CI; preceding builds were allowed to conclude.
+
+Unexpired artifacts: [CodeLab-APK](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920947097), [CodeLab-Offline-Packs](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920553470), [CodeLab-CI-Reports](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920463844). Source-only CI skipped production-certificate enforcement, signed-upgrade audit, manual-device prerequisite and public release. No tested install/upgrade, emulator/physical acceptance, public release or measured performance is claimed.
+
+New source covered nine Settings categories/live editor preferences, motion controls, real isolated-runtime practice, 19 licensed logos/notices, focus-layout persistence, console severity controls, explicit theme rename/duplicate, exact palette/adaptive glass, verified pack-aware selectors and lazy saved-theme rows. Workflows/dependencies remain unchanged; runtime architecture, six packs, consent, data and signing safeguards preserved.
+
+**Acceptance remains 0/37 fully accepted.** Latest observed device run 45306690201 is historical source b4adaa9, not this redesign. Connector lacks manual dispatch; CLI is unauthenticated and browser signed out. User was asked to start the existing API35 workflow; no response or refusal was assumed. No background coding continues.
+
+**Next unfinished task:** manual Android 15/API35 smoke on current main, inspect real screenshots and failures, fix screen/motion/gesture/accessibility/persistence/runtime/file regressions, record actual startup/typing/frame/memory measurements, then physical acceptance. Material control motion and full screen fidelity remain unverified. Resume from PROJECT_MEMORY.md and REIMAGINED_SPEC.md; do not restart planning or bypass release gates.

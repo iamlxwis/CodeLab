@@ -147,3 +147,6 @@ Nov 24, 2026, 2:56 AM PHT: IDEA-022 UX revision. Dedicated Downloads pane separa
 
 ### R37 — Full CodeLab Reimagined specification (Nov 24, 2026, 8:00:34 PM PHT)
 Status: In progress. All 37 decisions supplied by owner are authoritative; supersedes historical uncertainty about exact decision labels. Implement the entire design, retain functionality and data, direct main commits, medium thinking requested, continuous concise PHT tracking, no numbered phases. Acceptance remains evidence-based; see REIMAGINED.md for per-decision audit.
+
+
+R37 checkpoint — Nov 24, 2026, 8:44:57 PM PHT: source 03ef032 passed CI 45395252404; full contract in REIMAGINED_SPEC.md, acceptance 0/37 fully accepted. Status remains In progress pending API35, visual/functional/accessibility/performance and physical acceptance. Continue from PROJECT_MEMORY.md; retain approved requirements.
