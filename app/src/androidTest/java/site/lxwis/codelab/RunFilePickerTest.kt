@@ -25,4 +25,13 @@ class RunFilePickerTest {
         compose.onNodeWithText("scratch.lua").performClick()
         compose.runOnIdle { assertEquals("scratch.lua", selection) }
     }
+    @Test fun verifiedTypeScriptPackRemainsVisibleWithRunnableFilterEnabled() {
+        var selection = ""
+        compose.setContent { MaterialTheme {
+            RunFilePicker(files = listOf("src/main.ts", "README.md"),
+                installedModules = setOf("ts"), onRun = { selection = it }, onDismiss = {})
+        } }
+        compose.onNodeWithText("src/main.ts").performClick()
+        compose.runOnIdle { assertEquals("src/main.ts", selection) }
+    }
 }

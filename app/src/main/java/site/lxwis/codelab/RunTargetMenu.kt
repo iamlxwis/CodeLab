@@ -14,6 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextOverflow
@@ -25,7 +27,8 @@ internal fun RunModeStrip(
     m: WorkspaceModel, onLanguages: () -> Unit, onProjectSettings: () -> Unit
 ) {
     val active = m.active
-    val localReady = active?.let(m::isLocalExecutable) ?: false
+    val runtime = rememberInstalledRuntimeState()
+    val localReady = active?.let { RunCapability.forPath(it, installedModules = runtime.installedExtensions).mode == RunCapability.Mode.LOCAL } ?: false
     val cloudReady = active?.let(m::cloudAvailable) ?: false
     val preview = active?.endsWith(".html", true) == true ||
         active?.endsWith(".htm", true) == true
@@ -51,7 +54,7 @@ internal fun RunModeStrip(
                     listOf("Offline", "Online").forEach { mode ->
                         val selected = mode == m.executionMode
                         Surface(onClick = { m.chooseExecutionMode(mode) }, enabled = !m.runner.running,
-                            modifier = Modifier.heightIn(min = 48.dp).widthIn(min = 56.dp),
+                            modifier = Modifier.heightIn(min = 48.dp).widthIn(min = 56.dp).semantics { this.selected = selected },
                             color = if (selected) colors.primaryContainer else Color.Transparent,
                             shape = MaterialTheme.shapes.medium) {
                             Box(Modifier.padding(horizontal = 5.dp), contentAlignment = Alignment.Center) {
@@ -97,10 +100,11 @@ internal fun RunTargetMenu(m: WorkspaceModel, onProjectSettings: () -> Unit) {
                 onClick = { expanded = false; onProjectSettings() })
         }
     }
-    val context = androidx.compose.ui.platform.LocalContext.current
-    if (showPicker) RunFilePicker(m.files, m.cloudLanguages.keys, m::runTarget,
-        installedModules = if (PythonModuleLocator.installed(context)) setOf("py") else emptySet()
-    ) { showPicker = false }
+    if (showPicker) {
+        val runtime = rememberInstalledRuntimeState()
+        RunFilePicker(m.files, m.cloudLanguages.keys, m::runTarget,
+            installedModules = runtime.installedExtensions) { showPicker = false }
+    }
 }
 
 @Composable

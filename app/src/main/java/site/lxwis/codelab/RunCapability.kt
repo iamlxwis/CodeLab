@@ -20,8 +20,8 @@ internal object RunCapability {
             if ("ts" in cloudExtensions) return Target(Mode.ONLINE, "Online · TypeScript compiler")
             return Target(Mode.UNAVAILABLE, "TypeScript module not installed")
         }
-        val local = mapOf("js" to "Rhino JavaScript",
-            "lua" to "LuaJ", "java" to "Java interpreter beta", "sql" to "SQLite")
+        val local = mapOf("js" to "JavaScript",
+            "lua" to "Lua", "java" to "Java interpreter beta", "sql" to "SQLite")
         local[extension]?.let { return Target(Mode.LOCAL, "Offline · " + it) }
         if (extension.isNotEmpty() && extension in cloudExtensions)
             return Target(Mode.ONLINE, "Online · requires approval")

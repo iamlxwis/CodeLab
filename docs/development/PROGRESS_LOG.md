@@ -241,3 +241,12 @@ Next to build: repair any exact-source CI failure; then outstanding device-drive
 
 
 Nov 24, 2026, 8:24:37 PM PHT — Exact source 2b04bd19f0e17f697baf325ff1a08b8a51e27b0f is under CI 45392971931; last verified f2990a9. Consolidated current PROJECT_MEMORY and preserved prior text in PROJECT_MEMORY_ARCHIVE so new sessions do not treat obsolete pending-build statements as current. Full specification and 37-row audit are committed. Next: exact-source CI result/fixes, then manual API35 fidelity and functional acceptance.
+
+
+## Verified theme batch and runtime selector correction — Nov 24, 2026, 8:30:42 PM PHT
+
+Exact source 2b04bd19f0e17f697baf325ff1a08b8a51e27b0f passed [Android CI 45392971931](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931); [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14919328907), six packs 14920606010 and reports 14920615908. This verifies compilation/JVM tests/lint/signatures, not emulator instrumentation execution.
+
+Further source audit found the run-target picker supplied only Python to its installed-module set, hiding verified TypeScript under Runnable only. New shared InstalledRuntimeState checks existing signature/protocol validators, refreshes on lifecycle resume rather than on every keystroke, and supplies all verified module extensions to the picker and editor selector. Guided setup's status and Ready offline filter now use actual installed/bundled availability; missing TypeScript is no longer always labelled planned. Ordinary run labels use language names rather than internal JS/Lua engine brands. Added selected-state semantics for execution/language controls, JVM trust-state coverage and installed-TypeScript picker instrumentation regression. No automatic mode switching, uploads, downloader or runtime architecture changes.
+
+Local static security, eight release/artifact Python tests and diff checks passed. This correction awaits its own Android CI. Next: fix any cumulative CI failure; manual API35 screenshots, gestures, runtime/file/persistence/TalkBack and measured-performance validation. Dispatch remains unavailable with current connection/authentication.

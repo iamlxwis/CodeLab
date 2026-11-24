@@ -27,6 +27,13 @@ Read [REIMAGINED_SPEC.md](REIMAGINED_SPEC.md): the complete owner-approved 37 de
 9. Exact approved Crystal/Sandstone base colors and neutral backdrops; no Sandstone decorative lines; zero glass border removes the stroke; battery-saver-aware blur without polling.
 10. Persistent search/control descriptions, contract, per-decision audit and honest tracker.
 
+## Additional runtime selector correction (latest source; new build pending)
+
+Further source audit found the run-target picker supplied only Python to its installed-module set, hiding verified TypeScript under Runnable only. New shared InstalledRuntimeState checks existing signature/protocol validators, refreshes on lifecycle resume rather than on every keystroke, and supplies all verified module extensions to the picker and editor selector. Guided setup's status and Ready offline filter now use actual installed/bundled availability; missing TypeScript is no longer always labelled planned. Ordinary run labels use language names rather than internal JS/Lua engine brands. Added selected-state semantics for execution/language controls, JVM trust-state coverage and installed-TypeScript picker instrumentation regression. No automatic mode switching, uploads, downloader or runtime architecture changes.
+
+
+Latest verified build is now 2b04bd19f0e17f697baf325ff1a08b8a51e27b0f, [CI 45392971931](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931), [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14919328907). No emulator or physical acceptance.
+
 ## Next unfinished work
 
 1. Check latest source SHA Actions; fix compiler/test regressions before any delivery claim. Download/check APK artifacts when successful.

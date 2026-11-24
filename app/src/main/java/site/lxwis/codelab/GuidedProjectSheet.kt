@@ -16,6 +16,9 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,10 +50,18 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
     var execution by rememberSaveable { mutableStateOf("Offline") }
     val isDemo = language in projectDemos
     val catalog = LanguageCatalog.entries.firstOrNull { it.name == language }
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val runtime = rememberInstalledRuntimeState()
+    val readyOffline = remember(runtime) {
+        runtime.installedExtensions + OfflineRuntimeRegistry.engines()
+            .filter { OfflineRuntimeRegistry.locallyAvailable(it.extension) }.map { it.extension }
+    }
+    val optionalPack = OptionalRuntimeLocator.Pack.entries.firstOrNull { it.label == language }
     val runStatus = when {
         isDemo -> "Ready-made example project"
-        language == "Python" -> PythonModuleLocator.check(context).description
+        language == "Python" -> runtime.python.description
+        optionalPack != null && (runtime.optional[optionalPack]?.ready == true ||
+            LanguageCatalog.extensionFor(language) !in readyOffline) -> runtime.optional[optionalPack]?.description
+            ?: "Offline runtime unavailable"
         else -> RuntimePackCatalog.capability(language).let { capability ->
             if (capability.state == RuntimePackCatalog.State.BUNDLED && language !in setOf("Java", "HTML", "CSS", "Web")) "Offline execution available" else capability.label
         }
@@ -96,14 +107,14 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                 CodeLabSearch(query, { query = it }, "Search languages and file types")
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     FilterChip(offlineOnly, onClick = { offlineOnly = !offlineOnly },
-                        label = { Text("Included offline") })
+                        label = { Text("Ready offline") })
                     Spacer(Modifier.width(12.dp))
                     Text("Editing is available for every listed language",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 val results = LanguageCatalog.entries.filter {
-                    (!offlineOnly || it.local != null) &&
+                    (!offlineOnly || it.extension in readyOffline) &&
                         (it.name.contains(query, true) || it.extension.contains(query, true))
                 }
                 LazyColumn(Modifier.weight(1f),
@@ -115,6 +126,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                         item(key = "web-project") {
                             Surface(
                                 onClick = { language = "Web"; browsing = false; keyboard?.hide() },
+                                modifier = Modifier.semantics { selected = language == "Web" },
                                 color = if (language == "Web") MaterialTheme.colorScheme.primaryContainer
                                     else MaterialTheme.colorScheme.surfaceContainerLow,
                                 shape = RoundedCornerShape(14.dp)
@@ -136,6 +148,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                     items(results, key = { it.name }) { item ->
                         Surface(
                             onClick = { language = item.name; browsing = false; keyboard?.hide() },
+                            modifier = Modifier.semantics { selected = language == item.name },
                             color = if (language == item.name) MaterialTheme.colorScheme.primaryContainer
                                 else MaterialTheme.colorScheme.surfaceContainerLow,
                             shape = RoundedCornerShape(14.dp)
@@ -144,7 +157,9 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Text(item.name, style = MaterialTheme.typography.titleMedium)
-                                    Text(if (item.local != null) "Offline capable" else "Edit offline · no bundled runtime",
+                                    Text(if (item.extension in readyOffline) item.local ?: "Verified offline pack installed"
+                                        else if (RuntimePackCatalog.isDownloadable(item.name)) "Offline pack required"
+                                        else "Edit offline · no local runtime",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
@@ -170,7 +185,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                             Text("Project name", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             OutlinedTextField(name, { name = it.take(100) },
-                                Modifier.fillMaxWidth(), singleLine = true,
+                                Modifier.fillMaxWidth().semantics { contentDescription = "Project name" }, singleLine = true,
                                 shape = RoundedCornerShape(14.dp),
                                 placeholder = { Text("Enter project name") },
                                 supportingText = { if (name.isBlank()) Text("A project name is required") })
@@ -184,7 +199,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     choices.forEach { choice ->
                                         val selected = language == choice
-                                        Surface(onClick = { language = choice }, modifier = Modifier.weight(1f),
+                                        Surface(onClick = { language = choice }, modifier = Modifier.weight(1f).semantics { this.selected = selected },
                                             color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainer,
                                             border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null,
                                             shape = MaterialTheme.shapes.medium) {
