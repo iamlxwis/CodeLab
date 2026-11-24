@@ -88,7 +88,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     }
     LaunchedEffect(scroll.maxValue) { scroll.scrollTo(scroll.maxValue) }
     LaunchedEffect(session.waiting) { if (!session.waiting) input = "" }
-    if (showExecutionSettings) AlertDialog(
+    if (showExecutionSettings) CodeLabAlertDialog(
         onDismissRequest = { showExecutionSettings = false },
         title = { Text("Local execution limits") },
         text = {
@@ -118,7 +118,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
         }, confirmButton = {
             TextButton(onClick = { showExecutionSettings = false }) { Text("Done") }
         })
-    if (showHistory) AlertDialog(
+    if (showHistory) CodeLabAlertDialog(
         onDismissRequest = { showHistory = false },
         title = { Text("Execution history") },
         text = {
@@ -185,7 +185,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                     IconButton(onClick = { showActions = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Console actions")
                     }
-                    DropdownMenu(expanded = showActions, onDismissRequest = { showActions = false }) {
+                    CodeLabDropdownMenu(expanded = showActions, onDismissRequest = { showActions = false }) {
                         val hasOutput = session.transcript.isNotEmpty()
                         DropdownMenuItem(text = { Text("Execution history…") },
                             onClick = { showActions = false; showHistory = true })

@@ -30,7 +30,7 @@ internal object EditorToolbarOrder {
 @Composable
 internal fun EditorToolbarSettings(actions: List<EditorToolbarAction>, ids: List<String>,
     onChange: (List<String>) -> Unit, close: () -> Unit) {
-    AlertDialog(onDismissRequest = close, title = { Text("Customize editor toolbar") },
+    CodeLabAlertDialog(onDismissRequest = close, title = { Text("Customize editor toolbar") },
         text = {
             Column(Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(4.dp)) {

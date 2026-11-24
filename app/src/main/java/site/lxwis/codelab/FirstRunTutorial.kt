@@ -94,7 +94,7 @@ internal fun FirstRunTutorial(
     }
     val current = guide[index]
     val total = if (advanced) guide.size else 4
-    Dialog(onDismissRequest = onFinish,
+    CodeLabDialog(onDismissRequest = onFinish,
         properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxWidth().padding(horizontal = 14.dp),
             shape = RoundedCornerShape(28.dp),

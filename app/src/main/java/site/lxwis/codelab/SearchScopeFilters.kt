@@ -34,7 +34,7 @@ internal fun SearchScopeFilters(
                 Text(folder.ifEmpty { "All folders" }, maxLines = 1,
                     overflow = TextOverflow.Ellipsis)
             }
-            DropdownMenu(expanded = foldersExpanded,
+            CodeLabDropdownMenu(expanded = foldersExpanded,
                 onDismissRequest = { foldersExpanded = false }) {
                 DropdownMenuItem(text = { Text("All folders") },
                     onClick = { onFolder(""); foldersExpanded = false })
@@ -49,7 +49,7 @@ internal fun SearchScopeFilters(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                 Text(kind?.name ?: "All file types", maxLines = 1)
             }
-            DropdownMenu(expanded = kindsExpanded,
+            CodeLabDropdownMenu(expanded = kindsExpanded,
                 onDismissRequest = { kindsExpanded = false }) {
                 DropdownMenuItem(text = { Text("All file types") },
                     onClick = { onKind(null); kindsExpanded = false })

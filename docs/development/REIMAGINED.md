@@ -187,3 +187,8 @@ New source covered nine Settings categories/live editor preferences, motion cont
 ## Implementation-first instruction — Nov 24, 2026, 8:56:25 PM PHT
 
 Owner explicitly deferred testing until the 37-decision implementation is finished. Stop waiting on CI/device verification; implement remaining source gaps now. Use [skip ci] implementation checkpoints without altering workflow triggers, cancellation policy or release/signing safeguards. No tests, smoke runs or builds are requested during this implementation pass; do not mark untested results verified. Source queue: shared motion-aware modal/menu layer; editable native Theme Studio preview; component typography controls; reorderable coding accessory; full per-project/named layouts and system-bar preference; contextual guidance; consistent loading/search/accessibility polish; real opt-in performance instrumentation. Existing source remains intact. Next: first four source gaps, then remaining four in the same sitting.
+
+
+### Source checkpoint — Nov 24, 2026, 9:00:54 PM PHT
+
+Implementation-only, tests/build deferred by owner. Closed 4/8 source gaps: application motion supplied to all modal/alert/anchored-menu entry points with keyboard navigation; native SourceView editor in Theme Studio preview; independent UI scale/editor size encoded into theme recipes and consumed by real UI/editor including pinch and Settings changes; accessible reorder controls for custom coding accessory symbols with saved order. Next: complete layouts and system bars, contextual guidance, loading/accessibility polish and real opt-in performance instrumentation. Existing workflows/release gates untouched; no verified-result claim for this source.

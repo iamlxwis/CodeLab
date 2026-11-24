@@ -218,7 +218,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                         Text(projectSort)
                         Icon(Icons.Default.ArrowDropDown, null, Modifier.size(18.dp))
                     }
-                    DropdownMenu(expanded = sortOpen, onDismissRequest = { sortOpen = false }) {
+                    CodeLabDropdownMenu(expanded = sortOpen, onDismissRequest = { sortOpen = false }) {
                         listOf("Recent", "A–Z", "Z–A").forEach { choice ->
                             DropdownMenuItem(text = { Text(choice) }, onClick = { projectSort = choice; sortOpen = false },
                                 trailingIcon = if (projectSort == choice) ({ Icon(Icons.Default.Check, null) }) else null)
@@ -323,7 +323,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                     }
                     Box {
                         IconButton(onClick = { options = name }) { Icon(Icons.Default.MoreVert, "Manage $name") }
-                        DropdownMenu(expanded = options == name, onDismissRequest = { options = null }) {
+                        CodeLabDropdownMenu(expanded = options == name, onDismissRequest = { options = null }) {
                             DropdownMenuItem(
                                 text = { Text(if (name in m.favorites) "Remove from favorites" else "Add to favorites") },
                                 onClick = { options = null; m.toggleFavoriteProject(name) })

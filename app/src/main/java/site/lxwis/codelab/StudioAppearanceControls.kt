@@ -20,6 +20,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -95,6 +99,12 @@ internal fun StudioAppearanceControls(m: WorkspaceModel, initiallyOpen: Boolean 
             }
             if (section == "Fonts") {
             Text("Typography", style = MaterialTheme.typography.titleMedium)
+            StudioSlider("Interface text scale (%)", s.uiScale, 80f..140f) {
+                m.updateStudioAppearance(m.studioAppearance.copy(uiScale = it))
+            }
+            StudioSlider("Editor text size (sp)", s.editorTextSize.takeIf { it in 10..28 } ?: 15, 10f..28f) {
+                m.updateStudioAppearance(m.studioAppearance.copy(editorTextSize = it))
+            }
             Text("Interface font")
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 listOf("Inter", "System", "Serif").forEach { font ->
@@ -195,7 +205,7 @@ private fun ThemeColor(label: String, color: Color, onChange: (String) -> Unit) 
             green = ((components[1] + shift) * 255).roundToInt().coerceIn(0, 255)
             blue = ((components[2] + shift) * 255).roundToInt().coerceIn(0, 255)
         }
-        AlertDialog(onDismissRequest = { open = false }, title = { Text(label) }, text = {
+        CodeLabAlertDialog(onDismissRequest = { open = false }, title = { Text(label) }, text = {
             Column(Modifier.heightIn(max = 390.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 val sample = Color(red, green, blue)
@@ -250,97 +260,58 @@ private fun ThemeColor(label: String, color: Color, onChange: (String) -> Unit) 
 
 @Composable
 private fun StudioLivePreview(m: WorkspaceModel) {
-    val s = LocalStudioAppearance.current
-    val c = MaterialTheme.colorScheme
-    val context = LocalContext.current
-    val editor = studioColor(s.editorBackground, c.surface)
-    val console = studioColor(s.consoleBackground, c.surface)
-    val nav = studioColor(s.navigationBackground, c.surfaceContainerHigh)
-    val ink = studioReadable(c.onSurface, editor)
-    val font = remember(s.editorFont, s.editorFontRevision) {
-        when (s.editorFont) {
-            "System Mono" -> androidx.compose.ui.text.font.FontFamily.Monospace
-            "Custom" -> ImportedFonts.load(context, true, s.editorFontRevision)?.let {
-                androidx.compose.ui.text.font.FontFamily(it)
-            } ?: androidx.compose.ui.text.font.FontFamily.Monospace
-            else -> androidx.compose.ui.text.font.FontFamily(androidx.compose.ui.text.font.Font(R.font.jetbrains_mono))
-        }
-    }
-    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity, m.transitionEffect)
-    var python by remember { mutableStateOf(false) }
+    var python by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    var jsCode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("// Main program\nconst answer = 42;\nprint(\"Hello\", answer);") }
+    var pyCode by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("# Main program\nanswer = 42\nprint(\"Hello\", answer)") }
     var output by remember { mutableStateOf(false) }
-    var selectedLine by remember { mutableIntStateOf(0) }
-    val selection = studioColor(s.selectionColor, c.primary)
-    val selectedSurface = selection.copy(alpha = .26f).let { androidx.compose.ui.graphics.Color(
-        red = it.red * it.alpha + editor.red * (1f - it.alpha),
-        green = it.green * it.alpha + editor.green * (1f - it.alpha),
-        blue = it.blue * it.alpha + editor.blue * (1f - it.alpha)) }
+    val s = m.studioAppearance
+    val c = MaterialTheme.colorScheme
+    val background = studioColor(s.editorBackground, c.surface)
+    val foreground = studioReadable(c.onSurface, background)
+    val motion = workspaceMotion()
+    val file = if (python) "main.py" else "main.js"
+    val code = if (python) pyCode else jsCode
     ClayPanel {
         Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("Interactive workspace preview", style = MaterialTheme.typography.labelMedium)
-            Surface(color = nav, contentColor = studioReadable(c.onSurface, nav), shape = MaterialTheme.shapes.medium) {
+            Surface(color = studioColor(s.navigationBackground, c.surfaceContainerHigh), shape = MaterialTheme.shapes.medium) {
                 Row(Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    listOf("main.js", "main.py").forEachIndexed { index, file ->
-                        val selected = python == (index == 1)
-                        Surface(onClick = { python = index == 1; output = false; selectedLine = 0 },
-                            modifier = Modifier.weight(1f), color = if (selected) c.primaryContainer else Color.Transparent,
-                            shape = MaterialTheme.shapes.small) {
-                            Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                FileTypeIcon(file, Modifier.size(15.dp), selected = selected)
-                                Text(file, Modifier.padding(start = 4.dp), maxLines = 1,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (selected) c.onPrimaryContainer else studioReadable(c.onSurface, nav))
-                            }
-                        }
+                    listOf("main.js", "main.py").forEachIndexed { index, name ->
+                        FilterChip(python == (index == 1), { python = index == 1 }, label = { Text(name) },
+                            leadingIcon = { FileTypeIcon(name, Modifier.size(16.dp), selected = python == (index == 1)) })
                     }
-                    TextButton(onClick = { output = !output }) { Text(if (output) "Hide" else "Output") }
-                }
-            }
-            Surface(color = editor, contentColor = ink, shape = MaterialTheme.shapes.medium) {
-                Column(Modifier.fillMaxWidth().padding(6.dp)) {
-                    val lines = if (python) listOf("# Main program", "answer = 42", "print(\"Hello\", answer)")
-                        else listOf("// Main program", "const answer = 42;", "print(\"Hello\", answer);")
-                    lines.forEachIndexed { index, line ->
-                        val fill = if (selectedLine == index) selectedSurface else editor
-                        Surface(onClick = { selectedLine = index }, color = fill,
-                            contentColor = studioReadable(ink, fill), shape = MaterialTheme.shapes.small) {
-                            Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp)) {
-                                Text((index + 1).toString(), Modifier.width(24.dp), fontFamily = font,
-                                    color = studioReadable(c.onSurfaceVariant, fill))
-                                val code = androidx.compose.ui.text.buildAnnotatedString {
-                                    fun segment(value: String, color: Color) {
-                                        pushStyle(androidx.compose.ui.text.SpanStyle(color = studioReadable(color, fill)))
-                                        append(value); pop()
-                                    }
-                                    when (index) {
-                                        0 -> segment(line, studioColor(s.comments, c.onSurfaceVariant))
-                                        1 -> {
-                                            if (!python) segment("const ", studioColor(s.keywords, c.primary))
-                                            segment("answer = ", ink)
-                                            segment("42", studioColor(s.numbers, c.primary))
-                                            if (!python) append(";")
-                                        }
-                                        else -> {
-                                            segment("print(", ink)
-                                            segment("\"Hello\"", studioColor(s.strings, c.primary))
-                                            segment(if (python) ", answer)" else ", answer);", ink)
-                                        }
-                                    }
-                                }
-                                Text(code, fontFamily = font, style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
+                    Spacer(Modifier.weight(1f))
+                    IconButton(onClick = { output = !output }) {
+                        Icon(androidx.compose.material.icons.Icons.Default.Terminal, "Toggle sample console")
                     }
                 }
             }
+            key(file) {
+                androidx.compose.ui.viewinterop.AndroidView(factory = { context ->
+                    SourceView(context, file).apply {
+                        setText(code)
+                        setCodeWrap(true)
+                        changed = { value -> if (python) pyCode = value.take(8000) else jsCode = value.take(8000) }
+                    }
+                }, modifier = Modifier.fillMaxWidth().height(224.dp), update = { view ->
+                    view.appearance(s.editorTextSize.takeIf { it in 10..28 } ?: 15, foreground.toArgb(), background.toArgb(),
+                        studioReadable(c.onSurfaceVariant, background).toArgb(), c.primary.toArgb(), background.luminance() < .5f)
+                    view.setStudioEditorStyle(s)
+                    view.setGutterOptions(true, true)
+                    if (view.sourceSnapshot != code) view.replaceSource(code)
+                    view.zoomShortcut = { delta -> m.updateStudioAppearance(m.studioAppearance.copy(
+                        editorTextSize = ((m.studioAppearance.editorTextSize.takeIf { it in 10..28 } ?: 15) + delta).coerceIn(10, 28))) }
+                })
+            }
+            Text("Edit this sample to preview actual syntax, selection and typography.", style = MaterialTheme.typography.labelSmall)
             androidx.compose.animation.AnimatedVisibility(output,
-                enter = androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(motion.millis(180))),
-                exit = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(motion.millis(180)))) {
-                Surface(color = console, contentColor = studioReadable(c.onSurface, console), shape = MaterialTheme.shapes.medium) {
+                enter = androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(motion.millis(150))),
+                exit = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(motion.millis(100)))) {
+                Surface(color = studioColor(s.consoleBackground, c.surface), shape = MaterialTheme.shapes.medium) {
                     Column(Modifier.fillMaxWidth().padding(10.dp)) {
                         Text("Sample output", style = MaterialTheme.typography.labelMedium)
-                        Text("Hello 42", fontFamily = font)
-                        Text("Preview only · no code executed", style = MaterialTheme.typography.labelSmall)
+                        Text("Hello 42", fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                        Text("Appearance preview · no code executed", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }

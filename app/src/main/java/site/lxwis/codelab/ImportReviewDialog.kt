@@ -62,7 +62,7 @@ internal fun ImportReviewDialog(uri: Uri, project: Boolean, existing: List<Strin
         else clean.length <= 512 && clean.split('/').let { it.size <= 16 && it.all(ExternalFolderImporter::validSegment) }
     val valid = validName && !conflict
     val title = when { folder -> "Review folder import"; project -> "Review project import"; else -> "Review file import" }
-    AlertDialog(onDismissRequest = close, title = { Text(title) },
+    CodeLabAlertDialog(onDismissRequest = close, title = { Text(title) },
         text = {
             Column(Modifier.heightIn(max = 460.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -121,7 +121,7 @@ internal fun ImportReviewDialog(uri: Uri, project: Boolean, existing: List<Strin
 
 @Composable
 internal fun ExportReviewDialog(name: String, paths: List<String>, project: Boolean, close: () -> Unit, proceed: () -> Unit) {
-    AlertDialog(onDismissRequest = close, title = { Text(if (project) "Export project" else "Export file") },
+    CodeLabAlertDialog(onDismissRequest = close, title = { Text(if (project) "Export project" else "Export file") },
         text = {
             Column(Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(10.dp)) {

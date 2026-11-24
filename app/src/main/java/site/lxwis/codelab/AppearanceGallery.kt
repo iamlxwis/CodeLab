@@ -198,7 +198,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
     }
     var importOpen by remember { mutableStateOf(false) }
     var importText by rememberSaveable { mutableStateOf("") }
-    if (importOpen) AlertDialog(onDismissRequest = { importOpen = false },
+    if (importOpen) CodeLabAlertDialog(onDismissRequest = { importOpen = false },
         title = { Text("Import appearance") },
         text = { OutlinedTextField(importText, { importText = it.take(65536) },
             label = { Text("Paste exported theme JSON") }, modifier = Modifier.fillMaxWidth()) },
@@ -207,7 +207,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
             importOpen = false
         }) { Text("Import") } },
         dismissButton = { TextButton(onClick = { importOpen = false }) { Text("Cancel") } })
-    if (renameId != null) AlertDialog(onDismissRequest = { renameId = null },
+    if (renameId != null) CodeLabAlertDialog(onDismissRequest = { renameId = null },
         title = { Text("Rename theme") }, text = {
             OutlinedTextField(renameName, { renameName = it.take(32); renameError = false },
                 label = { Text("Theme name") }, singleLine = true, isError = renameError,
@@ -220,7 +220,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
                 notice = "Theme renamed"
             } else renameError = true
         }) { Text("Rename") } }, dismissButton = { TextButton(onClick = { renameId = null }) { Text("Cancel") } })
-    Dialog(onDismissRequest = dismiss,
+    CodeLabDialog(onDismissRequest = dismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
@@ -346,7 +346,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
                                     IconButton(onClick = { menuId = recipe.id }) {
                                         Icon(Icons.Default.MoreVert, "Actions for theme " + recipe.name)
                                     }
-                                    DropdownMenu(menuId == recipe.id, { menuId = null }) {
+                                    CodeLabDropdownMenu(menuId == recipe.id, { menuId = null }) {
                                         DropdownMenuItem(text = { Text("Edit") }, onClick = {
                                             menuId = null
                                             m.useAppearanceRecipe(recipe.id)
@@ -458,7 +458,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
     }
     pendingDelete?.let { id ->
         val recipe = m.savedAppearanceRecipes.firstOrNull { it.id == id }
-        AlertDialog(onDismissRequest = { pendingDelete = null },
+        CodeLabAlertDialog(onDismissRequest = { pendingDelete = null },
             title = { Text("Delete saved appearance?") },
             text = { Text("Delete " + (recipe?.name ?: "this preset") +
                 "? Your current theme will not change.") },

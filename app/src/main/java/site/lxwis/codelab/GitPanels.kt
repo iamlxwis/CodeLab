@@ -89,7 +89,7 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
             remoteInput = state.remoteUrl.removePrefix("https://github.com/").removeSuffix(".git")
         }
     }
-    AlertDialog(onDismissRequest = dismiss,
+    CodeLabAlertDialog(onDismissRequest = dismiss,
         title = { Text("Git · local history") },
         text = {
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
@@ -263,7 +263,7 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
 
     if (confirmRemoteAction != null) {
         val pushing = confirmRemoteAction == "push"
-        AlertDialog(
+        CodeLabAlertDialog(
             onDismissRequest = { confirmRemoteAction = null },
             title = { Text(if (pushing) "Push branch to GitHub?" else "Pull updates from GitHub?") },
             text = { Text(if (pushing)
@@ -287,7 +287,7 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
 internal fun GitHubImportDialog(m: WorkspaceModel, dismiss: () -> Unit) {
     var slug by rememberSaveable { mutableStateOf("") }
     var name by rememberSaveable { mutableStateOf("") }
-    AlertDialog(onDismissRequest = dismiss,
+    CodeLabAlertDialog(onDismissRequest = dismiss,
         title = { Text("Import public GitHub project") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

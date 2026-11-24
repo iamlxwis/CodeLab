@@ -37,7 +37,7 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
     var query by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
     var page by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     val title = settingsDestinations.firstOrNull { it.id == page }?.name ?: "Settings"
-    Dialog(onDismissRequest = { if (page != null) page = null else close() },
+    CodeLabDialog(onDismissRequest = { if (page != null) page = null else close() },
         properties = DialogProperties(usePlatformDefaultWidth = false)) {
         androidx.activity.compose.BackHandler(enabled = page != null) { page = null }
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -216,7 +216,7 @@ private fun EditorPreferenceControls(keyboard: Boolean) {
 internal fun WorkspaceLayoutPresets(m: WorkspaceModel, close: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var notice by remember { mutableStateOf("") }
-    AlertDialog(onDismissRequest = close, title = { Text("Workspace layouts") }, text = {
+    CodeLabAlertDialog(onDismissRequest = close, title = { Text("Workspace layouts") }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(name, { name = it.take(64) }, label = { Text("Layout name") }, singleLine = true)
             Button(enabled = name.isNotBlank(), onClick = {

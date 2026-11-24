@@ -72,7 +72,7 @@ import androidx.lifecycle.ViewModelProvider
 @Composable
 internal fun NameDialog(title: String, initial: String, label: String, example: String, cancel: () -> Unit, submit: (String) -> Unit) {
     var name by rememberSaveable(title, initial) { mutableStateOf(initial) }
-    AlertDialog(onDismissRequest = cancel, title = { Text(title) },
+    CodeLabAlertDialog(onDismissRequest = cancel, title = { Text(title) },
         text = { OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true, label = { Text(label) }, placeholder = { Text(example) }) },
         confirmButton = { TextButton(onClick = { submit(name.trim()) }, enabled = name.isNotBlank()) { Text(if (title.startsWith("New")) "Create" else if (title.startsWith("Import")) "Import" else "Rename") } },
         dismissButton = { TextButton(onClick = cancel) { Text("Cancel") } })
@@ -230,7 +230,7 @@ internal fun CreateProjectDialog(cancel: () -> Unit, submit: (String, String) ->
 @Composable
 internal fun ProjectSwitcher(m: WorkspaceModel, dismiss: () -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
-    AlertDialog(onDismissRequest = dismiss,
+    CodeLabAlertDialog(onDismissRequest = dismiss,
         title = { Text("Switch workspace") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -266,7 +266,7 @@ internal fun ProjectSettingsDialog(m: WorkspaceModel, dismiss: () -> Unit) {
     var description by remember(m.project) { mutableStateOf(m.projectMetadata.description) }
     var entrypoint by remember(m.project) { mutableStateOf(m.projectMetadata.entrypoint) }
     var filesExpanded by remember { mutableStateOf(false) }
-    AlertDialog(onDismissRequest = dismiss,
+    CodeLabAlertDialog(onDismissRequest = dismiss,
         title = { Text("Project settings") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -283,7 +283,7 @@ internal fun ProjectSettingsDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                         Text(if (entrypoint.isEmpty()) "Not configured" else entrypoint,
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                    DropdownMenu(expanded = filesExpanded,
+                    CodeLabDropdownMenu(expanded = filesExpanded,
                         onDismissRequest = { filesExpanded = false }) {
                         DropdownMenuItem(text = { Text("No preference") }, onClick = {
                             entrypoint = ""

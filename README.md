@@ -29,14 +29,14 @@ Write, run, and manage projects from your phone.
 | Update | CodeLab — Reimagined |
 | Status | **ACTIVE — implementation first; testing deferred by owner** |
 | Session source checks | **5/5 implementation batches passed Android CI**; build evidence is separate from device acceptance |
-| Implementation queue | **0/8 remaining source gaps closed in this session**; all 37 decisions mapped in the ledger |
+| Implementation queue | **4/8 remaining source gaps implemented in this session**; all 37 decisions mapped in the ledger |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [03ef032 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) · [APK artifact](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404/artifacts/14920947097) |
-| Next to build | Shared motion-aware dialogs/menus, native Theme Studio preview, keyboard ordering, complete layouts, contextual guidance and performance instrumentation |
-| Last activity | Nov 24, 2026, 8:56:25 PM PHT |
+| Next to build | Complete saved layouts/system bars, contextual guidance, app-wide loading/accessibility polish and opt-in performance instrumentation |
+| Last activity | Nov 24, 2026, 9:00:54 PM PHT |
 
-**Current activity:** Nov 24, 2026, 8:56:25 PM PHT — Implementing remaining approved source requirements across all 37 decisions; tests and build checks are deferred until implementation is finished.
+**Current activity:** Nov 24, 2026, 9:00:54 PM PHT — Shared modal/menu motion, real editable Theme Studio preview, saved typography sizes and keyboard shortcut ordering implemented; continuing remaining four source gaps, testing deferred.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

@@ -141,7 +141,7 @@ internal fun FileExplorerSheet(
                                 IconButton(onClick = { menuFor = folder }) {
                                     Icon(Icons.Default.MoreVert, "Folder actions")
                                 }
-                                DropdownMenu(expanded = menuFor == folder, onDismissRequest = { menuFor = null }) {
+                                CodeLabDropdownMenu(expanded = menuFor == folder, onDismissRequest = { menuFor = null }) {
                                     DropdownMenuItem(text = { Text("Rename / move") },
                                         onClick = { menuFor = null; onRenameFolder(folder) })
                                     DropdownMenuItem(text = { Text("Move to trash") },
@@ -168,7 +168,7 @@ internal fun FileExplorerSheet(
                             IconButton(onClick = { menuFor = file }) {
                                 Icon(Icons.Default.MoreVert, "Actions for " + file)
                             }
-                            DropdownMenu(expanded = menuFor == file, onDismissRequest = { menuFor = null }) {
+                            CodeLabDropdownMenu(expanded = menuFor == file, onDismissRequest = { menuFor = null }) {
                                 DropdownMenuItem(text = { Text("Rename / move") },
                                     onClick = { menuFor = null; onRename(file) })
                                 DropdownMenuItem(text = { Text("Move to trash", color = MaterialTheme.colorScheme.error) },
@@ -201,7 +201,7 @@ internal fun ProjectSearchDialog(m: WorkspaceModel, onDismiss: () -> Unit,
     var folder by rememberSaveable { mutableStateOf("") }
     var kind by remember { mutableStateOf<ProjectFileKind?>(null) }
     val grouped = m.searchHits.groupBy { it.path }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Search project") },
+    CodeLabAlertDialog(onDismissRequest = onDismiss, title = { Text("Search project") },
         text = {
             Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(query, { query = it; m.clearSearchHits() },
@@ -253,13 +253,13 @@ internal fun ProjectSearchDialog(m: WorkspaceModel, onDismiss: () -> Unit,
 @Composable
 internal fun TrashDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
     var confirmEmpty by remember { mutableStateOf(false) }
-    if (confirmEmpty) AlertDialog(onDismissRequest = { confirmEmpty = false },
+    if (confirmEmpty) CodeLabAlertDialog(onDismissRequest = { confirmEmpty = false },
         title = { Text("Permanently delete trash?") },
         text = { Text("This removes all deleted projects and files. This cannot be undone.") },
         confirmButton = { TextButton(onClick = { m.emptyTrash(); confirmEmpty = false }) {
             Text("Delete permanently", color = MaterialTheme.colorScheme.error)
         } }, dismissButton = { TextButton(onClick = { confirmEmpty = false }) { Text("Cancel") } })
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Recently deleted") },
+    CodeLabAlertDialog(onDismissRequest = onDismiss, title = { Text("Recently deleted") },
         text = {
             Column {
                 Text("Deleted projects and files remain on this device until emptied.",
@@ -294,7 +294,7 @@ internal fun TrashDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
 @Composable
 internal fun FileHistoryDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
     var restoreId by remember { mutableStateOf<String?>(null) }
-    if (restoreId != null) AlertDialog(onDismissRequest = { restoreId = null },
+    if (restoreId != null) CodeLabAlertDialog(onDismissRequest = { restoreId = null },
         title = { Text("Restore this version?") },
         text = { Text("Your current file will be saved to history before restoration.") },
         confirmButton = { TextButton(onClick = {
@@ -302,7 +302,7 @@ internal fun FileHistoryDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
             restoreId = null
         }) { Text("Restore") } },
         dismissButton = { TextButton(onClick = { restoreId = null }) { Text("Cancel") } })
-    AlertDialog(onDismissRequest = onDismiss,
+    CodeLabAlertDialog(onDismissRequest = onDismiss,
         title = { Text("File history") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -373,7 +373,7 @@ internal fun ProjectReplaceDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
     var folder by rememberSaveable { mutableStateOf("") }
     var kind by remember { mutableStateOf<ProjectFileKind?>(null) }
     var confirm by remember { mutableStateOf(false) }
-    if (confirm) AlertDialog(onDismissRequest = { confirm = false },
+    if (confirm) CodeLabAlertDialog(onDismissRequest = { confirm = false },
         title = { Text("Replace in multiple files?") },
         text = { Text("Replace " + (m.replaceSummary?.matches ?: 0) + " matches in " +
             (m.replaceSummary?.files ?: 0) + " files? Previous versions can be restored from file history.") },
@@ -383,7 +383,7 @@ internal fun ProjectReplaceDialog(m: WorkspaceModel, onDismiss: () -> Unit) {
             onDismiss()
         }) { Text("Replace all") } },
         dismissButton = { TextButton(onClick = { confirm = false }) { Text("Cancel") } })
-    AlertDialog(onDismissRequest = onDismiss,
+    CodeLabAlertDialog(onDismissRequest = onDismiss,
         title = { Text("Replace across project") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()),

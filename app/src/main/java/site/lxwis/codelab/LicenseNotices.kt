@@ -37,7 +37,7 @@ internal fun LicenseNotices(close: () -> Unit) {
                 .getOrDefault("Could not open the bundled notice.")
         }
     }
-    Dialog(onDismissRequest = { if (selected != null) selected = null else close() },
+    CodeLabDialog(onDismissRequest = { if (selected != null) selected = null else close() },
         properties = DialogProperties(usePlatformDefaultWidth = false)) {
         androidx.activity.compose.BackHandler(enabled = selected != null) { selected = null }
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {

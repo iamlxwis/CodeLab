@@ -96,7 +96,7 @@ internal fun WorkspaceTab(
                     "Tab actions for $path",
                     Modifier.size(18.dp))
             }
-            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+            CodeLabDropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(text = { Text(if (pinned) "Unpin tab" else "Pin tab") },
                     onClick = { menu = false; onTogglePin() })
                 DropdownMenuItem(text = { Text("Move left") },
@@ -134,7 +134,7 @@ internal fun OpenTabsMenu(tabs: List<String>, active: String?, onSelect: (String
         IconButton(onClick = { expanded = true }, modifier = Modifier.size(48.dp)) {
             Icon(Icons.Default.List, "Quick switch open files")
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        CodeLabDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             ordered.forEach { path ->
                 DropdownMenuItem(
                     text = { Text(if (path == active) "✓ $path" else path,

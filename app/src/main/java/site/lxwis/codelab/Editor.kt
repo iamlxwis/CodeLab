@@ -67,7 +67,18 @@ fun CodeEditor(
             preferences.edit().putString("toolbar-actions", ids.joinToString(",")).apply()
         }
     }
-    var fontSize by remember { mutableStateOf(preferences.getInt("font-size", 15)) }
+    val studioStyle = LocalStudioAppearance.current
+    val latestStudio by rememberUpdatedState(studioStyle)
+    val studioUpdate by rememberUpdatedState(LocalStudioAppearanceUpdater.current)
+    var fontSize by remember { mutableStateOf(studioStyle.editorTextSize.takeIf { it in 10..28 } ?: preferences.getInt("font-size", 15)) }
+    fun chooseEditorSize(value: Int) {
+        fontSize = value.coerceIn(10, 28)
+        preferences.edit().putInt("font-size", fontSize).apply()
+        studioUpdate?.invoke(latestStudio.copy(editorTextSize = fontSize))
+    }
+    LaunchedEffect(studioStyle.editorTextSize) {
+        fontSize = studioStyle.editorTextSize.takeIf { it in 10..28 } ?: preferences.getInt("font-size", 15).coerceIn(10, 28)
+    }
     var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", true)) }
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", true)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
@@ -152,7 +163,11 @@ fun CodeEditor(
     DisposableEffect(preferences) {
         val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             when (key) {
-                "font-size" -> fontSize = preferences.getInt(key, 15).coerceIn(10, 28)
+                "font-size" -> {
+                    fontSize = preferences.getInt(key, 15).coerceIn(10, 28)
+                    if (latestStudio.editorTextSize != 0 && latestStudio.editorTextSize != fontSize)
+                        studioUpdate?.invoke(latestStudio.copy(editorTextSize = fontSize))
+                }
                 "word-wrap" -> wordWrap = preferences.getBoolean(key, true)
                 "line-numbers" -> showLineNumbers = preferences.getBoolean(key, true)
                 "active-line" -> showActiveLine = preferences.getBoolean(key, true)
@@ -170,7 +185,7 @@ fun CodeEditor(
         onDispose { preferences.unregisterOnSharedPreferenceChangeListener(listener) }
     }
     var result by remember { mutableStateOf("") }
-    if (snippetSaveDialog) AlertDialog(
+    if (snippetSaveDialog) CodeLabAlertDialog(
         onDismissRequest = { snippetSaveDialog = false },
         title = { Text("Save selected code") },
         text = {
@@ -203,24 +218,34 @@ fun CodeEditor(
             TextButton(onClick = { snippetSaveDialog = false }) { Text("Cancel") }
         }
     )
-    if (customizeShortcuts) AlertDialog(onDismissRequest = { customizeShortcuts = false },
+    if (customizeShortcuts) CodeLabAlertDialog(onDismissRequest = { customizeShortcuts = false },
         title = { Text("Customize mobile shortcuts") },
         text = {
             Column(Modifier.heightIn(max = 340.dp).verticalScroll(rememberScrollState())) {
-                availableShortcuts.forEach { symbol ->
+                val orderedSymbols = draftShortcuts + availableShortcuts.filterNot { it in draftShortcuts }
+                orderedSymbols.forEach { symbol ->
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = symbol in draftShortcuts, onCheckedChange = { enabled ->
                             draftShortcuts = if (enabled) (draftShortcuts + symbol).distinct()
                                 else draftShortcuts - symbol
                         })
-                        Text(symbol, fontFamily = FontFamily.Monospace)
+                        Text(symbol, Modifier.weight(1f), fontFamily = FontFamily.Monospace)
+                        val index = draftShortcuts.indexOf(symbol)
+                        if (index >= 0) {
+                            IconButton(enabled = index > 0, onClick = {
+                                draftShortcuts = draftShortcuts.toMutableList().apply { add(index - 1, removeAt(index)) }
+                            }) { Icon(Icons.Default.ArrowUpward, "Move $symbol earlier") }
+                            IconButton(enabled = index < draftShortcuts.lastIndex, onClick = {
+                                draftShortcuts = draftShortcuts.toMutableList().apply { add(index + 1, removeAt(index)) }
+                            }) { Icon(Icons.Default.ArrowDownward, "Move $symbol later") }
+                        }
                     }
                 }
             }
         },
         confirmButton = {
             TextButton(enabled = draftShortcuts.isNotEmpty(), onClick = {
-                customShortcuts = availableShortcuts.filter { it in draftShortcuts }
+                customShortcuts = draftShortcuts.filter { it in availableShortcuts }.distinct()
                 preferences.edit().putString("custom-shortcuts", customShortcuts.joinToString(" ")).apply()
                 shortcutLayout = "Custom"
                 preferences.edit().putString("shortcut-layout", "Custom").apply()
@@ -231,7 +256,7 @@ fun CodeEditor(
         },
         dismissButton = { TextButton(onClick = { customizeShortcuts = false }) { Text("Cancel") } })
     val changes by rememberUpdatedState(onTextChange)
-    if (renameDialog) AlertDialog(onDismissRequest = { renameDialog = false },
+    if (renameDialog) CodeLabAlertDialog(onDismissRequest = { renameDialog = false },
         title = { Text("Rename identifier in this file") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
@@ -283,7 +308,7 @@ fun CodeEditor(
         language = filename.substringAfterLast('.', ""),
         onJump = { line -> foldPreview = false; view?.goToLogicalLine(line) },
         onClose = { foldPreview = false })
-    if (conflictDialog) AlertDialog(
+    if (conflictDialog) CodeLabAlertDialog(
         onDismissRequest = { conflictDialog = false },
         title = { Text("Resolve conflict markers") },
         text = {
@@ -345,7 +370,6 @@ fun CodeEditor(
         }
     }
     val palette = MaterialTheme.colorScheme
-    val studioStyle = LocalStudioAppearance.current
     val editorBackground = studioColor(studioStyle.editorBackground, palette.surface)
     val foreground = studioReadable(palette.onSurface, editorBackground).toArgb()
     val background = editorBackground.toArgb()
@@ -389,7 +413,7 @@ fun CodeEditor(
             searchError = ""
         } else result = "No matches"
     }
-    if (lineDialog) AlertDialog(
+    if (lineDialog) CodeLabAlertDialog(
         onDismissRequest = { lineDialog = false },
         title = { Text("Go to line") },
         text = {
@@ -461,7 +485,7 @@ fun CodeEditor(
                 selected = advancedTools) { advancedTools = !advancedTools }
             Box {
                 EditorIcon(Icons.Default.MoreHoriz, "Editor actions") { toolbarMenu = true }
-                DropdownMenu(expanded = toolbarMenu, onDismissRequest = { toolbarMenu = false }) {
+                CodeLabDropdownMenu(expanded = toolbarMenu, onDismissRequest = { toolbarMenu = false }) {
                     toolbarActions.filterNot { it.id in toolbarIds }.forEach { action ->
                         DropdownMenuItem(text = { Text(action.title) }, leadingIcon = { Icon(action.icon, null) },
                             onClick = { toolbarMenu = false; action.invoke() })
@@ -480,7 +504,7 @@ fun CodeEditor(
                 horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             Box {
                 EditorIcon(Icons.Default.List, "File symbol outline") { outlineMenu = true }
-                DropdownMenu(expanded = outlineMenu, onDismissRequest = { outlineMenu = false }) {
+                CodeLabDropdownMenu(expanded = outlineMenu, onDismissRequest = { outlineMenu = false }) {
                     val outline by produceState(initialValue = emptyList<CodeAnalysis.Symbol>(), text, outlineMenu) {
                         if (outlineMenu) {
                             delay(100)
@@ -500,7 +524,7 @@ fun CodeEditor(
             }
             Box {
                 EditorIcon(Icons.Default.Bookmark, "Code bookmarks") { bookmarksMenu = true }
-                DropdownMenu(expanded = bookmarksMenu, onDismissRequest = { bookmarksMenu = false }) {
+                CodeLabDropdownMenu(expanded = bookmarksMenu, onDismissRequest = { bookmarksMenu = false }) {
                     DropdownMenuItem(text = { Text("Bookmark current line") },
                         onClick = { view?.toggleBookmark(); bookmarksMenu = false })
                     view?.bookmarkedLines()?.forEach { line ->
@@ -522,7 +546,7 @@ fun CodeEditor(
                 EditorIcon(Icons.Default.ManageSearch, "Find identifier in current file") {
                     referenceMenu = true
                 }
-                DropdownMenu(expanded = referenceMenu,
+                CodeLabDropdownMenu(expanded = referenceMenu,
                     onDismissRequest = { referenceMenu = false }) {
                     val editor = view
                     val source = editor?.text?.toString().orEmpty()
@@ -576,7 +600,7 @@ fun CodeEditor(
                 EditorIcon(Icons.Default.AutoFixHigh, "Complete word from this file") {
                     completionMenu = true
                 }
-                DropdownMenu(expanded = completionMenu, onDismissRequest = { completionMenu = false }) {
+                CodeLabDropdownMenu(expanded = completionMenu, onDismissRequest = { completionMenu = false }) {
                     val available = view?.let {
                         CodeAnalysis.wordCompletions(it.text.toString(), it.selectionStart,
                             filename.substringAfterLast('.', ""))
@@ -594,7 +618,7 @@ fun CodeEditor(
             }
             Box {
                 EditorIcon(Icons.Default.BugReport, "Structural bracket hints") { issuesMenu = true }
-                DropdownMenu(expanded = issuesMenu, onDismissRequest = { issuesMenu = false }) {
+                CodeLabDropdownMenu(expanded = issuesMenu, onDismissRequest = { issuesMenu = false }) {
                     val issues = CodeAnalysis.bracketIssues(view?.text?.toString() ?: text,
                         filename.substringAfterLast('.', ""))
                     if (issues.isEmpty()) DropdownMenuItem(text = { Text("No bracket problems detected") },
@@ -622,7 +646,7 @@ fun CodeEditor(
             }
             Box {
                 EditorIcon(Icons.Default.Keyboard, "Mobile shortcut layout") { shortcutSettings = true }
-                DropdownMenu(expanded = shortcutSettings, onDismissRequest = { shortcutSettings = false }) {
+                CodeLabDropdownMenu(expanded = shortcutSettings, onDismissRequest = { shortcutSettings = false }) {
                     DropdownMenuItem(text = { Text(if (keyboardOnlySymbols) "Keep symbols visible without keyboard" else "Show symbols only with keyboard") },
                         onClick = {
                             keyboardOnlySymbols = !keyboardOnlySymbols
@@ -663,7 +687,7 @@ fun CodeEditor(
             }
             Box {
                 EditorIcon(Icons.Default.TextFields, "Font size: ${fontSize}sp") { settings = true }
-                DropdownMenu(expanded = settings, onDismissRequest = { settings = false }) {
+                CodeLabDropdownMenu(expanded = settings, onDismissRequest = { settings = false }) {
                     DropdownMenuItem(text = { Text(if (showLineNumbers) "Hide line numbers" else "Show line numbers") },
                         onClick = { showLineNumbers = !showLineNumbers
                             preferences.edit().putBoolean("line-numbers", showLineNumbers).apply()
@@ -711,8 +735,7 @@ fun CodeEditor(
                     HorizontalDivider()
                     listOf(12, 14, 15, 16, 18, 20, 24).forEach {
                         DropdownMenuItem(text = { Text("Font size · ${it}sp") }, onClick = {
-                            fontSize = it
-                            preferences.edit().putInt("font-size", it).apply()
+                            chooseEditorSize(it)
                             settings = false
                         })
                     }
@@ -725,7 +748,7 @@ fun CodeEditor(
             }
             Box {
                 EditorIcon(Icons.Default.Build, "Code transformation tools") { toolsMenu = true }
-                DropdownMenu(expanded = toolsMenu, onDismissRequest = { toolsMenu = false }) {
+                CodeLabDropdownMenu(expanded = toolsMenu, onDismissRequest = { toolsMenu = false }) {
                     listOf("Uppercase", "Lowercase", "Title case", "Trim selection",
                         "Trim trailing spaces", "Tabs to spaces", "Spaces to tabs",
                         "Sort lines A–Z", "Sort lines Z–A", "Reverse lines",
@@ -740,7 +763,7 @@ fun CodeEditor(
             }
             Box {
                 EditorIcon(Icons.Default.AutoAwesome, "Insert code snippets") { snippetsMenu = true }
-                DropdownMenu(expanded = snippetsMenu, onDismissRequest = { snippetsMenu = false }) {
+                CodeLabDropdownMenu(expanded = snippetsMenu, onDismissRequest = { snippetsMenu = false }) {
                     OutlinedTextField(snippetQuery, { snippetQuery = it.take(80) },
                         modifier = Modifier.width(290.dp).padding(horizontal = 9.dp),
                         label = { Text("Search snippets") }, singleLine = true)
@@ -960,8 +983,7 @@ fun CodeEditor(
                 editor.runShortcut = onRun
                 editor.commandShortcut = onOpenCommands
                 editor.zoomShortcut = { delta ->
-                    fontSize = (fontSize + delta).coerceIn(10, 28)
-                    preferences.edit().putInt("font-size", fontSize).apply()
+                    chooseEditorSize(fontSize + delta)
                 }
                 editor.isEnabled = !readOnly
                 if (editor.sourceSnapshot != text) editor.replaceSource(text)

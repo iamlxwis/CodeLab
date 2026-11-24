@@ -352,7 +352,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     }
     inspected?.let { language ->
         val engine = OfflineRuntimeRegistry.manifest(language.extension)
-        AlertDialog(onDismissRequest = { inspected = null },
+        CodeLabAlertDialog(onDismissRequest = { inspected = null },
             title = { Text(language.name + " runtime") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -457,7 +457,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             }, confirmButton = { TextButton(onClick = { inspected = null }) { Text("Close") } })
     }
 
-    if (removePythonConfirm) AlertDialog(
+    if (removePythonConfirm) CodeLabAlertDialog(
         onDismissRequest = { removePythonConfirm = false },
         title = { Text("Remove Python runtime?") },
         text = { Text("Android will ask to uninstall the optional Python companion. " +
@@ -470,7 +470,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
         dismissButton = { TextButton(onClick = { removePythonConfirm = false }) {
             Text("Cancel")
         } })
-    if (clearCacheConfirm) AlertDialog(
+    if (clearCacheConfirm) CodeLabAlertDialog(
         onDismissRequest = { clearCacheConfirm = false },
         title = { Text("Clear downloaded installer?") },
         text = { Text("Remove only the cached Python APK and cancel an active download. " +
@@ -517,7 +517,7 @@ internal fun OptionalRuntimeManagerDialog(
             }
         }
     }
-    AlertDialog(onDismissRequest = onDismiss,
+    CodeLabAlertDialog(onDismissRequest = onDismiss,
         title = { Text(pack.label + " offline runtime") },
         text = {
             Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
@@ -591,7 +591,7 @@ internal fun OptionalRuntimeManagerDialog(
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
     )
-    if (confirmRemove) AlertDialog(onDismissRequest = { confirmRemove = false },
+    if (confirmRemove) CodeLabAlertDialog(onDismissRequest = { confirmRemove = false },
         title = { Text("Remove " + pack.label + " module?") },
         text = { Text("Android will ask to remove the optional runtime. " +
             (if (pack == OptionalRuntimeLocator.Pack.TYPESCRIPT) "TypeScript offline execution will stop; " else "Bundled execution will remain available; ") +
@@ -600,7 +600,7 @@ internal fun OptionalRuntimeManagerDialog(
             message = manager.uninstall(); confirmRemove = false
         }) { Text("Open Android uninstaller") } },
         dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text("Cancel") } })
-    if (confirmCache) AlertDialog(onDismissRequest = { confirmCache = false },
+    if (confirmCache) CodeLabAlertDialog(onDismissRequest = { confirmCache = false },
         title = { Text("Clear installer cache?") },
         text = { Text("Only the downloaded APK is removed, never projects or installed engines.") },
         confirmButton = { Button(onClick = {
@@ -618,7 +618,7 @@ fun OnlineRunConfirmation(
     cancel: () -> Unit, start: (String) -> Unit
 ) {
     var stdin by rememberSaveable(filename) { mutableStateOf("") }
-    AlertDialog(onDismissRequest = cancel,
+    CodeLabAlertDialog(onDismissRequest = cancel,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         icon = { Icon(Icons.Default.Cloud, contentDescription = null) },
         title = { Text("Run online?") },

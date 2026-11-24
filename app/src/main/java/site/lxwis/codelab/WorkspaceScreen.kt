@@ -470,7 +470,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             m.select(path, goToLine = line)
         }
         "trash" -> TrashDialog(m) { dialog = "" }
-        "properties" -> AlertDialog(onDismissRequest = { dialog = "" },
+        "properties" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" },
             title = { Text("File properties") },
             text = { Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Path: " + m.active.orEmpty(), fontFamily = FontFamily.Monospace)
@@ -501,7 +501,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 dialog = ""
             }
         }
-        "copyproject" -> AlertDialog(onDismissRequest = { dialog = "" },
+        "copyproject" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" },
             title = { Text("Copy to project") },
             text = { Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text("Copy " + m.active.orEmpty() + " to:")
@@ -522,17 +522,17 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             onRenameFolder = { selected = it; dialog = "renamefolder" },
             onDeleteFolder = { selected = it; dialog = "deletefolder" },
             onNewFolder = { dialog = "newfolder" })
-        "deletefolder" -> AlertDialog(onDismissRequest = { dialog = "" },
+        "deletefolder" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" },
             title = { Text("Delete folder?") },
             text = { Text("Move " + selected + " and its contents to Recently deleted?") },
             confirmButton = { TextButton(onClick = { m.changeFolder(selected, null); dialog = "" }) {
                 Text("Move to trash", color = MaterialTheme.colorScheme.error)
             } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
-        "delete" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Move file to trash?") },
+        "delete" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Move file to trash?") },
             text = { Text(selected) }, confirmButton = { TextButton(onClick = { m.changeFile(selected, null); dialog = "" }) { Text("Move to trash", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
-        "deleteproject" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Move project to trash?") },
+        "deleteproject" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Move project to trash?") },
             text = { Text("$selected and its files can be recovered from Recently deleted.") },
             confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Move to trash", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
@@ -563,7 +563,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     "history" -> m.refreshHistory()
                 }
             })
-        "accessibility" -> AlertDialog(onDismissRequest = { dialog = "" },
+        "accessibility" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" },
             title = { Text("Accessibility") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -588,7 +588,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
-        "performance" -> AlertDialog(onDismissRequest = { dialog = "" },
+        "performance" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" },
             title = { Text("Performance diagnostics") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -603,7 +603,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
-        "panels" -> AlertDialog(onDismissRequest = { dialog = "" },
+        "panels" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" },
             title = { Text("Workspace panels") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -674,7 +674,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         }
     }
     if (m.gitPullInProgress) {
-        AlertDialog(
+        CodeLabAlertDialog(
             onDismissRequest = {},
             title = { Text("Updating Git branch") },
             text = {
@@ -688,7 +688,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         )
     }
     m.error?.let { issue ->
-        AlertDialog(onDismissRequest = { m.error = null }, title = { Text("Workspace error") }, text = { Text(issue) },
+        CodeLabAlertDialog(onDismissRequest = { m.error = null }, title = { Text("Workspace error") }, text = { Text(issue) },
             confirmButton = { TextButton(onClick = { m.error = null }) { Text("Close") } },
             dismissButton = {
                 val missingLanguage = when {

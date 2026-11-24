@@ -17,7 +17,7 @@ internal fun CommandPaletteDialog(m: WorkspaceModel, dismiss: () -> Unit,
     execute: (String) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
     val choices = rankWorkspaceCommands(query, workspaceCommandCatalog, m.recentCommandIds)
-    AlertDialog(onDismissRequest = dismiss, title = { Text("Command palette") },
+    CodeLabAlertDialog(onDismissRequest = dismiss, title = { Text("Command palette") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 OutlinedTextField(query, { query = it },
@@ -59,7 +59,7 @@ internal fun JavaScriptDebugDialog(m: WorkspaceModel, dismiss: () -> Unit) {
         .filter { it.isNotBlank() }
     val lines = parts.mapNotNull(String::toIntOrNull)
     val valid = parts.size == lines.size && lines.all { it in 1..100000 } && lines.size <= 80
-    AlertDialog(onDismissRequest = dismiss, title = { Text("JavaScript debugger") },
+    CodeLabAlertDialog(onDismissRequest = dismiss, title = { Text("JavaScript debugger") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("Execution pauses at the first statement. Use Step or Continue in the console.",

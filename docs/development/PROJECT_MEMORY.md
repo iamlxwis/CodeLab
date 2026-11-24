@@ -1,6 +1,10 @@
 # CodeLab — Reimagined: current continuation record
 
-Updated Nov 24, 2026, 8:44:57 PM PHT. **SESSION STOPPED — assistant handed off; no background coding continues.** History: [PROGRESS_LOG.md](PROGRESS_LOG.md), [older session archive](PROJECT_MEMORY_ARCHIVE.md). This record supersedes obsolete pending-build statements in the archive.
+Updated Nov 24, 2026, 9:00:54 PM PHT. **ACTIVE — implementation first; testing deferred by owner.** History: [PROGRESS_LOG.md](PROGRESS_LOG.md), [older session archive](PROJECT_MEMORY_ARCHIVE.md). This record supersedes obsolete pending-build statements in the archive.
+
+## Current priority
+
+Owner now requires completing the approved source implementation BEFORE any testing/build wait. Four of eight audited source gaps implemented: shared presentations, native preview, typography sizing, coding accessory ordering. Next four: layouts/system bars, contextual guidance, loading/accessibility polish, opt-in performance instrumentation. Use [skip ci] commits during this pass; keep workflow and release safeguards unchanged. Do not claim these new changes are tested.
 
 ## Approved scope
 
@@ -32,7 +36,7 @@ Updated Nov 24, 2026, 8:44:57 PM PHT. **SESSION STOPPED — assistant handed off
 11. Stable lazy saved-theme rows instead of composing the entire unlimited collection; no measured speedup claimed.
 12. Full approved contract, per-decision audit, source/build/device distinction and PHT tracker.
 
-## Next unfinished task and remaining acceptance
+## Deferred verification (after the implementation queue is finished)
 
 1. Confirm current main app sources still match verified 03ef032, then start existing manual Android 15/API35 device smoke. Do not rebuild completed source without a new reason.
 2. Inspect real screenshots of every screen, all six themes, small phone/tablet/landscape, IME and enlarged fonts. Check actual versus preview fidelity; fix observed defects. Material contextual/control animations still need reduced-motion acceptance.
@@ -57,3 +61,8 @@ Reusable prompt: Continue CodeLab — Reimagined in iamlxwis/CodeLab main using 
 ## Implementation-first instruction — Nov 24, 2026, 8:56:25 PM PHT
 
 Owner explicitly deferred testing until the 37-decision implementation is finished. Stop waiting on CI/device verification; implement remaining source gaps now. Use [skip ci] implementation checkpoints without altering workflow triggers, cancellation policy or release/signing safeguards. No tests, smoke runs or builds are requested during this implementation pass; do not mark untested results verified. Source queue: shared motion-aware modal/menu layer; editable native Theme Studio preview; component typography controls; reorderable coding accessory; full per-project/named layouts and system-bar preference; contextual guidance; consistent loading/search/accessibility polish; real opt-in performance instrumentation. Existing source remains intact. Next: first four source gaps, then remaining four in the same sitting.
+
+
+### Source checkpoint — Nov 24, 2026, 9:00:54 PM PHT
+
+Implementation-only, tests/build deferred by owner. Closed 4/8 source gaps: application motion supplied to all modal/alert/anchored-menu entry points with keyboard navigation; native SourceView editor in Theme Studio preview; independent UI scale/editor size encoded into theme recipes and consumed by real UI/editor including pinch and Settings changes; accessible reorder controls for custom coding accessory symbols with saved order. Next: complete layouts and system bars, contextual guidance, loading/accessibility polish and real opt-in performance instrumentation. Existing workflows/release gates untouched; no verified-result claim for this source.

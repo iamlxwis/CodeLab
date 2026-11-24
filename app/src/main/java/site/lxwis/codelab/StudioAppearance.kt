@@ -11,7 +11,8 @@ internal data class StudioAppearance(
     val glassQuality: String = "Auto", val blur: Int = 12,
     val uiFontRevision: Long = 0L, val editorFontRevision: Long = 0L,
     val editorBackground: String = "", val consoleBackground: String = "",
-    val navigationBackground: String = "", val borderColor: String = "", val selectionColor: String = ""
+    val navigationBackground: String = "", val borderColor: String = "", val selectionColor: String = "",
+    val uiScale: Int = 100, val editorTextSize: Int = 0
 ) {
     fun encode(): String = JSONObject().put("background", background).put("surface", surface)
         .put("foreground", foreground).put("corners", corners).put("opacity", opacity)
@@ -21,7 +22,7 @@ internal data class StudioAppearance(
         .put("uiFontRevision", uiFontRevision).put("editorFontRevision", editorFontRevision)
         .put("editorBackground", editorBackground).put("consoleBackground", consoleBackground)
         .put("navigationBackground", navigationBackground).put("borderColor", borderColor)
-        .put("selectionColor", selectionColor).toString()
+        .put("selectionColor", selectionColor).put("uiScale", uiScale).put("editorTextSize", editorTextSize).toString()
 
     companion object {
         fun decode(raw: String?): StudioAppearance = try {
@@ -37,7 +38,11 @@ internal data class StudioAppearance(
                 hex("comments"), hex("strings"), hex("numbers"), hex("keywords"),
                 j.optString("glassQuality").takeIf { it in listOf("Auto", "Lightweight", "High") } ?: "Auto",
                 j.optInt("blur", 12).coerceIn(0,24), j.optLong("uiFontRevision", 0L), j.optLong("editorFontRevision", 0L),
-                hex("editorBackground"), hex("consoleBackground"), hex("navigationBackground"), hex("borderColor"), hex("selectionColor"))
+                hex("editorBackground"), hex("consoleBackground"), hex("navigationBackground"), hex("borderColor"), hex("selectionColor"),
+                j.optInt("uiScale", 100).coerceIn(80, 140),
+                j.optInt("editorTextSize", 0).takeIf { it in 10..28 } ?: 0)
         } catch (_: Exception) { StudioAppearance() }
     }
 }
+
+internal val LocalStudioAppearanceUpdater = androidx.compose.runtime.staticCompositionLocalOf<((StudioAppearance) -> Unit)?> { null }

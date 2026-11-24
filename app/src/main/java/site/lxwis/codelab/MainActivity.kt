@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.animation.core.Animatable
@@ -46,10 +47,13 @@ class MainActivity : ComponentActivity() {
                         isAppearanceLightNavigationBars = lightBars
                     }
                 }
+                CompositionLocalProvider(LocalWorkspaceMotion provides motion,
+                    LocalStudioAppearanceUpdater provides { value -> model.updateStudioAppearance(value) }) {
                 CodeLabBackdrop(model.visualStyle, dark, motion.millis(300)) {
                     CodeLabForegroundSurface(Modifier.fillMaxSize().graphicsLayer { alpha = entrance.value }) {
                         Studio(model, Modifier.windowInsetsPadding(WindowInsets.safeDrawing).imePadding())
                     }
+                }
                 }
             }
         }

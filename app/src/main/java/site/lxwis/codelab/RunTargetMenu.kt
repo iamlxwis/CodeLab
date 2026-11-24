@@ -85,7 +85,7 @@ internal fun RunTargetMenu(m: WorkspaceModel, onProjectSettings: () -> Unit) {
         IconButton(onClick = { expanded = true }, modifier = Modifier.size(48.dp)) {
             Icon(Icons.Default.MoreHoriz, "Run file and entry options")
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        CodeLabDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             m.active?.let { path ->
                 DropdownMenuItem(text = { Text("Run active · ${path.substringAfterLast('/')}") },
                     onClick = { expanded = false; m.runTarget(path) })
@@ -122,7 +122,7 @@ internal fun RunFilePicker(
             path.contains(query, ignoreCase = true) &&
                 (!runnableOnly || target.mode != RunCapability.Mode.UNAVAILABLE)
         }.sortedWith(compareBy({ it.second.mode.ordinal }, { it.first.lowercase() }))
-    AlertDialog(onDismissRequest = onDismiss,
+    CodeLabAlertDialog(onDismissRequest = onDismiss,
         title = { Text("Choose a run target") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {

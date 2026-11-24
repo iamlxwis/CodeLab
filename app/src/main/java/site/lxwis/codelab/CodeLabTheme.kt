@@ -174,7 +174,7 @@ internal fun CodeLabTheme(
             } else schemeNormal
     }
     val fontContext = LocalContext.current
-    val typography = remember(largeInterfaceText, studio.uiFont, studio.uiFontRevision) {
+    val typography = remember(largeInterfaceText, studio.uiFont, studio.uiFontRevision, studio.uiScale) {
         val family = when (studio.uiFont) {
             "System" -> FontFamily.Default
             "Serif" -> FontFamily.Serif
@@ -183,9 +183,9 @@ internal fun CodeLabTheme(
             else -> FontFamily(Font(R.font.inter))
         }
         val baseTypography = Typography()
-            val textScale = if (largeInterfaceText) 1.16f else 1f
+            val textScale = (if (largeInterfaceText) 1.16f else 1f) * studio.uiScale.coerceIn(80, 140) / 100f
         fun styled(style: androidx.compose.ui.text.TextStyle, weight: FontWeight? = null) =
-            style.copy(fontFamily = family, fontSize = style.fontSize * textScale,
+            style.copy(fontFamily = family, fontSize = style.fontSize * textScale, lineHeight = style.lineHeight * textScale,
                 fontWeight = weight ?: style.fontWeight)
         Typography(
             displayLarge = styled(baseTypography.displayLarge),
