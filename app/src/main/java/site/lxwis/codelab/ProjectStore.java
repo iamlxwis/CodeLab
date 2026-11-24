@@ -852,6 +852,13 @@ public final class ProjectStore {
         StringWriter writer = new StringWriter();
         props.store(writer, null);
         writeText(session, writer.toString());
+        // A project is "recent" when opened, not when a file happened to be edited.
+        // Preserve the existing newest-first project ordering without moving source files.
+        if (project != null) {
+            File opened = project(project);
+            if (!opened.setLastModified(System.currentTimeMillis()))
+                throw new IOException("Could not update recently opened projects.");
+        }
     }
 
     public synchronized WorkspaceSession restore() {

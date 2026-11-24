@@ -27,17 +27,17 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Phase | Phase 3 — Project Management & Developer Workflow |
-| Status | **STARTED** (source audit pending) |
+| Status | **IN PROGRESS** (source implementation; CI pending) |
 | Workstreams completed | **0/7 verified** |
 | Workstreams remaining | **7** |
-| Current workstream | **1 — Project Management** |
-| Last verified commit | [`22d7dd5e77b4`](https://github.com/iamlxwis/CodeLab/commit/22d7dd5e77b479b63c1f873130aaae5925c78093) (baseline before startup) |
-| CI status | **Pending** for Phase 3; last known successful Phase 2 APK CI [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) |
-| Last activity | Nov 24, 2026 · 5:16 PM PHT |
+| Current workstream | **1 — Project Management; 2 — Git Integration** |
+| Last verified commit | [`2badb03401b6`](https://github.com/iamlxwis/CodeLab/commit/2badb03401b646ddba0cb4fd56fd0910aae50725) (previous pushed checkpoint; source CI for this batch pending) |
+| CI status | **Pending** for Phase 3 source; earlier Phase 2 APK CI [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) passed |
+| Last activity | Nov 24, 2026 · 5:19 PM PHT |
 
-**Current activity:** Nov 24, 2026 · 5:16 PM PHT — Phase 3 development started; auditing the repository and preparing seven workstreams.
+**Current activity:** Nov 24, 2026 · 5:19 PM PHT — Audited Phase 3 foundations and implemented recent-project ordering plus safe selective Git unstaging with regression tests.
 
-> This README displays **one** current activity only. Historical events: [progress log](docs/development/PROGRESS_LOG.md). Resumption context: [project memory](docs/development/PROJECT_MEMORY.md). This checkpoint begins Phase 3; it does not claim completed features, Phase 3 CI success or phone acceptance. Git history contains the SHA of this startup commit; the next checkpoint records it.
+> One current activity entry; GitHub push records the exact commit SHA. [Historical progress log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes are not counted completed until exact-SHA CI and workstream acceptance. No emulator/device testing authorized.
 
 [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Roadmap](docs/ROADMAP.md) · [GitHub Actions](https://github.com/iamlxwis/CodeLab/actions)
 

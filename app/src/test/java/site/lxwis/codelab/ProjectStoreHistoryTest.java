@@ -52,6 +52,19 @@ public class ProjectStoreHistoryTest {
         assertEquals(2 * 1024 * 1024, ProjectStore.importLimitFor("image.png"));
     }
 
+    @Test public void recentProjectsFollowLastOpenedWithoutEditingFiles() throws Exception {
+        ProjectStore store = new ProjectStore(temp.newFolder("recent-projects"));
+        store.createProject("First", "JavaScript");
+        store.createProject("Second", "JavaScript");
+        assertTrue(store.projectDirectory("First").setLastModified(1_000L));
+        assertTrue(store.projectDirectory("Second").setLastModified(2_000L));
+        assertEquals("Second", store.projects().get(0));
+        String before = store.read("First", "main.js");
+        store.remember("First", java.util.Collections.singletonList("main.js"), "main.js");
+        assertEquals("First", store.projects().get(0));
+        assertEquals(before, store.read("First", "main.js"));
+    }
+
     @Test public void deletedFileCanBeRecovered() throws Exception {
         ProjectStore store = new ProjectStore(temp.newFolder("workspace2"));
         store.createProject("Test", "JavaScript");

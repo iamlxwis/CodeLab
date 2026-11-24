@@ -59,6 +59,35 @@ class GitWorkspaceTest {
         assertTrue(git.inspect().staged.isEmpty())
     }
 
+    @Test fun unstagingOnUnbornBranchPreservesWorkingFilesAndOtherStagedPaths() {
+        val folder = temporary.newFolder("unstage-initial")
+        val git = GitWorkspace(folder)
+        git.init()
+        folder.resolve("one.js").writeText("one")
+        folder.resolve("two.js").writeText("two")
+        git.stage(listOf("one.js", "two.js"))
+        git.unstage(listOf("one.js"))
+        assertEquals(listOf("two.js"), git.inspect().staged)
+        assertTrue(git.inspect().changes.any { it.path == "one.js" && it.kind == "Untracked" })
+        assertEquals("one", folder.resolve("one.js").readText())
+        assertThrows(IllegalArgumentException::class.java) { git.unstage(listOf("../invalid")) }
+    }
+
+    @Test fun unstagingAfterFirstCommitLeavesEditsIntact() {
+        val folder = temporary.newFolder("unstage-tracked")
+        val git = GitWorkspace(folder)
+        git.init()
+        folder.resolve("tracked.js").writeText("before")
+        git.stage(listOf("tracked.js"))
+        git.commit("baseline", "Tester", "tester@example.com")
+        folder.resolve("tracked.js").writeText("after")
+        git.stage(listOf("tracked.js"))
+        git.unstage(listOf("tracked.js"))
+        assertTrue(git.inspect().staged.isEmpty())
+        assertTrue(git.inspect().changes.any { it.path == "tracked.js" && it.kind == "Modified" })
+        assertEquals("after", folder.resolve("tracked.js").readText())
+    }
+
     @get:Rule val temporary = TemporaryFolder()
 
     @Test fun initializesCommitsAndTracksChanges() {

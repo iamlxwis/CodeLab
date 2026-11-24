@@ -1,3 +1,19 @@
+# Phase 3 checkpoint — Nov 24, 2026 · 5:19 PM PHT
+
+- **Phase / status:** Phase 3, IN PROGRESS; **0/7 workstreams verified**, 7 remaining; WS1 Project Management and WS2 Git Integration have unverified changes.
+- **Previous verified remote SHA:** `2badb03401b646ddba0cb4fd56fd0910aae50725`. This implementation commit is linked in Git history and must be verified before counting workstreams complete.
+- **Latest successful CI:** Android APK [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) on earlier Phase 2 commit `399a1380`; Phase 3 exact-source CI pending.
+- **Audit:** Repo main had no previous Phase 3 source batch; CodeLab already included project templates/favorites/search/metadata/duplication, scoped search, Git init/stage/commit/branches/fetch/FF pull/non-force push, ZIP import/export/trash.
+- **Files changed:** `ProjectStore.java`, `GitWorkspace.kt`, `WorkspaceModel.kt`, `GitPanels.kt`, `ProjectStoreHistoryTest.java`, `GitWorkspaceTest.kt`, README.md, PROGRESS_LOG.md, PROJECT_MEMORY.md.
+- **Current change:** persisted last-open project ordering by touching project directory on session remember; added safe selective unstaging preserving working tree and handling HEAD-less index; UI unstage control and tests.
+- **Unfinished:** WS1 broader navigation/project polish; WS2 Git safety/UX; WS3 remote status/error handling; WS4 ZIP/bulk import safeguards; WS5 productivity; WS6 performance; WS7 reliability/security; no workstream complete.
+- **Constraints:** Kotlin/Compose app, six signed offline packs and bundled fallback engines intact. CI Option B preserved: source-only fast checks, `cancel-in-progress`, three artifacts, manual API35 smoke only; owner handles phone acceptance. No advanced Phase 2 functionality.
+- **Known blockers:** No local Android SDK or accessible Git clone in this session; use GitHub remote source CI for actual build/test proof.
+- **Next exact action:** verify this pushed main commit and inspect Android APK CI result; fix compile/test failures; proceed with unverified WS3–WS7 features, log each coherent checkpoint. Keep README to one current activity sentence and append historical events.
+- **Continuation:** fetch main HEAD and CI; do not repeat existing changes. Continue committing directly to main, updating all three tracker files atomically and accurately, and hand physical-device testing to owner.
+
+---
+
 # Phase 3 active checkpoint — Nov 24, 2026 · 5:16 PM PHT
 
 - **Phase:** Phase 3 — Project Management & Developer Workflow.

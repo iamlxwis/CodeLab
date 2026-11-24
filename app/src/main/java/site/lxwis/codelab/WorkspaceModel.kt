@@ -421,6 +421,16 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             apply
         }
     }
+    fun gitUnstage(paths: List<String>) {
+        val p = project ?: return
+        work {
+            val git = GitWorkspace(store.projectDirectory(p))
+            git.unstage(paths)
+            val snapshot = git.inspect()
+            val apply: () -> Unit = { if (project == p) gitState = snapshot }
+            apply
+        }
+    }
     fun gitCommit(message: String, name: String, email: String) {
         val p = project ?: return
         work {

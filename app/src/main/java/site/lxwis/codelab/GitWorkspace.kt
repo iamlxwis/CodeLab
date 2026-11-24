@@ -2,6 +2,7 @@ package site.lxwis.codelab
 
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.MergeCommand
+import org.eclipse.jgit.dircache.DirCacheEditor
 import org.eclipse.jgit.transport.RefSpec
 import org.eclipse.jgit.transport.RemoteRefUpdate
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -82,6 +83,33 @@ internal class GitWorkspace(private val folder: File) {
                 val command = git.add().addFilepattern(path)
                 if (path in status.missing) command.setUpdate(true)
                 command.call()
+            }
+        }
+    }
+
+    /** Remove only selected staged paths from the index; never reset working files. */
+    fun unstage(paths: List<String>) {
+        require(paths.isNotEmpty() && paths.size <= 200) { "Select up to 200 staged files." }
+        open { git ->
+            val status = git.status().call()
+            val staged = status.added + status.changed + status.removed
+            val selected = paths.distinct()
+            require(selected.all { it in staged }) {
+                "Staged Git files changed. Refresh and select them again."
+            }
+            if (git.repository.resolve("HEAD") == null) {
+                // An unborn branch has no HEAD tree for a standard path reset.
+                val index = git.repository.lockDirCache()
+                try {
+                    val editor = index.editor()
+                    selected.forEach { editor.add(DirCacheEditor.DeletePath(it)) }
+                    editor.finish()
+                    check(index.commit()) { "Git index changed; refresh and retry." }
+                } finally {
+                    index.unlock()
+                }
+            } else {
+                selected.forEach { git.reset().addPath(it).call() }
             }
         }
     }

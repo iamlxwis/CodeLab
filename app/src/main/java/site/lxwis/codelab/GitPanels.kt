@@ -124,6 +124,7 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                         color = MaterialTheme.colorScheme.primary)
                     state.changes.take(20).forEach { change ->
                         val selectable = change.kind in setOf("Modified", "Deleted", "Untracked")
+                        val staged = change.kind.startsWith("Staged")
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             if (selectable) Checkbox(
                                 checked = change.path in selectedForStage,
@@ -136,6 +137,12 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                                 fontFamily = FontFamily.Monospace,
                                 style = MaterialTheme.typography.bodySmall,
                                 maxLines = 2, modifier = Modifier.weight(1f))
+                            if (staged) IconButton(
+                                enabled = !m.busy,
+                                onClick = { m.gitUnstage(listOf(change.path)) }
+                            ) {
+                                Icon(Icons.Default.Undo, "Unstage ${change.path}")
+                            }
                         }
                     }
                     if (state.changes.size > 20)
