@@ -33,10 +33,10 @@ Write, run, and manage projects from your phone.
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [1e5bb5d — complete implementation pass](https://github.com/iamlxwis/CodeLab/actions/runs/45405666239) |
-| Next to build | Run exact-commit Android 15 smoke; guarded publication; then physical-device acceptance |
-| Last activity | Nov 24, 2026, 9:45:33 PM PHT |
+| Next to build | Rerun API35 with corrected accessible navigation; publish guarded APK; physical-device acceptance |
+| Last activity | Nov 24, 2026, 9:55:35 PM PHT |
 
-**Current activity:** Nov 24, 2026, 9:45:33 PM PHT — Cumulative Android CI passed; starting the explicit same-commit API35/release checkpoint and holding main stable until its gate finishes.
+**Current activity:** Nov 24, 2026, 9:55:35 PM PHT — Android 15 clean-install/tutorial/missing-pack checks passed; updating stale smoke navigation for categorized actions and native preview, then rerunning the guarded release.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

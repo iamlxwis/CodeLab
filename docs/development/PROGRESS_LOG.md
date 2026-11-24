@@ -312,3 +312,8 @@ Owner authorized the deferred build/error-check pass and requested a direct app 
 ## Build passed; guarded release started — Nov 24, 2026, 9:45:33 PM PHT
 
 Android CI 45405666239 passed at 1e5bb5d3a9f009d181979396b8b73449f1caedb0, including release APK, unit tests, instrumentation compilation, lint, runtime/signature checks. Local security gate and eight QA helper tests also passed. Explicit existing checkpoint is now triggered to dispatch manual API35 and then guarded publication. Main must remain stable during its exact-SHA gate. No visual/physical acceptance claim. Next: fix actual device failures or verify published new APK asset.
+
+
+### Android 15 smoke navigation correction — Nov 24, 2026, 9:55:35 PM PHT
+
+Run 45406809675 passed clean-install, resumable tutorial and missing-Python checks, then stopped because device_smoke.py tapped Appearance as a top-level action. Screenshot shows the healthy categorized Workspace sheet. Updated smoke to use accessible action search and select the actual TextView result, matching the production-upgrade test route, and changed old Output/Hide preview selectors to Toggle sample console. Existing assertions/runtime checks remain. No app crash observed or release published. Triggered explicit guarded retry; keep main stable.

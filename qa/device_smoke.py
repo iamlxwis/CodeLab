@@ -109,6 +109,17 @@ def tap_text_result(name):
     raise AssertionError(f"Result text {name} did not appear")
 
 
+
+def open_workspace_action(name):
+    """Reach categorized actions through the user-visible accessible search."""
+    tap("More tools and settings")
+    tap_node(wait_for("Search actions", field=True))
+    adb("shell", "input", "text", name)
+    adb("shell", "input", "keyevent", "4")
+    # The search field repeats the query; select the real result TextView.
+    tap_text_result(name)
+
+
 def choose_language(name):
     """Choose from the searchable language browser, not an off-screen quick card."""
     tap_node(scroll_to("Change", "Browse all languages"))
@@ -162,8 +173,7 @@ def main():
     wait_for("New project")
     snapshot("01-home")
     # Verify actual theme settings, not merely preview names.
-    tap("More tools and settings")
-    tap("Appearance")
+    open_workspace_action("Appearance")
     wait_for("Themes")
     for style in ("Obsidian", "Titanium", "Crystal", "Midnight", "Porcelain", "Sandstone"):
         select_style(style)
@@ -174,17 +184,16 @@ def main():
         adb("shell", "input", "swipe", str(w//2), str(int(h*.3)),
             str(w//2), str(int(h*.8)), "350")
     select_style("Obsidian")
-    tap_node(scroll_to("Output"))
+    tap_node(scroll_to("Toggle sample console"))
     wait_for("Sample output")
     wait_for("Hello 42")
     snapshot("theme-interactive-preview")
-    tap_node(scroll_to("Hide"))
+    tap_node(scroll_to("Toggle sample console"))
     tap("Done")
     wait_for("New project")
     # The Python pack is installed by this smoke run; verify native in-app
     # management affordances without downloading on the airplane-mode emulator.
-    tap("More tools and settings")
-    tap("Languages")
+    open_workspace_action("Languages")
     wait_for("Offline packs and editor support")
     wait_for("Installed")
     tap("Downloads")

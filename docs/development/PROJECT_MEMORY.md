@@ -56,3 +56,8 @@ Continue iamlxwis/CodeLab main from 2fded2e, using the full approved REIMAGINED_
 ## Build and direct APK delivery resumed — Nov 24, 2026, 9:39:00 PM PHT
 
 Owner authorized the deferred build/error-check pass and requested a direct app download link. Added regression coverage for complete workspace profiles and theme typography sizes/legacy defaults; cumulative Android CI next. Existing explicit release checkpoint can dispatch manual API35 smoke and guarded publication on the same SHA; retain all release/signing guards and do not publish an older APK as the new source. Next: inspect compiler/test failures and fix them; then run the existing guarded checkpoint.
+
+
+### Android 15 smoke navigation correction — Nov 24, 2026, 9:55:35 PM PHT
+
+Run 45406809675 passed clean-install, resumable tutorial and missing-Python checks, then stopped because device_smoke.py tapped Appearance as a top-level action. Screenshot shows the healthy categorized Workspace sheet. Updated smoke to use accessible action search and select the actual TextView result, matching the production-upgrade test route, and changed old Output/Hide preview selectors to Toggle sample console. Existing assertions/runtime checks remain. No app crash observed or release published. Triggered explicit guarded retry; keep main stable.
