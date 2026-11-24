@@ -27,15 +27,15 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **SOURCE UPDATED — decision 34 polish; cumulative CI pending** |
+| Status | **BUILD RUNNING — approved decision 34 polish** |
 | Workstreams accepted | **0/10 fully device-accepted** — source and CI verified separately |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [6e33876 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45384534494) · [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45384534494/artifacts/14915104647) |
-| Next to build | Close remaining explicitly approved design and interaction gaps; verify cumulative CI |
-| Last activity | Nov 24, 2026, 7:47:09 PM PHT |
+| Next to build | Remaining gaps within the 37 approved decisions only; verify exact-source build and acceptance |
+| Last activity | Nov 24, 2026, 7:47:47 PM PHT |
 
-**Current activity:** Nov 24, 2026, 7:47:09 PM PHT — Implemented decision 34 expandable Explorer/actions sheets, consistent actionable empty states, animated action/console filtering and themed console notices; cumulative CI pending.
+**Current activity:** Nov 24, 2026, 7:47:47 PM PHT — [Decision 34 cumulative CI](https://github.com/iamlxwis/CodeLab/actions/runs/45387376191) in_progress; original scope preserved, no unrelated work added.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 
