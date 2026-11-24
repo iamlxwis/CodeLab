@@ -40,43 +40,33 @@ internal fun RunModeStrip(
         m.executionMode == "Online" && !m.isOnline -> "Internet connection required"
         else -> "No online compiler for this file"
     }
+    var modesOpen by remember { mutableStateOf(false) }
     Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 5.dp)) {
-            Row(Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text("RUN", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                FilterChip(selected = m.executionMode == "Offline",
-                    onClick = { m.chooseExecutionMode("Offline") },
-                    enabled = !m.runner.running, modifier = Modifier.heightIn(min = 44.dp),
-                    label = { Text("Offline") },
-                    leadingIcon = { Icon(Icons.Default.Computer, null, Modifier.size(17.dp)) })
-                FilterChip(selected = m.executionMode == "Online",
-                    onClick = { m.chooseExecutionMode("Online") },
-                    enabled = !m.runner.running, modifier = Modifier.heightIn(min = 44.dp),
-                    label = { Text("Online") },
-                    leadingIcon = { Icon(Icons.Default.Cloud, null, Modifier.size(17.dp)) })
-                Spacer(Modifier.weight(1f))
-                RunTargetMenu(m, onProjectSettings)
-            }
-            Row(Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                Icon(if (missingModule || (m.executionMode == "Online" && !cloudReady))
-                    Icons.Default.Info else Icons.Default.CheckCircleOutline,
-                    contentDescription = null, modifier = Modifier.size(15.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(status, Modifier.weight(1f),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (missingModule || (m.executionMode == "Online" && !cloudReady)) {
-                    TextButton(onClick = onLanguages) {
-                        Text(if (missingModule) "Modules" else "Configure",
-                            style = MaterialTheme.typography.labelSmall)
+        Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box {
+                TextButton(onClick = { modesOpen = true }, enabled = !m.runner.running) {
+                    Icon(if (m.executionMode == "Offline") Icons.Default.Computer else Icons.Default.Cloud,
+                        null, Modifier.size(16.dp))
+                    Spacer(Modifier.width(5.dp))
+                    Text(m.executionMode)
+                    Icon(Icons.Default.ArrowDropDown, null, Modifier.size(16.dp))
+                }
+                DropdownMenu(expanded = modesOpen, onDismissRequest = { modesOpen = false }) {
+                    listOf("Offline", "Online").forEach { mode ->
+                        DropdownMenuItem(text = { Text(mode) }, onClick = {
+                            m.chooseExecutionMode(mode); modesOpen = false
+                        }, leadingIcon = { Icon(if (mode == "Offline") Icons.Default.Computer else Icons.Default.Cloud, null) })
                     }
                 }
             }
+            if (m.runner.running) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
+            Text(status, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            if (missingModule || (m.executionMode == "Online" && !cloudReady)) {
+                TextButton(onClick = onLanguages) { Text(if (missingModule) "Packs" else "Setup") }
+            }
+            RunTargetMenu(m, onProjectSettings)
         }
     }
 }
@@ -95,7 +85,7 @@ internal fun RunTargetMenu(m: WorkspaceModel, onProjectSettings: () -> Unit) {
                 DropdownMenuItem(text = { Text("Run active · ${path.substringAfterLast('/')}") },
                     onClick = { expanded = false; m.runTarget(path) })
             }
-            m.projectMetadata.entrypoint.takeIf { it in m.files }?.let { path ->
+            m.projectMetadata.entrypoint.takeIf { it in m.files && it != m.active }?.let { path ->
                 DropdownMenuItem(text = { Text("Run entry · ${path.substringAfterLast('/')}") },
                     onClick = { expanded = false; m.runTarget(path) })
             }

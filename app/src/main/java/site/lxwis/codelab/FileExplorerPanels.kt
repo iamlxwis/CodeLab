@@ -106,13 +106,13 @@ internal fun FileExplorerSheet(
     ModalBottomSheet(onDismissRequest = onClose, sheetState = state,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         dragHandle = { BottomSheetDefaults.DragHandle() }) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(.85f)
+        Column(Modifier.fillMaxWidth().fillMaxHeight(if (allFiles.size <= 3) .52f else .82f)
             .padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Explorer", style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold)
-                    Text(m.project.orEmpty() + " · " + allFiles.size + " files",
+                    Text(m.project.orEmpty() + " · " + allFiles.size + if (allFiles.size == 1) " file" else " files",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -122,9 +122,11 @@ internal fun FileExplorerSheet(
                     Spacer(Modifier.width(4.dp))
                     Text("File")
                 }
+                IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Close explorer") }
             }
             OutlinedTextField(search, { search = it }, Modifier.fillMaxWidth(),
-                singleLine = true, label = { Text("Search files") },
+                singleLine = true, placeholder = { Text("Search files") },
+                leadingIcon = { Icon(Icons.Default.Search, null) },
                 shape = RoundedCornerShape(12.dp))
             if (directory.isNotEmpty() && search.isBlank()) {
                 TextButton(onClick = {
@@ -160,7 +162,9 @@ internal fun FileExplorerSheet(
                     }
                 }
                 items(visibleFiles, key = { "file:" + it }) { file ->
-                    Row(Modifier.fillMaxWidth().heightIn(min = 52.dp),
+                    Row(Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                        .background(if (file == m.active) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                            RoundedCornerShape(10.dp)).padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically) {
                         FileTypeIcon(file, Modifier.size(18.dp), selected = file == m.active)
                         Text(if (search.isBlank()) file.removePrefix(directory) else file,

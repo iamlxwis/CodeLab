@@ -203,7 +203,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 IconButton(onClick = { dialog = "files" }) {
                     Icon(Icons.Default.FolderOpen, "Browse files")
                 }
-                if (m.files.isNotEmpty()) {
+                if (m.files.isNotEmpty() && LocalConfiguration.current.screenWidthDp >= 820) {
                     IconButton(onClick = { explorerPinned = !explorerPinned },
                         modifier = Modifier.size(38.dp)) {
                         Icon(if (explorerPinned) Icons.Default.VerticalSplit else Icons.Default.ViewSidebar,
@@ -253,7 +253,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         })
                 }
                 val outputPane: @Composable (Modifier) -> Unit = { pane ->
-                    if (m.console) RunConsole(m.runner, pane, m.active, m.files) { path, line ->
+                    if (m.console) RunConsole(m.runner, pane, m.active, m.files,
+                        onToggleMaximize = if (wide) null else { { m.choosePhoneSplitEnabled(!m.phoneSplitEnabled) } }) { path, line ->
                         m.select(path, goToLine = line)
                     }
                     else if (m.preview && m.active != null)
@@ -338,7 +339,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             if (!focusMode) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 PanelButton("Editor", !m.console && !m.preview, motionMillis) { m.console = false; m.preview = false }
-                PanelButton("Console", m.console, motionMillis) { m.console = true; m.preview = false }
+                PanelButton("Console", m.console && !m.phoneSplitEnabled, motionMillis) { m.console = true; m.preview = false }
                 if (LocalConfiguration.current.screenWidthDp < 820) {
                     PhoneSplitToggle(m.phoneSplitEnabled) {
                         val next = !m.phoneSplitEnabled
@@ -427,7 +428,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Text("Project: " + m.project.orEmpty())
             } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Close") } })
 
-        "newproject" -> GuidedProjectSheet(cancel = { dialog = "" }) { name, template, starter ->
+        "newproject" -> GuidedProjectSheet(cancel = { dialog = "" }) { name, template, starter, execution ->
+            m.chooseExecutionMode(execution)
             m.openProject(name, true, template, starter)
             dialog = ""
         }

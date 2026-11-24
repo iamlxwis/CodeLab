@@ -177,6 +177,36 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
     var sourceSnapshot = ""
         private set
+    private var logicalLines = LogicalLines("")
+    private var bracketPair: Pair<Int, Int>? = null
+    private var bracketTask: Future<*>? = null
+    private var bracketGeneration = 0
+    private val bracketJob = Runnable {
+        val snapshot = sourceSnapshot
+        val cursor = selectionStart.coerceIn(0, snapshot.length)
+        val generation = ++bracketGeneration
+        bracketTask?.cancel(true)
+        if (snapshot.length <= 32000 &&
+            (snapshot.getOrNull(cursor) in listOf('(', ')', '[', ']', '{', '}') ||
+                snapshot.getOrNull(cursor - 1) in listOf('(', ')', '[', ']', '{', '}'))) {
+            bracketTask = highlightWorker.submit {
+                val pair = CodeAnalysis.matchBracket(snapshot, cursor, language)
+                post {
+                    if (generation == bracketGeneration && snapshot == sourceSnapshot && cursor == selectionStart) {
+                        bracketPair = pair
+                        invalidate()
+                    }
+                }
+            }
+        }
+    }
+    private fun refreshBracket() {
+        bracketGeneration++
+        bracketPair = null
+        removeCallbacks(bracketJob)
+        postDelayed(bracketJob, 90)
+        invalidate()
+    }
     private var syncing = false
     private var positionKey: String? = null
     private var pendingScroll: Pair<Int,Int>? = null
@@ -239,6 +269,8 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             }
             override fun afterTextChanged(s: Editable?) {
                 sourceSnapshot = s?.toString().orEmpty()
+                logicalLines = LogicalLines(sourceSnapshot)
+                if (ready) refreshBracket()
                 if (!syncing) changed?.invoke(sourceSnapshot)
                 // Editable moves existing spans as users edit. Changes *after* our
                 // viewport window cannot affect tokens already painted there.
@@ -283,10 +315,12 @@ internal class SourceView(context: Context, filename: String) : EditText(context
 
     override fun onSelectionChanged(selStart: Int, selEnd: Int) {
         super.onSelectionChanged(selStart, selEnd)
-        val current = layout ?: return
-        val line = current.getLineForOffset(selEnd.coerceIn(0, length()))
-        val column = selEnd - current.getLineStart(line) + 1
+        if (!ready) return
+        val offset = selEnd.coerceIn(0, length())
+        val line = logicalLines.lineAt(offset)
+        val column = offset - logicalLines.start(line) + 1
         selectionChanged?.invoke(line + 1, column)
+        refreshBracket()
     }
 
     fun scrollToStart() {
@@ -558,30 +592,80 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
 
     override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-        val lines = layout ?: return
+        val lines = layout
+        if (lines == null) { super.onDraw(canvas); return }
         val first = lines.getLineForVertical((scrollY - totalPaddingTop).coerceAtLeast(0))
         val last = lines.getLineForVertical(scrollY + height)
         val selected = lines.getLineForOffset(selectionStart.coerceIn(0, length()))
+        val textLeft = totalPaddingLeft.toFloat()
+        if (showCurrentLine) {
+            fill.color = (active and 0x00ffffff) or 0x18000000
+            canvas.drawRect((scrollX + gutterWidth).toFloat(),
+                (totalPaddingTop + lines.getLineTop(selected)).toFloat(),
+                (scrollX + width).toFloat(),
+                (totalPaddingTop + lines.getLineBottom(selected)).toFloat(), fill)
+        }
+        // Indentation guides are limited to visible logical line starts.
+        fill.color = (muted and 0x00ffffff) or 0x30000000
+        fill.strokeWidth = dp(1f)
+        val indentStep = paint.measureText(" ") * indentSpaces
+        for (line in first..last) {
+            val offset = lines.getLineStart(line)
+            val logical = logicalLines.lineAt(offset)
+            if (logicalLines.start(logical) != offset || offset >= sourceSnapshot.length) continue
+            var at = offset
+            var columns = 0
+            while (at < sourceSnapshot.length && columns < 160) {
+                when (sourceSnapshot[at]) {
+                    ' ' -> columns++
+                    '\t' -> columns += indentSpaces
+                    else -> break
+                }
+                at++
+            }
+            for (level in 1..(columns / indentSpaces)) {
+                val x = textLeft + indentStep * (level - 1)
+                if (x >= scrollX + gutterWidth) canvas.drawLine(x,
+                    (totalPaddingTop + lines.getLineTop(line)).toFloat(), x,
+                    (totalPaddingTop + lines.getLineBottom(line)).toFloat(), fill)
+            }
+        }
+        bracketPair?.let { pair ->
+            fill.color = (active and 0x00ffffff) or 0x66000000
+            for (offset in listOf(pair.first, pair.second)) {
+                if (offset !in sourceSnapshot.indices) continue
+                val line = lines.getLineForOffset(offset)
+                if (line !in first..last) continue
+                val x = textLeft + lines.getPrimaryHorizontal(offset)
+                canvas.drawRect(x, (totalPaddingTop + lines.getLineTop(line)).toFloat(),
+                    x + paint.measureText(sourceSnapshot.substring(offset, offset + 1)),
+                    (totalPaddingTop + lines.getLineBottom(line)).toFloat(), fill)
+            }
+        }
+        super.onDraw(canvas)
         fill.color = paper
         canvas.drawRect(scrollX.toFloat(), scrollY.toFloat(), (scrollX + gutterWidth).toFloat(), (scrollY + height).toFloat(), fill)
         for (line in first..last) {
             if (!showNumbers) break
-            linePaint.color = if (showCurrentLine && line == selected) active else muted
+            val offset = lines.getLineStart(line)
+            val logical = logicalLines.lineAt(offset)
+            if (logicalLines.start(logical) != offset) continue
+            val number = logical + 1
+            linePaint.color = if (showCurrentLine && logical == logicalLines.lineAt(selectionStart)) active else muted
             linePaint.alpha = if (line == selected) 255 else 170
-            if (diagnostics.contains(line + 1)) {
+            if (diagnostics.contains(number)) {
                 fill.color = 0xffdc6a6a.toInt()
                 canvas.drawCircle((scrollX + dp(5)).toFloat(),
                     (totalPaddingTop + lines.getLineBaseline(line) - dp(4)).toFloat(),
-                    dp(2.5f).toFloat(), fill)
+                    dp(2.5f), fill)
             }
-            if (bookmarks.contains(line + 1)) {
+            if (bookmarks.contains(number)) {
                 fill.color = active
                 canvas.drawCircle((scrollX + dp(7)).toFloat(),
                     (totalPaddingTop + lines.getLineBaseline(line) - dp(4)).toFloat(),
                     dp(3).toFloat(), fill)
             }
-            canvas.drawText((line + 1).toString(), (scrollX + gutterWidth - dp(8)).toFloat(),
+            canvas.drawText(number.toString(), (scrollX + gutterWidth - dp(8)).toFloat(),
                 (totalPaddingTop + lines.getLineBaseline(line)).toFloat(), linePaint)
         }
     }
@@ -597,6 +681,8 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
 
     override fun onDetachedFromWindow() {
+        removeCallbacks(bracketJob)
+        bracketTask?.cancel(true)
         removeCallbacks(highlightJob)
         removeCallbacks(hintJob)
         ++highlightGeneration

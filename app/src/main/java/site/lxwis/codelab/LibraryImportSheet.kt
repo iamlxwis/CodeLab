@@ -30,8 +30,8 @@ internal fun LibraryImportSheet(
         Column(Modifier.fillMaxWidth().navigationBarsPadding()
             .padding(start = 22.dp, end = 22.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text("Bring in a project", style = MaterialTheme.typography.headlineSmall)
-            Text("Choose a source. Your project is copied into private local storage.",
+            Text("Import project", style = MaterialTheme.typography.headlineSmall)
+            Text("Choose a file or repository. Your original files stay unchanged.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium)
             ImportOption(title = "ZIP archive", detail = "Open a backup or exported project from your device.",
@@ -39,10 +39,7 @@ internal fun LibraryImportSheet(
             ImportOption(title = "GitHub repository",
                 detail = "Download a snapshot of a public repository; no account required.",
                 icon = { Icon(Icons.Default.CloudDownload, contentDescription = null) }, click = onGitHub)
-            Text("Imports keep their existing file-size, archive and repository safeguards.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.labelSmall)
-            TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) { Text("Cancel") }
+             TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) { Text("Cancel") }
         }
     }
 }
@@ -50,7 +47,7 @@ internal fun LibraryImportSheet(
 @Composable
 private fun ImportOption(title: String, detail: String,
     icon: @Composable () -> Unit, click: () -> Unit) {
-    Surface(onClick = click, modifier = Modifier.fillMaxWidth().heightIn(min = 92.dp),
+    Surface(onClick = click, modifier = Modifier.fillMaxWidth().heightIn(min = 72.dp),
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .48f))) {

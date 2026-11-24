@@ -230,9 +230,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                     Text("Choose New project to start with a template, or import work you already have.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(12.dp))
-                    Button(onClick = new) { Icon(Icons.Default.Add, null); Spacer(Modifier.width(6.dp)); Text("New project") }
-                }
+                 }
             }
         }
         if (visibleProjects.isEmpty() && m.projects.isNotEmpty()) item {
@@ -263,7 +261,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 interactionSource = pressInteraction,
                 modifier = Modifier.graphicsLayer { scaleX = pressScale; scaleY = pressScale }
             ) {
-                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Surface(shape = CodeLabCorners.iconTile,
                         tonalElevation = CodeLabElevation.icon,
                         color = MaterialTheme.colorScheme.primaryContainer) {
@@ -300,7 +298,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                                 onClick = { options = null; m.toggleFavoriteProject(name) })
                             DropdownMenuItem(text = { Text("Duplicate") }, onClick = { options = null; duplicate(name) })
                             DropdownMenuItem(text = { Text("Rename") }, onClick = { options = null; rename(name) })
-                            DropdownMenuItem(text = { Text("Delete") }, onClick = { options = null; delete(name) })
+                            DropdownMenuItem(text = { Text("Move to trash", color = MaterialTheme.colorScheme.error) }, leadingIcon = { Icon(Icons.Default.DeleteOutline, null, tint = MaterialTheme.colorScheme.error) }, onClick = { options = null; delete(name) })
                         }
                     }
                 }

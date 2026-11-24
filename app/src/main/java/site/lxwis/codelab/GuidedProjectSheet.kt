@@ -32,7 +32,7 @@ private val projectDemos = listOf(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, String) -> Unit) {
+internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, String, String) -> Unit) {
     val keyboard = LocalSoftwareKeyboardController.current
     var name by rememberSaveable { mutableStateOf("") }
     var language by rememberSaveable { mutableStateOf("JavaScript") }
@@ -41,6 +41,8 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
     var query by rememberSaveable { mutableStateOf("") }
     var offlineOnly by rememberSaveable { mutableStateOf(false) }
     var demosOpen by rememberSaveable { mutableStateOf(false) }
+    var guided by rememberSaveable { mutableStateOf(false) }
+    var execution by rememberSaveable { mutableStateOf("Offline") }
     val isDemo = language in projectDemos
     val catalog = LanguageCatalog.entries.firstOrNull { it.name == language }
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -141,7 +143,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Text(item.name, style = MaterialTheme.typography.titleMedium)
-                                    Text(item.local ?: "Edit offline · no bundled runtime",
+                                    Text(if (item.local != null) "Offline capable" else "Edit offline · no bundled runtime",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
@@ -156,8 +158,15 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                     contentPadding = PaddingValues(top = 6.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(18.dp)) {
                     item {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(if (guided) "Guided setup" else "Quick setup", Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium)
+                            TextButton(onClick = { guided = !guided }) { Text(if (guided) "Quick setup" else "Guide me") }
+                        }
+                    }
+                    item {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("01  PROJECT NAME", style = MaterialTheme.typography.labelSmall,
+                            Text("Project name", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             OutlinedTextField(name, { name = it.take(100) },
                                 Modifier.fillMaxWidth(), singleLine = true,
@@ -167,7 +176,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                     }
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Text("02  LANGUAGE", style = MaterialTheme.typography.labelSmall,
+                            Text("Language", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                                 items(quickLanguages) { choice ->
@@ -178,7 +187,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                                         border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                                             else null,
                                         shape = RoundedCornerShape(16.dp)) {
-                                        Column(Modifier.width(120.dp).padding(13.dp),
+                                        Column(Modifier.width(100.dp).padding(9.dp),
                                             verticalArrangement = Arrangement.spacedBy(7.dp)) {
                                             Icon(Icons.Default.Code, contentDescription = null,
                                                 modifier = Modifier.size(19.dp),
@@ -207,9 +216,23 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                             }
                         }
                     }
-                    if (!isDemo) item {
+                    item {
+                        Column {
+                            Text("Execution", style = MaterialTheme.typography.labelMedium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                listOf("Offline", "Online").forEach { mode ->
+                                    FilterChip(selected = execution == mode, onClick = { execution = mode },
+                                        label = { Text(mode) })
+                                }
+                            }
+                            Text(if (execution == "Offline") "Runs locally when the required pack is available."
+                                else "Internet and explicit source-upload approval required.",
+                                style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    if (guided && !isDemo) item {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("03  START WITH", style = MaterialTheme.typography.labelSmall,
+                            Text("Template", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             listOf(
                                 Triple(StarterExamples.BEGINNER, "Beginner example", "Learn from a short sample"),
@@ -234,10 +257,10 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                             }
                         }
                     }
-                    item {
+                    if (guided) item {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text("FILE PREVIEW", Modifier.weight(1f),
+                                Text("Preview", Modifier.weight(1f),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(if (isDemo) "Project" else StarterExamples.fileName(
@@ -281,7 +304,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                         }
                     }
                 }
-                Button(onClick = { keyboard?.hide(); submit(name.trim(), language, starter) },
+                Button(onClick = { keyboard?.hide(); submit(name.trim(), language, starter, execution) },
                     enabled = name.isNotBlank(),
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                     shape = RoundedCornerShape(15.dp)) {

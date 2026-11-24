@@ -13,6 +13,10 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -28,6 +32,7 @@ import androidx.compose.ui.unit.*
 @Composable
 fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: String? = null,
     knownFiles: List<String> = emptyList(),
+    onToggleMaximize: (() -> Unit)? = null,
     onOpenError: (String, Int) -> Unit = { _, _ -> }) {
     var tableMode by rememberSaveable(fileName) { mutableStateOf(true) }
     val sqlResult = remember(session.transcript, fileName, session.running) {
@@ -142,7 +147,9 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
         Column(Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Console", style = MaterialTheme.typography.titleSmall)
+                    Text("Console", modifier = if (onToggleMaximize != null)
+                        Modifier.pointerInput(onToggleMaximize) { detectTapGestures(onDoubleTap = { onToggleMaximize() }) }
+                        else Modifier, style = MaterialTheme.typography.titleSmall)
                     Text(session.status, style = MaterialTheme.typography.labelSmall,
                         color = if (session.running) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant)
@@ -153,8 +160,14 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                 }
                 if (session.running) TextButton(onClick = session::stop) { Text("Stop") }
                 else if (session.canRerun) TextButton(onClick = session::rerun) { Text("Rerun") }
-                FilterChip(selected = showFilter, onClick = { showFilter = !showFilter },
-                    label = { Text("Filter") })
+                if (session.running) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                IconButton(onClick = { showFilter = !showFilter }) {
+                    Icon(Icons.Default.Search, "Filter output",
+                        tint = if (showFilter) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (onToggleMaximize != null) IconButton(onClick = onToggleMaximize) {
+                    Icon(Icons.Default.Fullscreen, "Toggle console expansion")
+                }
                 Box {
                     IconButton(onClick = { showActions = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Console actions")
@@ -238,7 +251,8 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             if (sqlResult != null && tableMode) SqlDataGrid(sqlResult, Modifier.weight(1f).fillMaxWidth())
             else SelectionContainer(Modifier.weight(1f).fillMaxWidth().verticalScroll(scroll)) {
                 val textToShow = displayedOutput.ifEmpty {
-                    if (showFilter && filterOutput.isNotEmpty()) "No matching lines" else ""
+                    if (showFilter && filterOutput.isNotEmpty()) "No matching lines"
+                    else if (session.running) "Waiting for program output…" else "Run a file to see output here."
                 }
                 val defaultInk = MaterialTheme.colorScheme.onSurface
                 val formatted = remember(textToShow, defaultInk) {
