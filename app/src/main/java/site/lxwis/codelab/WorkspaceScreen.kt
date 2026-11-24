@@ -634,7 +634,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     TextButton(onClick = { dialog = "layoutpresets" }) { Text("Save or restore layouts") }
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
-        "appearance" -> AppearanceGallery(m) { dialog = "" }
+        "appearance", "studio" -> AppearanceGallery(m, openStudio = dialog == "studio") { dialog = "" }
         "settings" -> ReimaginedSettings(m, onAction = ::openAction, close = { dialog = "" })
         "layoutpresets" -> WorkspaceLayoutPresets(m) { dialog = "" }
     }
@@ -658,7 +658,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         },
         projectOpen = p != null,
         resumeFrom = tutorialPrefs.getInt("resume-index", 0),
-        motion = motion
+        motion = motion,
+        transitionEffect = m.transitionEffect
     )
     m.cloudPending?.let { filename ->
         val language = m.cloudLanguages[CloudJudge0.extension(filename)]

@@ -23,8 +23,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 
 @Composable
-internal fun StudioAppearanceControls(m: WorkspaceModel) {
-    var open by remember { mutableStateOf(false) }
+internal fun StudioAppearanceControls(m: WorkspaceModel, initiallyOpen: Boolean = false) {
+    var open by remember { mutableStateOf(initiallyOpen) }
     var section by remember { mutableStateOf("Colors") }
     val s = m.studioAppearance
     val context = LocalContext.current
@@ -132,18 +132,8 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
             }
             }
             if (section == "Motion") {
-                Text("Motion", style = MaterialTheme.typography.titleMedium)
-                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    listOf("System", "Full", "Reduced").forEach { choice ->
-                        FilterChip(selected = m.motionPreference == choice, onClick = { m.chooseMotion(choice) },
-                            label = { Text(choice) })
-                    }
-                }
-                StudioSlider("Intensity (%)", m.motionIntensity, 0f..100f, m::chooseMotionIntensity)
-                StudioSlider("Speed (%)", m.motionSpeed, 50f..200f, m::chooseMotionSpeed)
-                StudioSlider("Spring (%)", m.springIntensity, 0f..100f, m::chooseSpringIntensity)
-                Text("Try the preview tabs and Output button to see motion. Saved looks retain these settings; reduced motion takes precedence.",
+                MotionSettingsControls(m)
+                Text("Saved themes retain motion settings. Reduced motion takes precedence.",
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             TextButton(onClick = { m.updateStudioAppearance(StudioAppearance()) }) { Text("Reset color, material and font overrides") }

@@ -335,9 +335,24 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     var motionPreference by mutableStateOf(preferences.getString("motion", "System") ?: "System")
         private set
     fun chooseMotion(value: String) {
-        if (value !in listOf("System", "Full", "Reduced")) return
+        if (value !in listOf("System", "Full", "Reduced", "Standard", "Fluid")) return
         motionPreference = value
         preferences.edit().putString("motion", value).apply()
+    }
+    var transitionEffect by mutableStateOf(preferences.getString("transition-effect", "Fade")
+        ?.takeIf { it in listOf("None", "Fade", "Slide") } ?: "Fade")
+        private set
+    fun chooseTransitionEffect(value: String) {
+        if (value !in listOf("None", "Fade", "Slide")) return
+        transitionEffect = value
+        preferences.edit().putString("transition-effect", value).apply()
+    }
+    fun chooseMotionPreset(value: String) {
+        if (value !in listOf("Reduced", "Standard", "Fluid")) return
+        chooseMotion(value)
+        chooseMotionIntensity(if (value == "Reduced") 0 else 100)
+        chooseMotionSpeed(100)
+        chooseSpringIntensity(if (value == "Fluid") 60 else 0)
     }
     // Phone editor/console split is opt-in; preferences survive process death.
     var phoneSplitEnabled by mutableStateOf(preferences.getBoolean("phone-split", false))
@@ -445,7 +460,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val old = savedAppearanceRecipes.firstOrNull { it.id == editingId }
         val recipe = AppearanceRecipe(old?.id ?: java.util.UUID.randomUUID().toString(),
             clean, visualStyle, appearance, accent, studioAppearance,
-            ThemeMotionRecipe(motionPreference, motionIntensity, motionSpeed, springIntensity))
+            ThemeMotionRecipe(motionPreference, motionIntensity, motionSpeed, springIntensity, transitionEffect))
         savedAppearanceRecipes = if (old == null) savedAppearanceRecipes + recipe
             else savedAppearanceRecipes.map { if (it.id == old.id) recipe else it }
         preferences.edit().putString("saved-appearance-recipes",
@@ -466,6 +481,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             chooseMotionIntensity(motion.intensity)
             chooseMotionSpeed(motion.speed)
             chooseSpringIntensity(motion.spring)
+            chooseTransitionEffect(motion.transition)
         }
     }
 

@@ -609,3 +609,10 @@ Nov 24, 2026, 7:47:09 PM PHT — Owner explicitly limited scope to the 37 approv
 ## Full specification resumed — Nov 24, 2026, 8:00:34 PM PHT
 
 Owner supplied all 37 confirmed decisions in this session. Prior missing-label caveat is obsolete. Latest implementation 7304cbf passed Android CI 45387376191; screenshots, API35 execution and physical acceptance remain unverified. Source audit confirms settings currently has only eight mixed destinations rather than the nine approved groups. Next: implement navigable settings subpages and motion presets, then remaining gaps and exact-source CI. No runtime, signing or CI policy changes authorized beyond the approved design specification.
+
+
+## Settings, motion and live preferences — Nov 24, 2026, 8:05:54 PM PHT
+
+Source implementation: nine approved Settings destinations, searchable navigation and dedicated motion/editor/keyboard/storage/privacy/help pages; Theme Studio direct entry; live preference listener updates mounted editors without losing buffers; Reduced/Standard/Fluid presets and persistent None/Fade/Slide editor/onboarding transitions, also retained in theme JSON with legacy defaults. Added motion codec regression and settings instrumentation coverage. Android build/tests pending; local Gradle bootstrap failed with Network is unreachable. Latest verified Android source remains 7304cbf (CI 45387376191).
+
+Device blocker: connector has no workflow-dispatch operation, gh is unauthenticated, and the fallback GitHub browser is signed out. No workflow configuration or release safeguards changed. Next: inspect exact-source CI, fix failures, complete language icon/onboarding gaps and obtain API35 visual/runtime/performance evidence. Physical acceptance remains with owner.

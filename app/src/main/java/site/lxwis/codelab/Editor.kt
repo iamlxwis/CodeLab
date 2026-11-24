@@ -149,6 +149,26 @@ fun CodeEditor(
     var bookmarksMenu by remember { mutableStateOf(false) }
     var showLineNumbers by remember { mutableStateOf(preferences.getBoolean("line-numbers", true)) }
     var showActiveLine by remember { mutableStateOf(preferences.getBoolean("active-line", true)) }
+    DisposableEffect(preferences) {
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            when (key) {
+                "font-size" -> fontSize = preferences.getInt(key, 15).coerceIn(10, 28)
+                "word-wrap" -> wordWrap = preferences.getBoolean(key, true)
+                "line-numbers" -> showLineNumbers = preferences.getBoolean(key, true)
+                "active-line" -> showActiveLine = preferences.getBoolean(key, true)
+                "minimap" -> minimap = preferences.getBoolean(key, false)
+                "diagnostic-markers" -> diagnosticMarkers = preferences.getBoolean(key, true)
+                "indent-width" -> indentWidth = preferences.getInt(key, 4)
+                "indent-tabs" -> useTabs = preferences.getBoolean(key, false)
+                "symbol-toolbar" -> symbols = preferences.getBoolean(key, true)
+                "shortcut-layout" -> shortcutLayout = preferences.getString(key, "Standard") ?: "Standard"
+                "keyboard-only-symbols" -> keyboardOnlySymbols = preferences.getBoolean(key, false)
+                "auto-hide-hardware-toolbar" -> hideToolbarOnHardware = preferences.getBoolean(key, false)
+            }
+        }
+        preferences.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { preferences.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
     var result by remember { mutableStateOf("") }
     if (snippetSaveDialog) AlertDialog(
         onDismissRequest = { snippetSaveDialog = false },

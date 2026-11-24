@@ -144,7 +144,7 @@ private fun SettingChoices(title: String, choices: List<String>, currentChoice: 
 
 /** Full-width, scrollable visual settings page, replacing the cramped modal. */
 @Composable
-internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
+internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, dismiss: () -> Unit) {
     var customHex by remember(m.visualStyle) {
         mutableStateOf(if (m.accent.startsWith("#")) m.accent else "#")
     }
@@ -284,7 +284,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                                 })
                         }
                     }
-                    item { StudioAppearanceControls(m) }
+                    item { StudioAppearanceControls(m, initiallyOpen = openStudio) }
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(Modifier.fillMaxWidth(),
@@ -398,8 +398,8 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                     }
                     if (advanced) item {
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            SettingChoices("ANIMATIONS", listOf("System", "Full", "Reduced"),
-                                m.motionPreference, m::chooseMotion)
+                            SettingChoices("ANIMATIONS", listOf("Reduced", "Standard", "Fluid"),
+                                when (m.motionPreference) { "System" -> "Standard"; "Full" -> "Fluid"; else -> m.motionPreference }, m::chooseMotionPreset)
                             Text("Motion intensity · " + m.motionIntensity + "%",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)

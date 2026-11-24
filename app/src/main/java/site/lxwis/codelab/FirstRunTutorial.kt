@@ -80,7 +80,8 @@ internal fun FirstRunTutorial(
     onTryAction: (String, Int) -> Unit = { _, _ -> },
     projectOpen: Boolean = false,
     resumeFrom: Int = 0,
-    motion: CodeLabMotion? = null
+    motion: CodeLabMotion? = null,
+    transitionEffect: String = "Slide"
 ) {
     val start = TutorialProgress.restore(resumeFrom, guide.size)
     var index by rememberSaveable { mutableIntStateOf(start) }
@@ -115,10 +116,12 @@ internal fun FirstRunTutorial(
                         modifier = Modifier.padding(18.dp).size(30.dp))
                 }
                 val systemMotion = rememberCodeLabMotion("System", 100)
-                val duration = (motion ?: systemMotion).millis(220)
+                val duration = if (transitionEffect == "None") 0 else (motion ?: systemMotion).millis(220)
                 AnimatedContent(targetState = current, transitionSpec = {
-                    (fadeIn(tween(duration)) + androidx.compose.animation.slideInHorizontally(tween(duration)) { it / 12 }) togetherWith
-                        (fadeOut(tween(duration)) + androidx.compose.animation.slideOutHorizontally(tween(duration)) { -it / 12 })
+                    if (transitionEffect == "Slide") {
+                        (fadeIn(tween(duration)) + androidx.compose.animation.slideInHorizontally(tween(duration)) { it / 12 }) togetherWith
+                            (fadeOut(tween(duration)) + androidx.compose.animation.slideOutHorizontally(tween(duration)) { -it / 12 })
+                    } else fadeIn(tween(duration)) togetherWith fadeOut(tween(duration))
                 }, label = "guide-page") { step ->
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(step.title, modifier = Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineSmall)

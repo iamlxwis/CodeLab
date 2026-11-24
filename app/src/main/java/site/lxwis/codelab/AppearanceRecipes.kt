@@ -11,16 +11,17 @@ internal data class AppearanceRecipe(
 )
 
 /** Legacy recipes omit motion and must not change existing accessibility preferences. */
-internal data class ThemeMotionRecipe(val preference: String, val intensity: Int, val speed: Int, val spring: Int) {
+internal data class ThemeMotionRecipe(val preference: String, val intensity: Int, val speed: Int, val spring: Int, val transition: String = "Fade") {
     fun json() = JSONObject().put("preference", preference).put("intensity", intensity)
-        .put("speed", speed).put("spring", spring)
+        .put("speed", speed).put("spring", spring).put("transition", transition)
     companion object {
         fun decode(json: JSONObject?): ThemeMotionRecipe? {
             if (json == null) return null
-            val preference = json.optString("preference").takeIf { it in listOf("System", "Full", "Reduced") }
+            val preference = json.optString("preference").takeIf { it in listOf("System", "Full", "Reduced", "Standard", "Fluid") }
                 ?: return null
             return ThemeMotionRecipe(preference, json.optInt("intensity", 100).coerceIn(0, 100),
-                json.optInt("speed", 100).coerceIn(50, 200), json.optInt("spring", 35).coerceIn(0, 100))
+                json.optInt("speed", 100).coerceIn(50, 200), json.optInt("spring", 35).coerceIn(0, 100),
+                json.optString("transition").takeIf { it in listOf("None", "Fade", "Slide") } ?: "Fade")
         }
     }
 }

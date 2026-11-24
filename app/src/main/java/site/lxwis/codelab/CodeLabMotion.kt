@@ -34,7 +34,7 @@ internal fun resolveMotionScale(preference: String, intensity: Int, systemScale:
     if (preference == "Reduced" || intensity <= 0 || !systemScale.isFinite() ||
         systemScale <= 0f) return 0f
     val adjusted = (0.55f + 0.45f * (intensity.coerceIn(0, 100) / 100f))
-    val mode = if (preference == "System") 0.9f else 1f
+    val mode = if (preference == "System" || preference == "Standard") 0.9f else 1f
     return (systemScale.coerceIn(0f, 3f) * adjusted * mode).coerceIn(0f, 3f)
 }
 

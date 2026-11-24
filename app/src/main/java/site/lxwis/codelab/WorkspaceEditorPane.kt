@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.graphicsLayer
@@ -35,11 +36,16 @@ internal fun WorkspaceEditorPane(
     val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
     val file = m.active
     val alpha = remember { Animatable(1f) }
-    LaunchedEffect(file, project, motion.millis(160)) {
-        if (motion.millis(160) > 0) { alpha.snapTo(.75f); alpha.animateTo(1f, tween(motion.millis(160))) }
+    val transitionMillis = if (m.transitionEffect == "None") 0 else motion.millis(160)
+    val slideDistance = with(LocalDensity.current) { 16.dp.toPx() }
+    LaunchedEffect(file, project, transitionMillis, m.transitionEffect) {
+        if (transitionMillis > 0) { alpha.snapTo(0f); alpha.animateTo(1f, tween(transitionMillis)) }
         else alpha.snapTo(1f)
     }
-    Box(modifier.graphicsLayer { this.alpha = alpha.value }) {
+    Box(modifier.graphicsLayer {
+        this.alpha = .75f + .25f * alpha.value
+        translationX = if (m.transitionEffect == "Slide") (1f - alpha.value) * slideDistance else 0f
+    }) {
         if (file != null) key(project, file) {
             CodeEditor(
                 fileKey = "$project/$file",

@@ -63,4 +63,17 @@ class AppearanceRecipesTest {
         assertNull(ThemeMotionRecipe.decode(org.json.JSONObject("""{"preference":"Unknown"}""")))
     }
 
+    @Test fun newMotionPresetsAndTransitionsRetainLegacyDefaults() {
+        for (preset in listOf("Reduced", "Standard", "Fluid")) {
+            for (effect in listOf("None", "Fade", "Slide")) {
+                val motion = ThemeMotionRecipe(preset, 80, 120, 40, effect)
+                assertEquals(motion, ThemeMotionRecipe.decode(motion.json()))
+            }
+        }
+        val legacy = org.json.JSONObject("""{"preference":"Full"}""")
+        assertEquals("Fade", ThemeMotionRecipe.decode(legacy)?.transition)
+        legacy.put("transition", "unknown")
+        assertEquals("Fade", ThemeMotionRecipe.decode(legacy)?.transition)
+    }
+
 }

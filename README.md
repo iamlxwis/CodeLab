@@ -27,15 +27,15 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **ACTIVE — auditing all 37 confirmed decisions** |
+| Status | **ACTIVE — settings, motion and live editor preferences implemented; CI pending** |
 | Workstreams accepted | **0/10 fully device-accepted** — source and CI verified separately |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [7304cbf — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45387376191) · source CI; device acceptance pending |
 | Next to build | Complete the required settings subpages, motion controls and remaining source gaps; validate exact-source APK and API35 behavior |
-| Last activity | Nov 24, 2026, 8:00:34 PM PHT |
+| Last activity | Nov 24, 2026, 8:05:54 PM PHT |
 
-**Current activity:** Nov 24, 2026, 8:00:34 PM PHT — Resumed from passing 7304cbf; auditing the full confirmed specification and implementing missing settings behavior.
+**Current activity:** Nov 24, 2026, 8:05:54 PM PHT — Nine Settings destinations and persistent motion controls implemented; exact-source Android CI next, device acceptance remains pending.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

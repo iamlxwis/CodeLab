@@ -80,3 +80,57 @@ Nov 24, 2026, 7:47:09 PM PHT — Owner explicitly limited scope to the 37 approv
 ## Full specification resumed — Nov 24, 2026, 8:00:34 PM PHT
 
 Owner supplied all 37 confirmed decisions in this session. Prior missing-label caveat is obsolete. Latest implementation 7304cbf passed Android CI 45387376191; screenshots, API35 execution and physical acceptance remain unverified. Source audit confirms settings currently has only eight mixed destinations rather than the nine approved groups. Next: implement navigable settings subpages and motion presets, then remaining gaps and exact-source CI. No runtime, signing or CI policy changes authorized beyond the approved design specification.
+
+
+## Settings, motion and live preferences — Nov 24, 2026, 8:05:54 PM PHT
+
+Source implementation: nine approved Settings destinations, searchable navigation and dedicated motion/editor/keyboard/storage/privacy/help pages; Theme Studio direct entry; live preference listener updates mounted editors without losing buffers; Reduced/Standard/Fluid presets and persistent None/Fade/Slide editor/onboarding transitions, also retained in theme JSON with legacy defaults. Added motion codec regression and settings instrumentation coverage. Android build/tests pending; local Gradle bootstrap failed with Network is unreachable. Latest verified Android source remains 7304cbf (CI 45387376191).
+
+Device blocker: connector has no workflow-dispatch operation, gh is unauthenticated, and the fallback GitHub browser is signed out. No workflow configuration or release safeguards changed. Next: inspect exact-source CI, fix failures, complete language icon/onboarding gaps and obtain API35 visual/runtime/performance evidence. Physical acceptance remains with owner.
+
+
+## Authoritative 37-decision source audit
+
+The full owner specification was supplied in the current session. This matrix supersedes earlier statements that decision labels were unavailable. **Source** means inspected implementation exists; **Partial** means a known source gap remains; **Unverified** means acceptance evidence is missing. No decision is fully accepted on the redesigned app yet (0/37); this is separate from passing source CI. Existing grouped 0/10 device workstreams are historical grouping, not the decision denominator.
+
+| Decision | Source evidence | Status / remaining acceptance |
+| --- | --- | --- |
+| 01 Apple Pro + Liquid Glass | CodeLabTheme, ClayDesign, WorkspaceShell | Source; screen-by-screen fidelity unverified |
+| 02 Complete Theme Studio | AppearanceGallery, StudioAppearanceControls, AppearanceRecipes | Source; full persistence and preview fidelity unverified |
+| 03 Complete theme replacement | CodeLabVisualStyles canonical aliases; six replacement presets | Source; data-preserving migration unverified on device |
+| 04 Adaptive Apple navigation | WorkspaceScreen, WorkspaceShell, Explorer sheet | Source; phone/tablet/landscape and system gesture QA unverified |
+| 05 Apple Fluid | CodeLabMotion, themed press springs and transitions | Partial; coordinated consistent motion across all tool screens unverified |
+| 06 Six presets + unlimited custom | AppearanceGallery and uncapped AppearanceRecipes | Source; all six presets and large saved collections need device checks |
+| 07 Adaptive dashboard | ProjectLibraryScreen, metadata, favorites, sort and grid | Source; screen sizes, actions and hierarchy unverified |
+| 08 Adaptive editor | Editor, EditorToolbar, WorkspaceEditorPane | Source; IME, toolbar persistence and small screens unverified |
+| 09 Dual project creation | GuidedProjectSheet, ProjectDialogs | Source; real quick/guided creation and consent need device QA |
+| 10 Monogram branding | drawable icons, splash animator and WorkspaceShell | Source; masks, startup and reduced motion unverified |
+| 11 All 12 Theme Studio capabilities | StudioAppearanceControls, ImportedFonts, recipes and actual theme consumers | Source; live RGB/HSL/HEX, import/export/fonts/syntax/system switching unverified |
+| 12 Animations + haptics | CodeLabMotion, persisted touchFeedback, platform haptic API | Source; system preference and accessibility behavior unverified |
+| 13 Developer console | RunConsole, RunStatePanels, split controls | Source; errors/warnings/filtering and real runs unverified |
+| 14 Bottom explorer | FileExplorerPanels, FileExplorerHierarchy | Source; tree/file operations and sheet resize unverified |
+| 15 Nine settings groups | ReimaginedSettings; direct Theme Studio entry | Source changed this session; build and navigation/persistence unverified |
+| 16 Adaptive onboarding | FirstRunTutorial, resume/detour persistence | Partial; practical detours exist, interactive editing/execution lessons still incomplete |
+| 17 All eight gestures | SourceView, Editor, WorkspaceTab, ProjectLibraryScreen, PhoneSplitPanel | Source; gesture interactions and accessible alternatives unverified |
+| 18 Explicit execution | RunModeStrip, ProjectDialogs, OnlineRunConfirmation | Source; real offline packs, consent and failure states unverified |
+| 19 Adaptive glass | ClayDesign, backdrop quality and material controls | Source approximation; fidelity/readability/performance unverified |
+| 20 Strict visual QA | qa device/accessibility/font/motion scripts | Unverified; no screenshots inspected for current redesign |
+| 21 Custom typography | Licensed Inter/JetBrains assets; ImportedFonts | Source; system scaling and custom font imports unverified |
+| 22 Contextual icons | Rounded Material icons and FileTypeIcon letter badges | Partial; recognizable programming-language logo assets missing |
+| 23 Language pack library | LanguageManager; real signed optional pack architecture retained | Source; detail/install/remove/download journeys unverified for redesign |
+| 24 Contextual presentations | Alerts, anchored menus, action/explorer sheets | Source; all existing tool screens require visual audit |
+| 25 All nine workspace controls | EditorToolbarOrder, WorkspaceLayout, per-project preferences | Source; focus and named/per-project layout restoration unverified |
+| 26 Complete motion customization | MotionSettingsControls; recipes include preset/speed/spring/transition | Source changed this session; system reduced-motion and persistence unverified |
+| 27 Accessibility | Semantics, native editing, alternate controls, contrast/font checks | Partial; full TalkBack/keyboard/contrast/device validation outstanding |
+| 28 Default Obsidian | #000000 preset and default preference | Source; clean install appearance unverified |
+| 29 Adaptive performance | Incremental indexes, async matching, low-RAM glass fallback, real diagnostic hooks | Unverified; no current measured startup/typing/frame/memory results |
+| 30 Preserve functionality/data | Existing engines, runtime packs, tools and storage retained | Unverified regression acceptance; no runtime architecture changes in this session |
+| 31 Files import/export | DocumentPreview, ImportReviewDialog, ExportReviewDialog, guarded ProjectStore | Source; real transfer/conflict/data safety UI regression outstanding |
+| 32 Cinematic splash | Native animated monogram plus app transition | Source; startup timing and reduced-motion acceptance outstanding |
+| 33 All 12 editor enhancements | SourceView, LogicalLines, Editor, WorkspaceTab, accessory controls | Source; correctness/selection/IME and large files need device QA |
+| 34 All 12 app polish enhancements | Empty states, themed feedback, sheets/filter transitions/system bars | Partial; whole-app visual audit and remaining screens unverified |
+| 35 Continuous tracker | README current activity; separate logs and project memory; PHT AM/PM | Process active; keep implementation/build/device/physical evidence separate |
+| 36 Quality and installable APK | Prior source 7304cbf passed CI; new code must build | Unverified; latest APK, API35 acceptance and physical review still required |
+| 37 CodeLab — Reimagined | Current documentation and in-app identity | Source; comprehensive update remains in progress |
+
+Next unfinished implementation: real guided editor lesson (decision 16), language-logo icons (22); then remaining screen/interaction polish. Obtain exact-source build before claiming delivery. Full visual/accessibility/runtime/performance acceptance remains open.
