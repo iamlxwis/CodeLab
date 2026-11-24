@@ -43,29 +43,29 @@ internal fun CodeLabTheme(
     largeInterfaceText: Boolean,
     content: @Composable (Boolean) -> Unit
 ) {
-    val dark = when (visualStyle) {
-        "AMOLED" -> true
-        "Paper" -> false
+    val dark = when (CodeLabVisualStyles.canonical(visualStyle)) {
+        "Obsidian" -> true
+        "Porcelain", "Sandstone" -> false
         else -> appearance == "Dark" || (appearance == "System" && isSystemInDarkTheme())
     }
     // Do not allocate a new ColorScheme on unrelated editor recompositions.
     val scheme = remember(themePreset, visualStyle, accentPreset, highContrast, dark) {
             val palette = if (dark) night else day
-            val base = when (visualStyle) {
-                "AMOLED" -> night.copy(
+            val base = when (CodeLabVisualStyles.canonical(visualStyle)) {
+                "Obsidian" -> night.copy(
                     background = Color.Black, surface = Color.Black,
                     surfaceContainer = Color(0xff090909),
                     surfaceContainerHigh = Color(0xff121212),
                     surfaceVariant = Color(0xff0a0a0a),
                     outlineVariant = Color(0xff303030))
-                "Paper" -> day.copy(
+                "Sandstone" -> day.copy(
                     background = Color(0xfffaf8f1), surface = Color(0xfffaf8f1),
                     surfaceContainer = Color(0xfff3efe5),
                     surfaceContainerHigh = Color(0xffeae5d8),
                     surfaceVariant = Color(0xffe9e4d8),
                     onSurface = Color(0xff272922),
                     onSurfaceVariant = Color(0xff555950))
-                "Glass" -> palette.copy(
+                "Crystal" -> palette.copy(
                     background = if (dark) Color(0xff111416) else Color(0xffeef0f1),
                     surface = if (dark) Color(0xff24282b) else Color(0xfff7f8f9),
                     surfaceContainer = if (dark) Color(0xff393d41).copy(alpha = .77f)
@@ -75,13 +75,24 @@ internal fun CodeLabTheme(
                     surfaceVariant = if (dark) Color(0xff34383c) else Color(0xffe6e9ec),
                     onSurfaceVariant = if (dark) Color(0xffd1d6d9) else Color(0xff454a50),
                     outlineVariant = if (dark) Color(0xff7c8388) else Color(0xffb8bec2))
-                "Clay" -> palette.copy(
-                    background = if (dark) Color(0xff111b23) else Color(0xffe7eeeb),
-                    surface = if (dark) Color(0xff17252e) else Color(0xffeaf0ed),
-                    surfaceContainer = if (dark) Color(0xff233742) else Color(0xffedf3ee),
-                    surfaceContainerHigh = if (dark) Color(0xff304854) else Color(0xfff6faf6),
-                    surfaceVariant = if (dark) Color(0xff354b56) else Color(0xffd9e5df),
-                    outlineVariant = if (dark) Color(0xff4d6772) else Color(0xffc2d3c9))
+                "Titanium" -> if (dark) palette.copy(
+                    background = Color(0xff17191c), surface = Color(0xff17191c),
+                    surfaceContainer = Color(0xff22252a), surfaceContainerHigh = Color(0xff30343a),
+                    surfaceVariant = Color(0xff30343a), onSurface = Color(0xffe5e5e7),
+                    onSurfaceVariant = Color(0xffb0b3ba), outlineVariant = Color(0xff41454c)
+                ) else palette.copy(background = Color(0xfff2f2f7), surface = Color.White,
+                    surfaceContainer = Color(0xfff2f2f7), surfaceContainerHigh = Color(0xffe5e5ea))
+                "Midnight" -> if (dark) palette.copy(
+                    background = Color(0xff090f1d), surface = Color(0xff090f1d),
+                    surfaceContainer = Color(0xff141f31), surfaceContainerHigh = Color(0xff182438),
+                    surfaceVariant = Color(0xff24334c), onSurface = Color(0xffe6edf9),
+                    onSurfaceVariant = Color(0xffb7c8e2), outlineVariant = Color(0xff354965)
+                ) else palette
+                "Porcelain" -> day.copy(
+                    background = Color(0xfff5f5f7), surface = Color.White,
+                    surfaceContainer = Color(0xffededf0), surfaceContainerHigh = Color(0xffe5e5ea),
+                    surfaceVariant = Color(0xffe5e5ea), onSurface = Color(0xff1c1c1e),
+                    onSurfaceVariant = Color(0xff515158), outlineVariant = Color(0xffc7c7cc))
                 else -> if (!dark) palette else when (themePreset) {
                     "Nocturne" -> palette.copy(
                         background = Color(0xff0c1020), surface = Color(0xff0c1020),
@@ -104,7 +115,7 @@ internal fun CodeLabTheme(
                 "Mono" -> if (dark) Color(0xffced4d5) else Color(0xff465152)
                 else -> if (AppearanceRecipes.validAccent(accentPreset) &&
                     accentPreset.startsWith("#")) Color(0xff000000 or accentPreset.drop(1).toLong(16))
-                    else if (visualStyle == "Glass") {
+                    else if (CodeLabVisualStyles.canonical(visualStyle) == "Crystal") {
                         if (dark) Color(0xffd9dee1) else Color(0xff38444b)
                     } else base.primary
             }
@@ -158,7 +169,7 @@ internal fun CodeLabTheme(
                 extraLarge = RoundedCornerShape(28.dp))
         }
     }
-    CompositionLocalProvider(LocalCodeLabVisualStyle provides visualStyle) {
+    CompositionLocalProvider(LocalCodeLabVisualStyle provides CodeLabVisualStyles.canonical(visualStyle)) {
         MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes) {
             content(dark)
         }

@@ -9,14 +9,14 @@ internal data class AppearanceRecipe(
 )
 
 internal object AppearanceRecipes {
-    private val styles = setOf("Minimal", "Glass", "Clay", "AMOLED", "Paper")
+    private fun validStyle(value: String) = CodeLabVisualStyles.accepts(value)
     private val modes = setOf("Dark", "Light", "System")
     private val accents = setOf("Mint", "Blue", "Violet", "Amber", "Rose", "Mono")
     private val hexColor = Regex("#[0-9a-fA-F]{6}")
     const val LIMIT = 20
 
     fun validAccent(value: String): Boolean = value in accents || hexColor.matches(value)
-    fun defaultAccent(style: String): String = if (style == "Glass" || style == "AMOLED") "Mono" else "Mint"
+    fun defaultAccent(style: String): String = if (CodeLabVisualStyles.canonical(style) in listOf("Crystal", "Obsidian", "Titanium")) "Mono" else "Blue"
     fun validName(name: String): Boolean =
         name == name.trim() && name.isNotBlank() && name.length <= 32 &&
             name.none { it.isISOControl() }
@@ -29,7 +29,7 @@ internal object AppearanceRecipes {
             val candidate = AppearanceRecipe(obj.optString("id"), obj.optString("name"),
                 obj.optString("style"), obj.optString("mode"), obj.optString("accent"))
             if (candidate.id.length in 1..64 && validName(candidate.name) &&
-                candidate.style in styles && candidate.mode in modes &&
+                validStyle(candidate.style) && candidate.mode in modes &&
                 validAccent(candidate.accent) && result.none { it.id == candidate.id }) result += candidate
         }
         result
@@ -38,7 +38,7 @@ internal object AppearanceRecipes {
     fun encode(recipes: List<AppearanceRecipe>): String {
         val array = JSONArray()
         recipes.take(LIMIT).forEach { recipe ->
-            if (recipe.style in styles && recipe.mode in modes &&
+            if (validStyle(recipe.style) && recipe.mode in modes &&
                 validName(recipe.name) && validAccent(recipe.accent) &&
                 recipe.id.length in 1..64) {
                 array.put(JSONObject().put("id", recipe.id).put("name", recipe.name)

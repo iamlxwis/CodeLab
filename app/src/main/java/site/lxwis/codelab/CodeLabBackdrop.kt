@@ -19,22 +19,23 @@ import androidx.compose.ui.unit.dp
 @Composable
 internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable () -> Unit) {
     val scheme = MaterialTheme.colorScheme
-    val background = when (style) {
-        "Glass" -> if (dark)
+    val preset = CodeLabVisualStyles.canonical(style)
+    val background = when (preset) {
+        "Crystal" -> if (dark)
             Brush.verticalGradient(listOf(Color(0xff101214), Color(0xff252a2e), Color(0xff14171a)))
             else Brush.verticalGradient(listOf(Color(0xfff8f9fa), Color(0xffdfe3e6), Color(0xfff2f4f5)))
         "Clay" -> if (dark)
             Brush.verticalGradient(listOf(Color(0xff18232a), Color(0xff111b23)))
             else Brush.verticalGradient(listOf(Color(0xfff4f5f0), Color(0xffe3ebe8)))
-        "Paper" -> Brush.verticalGradient(listOf(Color(0xfffdfbf4), Color(0xfff5f0e4)))
-        "AMOLED" -> Brush.verticalGradient(listOf(Color.Black, Color.Black))
+        "Sandstone" -> Brush.verticalGradient(listOf(Color(0xfffdfbf4), Color(0xfff5f0e4)))
+        "Obsidian" -> Brush.verticalGradient(listOf(Color.Black, Color.Black))
         else -> Brush.verticalGradient(listOf(scheme.background, scheme.background))
     }
     Box(Modifier.fillMaxSize().background(background)) {
-        if (style == "Glass" || style == "Clay" || style == "Paper") {
+        if (preset == "Crystal" || preset == "Clay" || preset == "Sandstone") {
             Canvas(Modifier.fillMaxSize()) {
                 val radius = maxOf(size.width, size.height * .58f)
-                if (style == "Glass") {
+                if (preset == "Crystal") {
                     val firstGlow = if (dark) Color.White.copy(alpha = .12f)
                         else Color.White.copy(alpha = .70f)
                     val secondGlow = if (dark) Color(0xffaeb7c0).copy(alpha = .10f)
@@ -50,7 +51,7 @@ internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable 
                         radius = radius * .73f
                     ))
                 }
-                if (style == "Clay") {
+                if (preset == "Clay") {
                     val glow = if (dark) Color(0xff748ca2).copy(alpha = .13f)
                         else Color.White.copy(alpha = .52f)
                     drawRect(Brush.radialGradient(
@@ -59,7 +60,7 @@ internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable 
                         radius = radius * .80f
                     ))
                 }
-                if (style == "Paper") {
+                if (preset == "Sandstone") {
                     val step = 50.dp.toPx()
                     var y = step
                     while (y < size.height) {

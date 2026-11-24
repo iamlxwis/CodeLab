@@ -209,7 +209,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             ?: when (preferences.getString("preset", "Obsidian")) {
                 "OLED" -> "AMOLED"
                 "Paper", "GitHub Light" -> "Paper"
-                else -> "Minimal"
+                else -> "Obsidian"
             }
     )
         private set
@@ -222,8 +222,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         visualStyle = value
         accent = preferences.getString("accent:$value", AppearanceRecipes.defaultAccent(value))
             ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(value)
-        appearance = preferences.getString("mode:$value", "Dark")
-            ?.takeIf { it in listOf("Dark", "Light", "System") } ?: "Dark"
+        appearance = preferences.getString("mode:$value", CodeLabVisualStyles.defaultMode(value))
+            ?.takeIf { it in listOf("Dark", "Light", "System") } ?: CodeLabVisualStyles.defaultMode(value)
         preferences.edit().putString("visual-style", value)
             .putString("accent", accent).putString("mode", appearance).apply()
     }
@@ -338,7 +338,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun restoreAppearanceDefaults() {
-        setMode("Dark")
+        setMode(CodeLabVisualStyles.defaultMode(visualStyle))
         chooseAccent(AppearanceRecipes.defaultAccent(visualStyle))
     }
     private var shellSession: WorkspaceShell? = null

@@ -2,10 +2,14 @@ package site.lxwis.codelab
 
 import androidx.compose.runtime.staticCompositionLocalOf
 
-/** A visual treatment, separate from light/dark mode and syntax colors. */
+/** Public presets; legacy names remain readable for stored user recipes. */
 internal object CodeLabVisualStyles {
-    val all = listOf("Minimal", "Glass", "Clay", "AMOLED", "Paper")
-    fun accepts(style: String) = style in all
+    val all = listOf("Obsidian", "Titanium", "Crystal", "Midnight", "Porcelain", "Sandstone")
+    private val legacy = mapOf("Minimal" to "Titanium", "Glass" to "Crystal",
+        "Clay" to "Titanium", "AMOLED" to "Obsidian", "Paper" to "Sandstone")
+    fun accepts(style: String) = style in all || style in legacy
+    fun canonical(style: String) = legacy[style] ?: style.takeIf { it in all } ?: "Obsidian"
+    fun defaultMode(style: String) = if (canonical(style) in listOf("Porcelain", "Sandstone")) "Light" else "Dark"
 }
 
-internal val LocalCodeLabVisualStyle = staticCompositionLocalOf { "Minimal" }
+internal val LocalCodeLabVisualStyle = staticCompositionLocalOf { "Obsidian" }

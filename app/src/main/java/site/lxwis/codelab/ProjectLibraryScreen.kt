@@ -173,14 +173,9 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
         horizontal = CodeLabSpacing.screen, vertical = CodeLabSpacing.large),
         verticalArrangement = Arrangement.spacedBy(spacing)) {
         item {
-            Text("YOUR WORKSPACE", style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(7.dp))
-            Text("Projects", style = MaterialTheme.typography.headlineLarge,
+             Text("Projects", style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.SemiBold)
-            Text("Open a project or start something new.", style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(CodeLabSpacing.large))
+             Spacer(Modifier.height(CodeLabSpacing.large))
             Row(Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(CodeLabSpacing.small)) {
                 Button(onClick = new, modifier = Modifier.weight(1f),
@@ -196,7 +191,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                     Text("Import", maxLines = 1)
                 }
             }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(12.dp))
             OutlinedTextField(value = projectSearch, onValueChange = { projectSearch = it },
                 modifier = Modifier.fillMaxWidth(), singleLine = true,
                 shape = RoundedCornerShape(18.dp),
@@ -223,7 +218,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 verticalAlignment = Alignment.CenterVertically) {
                 Text("ON THIS DEVICE", fontSize = 11.sp, letterSpacing = 1.6.sp,
                     fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("$visibleCount / ${m.projects.size}", style = MaterialTheme.typography.labelSmall,
+                Text("$visibleCount projects", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

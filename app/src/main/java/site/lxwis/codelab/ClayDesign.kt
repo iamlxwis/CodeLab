@@ -58,18 +58,18 @@ internal fun ClayPanel(
     Surface(
         modifier = if (style == "Clay") modifier.shadow(12.dp, shape, clip = false) else modifier,
         shape = shape,
-        color = if (style == "Glass") colors.surfaceContainer.copy(alpha = .72f)
+        color = if (style == "Crystal") colors.surfaceContainer.copy(alpha = .72f)
             else colors.surfaceContainer,
         tonalElevation = if (style == "Clay") 2.dp else 0.dp,
         shadowElevation = if (style == "Clay") 3.dp else 0.dp,
         border = when (style) {
-            "Glass" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
+            "Crystal" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
                 Color.White.copy(alpha = .58f),
                 colors.outlineVariant.copy(alpha = .28f))))
             "Clay" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
                 Color.White.copy(alpha = .30f),
                 colors.outlineVariant.copy(alpha = .5f))))
-            "AMOLED" -> BorderStroke(1.dp, colors.outlineVariant.copy(alpha = .72f))
+            "Obsidian" -> BorderStroke(1.dp, colors.outlineVariant.copy(alpha = .72f))
             else -> null
         }
     ) { content() }
@@ -91,17 +91,17 @@ internal fun ClayActionCard(
         enabled = true,
         interactionSource = interactionSource,
         shape = shape,
-        color = if (style == "Glass")
+        color = if (style == "Crystal")
             colors.surfaceContainerHigh.copy(alpha = .72f)
             else colors.surfaceContainerHigh,
         tonalElevation = if (style == "Clay") CodeLabElevation.tonal else 0.dp,
         shadowElevation = if (style == "Clay") 9.dp else 0.dp,
         border = when (style) {
-            "Glass" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
+            "Crystal" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
                 Color.White.copy(alpha = .55f), colors.outlineVariant.copy(alpha = .20f))))
             "Clay" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
                 Color.White.copy(alpha = .35f), colors.outlineVariant.copy(alpha = .55f))))
-            "AMOLED" -> BorderStroke(1.dp, colors.outlineVariant.copy(alpha = .75f))
+            "Obsidian" -> BorderStroke(1.dp, colors.outlineVariant.copy(alpha = .75f))
             else -> null
         }
     ) { content() }

@@ -30,11 +30,12 @@ import androidx.compose.ui.window.DialogProperties
 
 private data class StyleSample(val name: String, val summary: String)
 private val styles = listOf(
-    StyleSample("Minimal", "Clean & focused"),
-    StyleSample("Glass", "Frosted & luminous"),
-    StyleSample("Clay", "Raised & tactile"),
-    StyleSample("AMOLED", "Pure black"),
-    StyleSample("Paper", "Warm & bright")
+    StyleSample("Obsidian", "Pure black"),
+    StyleSample("Titanium", "Neutral metallic"),
+    StyleSample("Crystal", "Liquid glass"),
+    StyleSample("Midnight", "Deep navy"),
+    StyleSample("Porcelain", "Refined light"),
+    StyleSample("Sandstone", "Warm neutral")
 )
 
 /**
@@ -56,10 +57,10 @@ private fun StyleCard(choice: StyleSample, isSelected: Boolean, onClick: () -> U
         shape = RoundedCornerShape(18.dp),
         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceContainerLow,
-        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+        border = if (isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
     ) {
         Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.fillMaxWidth().height(119.dp).clip(RoundedCornerShape(12.dp))) {
+            Box(Modifier.fillMaxWidth().height(96.dp).clip(RoundedCornerShape(12.dp))) {
                 CodeLabTheme(
                     themePreset = model.themePreset,
                     visualStyle = choice.name,
@@ -167,7 +168,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("Choose your style", style = MaterialTheme.typography.titleLarge)
+                            Text("Themes", style = MaterialTheme.typography.titleLarge)
                             Text("Preview a visual treatment. Your editor stays readable and your files stay unchanged.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -178,7 +179,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                             if (maxWidth < 340.dp) {
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                     row.forEach { style ->
-                                        StyleCard(style, isSelected = m.visualStyle == style.name,
+                                        StyleCard(style, isSelected = CodeLabVisualStyles.canonical(m.visualStyle) == style.name,
                                             onClick = { m.chooseVisualStyle(style.name) },
                                             modifier = Modifier.fillMaxWidth(), model = m)
                                     }
@@ -186,7 +187,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                             } else {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                     row.forEach { style ->
-                                        StyleCard(style, isSelected = m.visualStyle == style.name,
+                                        StyleCard(style, isSelected = CodeLabVisualStyles.canonical(m.visualStyle) == style.name,
                                             onClick = { m.chooseVisualStyle(style.name) },
                                             modifier = Modifier.weight(1f), model = m)
                                     }
@@ -199,7 +200,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             SettingChoices("COLOR MODE", listOf("Dark", "Light", "System"),
                                 m.appearance, m::setMode)
-                            Text("AMOLED uses true black; Paper uses its dedicated light palette.",
+                            Text("Obsidian is pure black. Porcelain and Sandstone use light palettes.",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall)
                         }
