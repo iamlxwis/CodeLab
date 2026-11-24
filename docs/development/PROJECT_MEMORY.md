@@ -1,3 +1,7 @@
+## Nov 24, 2026 — Language Manager visual simplification
+
+Owner screenshot showed cluttered Downloads view with repeated installer state lines and Manage buttons. Retained existing Python and five optional pack installation dialogs, signature checks, transfers, Wi-Fi/network setting and Android confirmation; replaced list with compact full-row clickable entries, Available/Installed/All filter, scoped download/online panels and pure-JVM label tests. Six offline languages and existing online catalog frozen. New source awaits CI and owner physical-device acceptance. Next: consolidate GitHub Actions artifacts to three while retaining release gating and signed individual release assets. Assistant HANDOFF at commit.
+
 ## Nov 24, 2026 — Further Phase 2 medium refinements
 
 Added read-only Python indentation-suite folding and fixed go-to-definition lookup beyond the 120-entry outline display cap. Unit tests cover both. Source commits must pass fast APK workflow before verified status. User is sole physical-device tester; assistant handles source changes/CI errors only. No expensive LSP, multi-cursor or project-wide semantic work authorized.

@@ -24,7 +24,7 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last committed checkpoint:** Nov 24, 2026 · **Assistant: HANDED OFF** · **CI: UI/tutorial source changes awaiting build verification**
+**Last committed checkpoint:** Nov 24, 2026 · **Assistant: HANDED OFF** · **CI: Language Manager redesign awaiting source build**
 
 > This is a **commit checkpoint**, not a live clock or background agent. `HANDED OFF` means this interactive turn stopped after committing; independent GitHub Actions may still run. Each subsequent turn can resume from the [project memory](docs/development/PROJECT_MEMORY.md).
 
@@ -32,13 +32,13 @@ Write, run, and manage projects from your phone.
 | --- | --- | --- |
 | **CI Option B — Smart CI** | Fast compile/unit/lint/signed APK, API35 smoke, and protected six-pack release all passed on [b4adaa96](https://github.com/iamlxwis/CodeLab/commit/b4adaa96209a1086df181adbd279c926ff64d62c). Current UI/tutorial change [34d34252](https://github.com/iamlxwis/CodeLab/commit/34d342527c1f650846bc9a2ebeae28cc0f118225) is awaiting fast build verification. | Review current CI and perform targeted narrow-screen, large-font and TalkBack acceptance. |
 | **Phase 1 — Frozen runtime baseline** | [Android 15 device smoke 45306690201](https://github.com/iamlxwis/CodeLab/actions/runs/45306690201) **PASSED**, protected release checkpoint [45306673023](https://github.com/iamlxwis/CodeLab/actions/runs/45306673023) **PASSED**, and all six optional APK assets are published. | Owner handles runtime and module installation acceptance. Assistant is responsible for UI/accessibility T07, tutorial T08, defects T03 and release/docs accuracy T09. Additional compiler packs are explicitly deferred by owner decision. |
-| **Phase 2 — Editor intelligence** | Not started | Begin after Phase 1 UI/tutorial/bug stabilization and owner-provided runtime acceptance |
+| **Phase 2 — Editor intelligence** | Easy/medium editor changes passed [CI 45314217793](https://github.com/iamlxwis/CodeLab/actions/runs/45314217793); Language Manager compact UI committed as an additional UX task | New UI requires fresh fast CI and owner phone acceptance. Hard editor features deferred. |
 
 **Current counts:** Six optional signed module APKs published (Python, JavaScript, Lua, Java beta, TypeScript, SQLite). Their installation lifecycle and physical-device runtime acceptance are owner-delegated. Language roster is frozen by owner request; no additional compiler packs in Phase 1. UI/accessibility, tutorial and release/documentation stabilization remain open.
 
-**Latest implementation:** Phase 2 easy/medium source improvements: proximity-ranked lexical completion, rename impact count, cursor-relative issue navigation, caret-preserving indentation, Python indentation-aware fold preview and uncapped same-file definition lookup. Added JVM regressions; source CI pending. Device testing delegated to owner.
+**Latest implementation:** Simplified Language Manager to compact tappable rows with Available/Installed/All filters, on-demand download/online settings, and verified status labels. Existing module dialogs and all six packs retained. UI and JVM status regressions pending fresh CI.
 
-**Next:** verify exact-source fast APK build/JVM tests, resolve failures if any, then continue Phase 2 easy/medium changes. Owner handles physical APK testing and module/runtime acceptance. Phase 1 UI/tutorial remains owner-acceptance pending.
+**Next:** verify source build/JVM regressions and consolidate workflow artifacts into app APK, six-pack ZIP artifact and CI reports. Owner handles all on-device acceptance. Phase 1 UI/tutorial remains owner-acceptance pending.
 
 [Compiler feasibility](docs/development/LANGUAGE_FEASIBILITY.md) · [Full audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Project memory](docs/development/PROJECT_MEMORY.md)
 
@@ -46,7 +46,7 @@ Write, run, and manage projects from your phone.
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.
 - **Run offline** — JavaScript, Lua, SQL, and limited Java support, with an integrated console.
-- **Language Manager** — Installed/Downloadable filtering, signed optional Python APK download, progress/cancel/retry, network policy, cache controls, Android-approved installation and removal.
+- **Language Manager** — Compact Available/Installed/All browser, optional signed packs for six baseline languages, progress/cancel/retry, per-pack network/cache controls, Android-approved installation and removal.
 - **Web preview** — Build and preview HTML, CSS, and JavaScript locally.
 - **Projects** — Templates, autosave, file management, and ZIP import/export.
 - **Tools** — Selective Git commits, optional GitHub remote sync, JavaScript debugging and code screenshots.

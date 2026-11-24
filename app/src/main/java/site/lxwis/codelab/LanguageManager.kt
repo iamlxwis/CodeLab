@@ -18,6 +18,10 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -33,7 +37,9 @@ private val catalog = LanguageCatalog.entries
 fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null, close: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var search by rememberSaveable { mutableStateOf("") }
-    var filter by rememberSaveable { mutableStateOf("Installed") }
+    var filter by rememberSaveable { mutableStateOf("Available") }
+    var showDownloadSettings by rememberSaveable { mutableStateOf(false) }
+    var showOnlineStatus by rememberSaveable { mutableStateOf(false) }
     val languageListState = rememberLazyListState()
     // Filtered rows have different lengths; always reveal the new section heading.
     LaunchedEffect(filter, search) { languageListState.scrollToItem(0) }
@@ -97,11 +103,6 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             ("py" to python.ready) +
             ("ts" to OptionalRuntimeLocator.check(context, OptionalRuntimeLocator.Pack.TYPESCRIPT).ready)
     }
-    val offlineEngineCount = OfflineRuntimeRegistry.engines().count {
-        it.extension in setOf("js", "lua", "java", "sql") &&
-            OfflineRuntimeRegistry.locallyAvailable(it.extension)
-    } + if (python.ready) 1 else 0 +
-        if (OptionalRuntimeLocator.check(context, OptionalRuntimeLocator.Pack.TYPESCRIPT).ready) 1 else 0
     val cachedInstallerBytes = remember(transfer, recheck) { module.cachedBytes() }
     val optionalPacks = remember(context) { OptionalRuntimeLocator.Pack.entries.associateWith {
         OptionalRuntimeDownload(context.applicationContext, it)
@@ -122,219 +123,225 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     val optionalStatuses = remember(recheck) {
         optionalPacks.keys.associateWith { OptionalRuntimeLocator.check(context, it) }
     }
-    val pythonApkBytes = remember(recheck) { module.installedApkBytes() }
-    val pythonVersionCode = remember(recheck) { module.installedVersionCode() }
     val filteredLanguages = catalog.filter { language ->
         (language.name.contains(search, ignoreCase = true) ||
             language.extension.contains(search, ignoreCase = true)) &&
-        when (filter) {
-            "Installed" -> detected[language.extension] == true
-            "Downloads" -> (language.name == "Python" && (python.state !=
-                PythonModuleLocator.State.NOT_INSTALLED || cachedInstallerBytes > 0L ||
-                transfer.stage != PythonModuleDownload.Stage.IDLE)) ||
-                (optionalPacks.keys.any { it.label == language.name &&
-                    (optionalStatuses[it]?.state != PythonModuleLocator.State.NOT_INSTALLED ||
-                     (optionalPacks[it]?.cachedBytes() ?: 0L) > 0L ||
-                     optionalTransfers[it]?.stage != OptionalRuntimeDownload.Stage.IDLE) })
-            "Downloadable" -> RuntimePackCatalog.isDownloadable(language.name)
-            "Cloud ready" -> model.isOnline && model.cloudLanguages.containsKey(language.extension)
-            else -> true
-        }
+            when (filter) {
+                "Installed" -> detected[language.extension] == true
+                "Available" -> RuntimePackCatalog.isDownloadable(language.name)
+                else -> true
+            }
+    }.let { languages ->
+        if (filter == "Available") languages.sortedBy {
+            LanguageManagerPresentation.priority(it.name)
+        } else languages
     }
 
     ModalBottomSheet(onDismissRequest = close, sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
         dragHandle = { BottomSheetDefaults.DragHandle() }) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(.92f).padding(horizontal = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Language Manager", style = MaterialTheme.typography.headlineSmall)
-                    Text("Manage offline engines, downloads and execution",
+                    Text("Languages", style = MaterialTheme.typography.headlineSmall)
+                    Text("Offline packs and editor support",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall)
                 }
-                Icon(if (model.isOnline) Icons.Default.Cloud else Icons.Default.WifiOff,
-                    contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 IconButton(onClick = close) {
                     Icon(Icons.Default.Close, contentDescription = "Close languages")
                 }
             }
-            OutlinedTextField(search, { search = it; if (it.isNotBlank()) filter = "All" },
-                modifier = Modifier.fillMaxWidth(), singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Code, contentDescription = null) },
-                label = { Text("Find a language") })
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf("Installed", "Downloads", "Downloadable", "All", "Cloud ready").forEach { option ->
+            OutlinedTextField(
+                value = search,
+                onValueChange = { search = it; if (it.isNotBlank()) filter = "All" },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                placeholder = { Text("Search languages") },
+                shape = RoundedCornerShape(14.dp)
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("Available", "Installed", "All").forEach { option ->
                     FilterChip(selected = filter == option, onClick = { filter = option },
                         label = { Text(option) })
                 }
             }
-            Text("${filteredLanguages.size} matching · $offlineEngineCount executable engines · " +
-                "Installer cache: ${cachedInstallerBytes / 1024 / 1024} MB",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            HorizontalDivider()
-            LazyColumn(modifier = Modifier.weight(1f), state = languageListState,
-                verticalArrangement = Arrangement.spacedBy(9.dp),
-                contentPadding = PaddingValues(bottom = 28.dp)) {
-                // Separate transfer management from results so installed engines are
-                // immediately visible, even on small Android screens.
-                if (search.isBlank() && filter == "Downloads") item {
-                    Text("DOWNLOAD MANAGER", style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(8.dp))
-                    Text("Python: " + python.description,
-                        style = MaterialTheme.typography.bodySmall)
-                    Text("Python package APK: ${pythonApkBytes / 1024 / 1024} MB" +
-                        (pythonVersionCode?.let { " · version code $it" } ?: "") +
-                        " · Installer cache: ${cachedInstallerBytes / 1024 / 1024} MB",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text("Wi-Fi only downloads", style = MaterialTheme.typography.bodyMedium)
-                            Text("Applies to the next Python download",
-                                style = MaterialTheme.typography.labelSmall,
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    filteredLanguages.size.toString() + " languages",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                TextButton(onClick = { showOnlineStatus = !showOnlineStatus }) {
+                    Icon(if (model.isOnline) Icons.Default.Cloud else Icons.Default.WifiOff,
+                        contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Online")
+                }
+                TextButton(onClick = { showDownloadSettings = !showDownloadSettings }) {
+                    Icon(Icons.Default.Settings, contentDescription = null,
+                        modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Downloads")
+                }
+            }
+            if (showDownloadSettings) {
+                Surface(shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                    Column(Modifier.fillMaxWidth().padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Download settings", style = MaterialTheme.typography.titleSmall)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Python: Wi-Fi only", style = MaterialTheme.typography.bodyMedium)
+                                Text("Other packs have their own network settings.",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Switch(checked = wifiOnly, onCheckedChange = {
+                                wifiOnly = it
+                                module.setWifiOnly(it)
+                            })
+                        }
+                        val pythonActive = transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
+                            transfer.stage == PythonModuleDownload.Stage.PAUSED
+                        val activePacks = optionalTransfers.filterValues {
+                            it.stage == OptionalRuntimeDownload.Stage.DOWNLOADING ||
+                                it.stage == OptionalRuntimeDownload.Stage.PAUSED
+                        }
+                        if (!pythonActive && activePacks.isEmpty()) {
+                            Text("No active downloads",
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Switch(checked = wifiOnly, onCheckedChange = {
-                            wifiOnly = it
-                            module.setWifiOnly(it)
-                        })
-                    }
-                    Text(when (transfer.stage) {
-                        PythonModuleDownload.Stage.DOWNLOADING, PythonModuleDownload.Stage.PAUSED ->
-                            "Python download: " + (if (transfer.total > 0L)
-                                "${(transfer.progress * 100).toInt()}%" else "in progress") +
-                                (if (transfer.stage == PythonModuleDownload.Stage.PAUSED)
-                                    " · paused by Android" else "")
-                        PythonModuleDownload.Stage.DOWNLOADED -> "Python installer downloaded · ready for signature check"
-                        PythonModuleDownload.Stage.FAILED -> "Python download failed · retry from Manage Python"
-                        else -> "No active module download"
-                    }, style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
-                        transfer.stage == PythonModuleDownload.Stage.PAUSED)
-                        LinearProgressIndicator(progress = { transfer.progress },
-                            modifier = Modifier.fillMaxWidth())
-                    Text("JavaScript, Lua and Java beta remain built into CodeLab as safe fallbacks. " +
-                        "Optional modules are verified before use. Unpublished compiler packs cannot be downloaded.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = {
-                            inspected = catalog.firstOrNull { it.name == "Python" }
-                        }) { Text("Manage Python") }
-                        if (cachedInstallerBytes > 0L) OutlinedButton(onClick = {
-                            clearCacheConfirm = true
-                        }) { Text("Clear cache") }
-                    }
-                    OptionalRuntimeLocator.Pack.entries.forEach { pack ->
-                        val transfer = optionalTransfers[pack]
-                        val status = optionalStatuses[pack]
-                        Text(pack.label + ": " + (status?.description ?: "Unknown") +
-                            " · installer " + ((optionalPacks[pack]?.cachedBytes() ?: 0L) / 1024 / 1024) + " MB",
-                            style = MaterialTheme.typography.bodySmall)
-                        Text("Download: " + (transfer?.stage?.name ?: "IDLE") +
-                            (if (transfer != null && transfer.total > 0)
-                                " · " + (transfer.progress * 100).toInt() + "%" else ""),
-                            style = MaterialTheme.typography.labelSmall)
-                        OutlinedButton(onClick = { optionalInspect = pack }) {
-                            Text("Manage " + pack.label)
+                        if (pythonActive) {
+                            TextButton(onClick = {
+                                inspected = catalog.firstOrNull { it.name == "Python" }
+                            }) {
+                                Text("Python · " + (transfer.progress * 100).toInt() + "%")
+                            }
+                            LinearProgressIndicator(progress = { transfer.progress },
+                                modifier = Modifier.fillMaxWidth())
                         }
+                        activePacks.forEach { (pack, current) ->
+                            TextButton(onClick = { optionalInspect = pack }) {
+                                Text(pack.label + " · " + (current.progress * 100).toInt() + "%")
+                            }
+                            LinearProgressIndicator(progress = { current.progress },
+                                modifier = Modifier.fillMaxWidth())
+                        }
+                        if (cachedInstallerBytes > 0L) {
+                            TextButton(onClick = { clearCacheConfirm = true }) {
+                                Text("Clear Python installer cache")
+                            }
+                        }
+                        Text("Tap a language for installation, updates, removal and detailed status.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Spacer(Modifier.height(10.dp))
                 }
-                if (search.isBlank() && filter == "Cloud ready") item {
-                    Text("EXECUTION AVAILABILITY", style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(8.dp))
-                    Text(if (!model.isOnline) "Device offline — local runtimes remain available"
-                        else if (model.cloudChecking) "Checking compiler language availability…"
-                        else if (model.cloudError != null) "Online execution is not available right now"
-                        else "Online execution available for " + model.cloudLanguages.size + " language families",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (model.cloudError != null && model.isOnline)
-                            MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (model.cloudChecking) {
-                        Spacer(Modifier.height(6.dp))
-                        LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
+            }
+            if (showOnlineStatus) {
+                Surface(shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                    Column(Modifier.fillMaxWidth().padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Online execution", style = MaterialTheme.typography.titleSmall)
+                        Text(when {
+                            !model.isOnline -> "No connection. Offline engines remain available."
+                            model.cloudChecking -> "Checking online language availability…"
+                            model.cloudError != null -> "Online execution unavailable. Try again."
+                            else -> model.cloudLanguages.size.toString() +
+                                " online language families currently reported"
+                        }, style = MaterialTheme.typography.bodySmall)
+                        if (model.cloudChecking) LinearProgressIndicator(Modifier.fillMaxWidth())
+                        OutlinedButton(onClick = { model.refreshCloudLanguages() },
+                            enabled = model.isOnline && !model.cloudChecking) {
+                            Text("Refresh online availability")
+                        }
+                        Text("Your source is uploaded only after you approve an online run.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Spacer(Modifier.height(12.dp))
-                    Button(onClick = { model.refreshCloudLanguages() },
-                        modifier = Modifier.fillMaxWidth(), enabled = !model.cloudChecking && model.isOnline,
-                        shape = RoundedCornerShape(12.dp)) {
-                        Text(if (model.cloudChecking) "Checking…" else "Check online availability")
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Text("Online execution uses an external service. Availability varies by language. " +
-                        "Your code is sent only after you approve an online run.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(Modifier.height(16.dp))
                 }
+            }
+            LazyColumn(modifier = Modifier.weight(1f), state = languageListState,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(bottom = 24.dp)) {
                 if (filteredLanguages.isEmpty()) item {
-                    Text(if (filter == "Downloads" && search.isBlank())
-                        "No downloaded optional modules. Open Downloadable to install Python."
-                        else "No languages match this filter.",
-                        Modifier.padding(vertical = 24.dp),
-                        style = MaterialTheme.typography.bodyMedium,
+                    Text("No languages match your search or filter.",
+                        modifier = Modifier.padding(vertical = 24.dp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 items(filteredLanguages, key = { it.extension }) { language ->
-                    val cloud = model.cloudLanguages[language.extension]
-                    val engine = OfflineRuntimeRegistry.manifest(language.extension)
-                    val localInstalled = detected[language.extension] == true
-                    val optionalPack = OptionalRuntimeLocator.Pack.entries.firstOrNull {
-                        it.extension == language.extension
+                    val pack = OptionalRuntimeLocator.Pack.entries.firstOrNull {
+                        it.label == language.name
                     }
-                    val verifiedModuleLabel = optionalPack?.takeIf { optionalStatuses[it]?.ready == true }?.label
-                    val localLabel = LanguageRuntimeLabel.describe(localInstalled,
-                        engine, verifiedModuleLabel, cloud != null)
-                    Row(Modifier.fillMaxWidth().heightIn(min = 50.dp)
-                        .clickable {
-                            val optional = OptionalRuntimeLocator.Pack.entries.firstOrNull {
-                                it.label == language.name
-                            }
-                            if (optional != null) optionalInspect = optional
+                    val isPython = language.name == "Python"
+                    val downloadable = RuntimePackCatalog.isDownloadable(language.name)
+                    val moduleReady = if (isPython) python.ready
+                        else pack?.let { optionalStatuses[it]?.ready == true } == true
+                    val moduleProblem = if (isPython)
+                        python.state != PythonModuleLocator.State.NOT_INSTALLED && !python.ready
+                        else pack?.let {
+                            optionalStatuses[it]?.state != PythonModuleLocator.State.NOT_INSTALLED &&
+                                optionalStatuses[it]?.ready != true
+                        } == true
+                    val activeDownload = if (isPython)
+                        transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
+                            transfer.stage == PythonModuleDownload.Stage.PAUSED
+                        else pack?.let {
+                            optionalTransfers[it]?.stage == OptionalRuntimeDownload.Stage.DOWNLOADING ||
+                                optionalTransfers[it]?.stage == OptionalRuntimeDownload.Stage.PAUSED
+                        } == true
+                    val status = LanguageManagerPresentation.describe(
+                        downloadable = downloadable,
+                        moduleReady = moduleReady,
+                        bundledReady = detected[language.extension] == true && !moduleReady,
+                        onlineReady = model.isOnline &&
+                            model.cloudLanguages.containsKey(language.extension),
+                        preview = language.name == "HTML" || language.name == "CSS",
+                        activeDownload = activeDownload,
+                        moduleProblem = moduleProblem
+                    )
+                    Surface(
+                        onClick = {
+                            if (pack != null) optionalInspect = pack
                             else inspected = language
                         },
-                        verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(19.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                            Text(language.name, style = MaterialTheme.typography.bodyMedium)
-                            Text(when {
-                                language.name == "Python" ->
-                                    (if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
-                                         transfer.stage == PythonModuleDownload.Stage.PAUSED)
-                                        "Downloading Python · ${(transfer.progress * 100).toInt()}%"
-                                     else python.description) +
-                                    (if (cloud != null) " · Cloud ready" else "")
-                                localLabel != null -> localLabel
-                                engine != null -> "Offline runtime unavailable"
-                                language.local != null && cloud != null -> language.local + " · Online ready"
-                                language.local != null -> language.local
-                                cloud != null && model.isOnline -> "Online execution ready"
-                                !model.isOnline -> "Online only · no connection"
-                                else -> RuntimePackCatalog.capability(language.name).label
-                            }, style = MaterialTheme.typography.labelSmall,
-                                maxLines = 2,
-                                color = if (cloud != null || localInstalled)
-                                    MaterialTheme.colorScheme.primary else
-                                    MaterialTheme.colorScheme.onSurfaceVariant)
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 66.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainerLow
+                    ) {
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Code, contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                                Text(language.name, style = MaterialTheme.typography.titleSmall,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(status.detail, style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                            Spacer(Modifier.width(8.dp))
+                            Text(status.label, style = MaterialTheme.typography.labelMedium,
+                                color = if (status.emphasis) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1)
+                            Icon(Icons.Default.ChevronRight, contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp))
                         }
-                        Text("." + language.extension, fontFamily = FontFamily.Monospace,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f))
                 }
                 item {
-                    Text("Language listings indicate editing support, not offline execution. " +
-                        "Run availability is checked separately for your connection.",
+                    Text("Languages listed under All support editing. Offline execution requires a " +
+                        "built-in or verified installed engine; online runs require your approval.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
