@@ -383,8 +383,8 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         preferences.edit().putString("studio:$visualStyle", value.encode()).apply()
     }
     internal fun importAppearanceRecipe(raw: String): Boolean {
+        if (raw.length > 65_536) return false
         val imported = AppearanceRecipes.decode(raw).firstOrNull() ?: return false
-        if (savedAppearanceRecipes.size >= AppearanceRecipes.LIMIT) return false
         val copy = imported.copy(id = java.util.UUID.randomUUID().toString())
         savedAppearanceRecipes = savedAppearanceRecipes + copy
         preferences.edit().putString("saved-appearance-recipes",
@@ -399,7 +399,6 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val clean = name.trim()
         if (!AppearanceRecipes.validName(clean)) return false
         val old = savedAppearanceRecipes.firstOrNull { it.id == editingId }
-        if (old == null && savedAppearanceRecipes.size >= AppearanceRecipes.LIMIT) return false
         val recipe = AppearanceRecipe(old?.id ?: java.util.UUID.randomUUID().toString(),
             clean, visualStyle, appearance, accent, studioAppearance)
         savedAppearanceRecipes = if (old == null) savedAppearanceRecipes + recipe

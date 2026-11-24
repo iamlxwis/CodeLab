@@ -226,8 +226,9 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     fun setStudioEditorStyle(style: StudioAppearance) {
         val colors = listOf(style.comments, style.strings, style.numbers, style.keywords)
         if (customInk != colors) { customInk = colors; scheduleHighlight(true) }
-        if (editorFontChoice != style.editorFont) {
-            editorFontChoice = style.editorFont
+        val fontKey = style.editorFont + ":" + style.editorFontRevision
+        if (editorFontChoice != fontKey) {
+            editorFontChoice = fontKey
             typeface = when (style.editorFont) {
                 "Custom" -> ImportedFonts.load(context, true) ?: Typeface.MONOSPACE
                 "System Mono" -> Typeface.MONOSPACE

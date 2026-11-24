@@ -29,17 +29,24 @@ class AppearanceRecipesTest {
         assertEquals(examples, AppearanceRecipes.decode(AppearanceRecipes.encode(examples)))
     }
 
+    @Test fun studioOverridesRoundTrip() {
+        val studio = StudioAppearance(background = "#112233", corners = 27, uiFont = "Serif",
+            keywords = "#AA7722", glassQuality = "Lightweight", blur = 0)
+        val recipe = AppearanceRecipe("test", "Custom", "Crystal", "System", "#102030", studio)
+        assertEquals(listOf(recipe), AppearanceRecipes.decode(AppearanceRecipes.encode(listOf(recipe))))
+    }
+
     @Test fun corruptedPreferencesFailClosed() {
         assertEquals(emptyList<AppearanceRecipe>(), AppearanceRecipes.decode("not json"))
         val invalid = """[{"id":"invalid","name":"Test","style":"Unknown","mode":"Dark","accent":"Mint"}]"""
         assertTrue(AppearanceRecipes.decode(invalid).isEmpty())
     }
 
-    @Test fun cappedSavedRecipes() {
+    @Test fun savedRecipesAreNotSilentlyTruncated() {
         val entries = (1..40).map {
             AppearanceRecipe(it.toString(), "Preset " + it, "Minimal", "Dark", "Blue")
         }
-        assertEquals(AppearanceRecipes.LIMIT,
+        assertEquals(entries.size,
             AppearanceRecipes.decode(AppearanceRecipes.encode(entries)).size)
     }
 }

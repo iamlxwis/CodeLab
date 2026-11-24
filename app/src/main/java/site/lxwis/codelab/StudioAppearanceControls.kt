@@ -34,8 +34,8 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
             val editor = fontTarget
             scope.launch {
                 val ok = withContext(Dispatchers.IO) { ImportedFonts.install(context, uri, editor) }
-                if (ok) m.updateStudioAppearance(if (editor) m.studioAppearance.copy(editorFont = "Custom")
-                    else m.studioAppearance.copy(uiFont = "Custom"))
+                if (ok) m.updateStudioAppearance(if (editor) m.studioAppearance.copy(editorFont = "Custom", editorFontRevision = System.currentTimeMillis())
+                    else m.studioAppearance.copy(uiFont = "Custom", uiFontRevision = System.currentTimeMillis()))
                 fontNotice = if (ok) "Custom font installed" else "Could not load this font (maximum 5 MB)"
             }
         }
@@ -198,7 +198,7 @@ private fun ThemeColor(label: String, color: Color, onChange: (String) -> Unit) 
                     }
                 }
             }
-        }, confirmButton = { TextButton(onClick = { onChange(hex); open = false }) { Text("Apply") } },
+        }, confirmButton = { TextButton(enabled = mode != "HEX" || draft.matches(Regex("#[0-9a-fA-F]{6}")), onClick = { onChange(hex); open = false }) { Text("Apply") } },
             dismissButton = { TextButton(onClick = { open = false }) { Text("Cancel") } })
     }
 }

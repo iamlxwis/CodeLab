@@ -3,7 +3,7 @@ package site.lxwis.codelab
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** User-defined appearance recipes. Import from preferences is always validated and bounded. */
+/** User-defined appearance recipes. Import from preferences is validated; import payload size is bounded separately. */
 internal data class AppearanceRecipe(
     val id: String, val name: String, val style: String, val mode: String, val accent: String,
     val studio: StudioAppearance = StudioAppearance()
@@ -14,7 +14,6 @@ internal object AppearanceRecipes {
     private val modes = setOf("Dark", "Light", "System")
     private val accents = setOf("Mint", "Blue", "Violet", "Amber", "Rose", "Mono")
     private val hexColor = Regex("#[0-9a-fA-F]{6}")
-    const val LIMIT = 20
 
     fun validAccent(value: String): Boolean = value in accents || hexColor.matches(value)
     fun defaultAccent(style: String): String = if (CodeLabVisualStyles.canonical(style) in listOf("Crystal", "Obsidian", "Titanium")) "Mono" else "Blue"
@@ -25,21 +24,22 @@ internal object AppearanceRecipes {
     fun decode(raw: String?): List<AppearanceRecipe> = try {
         val array = JSONArray(raw ?: "[]")
         val result = mutableListOf<AppearanceRecipe>()
-        for (i in 0 until minOf(array.length(), LIMIT)) {
+        val ids = HashSet<String>()
+        for (i in 0 until array.length()) {
             val obj = array.optJSONObject(i) ?: continue
             val candidate = AppearanceRecipe(obj.optString("id"), obj.optString("name"),
                 obj.optString("style"), obj.optString("mode"), obj.optString("accent"),
                 StudioAppearance.decode(obj.optString("studio")))
             if (candidate.id.length in 1..64 && validName(candidate.name) &&
                 validStyle(candidate.style) && candidate.mode in modes &&
-                validAccent(candidate.accent) && result.none { it.id == candidate.id }) result += candidate
+                validAccent(candidate.accent) && ids.add(candidate.id)) result += candidate
         }
         result
     } catch (_: Exception) { emptyList() }
 
     fun encode(recipes: List<AppearanceRecipe>): String {
         val array = JSONArray()
-        recipes.take(LIMIT).forEach { recipe ->
+        recipes.forEach { recipe ->
             if (validStyle(recipe.style) && recipe.mode in modes &&
                 validName(recipe.name) && validAccent(recipe.accent) &&
                 recipe.id.length in 1..64) {

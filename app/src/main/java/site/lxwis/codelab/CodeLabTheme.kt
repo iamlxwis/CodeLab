@@ -162,7 +162,7 @@ internal fun CodeLabTheme(
             ) else schemeNormal
     }
     val fontContext = LocalContext.current
-    val typography = remember(largeInterfaceText, studio.uiFont) {
+    val typography = remember(largeInterfaceText, studio.uiFont, studio.uiFontRevision) {
         val family = when (studio.uiFont) {
             "System" -> FontFamily.Default
             "Serif" -> FontFamily.Serif

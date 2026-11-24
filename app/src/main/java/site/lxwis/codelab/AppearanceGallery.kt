@@ -155,7 +155,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
         text = { OutlinedTextField(importText, { importText = it.take(65536) },
             label = { Text("Paste exported theme JSON") }, modifier = Modifier.fillMaxWidth()) },
         confirmButton = { TextButton(onClick = {
-            notice = if (m.importAppearanceRecipe(importText)) "Appearance imported" else "Invalid theme or preset limit reached"
+            notice = if (m.importAppearanceRecipe(importText)) "Appearance imported" else "Invalid theme JSON"
             importOpen = false
         }) { Text("Import") } },
         dismissButton = { TextButton(onClick = { importOpen = false }) { Text("Cancel") } })
@@ -249,8 +249,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                                 verticalAlignment = Alignment.CenterVertically) {
                                 Text("Saved appearances", Modifier.weight(1f),
                                     style = MaterialTheme.typography.titleLarge)
-                                Text(m.savedAppearanceRecipes.size.toString() + "/" +
-                                    AppearanceRecipes.LIMIT,
+                                Text(m.savedAppearanceRecipes.size.toString(),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -310,7 +309,7 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                                 Button(onClick = {
                                     val saved = m.saveAppearanceRecipe(recipeName, editingId)
                                     notice = if (saved) "Appearance saved"
-                                        else "Name must be 1–32 characters; maximum 20 presets"
+                                        else "Name must be 1–32 characters"
                                     if (saved) { editingId = null; recipeName = "" }
                                 }, enabled = recipeName.isNotBlank()) {
                                     Icon(Icons.Default.Save, contentDescription = null,
