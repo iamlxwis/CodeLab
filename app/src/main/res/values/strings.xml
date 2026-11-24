@@ -29,4 +29,7 @@
     <string name="preview_phone">Phone</string>
     <string name="preview_tablet">Tablet</string>
     <string name="preview_desktop">Desktop</string>
+    <string name="console_program_input">Program input</string>
+    <string name="console_send">Send</string>
+    <string name="git_unsafe_configuration">Review the repository origin, push destination and TLS settings before syncing.</string>
 </resources>

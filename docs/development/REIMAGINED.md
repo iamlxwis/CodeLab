@@ -7,6 +7,10 @@ Owner approved one comprehensive update, without numbered development phases. Th
 **Current source:** [2fded2e](https://github.com/iamlxwis/CodeLab/commit/2fded2e4e36dd27b7f1fb70b102e64ff580dadbd); latest implementation-first pass is unbuilt and untested by owner instruction.
 **Current order:** source implementation first; testing/acceptance deferred. Prior baseline CI is historical and does not verify the new source.
 
+## Current acceptance checkpoint
+
+Final stabilization supersedes the historical implementation-first order below. Verified source 35f356c passed strict Android CI 45507512842; device 45507530180 verified keyboard input then exposed partial active-tab visibility. Canonical current 37-decision and 10-UI status: [RELEASE_ACCEPTANCE.md](RELEASE_ACCEPTANCE.md). No decisions are fully accepted yet.
+
 ## Current 37-decision source coverage
 
 Every decision has a source implementation or retained QA/delivery infrastructure below. This is an implementation checkpoint, **not a claim that all associated behavior is verified**. The owner explicitly requires implementation before testing. Decisions 20 and 36 include execution/acceptance requirements deferred by that instruction; decision 29 measurements need later real usage. No new build, test, screenshot or APK result is claimed for this pass.

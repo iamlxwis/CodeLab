@@ -65,9 +65,13 @@ jobs:
             python3 qa/motion_smoke.py
             python3 qa/accessibility_audit.py
             python3 qa/font_scale_smoke.py
+            python3 qa/layout_screenshots.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: device-smoke-evidence-api-35
-          path: qa-results/
+          path: |
+            qa-results/
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
           if-no-files-found: warn

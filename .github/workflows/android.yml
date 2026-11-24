@@ -103,16 +103,6 @@ jobs:
           done
       - name: Exercise packaged TypeScript transpiler (offline)
         run: node qa/typescript_compiler_smoke.js engine-ts/build/outputs/apk/release/engine-ts-release.apk
-      - name: Upload quality reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: CodeLab-CI-Reports
-          path: |
-            app/build/reports/jacoco/
-            app/build/reports/lint-results-debug.*
-            qa-results/
-          if-no-files-found: warn
       - name: Verify APK signature
         run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk'
       - name: Verify all optional runtime signatures
@@ -273,6 +263,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 qa/require_device_smoke.py
+      - name: Upload quality reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CodeLab-CI-Reports
+          path: |
+            app/build/reports/jacoco/
+            app/build/test-results/
+            app/build/reports/tests/
+            app/build/reports/lint-results-debug.*
+            qa-results/
+          if-no-files-found: warn
       - name: Require complete production acceptance ledger
         if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         run: python3 qa/require_release_acceptance.py

@@ -60,7 +60,7 @@ internal class GitWorkspace(private val folder: File) {
             val staged = (status.added + status.changed + status.removed).sorted()
             val configUrl = git.repository.config.getString("remote", "origin", "url")
             val remoteUrl = configUrl?.takeIf {
-                runCatching { GitHubRemoteAddress.requireConfigured(it) }.isSuccess
+                runCatching { GitHubTransportPolicy.requireSafeConfig(git.repository.config) }.isSuccess
             }
             val branch = git.repository.branch
             val trackingRemote = git.repository.config.getString("branch", branch, "remote")
@@ -151,8 +151,7 @@ internal class GitWorkspace(private val folder: File) {
     }
 
     private fun checkedRemote(git: Git): String =
-        GitHubRemoteAddress.requireConfigured(
-            git.repository.config.getString("remote", "origin", "url"))
+        GitHubTransportPolicy.requireSafeConfig(git.repository.config)
 
     private fun credentials(token: String) =
         UsernamePasswordCredentialsProvider("x-access-token", token)
@@ -178,8 +177,11 @@ internal class GitWorkspace(private val folder: File) {
 
     /** Fetch moves only refs/remotes/origin; it never changes working files. */
     fun fetchGitHub(token: String): String = guardedRemote { open { git ->
-        checkedRemote(git)
+        val expectedRemote = checkedRemote(git)
         val command = git.fetch().setRemote("origin").setTimeout(30)
+            .setTransportConfigCallback { transport ->
+                GitHubTransportPolicy.requireSafeTransport(git.repository.config, expectedRemote, transport)
+            }
         if (token.isNotBlank()) command.setCredentialsProvider(credentials(token))
         command.call()
         "Fetched remote branches. Your files are unchanged."
@@ -190,7 +192,7 @@ internal class GitWorkspace(private val folder: File) {
      * Never perform a merge commit, rebase or overwrite dirty local work.
      */
     fun pullFastForwardGitHub(token: String): String = guardedRemote { open { git ->
-        checkedRemote(git)
+        val expectedRemote = checkedRemote(git)
         require(git.status().call().isClean) {
             "Commit or remove local modifications before pulling."
         }
@@ -199,6 +201,9 @@ internal class GitWorkspace(private val folder: File) {
             "Switch to a local branch before pulling."
         }
         val command = git.pull()
+            .setTransportConfigCallback { transport ->
+                GitHubTransportPolicy.requireSafeTransport(git.repository.config, expectedRemote, transport)
+            }
             .setRemote("origin")
             .setRemoteBranchName(branch)
             .setFastForward(MergeCommand.FastForwardMode.FF_ONLY)
@@ -212,7 +217,7 @@ internal class GitWorkspace(private val folder: File) {
 
     /** An explicit, single-branch, non-force push; server rejection is an error. */
     fun pushGitHub(token: String): String = guardedRemote { open { git ->
-        checkedRemote(git)
+        val expectedRemote = checkedRemote(git)
         require(token.isNotBlank()) { "Save a GitHub access token before pushing." }
         require(git.status().call().isClean) {
             "Commit or remove local changes before pushing."
@@ -222,6 +227,9 @@ internal class GitWorkspace(private val folder: File) {
             "Switch to a local branch before pushing."
         }
         val updates = git.push()
+            .setTransportConfigCallback { transport ->
+                GitHubTransportPolicy.requireSafeTransport(git.repository.config, expectedRemote, transport)
+            }
             .setRemote("origin")
             .setRefSpecs(RefSpec("refs/heads/$branch:refs/heads/$branch"))
             .setCredentialsProvider(credentials(token))

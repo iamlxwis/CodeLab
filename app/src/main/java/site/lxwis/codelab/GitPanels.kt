@@ -195,7 +195,7 @@ internal fun GitDialog(m: WorkspaceModel, dismiss: () -> Unit) {
                         Text("Remote operations are optional. Only GitHub HTTPS URLs are accepted.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (state.unsafeRemote) Text("This repository has an unsupported origin URL. Configure a trusted GitHub remote.",
+                        if (state.unsafeRemote) Text(androidx.compose.ui.res.stringResource(R.string.git_unsafe_configuration),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall)
                         OutlinedTextField(remoteInput, { remoteInput = it.take(180) },

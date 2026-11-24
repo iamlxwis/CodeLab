@@ -1,5 +1,10 @@
 package site.lxwis.codelab
 
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -36,6 +41,20 @@ class WorkspacePanelsUiTest {
             }
         }
         compose.onNodeWithContentDescription("Close other.js").performClick()
+        compose.runOnIdle { assertTrue(closed) }
+    }
+
+    @Test fun longFileNameKeepsCloseActionInsideNarrowTabViewport() {
+        var closed = false
+        val path = "a-very-long-source-file-name-that-must-ellipsis.js"
+        compose.setContent {
+            MaterialTheme { Box(Modifier.width(180.dp)) {
+                WorkspaceTab(path, active = true, pinned = false, dirty = true, motionMillis = 0,
+                    onSelect = {}, onClose = { closed = true }, onTogglePin = {},
+                    onCloseOthers = {}, onCloseAll = {}, onMove = {}, onReveal = {}, maxWidth = 180.dp)
+            } }
+        }
+        compose.onNodeWithContentDescription("Close $path").assertIsDisplayed().performClick()
         compose.runOnIdle { assertTrue(closed) }
     }
 

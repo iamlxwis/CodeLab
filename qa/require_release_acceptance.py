@@ -6,7 +6,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-GROUPS = {'W': 9, 'D': 37, 'U': 10}
+# W09 records publication after it happens; requiring it before upload is circular.
+GROUPS = {'W': 8, 'D': 37, 'U': 10}
 
 def problems(text):
     rows = {}
@@ -31,7 +32,7 @@ def main():
     failures = problems((ROOT / 'docs/development/RELEASE_ACCEPTANCE.md').read_text())
     if failures:
         raise SystemExit('Stable publication blocked:\n' + '\n'.join(failures))
-    print('All 9 stabilization, 37 redesign and 10 UI entries have recorded acceptance evidence.')
+    print('All 8 prepublication stabilization, 37 redesign and 10 UI entries have recorded acceptance evidence.')
 
 if __name__ == '__main__':
     main()

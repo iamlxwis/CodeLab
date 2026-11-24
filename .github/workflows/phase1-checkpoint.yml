@@ -69,8 +69,6 @@ jobs:
           done
           echo "::error::Android 15 QA did not pass within the checkpoint timeout."
           exit 1
-      - name: Require complete production acceptance
-        run: python3 qa/require_release_acceptance.py
       - name: Dispatch guarded public release (requires same-commit device success)
         env:
           GH_TOKEN: ${{ github.token }}

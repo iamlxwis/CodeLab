@@ -20,7 +20,7 @@ Write, run, and manage projects from your phone.
   &nbsp;&nbsp;
   <img src="docs/screenshots/web-preview.png" alt="CodeLab offline HTML preview on Android" width="290" />
 </p>
-<p align="center"><sub>Earlier-build Android emulator screenshots; Reimagined visual acceptance is pending.</sub></p>
+<p align="center"><sub>Earlier-build Android emulator screenshots; current candidate screenshots and visual acceptance are pending.</sub></p>
 
 ## CodeLab Development Tracker
 
@@ -28,15 +28,15 @@ Write, run, and manage projects from your phone.
 | --- | --- |
 | Update | CodeLab — Reimagined |
 | Status | **ACTIVE — Final Release Stabilization; 0/9 verified, 9/9 remaining** |
-| Current-pass checks | Baseline [45438526779](https://github.com/iamlxwis/CodeLab/actions/runs/45438526779) succeeded, but report contained 4 nonfatal lint errors; new fixes await CI |
+| Current-pass checks | [35f356c build](https://github.com/iamlxwis/CodeLab/actions/runs/45507512842) passed; strict lint: 0 errors, 37 warnings; [API35](https://github.com/iamlxwis/CodeLab/actions/runs/45507530180) passed stdin then failed clipped active tab close |
 | Source coverage | **37/37 decisions mapped; 8/8 audited implementation gaps addressed** — validation is separate |
 | Current workstream | Final stabilization W1/W2/W6/W7; [acceptance matrix](docs/development/RELEASE_ACCEPTANCE.md): 0/37 redesign, 0/10 UI accepted |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [6d81def Android APK](https://github.com/iamlxwis/CodeLab/actions/runs/45414788437); [device failed](https://github.com/iamlxwis/CodeLab/actions/runs/45414804243) |
-| Next to build | Check strict lint/build, API35 stdin with IME open, then instrumentation and three-size/two-theme screenshots |
-| Last activity | November 25, 2026 — 07:09:05 AM PHT |
+| Latest verified build | [35f356c Android APK](https://github.com/iamlxwis/CodeLab/actions/runs/45507512842); production fingerprint independently matched; full device/upgrade acceptance pending |
+| Next to build | Build tab/trust fixes, run API35, inspect instrumentation and actual layout/viewport artifacts; then production upgrade and remaining acceptance |
+| Last activity | November 25, 2026 — 07:24:55 AM PHT |
 
-**Current activity:** November 25, 2026 — 07:09:05 AM PHT — Workstreams 1/2/6/7: fixed keyboard starvation of runtime input, restored lint error enforcement and fail-closed production signing; added real upgrade and acceptance gates. 0/9 verified complete, 9 remaining; next exact-source build and API35 regression.
+**Current activity:** November 25, 2026 — 07:24:55 AM PHT — W1/W2/W6/W7/W8: strict build passed at 35f356c; API35 verified stdin/Send with IME, then exposed partial-tab close clipping; fixing tab sizing, Git transport trust and adding actual 3-size/2-theme viewport evidence. 0/9 verified complete, 9 remaining; next cumulative build and API35 rerun.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

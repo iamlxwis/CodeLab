@@ -26,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -299,13 +300,13 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             }
             if (session.waiting) Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(value = input, onValueChange = { input = it.take(4096) }, singleLine = true,
-                    modifier = Modifier.weight(1f), placeholder = { Text("Program input") },
+                    modifier = Modifier.weight(1f), label = { Text(stringResource(R.string.console_program_input)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { submitInput() }))
                 if (sentInputs.isNotEmpty()) IconButton(onClick = { input = sentInputs.first() }) {
                     Icon(Icons.Default.History, "Previous standard input")
                 }
-                TextButton(onClick = { submitInput() }) { Text("Send") }
+                TextButton(onClick = { submitInput() }) { Text(stringResource(R.string.console_send)) }
             }
         }
     }

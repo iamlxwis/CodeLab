@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.abs
 
@@ -41,7 +42,8 @@ internal fun WorkspaceTab(
     onCloseOthers: () -> Unit,
     onCloseAll: () -> Unit,
     onMove: (Int) -> Unit,
-    onReveal: () -> Unit
+    onReveal: () -> Unit,
+    maxWidth: Dp = 240.dp
 ) {
     var menu by remember { mutableStateOf(false) }
     val background by animateColorAsState(
@@ -55,7 +57,7 @@ internal fun WorkspaceTab(
     var dragX by remember(path) { mutableFloatStateOf(0f) }
     val move by rememberUpdatedState(onMove)
     Row(
-        Modifier.padding(end = 2.dp)
+        Modifier.widthIn(max = maxWidth).padding(end = 2.dp)
             .background(background, RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -65,7 +67,7 @@ internal fun WorkspaceTab(
                 append(path.substringAfterLast('/'))
                 if (dirty) append(" •")
             },
-            Modifier.heightIn(min = 48.dp)
+            Modifier.weight(1f, fill = false).heightIn(min = 48.dp)
                 .combinedClickable(onClick = onSelect, onLongClick = { menu = true })
                 .semantics {
                     selected = active

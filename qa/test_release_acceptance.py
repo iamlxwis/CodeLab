@@ -8,7 +8,7 @@ class ReleaseAcceptanceTest(unittest.TestCase):
 
     def test_empty_partial_and_source_only_ledgers_fail_closed(self):
         self.assertTrue(problems(''))
-        self.assertTrue(problems(self.ledger().replace('W09', 'W99')))
+        self.assertTrue(problems(self.ledger().replace('W08', 'W99')))
         self.assertTrue(problems(self.ledger().replace('Accepted', 'Implemented', 1)))
         self.assertTrue(problems(self.ledger().replace('Verified: run evidence', 'Source only', 1)))
 

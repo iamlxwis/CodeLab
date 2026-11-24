@@ -74,6 +74,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 
 @Composable
 internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
@@ -243,11 +244,21 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 val tabScroll = rememberLazyListState()
                 LaunchedEffect(m.active, m.tabs) {
                     val index = m.tabs.indexOf(m.active)
-                    if (index >= 0 && tabScroll.layoutInfo.visibleItemsInfo.none { it.index == index }) {
-                        if (motionMillis > 0) tabScroll.animateScrollToItem(index) else tabScroll.scrollToItem(index)
+                    if (index >= 0) {
+                        // Wait for the new tab count to be measured, then reveal the entire item.
+                        val layout = snapshotFlow { tabScroll.layoutInfo }.first {
+                            it.totalItemsCount == m.tabs.size && it.viewportEndOffset > it.viewportStartOffset
+                        }
+                        val item = layout.visibleItemsInfo.firstOrNull { it.index == index }
+                        if (item == null || item.offset < layout.viewportStartOffset ||
+                            item.offset + item.size > layout.viewportEndOffset) {
+                            if (motionMillis > 0) tabScroll.animateScrollToItem(index) else tabScroll.scrollToItem(index)
+                        }
                     }
                 }
-                LazyRow(Modifier.weight(1f), state = tabScroll,
+                BoxWithConstraints(Modifier.weight(1f)) {
+                val tabWidth = maxWidth
+                LazyRow(Modifier.fillMaxWidth(), state = tabScroll,
                     verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
                         Box(Modifier.animateItem(
@@ -268,9 +279,10 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             onCloseOthers = { m.closeOtherTabs(path) },
                             onCloseAll = { m.closeOtherTabs(null) },
                             onMove = { m.reorderTab(path, it) },
-                            onReveal = { selected = path; dialog = "filereveal" })
+                            onReveal = { selected = path; dialog = "filereveal" }, maxWidth = tabWidth)
                         }
                     }
+                }
                 }
                 if (m.tabs.size > 1) OpenTabsMenu(m.tabs, m.active, m::select)
                 IconButton(onClick = { dialog = "newfile" }) { Icon(Icons.Default.Add, "Add file") }
