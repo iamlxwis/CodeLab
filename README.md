@@ -27,15 +27,15 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **SOURCE UPDATED — CI and device verification pending** |
+| Status | **BUILD RUNNING — cumulative editor and UI fixes** |
 | Workstreams accepted | **0/10 fully device-accepted** — source and CI verified separately |
 | Current workstream | Final quality and stability verification |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [6e33876 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45384534494) · [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45384534494/artifacts/14915104647) |
-| Next to build | Manual API35 regression; repair observed UI, runtime and performance issues | 
-| Last activity | Nov 24, 2026, 7:42:12 PM PHT |
+| Next to build | Verify cumulative CI; manual API35 regression, visual/accessibility and performance fixes |
+| Last activity | Nov 24, 2026, 7:42:58 PM PHT |
 
-**Current activity:** Nov 24, 2026, 7:42:12 PM PHT — Added reduced-motion-aware project/explorer filtering transitions, keyboard-aware workspace chrome, pinch isolation and empty-line editing regression coverage; cumulative CI pending.
+**Current activity:** Nov 24, 2026, 7:42:58 PM PHT — [Cumulative CI 45386617353](https://github.com/iamlxwis/CodeLab/actions/runs/45386617353) is running for 9e3da84; editor and interaction fixes committed, device acceptance pending manual dispatch.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 
