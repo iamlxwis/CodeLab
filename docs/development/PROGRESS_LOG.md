@@ -253,3 +253,10 @@ Local static security, eight release/artifact Python tests and diff checks passe
 
 
 Nov 24, 2026, 8:33:19 PM PHT — Runtime selector source 97e31ad2668de8cb127c7c1bc9a171d16cd7e013 is under CI 45394263948 (in_progress); prior 2b04bd1 passed CI 45392971931. Source tree is clean, workflows/dependencies unchanged. No current-source manual API35 run found; next compile/test result and device acceptance.
+
+
+## Verified runtime correction and large-theme-list rendering — Nov 24, 2026, 8:36:53 PM PHT
+
+Exact source 97e31ad2668de8cb127c7c1bc9a171d16cd7e013 passed [CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948); [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948/artifacts/14920642082), packs 14920337964, reports 14920756656. Compilation, JVM tests, instrumentation compilation, lint, packaged TypeScript and signatures passed. Device execution remains unverified.
+
+New source: the gallery previously composed every saved theme inside one LazyColumn item. Saved themes now use individual lazy rows keyed by persistent recipe IDs, preserving all contextual operations and the unlimited saved-theme collection. This structurally bounds composed off-screen rows; no measured device performance improvement is claimed. Source build pending. Next: definitive cumulative CI and APK artifacts; manual API35 visual/gesture/runtime/persistence/accessibility/performance acceptance remains required. No new manual run observed; user was asked to start existing workflow because the connector cannot dispatch it.

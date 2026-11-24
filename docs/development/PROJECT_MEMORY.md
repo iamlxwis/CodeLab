@@ -8,8 +8,8 @@ Read [REIMAGINED_SPEC.md](REIMAGINED_SPEC.md): the complete owner-approved 37 de
 
 ## Current source and evidence
 
-- Latest implementation: `97e31ad2668de8cb127c7c1bc9a171d16cd7e013`; [exact-source CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) running at this checkpoint. Query Actions before claiming results.
-- Verified `2b04bd19f0e17f697baf325ff1a08b8a51e27b0f`: [CI 45392971931](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931) passed; [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14919328907), [packs](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14920606010), [reports](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14920615908). Theme duplicate/rename, palette and adaptive effects compiled and JVM-tested; device QA not run.
+- Latest verified implementation: `97e31ad2668de8cb127c7c1bc9a171d16cd7e013`; [CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) passed; [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948/artifacts/14920642082), packs 14920337964, reports 14920756656. Additional saved-theme lazy-row rendering correction is being committed in this checkpoint; new CI required.
+- Prior verified `2b04bd19f0e17f697baf325ff1a08b8a51e27b0f`: [CI 45392971931](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931) passed.
 - Verified implementation `f2990a971982f54f14568c1ce65a10186c291e5c`: [CI 45391600449](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449) passed release builds, JVM tests, instrumentation Kotlin compilation, lint, security and signature checks. [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449/artifacts/14919956476), [six packs](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449/artifacts/14919582010), [reports](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449/artifacts/14919048305).
 - Previous `bb5172d7957f1584a39cf4679e893f4b6d6e60f1`: [CI 45390387550](https://github.com/iamlxwis/CodeLab/actions/runs/45390387550) passed settings/motion/live-editor preference source.
 - No redesigned-source API35 emulator or physical-device acceptance in this session. **0/37 fully accepted**, distinct from implemented source and passing Android builds. Earlier 0/10 workstreams were a grouping, not a count of decisions.
@@ -28,12 +28,12 @@ Read [REIMAGINED_SPEC.md](REIMAGINED_SPEC.md): the complete owner-approved 37 de
 9. Exact approved Crystal/Sandstone base colors and neutral backdrops; no Sandstone decorative lines; zero glass border removes the stroke; battery-saver-aware blur without polling.
 10. Persistent search/control descriptions, contract, per-decision audit and honest tracker.
 
-## Additional runtime selector correction (latest source; new build pending)
+## Additional runtime selector correction (source and JVM checks passed; device pending)
 
 Further source audit found the run-target picker supplied only Python to its installed-module set, hiding verified TypeScript under Runnable only. New shared InstalledRuntimeState checks existing signature/protocol validators, refreshes on lifecycle resume rather than on every keystroke, and supplies all verified module extensions to the picker and editor selector. Guided setup's status and Ready offline filter now use actual installed/bundled availability; missing TypeScript is no longer always labelled planned. Ordinary run labels use language names rather than internal JS/Lua engine brands. Added selected-state semantics for execution/language controls, JVM trust-state coverage and installed-TypeScript picker instrumentation regression. No automatic mode switching, uploads, downloader or runtime architecture changes.
 
 
-Latest verified build is now 2b04bd19f0e17f697baf325ff1a08b8a51e27b0f, [CI 45392971931](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931), [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14919328907). No emulator or physical acceptance.
+Runtime correction 97e31ad passed CI 45394263948. Saved-theme rows now render lazily under stable IDs without limiting collection size; that latest rendering source requires a fresh build. No emulator or physical acceptance.
 
 ## Next unfinished work
 

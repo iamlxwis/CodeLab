@@ -27,15 +27,15 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **BUILD RUNNING — verified-pack selectors and cumulative redesign fixes** |
+| Status | **ACTIVE — unlimited-theme list rendering correction; new CI pending** |
 | Decisions accepted | **0/37 fully accepted** — 37 require current visual/function/device evidence; source and CI tracked separately |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [2b04bd1 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931) · [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931/artifacts/14919328907) |
-| Next to build | Verify installed-runtime selector correction; then API35-driven visual, gesture, persistence, accessibility and performance fixes |
-| Last activity | Nov 24, 2026, 8:33:19 PM PHT |
+| Latest verified build | [97e31ad — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) · [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948/artifacts/14920642082) |
+| Next to build | Verify cumulative lazy theme-list build; then source-matched API35 fidelity, interaction and accessibility fixes |
+| Last activity | Nov 24, 2026, 8:36:53 PM PHT |
 
-**Current activity:** Nov 24, 2026, 8:33:19 PM PHT — Exact-source [CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) running for 97e31ad; prior theme/palette build passed, manual API35 run still unavailable.
+**Current activity:** Nov 24, 2026, 8:36:53 PM PHT — Runtime selector CI passed; saved themes now render as keyed lazy rows without a count limit, cumulative build next.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

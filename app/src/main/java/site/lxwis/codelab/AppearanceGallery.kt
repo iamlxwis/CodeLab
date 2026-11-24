@@ -321,56 +321,60 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
                             Text("Save or transfer a look. Custom font assets stay on this device.",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall)
-                            m.savedAppearanceRecipes.forEach { recipe ->
-                                Surface(onClick = {
-                                    m.useAppearanceRecipe(recipe.id)
-                                    editingId = recipe.id
-                                    recipeName = recipe.name
-                                    notice = "Loaded " + recipe.name
-                                }, color = MaterialTheme.colorScheme.surfaceContainer,
-                                    shape = RoundedCornerShape(16.dp)) {
-                                    Row(Modifier.fillMaxWidth().padding(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                        Icon(Icons.Default.Palette, contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary)
-                                        Column(Modifier.weight(1f)) {
-                                            Text(recipe.name, style = MaterialTheme.typography.titleSmall)
-                                            Text(recipe.style + " · " + recipe.accent + (recipe.motion?.let { " · " + it.preference } ?: ""),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                        Box {
-                                            IconButton(onClick = { menuId = recipe.id }) {
-                                                Icon(Icons.Default.MoreVert, "Actions for theme " + recipe.name)
-                                            }
-                                            DropdownMenu(menuId == recipe.id, { menuId = null }) {
-                                                DropdownMenuItem(text = { Text("Edit") }, onClick = {
-                                                    menuId = null
-                                                    m.useAppearanceRecipe(recipe.id)
-                                                    editingId = recipe.id
-                                                    recipeName = recipe.name
-                                                    notice = "Adjust the look, then select Update"
-                                                })
-                                                DropdownMenuItem(text = { Text("Rename") }, onClick = {
-                                                    menuId = null; renameId = recipe.id; renameName = recipe.name; renameError = false
-                                                })
-                                                DropdownMenuItem(text = { Text("Duplicate") }, onClick = {
-                                                    menuId = null
-                                                    notice = if (m.duplicateAppearanceRecipe(recipe.id)) "Theme duplicated" else "Could not duplicate theme"
-                                                })
-                                                DropdownMenuItem(text = { Text("Export") }, onClick = {
-                                                    menuId = null; exportId = recipe.id
-                                                    exportTheme.launch(recipe.name.replace(Regex("[^a-zA-Z0-9_-]"), "_") + ".json")
-                                                })
-                                                HorizontalDivider()
-                                                DropdownMenuItem(text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
-                                                    onClick = { menuId = null; pendingDelete = recipe.id })
-                                            }
-                                        }
+                        }
+                    }
+                    items(m.savedAppearanceRecipes, key = { "saved-theme-" + it.id }) { recipe ->
+                        Surface(onClick = {
+                            m.useAppearanceRecipe(recipe.id)
+                            editingId = recipe.id
+                            recipeName = recipe.name
+                            notice = "Loaded " + recipe.name
+                        }, color = MaterialTheme.colorScheme.surfaceContainer,
+                            shape = RoundedCornerShape(16.dp)) {
+                            Row(Modifier.fillMaxWidth().padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Icon(Icons.Default.Palette, contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary)
+                                Column(Modifier.weight(1f)) {
+                                    Text(recipe.name, style = MaterialTheme.typography.titleSmall)
+                                    Text(recipe.style + " · " + recipe.accent + (recipe.motion?.let { " · " + it.preference } ?: ""),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Box {
+                                    IconButton(onClick = { menuId = recipe.id }) {
+                                        Icon(Icons.Default.MoreVert, "Actions for theme " + recipe.name)
+                                    }
+                                    DropdownMenu(menuId == recipe.id, { menuId = null }) {
+                                        DropdownMenuItem(text = { Text("Edit") }, onClick = {
+                                            menuId = null
+                                            m.useAppearanceRecipe(recipe.id)
+                                            editingId = recipe.id
+                                            recipeName = recipe.name
+                                            notice = "Adjust the look, then select Update"
+                                        })
+                                        DropdownMenuItem(text = { Text("Rename") }, onClick = {
+                                            menuId = null; renameId = recipe.id; renameName = recipe.name; renameError = false
+                                        })
+                                        DropdownMenuItem(text = { Text("Duplicate") }, onClick = {
+                                            menuId = null
+                                            notice = if (m.duplicateAppearanceRecipe(recipe.id)) "Theme duplicated" else "Could not duplicate theme"
+                                        })
+                                        DropdownMenuItem(text = { Text("Export") }, onClick = {
+                                            menuId = null; exportId = recipe.id
+                                            exportTheme.launch(recipe.name.replace(Regex("[^a-zA-Z0-9_-]"), "_") + ".json")
+                                        })
+                                        HorizontalDivider()
+                                        DropdownMenuItem(text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                                            onClick = { menuId = null; pendingDelete = recipe.id })
                                     }
                                 }
                             }
+                        }
+                    }
+                    item(key = "saved-theme-editor") {
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             OutlinedTextField(value = recipeName, onValueChange = {
                                 if (it.length <= 32) recipeName = it
                             }, modifier = Modifier.fillMaxWidth(), singleLine = true,
