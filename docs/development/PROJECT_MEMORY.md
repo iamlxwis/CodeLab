@@ -1,3 +1,10 @@
+# Latest Reimagined checkpoint — Nov 24, 2026, 7:29:07 PM PHT
+
+- Latest implementation: 6e33876f41b38249aa041ef48cef651688489dea, [CI 45384534494](https://github.com/iamlxwis/CodeLab/actions/runs/45384534494) running. Last verified build 52fbd6fa51a53551d2807393d32da2c0df490ad4, [CI pass](https://github.com/iamlxwis/CodeLab/actions/runs/45383476477), [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45383476477/artifacts/14914833531). New import/export code is not included in that APK.
+- Next to build: fix any latest CI failures, manual API35 regression, remaining actual visual/interaction and transfer acceptance. Preserve six signed runtime packs, online consent, manual device workflow and cancellation policy. Update README Next to build and one current activity sentence in 12-hour PHT.
+
+---
+
 # Reimagined continuation checkpoint — Nov 24, 2026, 7:22:49 PM PHT
 
 - Latest source: `52fbd6fa51a53551d2807393d32da2c0df490ad4`, [CI 45383476477](https://github.com/iamlxwis/CodeLab/actions/runs/45383476477) in_progress/pending. Previous verified build: e9be726, run 45380854708. Do not substitute old APK evidence for new source.

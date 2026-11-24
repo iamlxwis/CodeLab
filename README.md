@@ -27,15 +27,15 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **IN PROGRESS — latest cumulative source under CI** |
+| Status | **IN PROGRESS — import/export source under CI** |
 | Workstreams accepted | **0/10 fully device-accepted** — source and CI verified separately |
-| Current workstream | Theme/toolbar persistence and panel contrast verification |
+| Current workstream | Files-style import/export verification |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [e9be726 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708) |
+| Latest verified build | [52fbd6f — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45383476477) · [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45383476477/artifacts/14914833531) |
 | Next to build | Cumulative APK verification, manual API35 regression and remaining visual acceptance | 
-| Last activity | Nov 24, 2026, 7:25:56 PM PHT |
+| Last activity | Nov 24, 2026, 7:29:07 PM PHT |
 
-**Current activity:** Nov 24, 2026, 7:25:56 PM PHT — Added bounded document/ZIP previews, folder and export review, actionable name validation, and operation-specific transfer feedback; locally tested preview logic, cumulative Android build pending.
+**Current activity:** Nov 24, 2026, 7:29:07 PM PHT — [Workspace/theme CI passed](https://github.com/iamlxwis/CodeLab/actions/runs/45383476477); Files-style import/export [6e33876](https://github.com/iamlxwis/CodeLab/commit/6e33876f41b38249aa041ef48cef651688489dea) now on main with 11 local preview checks passed; [new cumulative CI](https://github.com/iamlxwis/CodeLab/actions/runs/45384534494) running.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 
