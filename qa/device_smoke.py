@@ -56,7 +56,14 @@ def wait_for(*labels, field=False, contains=False, timeout=28):
         except (ET.ParseError, subprocess.CalledProcessError):
             pass
         time.sleep(0.35)
-    raise AssertionError(f"Timed out waiting for {labels or 'text field'}")
+    summary = []
+    try:
+        summary = [n.attrib.get("text", "") for n in nodes()
+                   if n.attrib.get("text", "")][-18:]
+    except (ET.ParseError, subprocess.CalledProcessError):
+        pass
+    raise AssertionError(f"Timed out waiting for {labels or 'text field'}; "
+                         f"visible text tail: {summary}")
 
 
 def tap_node(node):

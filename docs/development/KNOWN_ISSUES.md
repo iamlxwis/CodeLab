@@ -236,3 +236,7 @@ New signed Java companion uses BeanShell; it cannot compile general Java classes
 ## Nov 24, 4:38 AM PHT — API35 LanguageManager TypeScript NPE (source fix, retest pending)
 
 [Device 45259024641](https://github.com/iamlxwis/CodeLab/actions/runs/45259024641) installed all six debug companion APKs and failed in `qa/device_smoke.py:165`, timed out waiting for DOWNLOAD MANAGER. Downloaded evidence; `last-window.xml` showed launcher, and Android logcat at 20:33:45 recorded `FATAL EXCEPTION main: java.lang.NullPointerException` in LazyColumn row composition. Cause: `localInstalled` true for optional `.ts`, but `OfflineRuntimeRegistry.manifest("ts")` null and `engine!!.engine` crashed. Fixed with `LanguageRuntimeLabel` and JVM regression, preserving signed module status semantics. **Retest pending**; do not describe as device verified.
+
+## Nov 24, 9:20 AM PHT — TS5047 transpileModule default option bug (source fix pending CI)
+
+[Android 15 45261469481](https://github.com/iamlxwis/CodeLab/actions/runs/45261469481) reached TypeScript launch, then `Exit 1` with official compiler TS5047 diagnostic: `isolatedModules` requires CommonJS/ES2015 module or ES2015+ target. Source changed from ModuleKind.None to ModuleKind.CommonJS while keeping ES5 output; verified standalone with the exact APK bundled TypeScript compiler. New CI/device regression pending. This does not provide CommonJS imports, Node APIs or project-wide TS type checks.

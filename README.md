@@ -24,21 +24,21 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last committed checkpoint:** Nov 24, 4:38 AM PHT · **Assistant: WORKING at checkpoint** · **CI: TypeScript row crash fix and API35 retry**
+**Last committed checkpoint:** Nov 24, 9:20 AM PHT · **Assistant: WORKING at checkpoint** · **CI: TypeScript actual compiler fix pending build/device**
 
 > This is a **commit checkpoint**, not a live clock or background agent. `HANDED OFF` means this interactive turn stopped after committing; independent GitHub Actions may still run. Each subsequent turn can resume from the [project memory](docs/development/PROJECT_MEMORY.md).
 
 | Workstream | Verified / implemented | Remaining before completion |
 | --- | --- | --- |
 | **CI Option B — Smart CI** | Fast compile/unit/lint/signed APK and six companions successfully built at [34030469](https://github.com/iamlxwis/CodeLab/actions/runs/45257846511). Normal source builds and manual API35 gate preserved; new retry wrapper targets upstream Maven HTTP 429 without ignoring compiler/test failures. | Re-run device acceptance on exact current SHA, then protected publication. |
-| **Phase 1 — Runtime manager** | Six signed module projects and source build [8bc7dc](https://github.com/iamlxwis/CodeLab/actions/runs/45258998628) **passed**. Inspected actual API35 device logcat + UI evidence: LanguageManager NPE on TypeScript row due core-only `engine!!` assumption. Replaced with null-safe signed-module-aware label and JVM regression tests. | [API35 45259024641](https://github.com/iamlxwis/CodeLab/actions/runs/45259024641) failed in LanguageManager; new retry checkpoint pending. No module release until same-SHA smoke passes; broad compiler packs still pending. |
+| **Phase 1 — Runtime manager** | Six signed companion projects built in [fast APK CI](https://github.com/iamlxwis/CodeLab/actions/runs/45261447402); Android 15 full smoke completed Python/JS/Lua/Java/SQL paths but failed TS typed output. Inspected real APK compiler and API35 UI artifact: TS5047 isolatedModules requiring module setting. Fixed to ES5+CommonJS in source and added packaged-compiler smoke in both CI paths. | **Source fix unverified**; rerun Android 15 checkpoint, then protected APK release. Real public assets only Python until signed publication. Full PHP/Ruby/C/C++/Kotlin/Rust/Go/C# and real Java compiler not implemented. |
 | **Phase 2 — Editor intelligence** | Not started | Begin only after agreed Phase 1 completion gate |
 
 **Current counts:** Six optional module implementations in source, one historically confirmed public (Python); remaining five need published installer checks. Java beta is not javac; TS is single-file transpilation, SQLite uses Android platform.
 
-**Latest implementation:** Signed Java beta, TypeScript and SQLite companion sources plus direct missing-runtime entry points. Runtime stop/restart and output-limit race source fix [dcb1daed](https://github.com/iamlxwis/CodeLab/commit/dcb1daeda2fb1e8a494a26171a7ef30e8b32d6b9). New fast/device CI pending.
+**Latest implementation:** TypeScript compiler option repair with a zero-network test that executes the **actual packaged TypeScript engine** inside CI; [previous API35 failure](https://github.com/iamlxwis/CodeLab/actions/runs/45261469481) accurately recorded.
 
-**Next:** verify JVM source build and same-SHA API35 can navigate module tabs without crashing, then protected public six-pack publication. Phase 1 not complete.
+**Next:** inspect new fast CI + exact-SHA API35 and release checkpoint, fix anything else, publish six production-signed modules only after successful device gate; continue broader offline pack engineering. Phase 1 remains open.
 
 [Compiler feasibility](docs/development/LANGUAGE_FEASIBILITY.md) · [Full audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Project memory](docs/development/PROJECT_MEMORY.md)
 

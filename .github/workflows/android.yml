@@ -97,6 +97,8 @@ jobs:
             echo "::warning::Maven repository HTTP 429 on attempt $attempt/3; retrying with backoff."
             sleep $((attempt * 40))
           done
+      - name: Exercise packaged TypeScript transpiler (offline)
+        run: node qa/typescript_compiler_smoke.js engine-ts/build/outputs/apk/release/engine-ts-release.apk
       - name: Upload quality reports
         if: always()
         uses: actions/upload-artifact@v4

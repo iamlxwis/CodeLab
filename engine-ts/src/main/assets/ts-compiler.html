@@ -7,7 +7,7 @@ window.compileTs = function(source) {
     var result = ts.transpileModule(source, {
       fileName: "main.ts",
       reportDiagnostics: true,
-      compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.None }
+      compilerOptions: { target: ts.ScriptTarget.ES5, module: ts.ModuleKind.CommonJS }
     });
     var errors = (result.diagnostics || []).filter(function(d) {
       return d.category === ts.DiagnosticCategory.Error;

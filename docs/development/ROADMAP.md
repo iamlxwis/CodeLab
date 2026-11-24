@@ -1,3 +1,10 @@
+## Nov 24, 9:20 AM PHT — TS5.9 compiler option correction with real APK evidence
+
+- [x] Source failure diagnosed from [API35 45261469481](https://github.com/iamlxwis/CodeLab/actions/runs/45261469481) and downloaded artifact: TypeScript console printed `Option 'isolatedModules' can only be used when either option '--module' is provided or option 'target' is 'ES2015' or higher.` App returned Exit 1, **not** an Android crash.
+- [x] Used **exact** official TypeScript 5.9.3 `assets/typescript.js` extracted from [built engine-ts APK](https://github.com/iamlxwis/CodeLab/actions/runs/45261447402), demonstrated `ModuleKind.None` causes diagnostic code TS5047 while `ModuleKind.CommonJS` with ES5 outputs runnable JS with zero diagnostics. Set module to CommonJS; still no Node/CommonJS `require` or multi-file imports.
+- [x] Added `qa/typescript_compiler_smoke.js` that runs actual compiler and HTML bridge from the built APK (type annotations, output, syntax-error reporting), in both fast and API35 workflows.
+- [ ] Check next same-commit CI, API35 full UI/offline TypeScript and protected signed six-module release. Physical device acceptance remains owner-delegated; full native and PHP/Ruby compilers remain open.
+
 ## Nov 24, 4:38 AM PHT — Live API35 runtime manager crash
 
 - [x] Diagnose app-home crash from [device 45259024641](https://github.com/iamlxwis/CodeLab/actions/runs/45259024641): optional TypeScript row attempted to dereference absent bundled engine; source fixed, with JVM regression.
