@@ -14,3 +14,9 @@ internal fun orderedProjects(
     "Z–A" -> projects.sortedWith(String.CASE_INSENSITIVE_ORDER.reversed())
     else -> projects // Recent follows storage order, not pinned favorites.
 }
+
+/** The switcher keeps recent order within each group without O(n²) index lookups. */
+internal fun projectSwitcherOrder(projects: List<String>, favorites: Set<String>): List<String> {
+    val (starred, others) = projects.partition { it in favorites }
+    return starred + others
+}

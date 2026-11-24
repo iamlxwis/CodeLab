@@ -236,9 +236,11 @@ internal fun ProjectSwitcher(m: WorkspaceModel, dismiss: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 OutlinedTextField(query, { query = it }, modifier = Modifier.fillMaxWidth(),
                     label = { Text("Search projects") }, singleLine = true)
-                val visible = m.projects.filter { it.contains(query, ignoreCase = true) }
-                    .sortedWith(compareBy<String> { it !in m.favorites }
-                        .thenBy { m.projects.indexOf(it) })
+                val visible = remember(m.projects, m.favorites, query) {
+                    projectSwitcherOrder(
+                        m.projects.filter { it.contains(query, ignoreCase = true) },
+                        m.favorites)
+                }
                 LazyColumn(Modifier.heightIn(max = 330.dp)) {
                     items(visible, key = { it }) { name ->
                         Row(Modifier.fillMaxWidth(),

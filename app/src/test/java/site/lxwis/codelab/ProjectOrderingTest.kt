@@ -19,6 +19,14 @@ class ProjectOrderingTest {
             orderedProjects(names, setOf("Zulu"), "Favorites"))
     }
 
+    @Test fun switcherGroupsFavoritesWithoutLosingRecentOrder() {
+        assertEquals(listOf("Bravo", "Zulu", "Alpha"),
+            projectSwitcherOrder(names, favorites))
+        assertEquals(names, projectSwitcherOrder(names, emptySet()))
+        assertEquals(listOf("Zulu", "Bravo", "Alpha"),
+            projectSwitcherOrder(names, setOf("Zulu", "Bravo")))
+    }
+
     @Test fun recentKeepsNewFirstOrderWithoutPinningFavorites() {
         assertEquals(names, orderedProjects(names, favorites, "Recent"))
     }

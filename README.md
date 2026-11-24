@@ -27,17 +27,17 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Phase | Phase 3 — Project Management & Developer Workflow |
-| Status | **IN PROGRESS** (source code pushed; CI pending) |
+| Status | **IN PROGRESS** (source verification pending) |
 | Workstreams completed | **0/7 verified** |
 | Workstreams remaining | **7** |
-| Current workstream | **5 — Developer Productivity; source verification across WS1–WS7** |
-| Last verified commit | [`ae4ad81291b9`](https://github.com/iamlxwis/CodeLab/commit/ae4ad81291b999089f1853c119d6f4d760735b08) (prior pushed checkpoint, CI unverified) |
-| CI status | **Pending** for latest Phase 3 code; earlier Phase 2 CI [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) passed |
-| Last activity | Nov 24, 2026, 5:24 PM PHT |
+| Current workstream | **6 — Performance Optimization; cross-workstream verification** |
+| Last verified commit | [`886d464d8fd4`](https://github.com/iamlxwis/CodeLab/commit/886d464d8fd4ffb0584d3c1fe56aa91523ad0a63) (last pushed checkpoint; CI pending) |
+| CI status | **Pending** for the latest Phase 3 source (earlier Phase 2 [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) passed) |
+| Last activity | Nov 24, 2026 · 5:26 PM PHT |
 
-**Current activity:** Nov 24, 2026, 5:24 PM PHT — Added searchable built-in and saved snippets, selection-only snippet creation, controlled deletion, and persistence regression tests.
+**Current activity:** Nov 24, 2026 · 5:26 PM PHT — Reduced project-switcher sorting overhead and incrementalized project-search line scanning with JVM regressions.
 
-> Only one current activity in README. The [progress log](docs/development/PROGRESS_LOG.md) and [memory](docs/development/PROJECT_MEMORY.md) retain history. No Phase 3 workstream is counted verified until source CI passes and the complete workstream is reviewed. Physical-phone acceptance is owner-led.
+> Exactly one current activity line. [Progress history](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Workstreams remain unverified pending exact-source APK CI, tests, review and owner physical acceptance.
 
 [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Roadmap](docs/ROADMAP.md) · [GitHub Actions](https://github.com/iamlxwis/CodeLab/actions)
 

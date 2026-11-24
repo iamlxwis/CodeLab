@@ -1,3 +1,18 @@
+# Phase 3 checkpoint — Nov 24, 2026 · 5:26 PM PHT
+
+- **Current status:** Phase 3 IN PROGRESS; 0/7 workstreams source/CI verified; seven remain subject to final review. Performance workstream is active.
+- **Previous pushed SHA:** `886d464d8fd4ffb0584d3c1fe56aa91523ad0a63`; latest source commit is the commit containing this checkpoint, awaiting exact-SHA CI.
+- **Latest confirmed successful CI:** [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) on Phase 2 code. Phase 3 runs may be cancelled by later source commits due to cancel-in-progress. Do not claim a passed Phase 3 workflow until inspected.
+- **New WS6 changes:** `ProjectOrdering.kt` + `ProjectDialogs.kt` use stable favorite/recent O(n) grouping with remembered lists rather than O(n²) indexOf sorting; `ProjectStore.java` project search scans newline boundaries without a per-file String array; tests validate order and line numbers. No quantitative benchmark claimed.
+- **Other unverified changes on latest main:** WS1 recent open order; WS2 Git unstage; WS3 tracking/error handling; WS4 bulk import transaction, ZIP metadata restrictions; WS5 searchable built-ins and saved selected-code snippets; WS7 guardrails and failure-case tests.
+- **Changed in latest checkpoint:** `ProjectOrdering.kt`, `ProjectDialogs.kt`, `ProjectStore.java`, `ProjectOrderingTest.kt`, `ProjectStoreTest.java`, README.md, PROGRESS_LOG.md, PROJECT_MEMORY.md.
+- **Known blockers:** No Android SDK/local clone. Must inspect remote GitHub Actions for test/Gradle/signing result; GitHub source is ground truth. Owner handles only physical-phone acceptance.
+- **Next exact action:** poll latest Android APK CI for main; if failed, fetch job logs and fix compilation/tests; if successful, audit full seven-workstream coverage and only then mark verified source counts, record successful run and link final commit.
+- **Restrictions:** main only, no PR, no emulator tests, preserve all six offline packs, source-only CI Option B, cancel-in-progress, three artifacts, signing gates and existing language/runtime scope; no declined Phase 2 advanced features.
+- **Continuation:** Fetch latest remote SHA and all tracker docs, avoid repeats, commit accurate updates together, and provide continuation prompt if paused.
+
+---
+
 # Phase 3 checkpoint — Nov 24, 2026, 5:24 PM PHT
 
 - **Current phase / status:** Phase 3 IN PROGRESS; 0/7 fully verified, seven remaining. Current implementation: WS5 snippet management; source CI outstanding.

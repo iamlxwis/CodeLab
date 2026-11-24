@@ -862,13 +862,23 @@ public final class ProjectStore {
             String content;
             try { content = read(projectName, path); }
             catch (IOException ignored) { continue; }
-            String[] lines = content.split("\\n", -1);
-            for (int i = 0; i < lines.length; i++) {
-                String line = lines[i];
+            // Scan line boundaries incrementally rather than allocating an array
+            // for every line of a near-limit editor file.
+            int start = 0;
+            int lineNumber = 1;
+            while (start <= content.length()) {
+                int end = content.indexOf('\n', start);
+                if (end < 0) end = content.length();
+                String line = content.substring(start, end);
                 if ((caseSensitive ? line : line.toLowerCase(Locale.ROOT)).contains(needle)) {
-                    hits.add(new SearchHit(path, i + 1, line.trim().substring(0, Math.min(160, line.trim().length()))));
+                    String preview = line.trim();
+                    hits.add(new SearchHit(path, lineNumber,
+                        preview.substring(0, Math.min(160, preview.length()))));
                     if (hits.size() >= 200) return hits;
                 }
+                if (end == content.length()) break;
+                start = end + 1;
+                lineNumber++;
             }
         }
         return hits;

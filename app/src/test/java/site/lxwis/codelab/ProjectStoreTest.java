@@ -36,6 +36,15 @@ public class ProjectStoreTest {
         assertEquals(200, restored.searchText("First", "const n = 1234", true).size());
     }
 
+    @Test public void lineByLineSearchPreservesLineNumbersAndResultCap() throws Exception {
+        store.createFile("First", "notes.txt", "alpha\nMATCH\nlast match\n");
+        List<ProjectStore.SearchHit> hits =
+            store.searchText("First", "match", false, Collections.singletonList("notes.txt"));
+        assertEquals(2, hits.size());
+        assertEquals(2, hits.get(0).line);
+        assertEquals(3, hits.get(1).line);
+    }
+
     @Test public void failedSavePreservesPriorRevision() throws Exception {
         store.save("First", "main.js", "print('preserved');");
         char[] huge = new char[262145];
