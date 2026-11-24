@@ -26,20 +26,16 @@ Write, run, and manage projects from your phone.
 
 | Field | Latest committed checkpoint |
 | --- | --- |
-| Phase | Phase 3 — Project Management & Developer Workflow |
-| Status | **COMPLETED — source/CI**; owner physical-device acceptance pending |
-| Workstreams completed | **7/7** (source implementation reviewed and CI verified) |
-| Workstreams remaining | **0 source workstreams**; owner device acceptance pending |
-| Current workstream | **Handoff — physical-device testing** |
-| Last verified source commit | [`55a65774d56e`](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b) |
-| CI status | **PASSED** — [Android APK run 45366121115](https://github.com/iamlxwis/CodeLab/actions/runs/45366121115) |
-| Last activity | Nov 24, 2026 · 5:37 PM PHT |
+| Update | CodeLab — Reimagined |
+| Status | **IN PROGRESS** — owner authorized implementation |
+| Workstreams accepted | **0/10** — verification pending |
+| Current workstream | Repository audit and design system |
+| Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
+| Last activity | 24 Nov 2026, 18:31 PHT |
 
-**Current activity:** Nov 24, 2026 · 5:37 PM PHT — Phase 3 source work completed across all seven workstreams; APK, unit tests, lint, signatures and three artifacts passed CI.
+**Current activity:** 24 Nov 2026, 18:31 PHT — Reimagined authorized; auditing current source before implementing the unified Apple-inspired design and preserving working capabilities.
 
-> Exactly one current activity sentence is retained here. [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md) · [Full Phase 3 verification inventory](docs/IMPLEMENTATION_STATUS.md). GitHub Actions verifies APK builds/JVM tests/signatures and three artifact uploads, **not** real-device acceptance.
-
-[CodeLab-APK and other run artifacts](https://github.com/iamlxwis/CodeLab/actions/runs/45366121115) · [Roadmap](docs/ROADMAP.md)
+> One current activity sentence. [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 
 ## Features
 
