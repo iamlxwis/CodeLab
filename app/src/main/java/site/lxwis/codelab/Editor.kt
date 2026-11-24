@@ -150,6 +150,17 @@ fun CodeEditor(
                     style = MaterialTheme.typography.bodySmall)
                 OutlinedTextField(renameValue, { renameValue = it; renameError = "" },
                     label = { Text("New identifier") }, singleLine = true)
+                val editorSource = view?.text?.toString().orEmpty()
+                val original = view?.let {
+                    CodeAnalysis.identifierAt(editorSource, it.selectionStart)
+                }
+                if (original != null) {
+                    val count = CodeAnalysis.renameCount(editorSource, original,
+                        filename.substringAfterLast('.', ""))
+                    Text("$count code occurrence(s) in this file will be updated. Strings and comments are excluded.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 if (renameError.isNotBlank())
                     Text(renameError, color = MaterialTheme.colorScheme.error)
             }
@@ -442,7 +453,8 @@ fun CodeEditor(
                 }
                 DropdownMenu(expanded = completionMenu, onDismissRequest = { completionMenu = false }) {
                     val available = view?.let {
-                        CodeAnalysis.wordCompletions(it.text.toString(), it.selectionStart)
+                        CodeAnalysis.wordCompletions(it.text.toString(), it.selectionStart,
+                            filename.substringAfterLast('.', ""))
                     }.orEmpty()
                     if (available.isEmpty()) DropdownMenuItem(text = { Text("No matching words in this file") },
                         enabled = false, onClick = {})
@@ -462,7 +474,15 @@ fun CodeEditor(
                         filename.substringAfterLast('.', ""))
                     if (issues.isEmpty()) DropdownMenuItem(text = { Text("No bracket problems detected") },
                         enabled = false, onClick = {})
-                    issues.forEach { issue ->
+                    val currentLine = view?.let {
+                        it.text.subSequence(0, it.selectionStart.coerceIn(0, it.length()))
+                            .count { character -> character == '\n' } + 1
+                    } ?: 1
+                    val orderedIssues = issues.sortedWith(compareBy(
+                        { if (it.line >= currentLine) 0 else 1 },
+                        { it.line }
+                    ))
+                    orderedIssues.forEach { issue ->
                         DropdownMenuItem(text = { Text("Line ${issue.line}: ${issue.description}") },
                             onClick = { view?.goToLogicalLine(issue.line); issuesMenu = false })
                     }

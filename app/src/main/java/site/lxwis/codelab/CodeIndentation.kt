@@ -46,9 +46,11 @@ internal fun codeIndentationEdit(
     if (replacement == original) return null
     val collapsed = lower == upper
     val caret = if (collapsed) {
-        val removed = original.length - replacement.length
-        (lower - removed.coerceAtLeast(0).coerceAtMost(lower - start))
-            .coerceIn(start, start + replacement.length)
+        // Preserve the logical column for an indent or outdent of the current line.
+        val originalLine = original.substringBefore('\n')
+        val replacementLine = replacement.substringBefore('\n')
+        val delta = replacementLine.length - originalLine.length
+        (lower + delta).coerceIn(start, start + replacement.length)
     } else start
     return CodeIndentationEdit(
         start, end, replacement,

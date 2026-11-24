@@ -43,6 +43,26 @@ class CodeAnalysisTest {
         assertTrue(result.contains("renderView"))
     }
 
+    @Test fun completionRanksNearbyWordsAndSkipsCommentsAndStrings() {
+        val source = "val renderFar = 1\n" +
+            "// renderComment\n" +
+            "val message = \"renderString\"\n" +
+            "val renderClose = 2\n" +
+            "ren\n"
+        val candidates = CodeAnalysis.wordCompletions(source, source.length, "kt")
+        assertEquals(listOf("renderClose", "renderFar"), candidates)
+        assertEquals(2, CodeAnalysis.renameCount(source, "renderClose", "kt") +
+            CodeAnalysis.renameCount(source, "renderFar", "kt"))
+        assertEquals(0, CodeAnalysis.renameCount(source, "renderComment", "kt"))
+    }
+
+    @Test fun renameCountIsNotLimitedToReferenceListPage() {
+        val source = "val item = 1\n" + "use(item)\n".repeat(650) +
+            "\"item\" // item\n"
+        assertEquals(651, CodeAnalysis.renameCount(source, "item", "kt"))
+        assertEquals(120, CodeAnalysis.references(source, "item", language = "kt").size)
+    }
+
     @Test fun renameUpdatesAllOccurrencesBeyondReferenceDisplayCap() {
         val source = buildString {
             append("val item = 0\n")

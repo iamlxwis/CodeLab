@@ -43,6 +43,13 @@ class CodeIndentationTest {
         assertEquals(6, change.selectionEnd)
     }
 
+    @Test fun collapsedIndentMovesCaretWithInsertedPrefix() {
+        val (result, change) = edit("val x = 1", 4, 4)
+        assertEquals("    val x = 1", result)
+        assertEquals(8, change!!.selectionStart)
+        assertEquals(8, change.selectionEnd)
+    }
+
     @Test fun refusesIndentationWithoutActualChange() {
         val (result, change) = edit("val x = 1", 4, 4, outdent = true)
         assertEquals("val x = 1", result)

@@ -191,15 +191,42 @@ internal object CodeAnalysis {
         return issues
     }
 
-    /** Suggestions are words actually used in the current buffer, never invented symbols. */
-    fun wordCompletions(source: String, caret: Int): List<String> {
+    /** Ranked file-local completions, excluding tokens inside comments and quoted strings. */
+    fun wordCompletions(source: String, caret: Int, language: String = ""): List<String> {
         val position = caret.coerceIn(0, source.length)
         var start = position
         while (start > 0 && (source[start - 1].isLetterOrDigit() || source[start - 1] == '_')) start--
         val prefix = source.substring(start, position)
-        if (prefix.length < 2) return emptyList()
-        return Regex("""[A-Za-z_][A-Za-z_0-9]{2,}""")
-            .findAll(source).map { it.value }.filter { it != prefix && it.startsWith(prefix) }
-            .distinct().take(25).toList()
+        if (prefix.length < 2 || !prefix[0].isLetter() && prefix[0] != '_') return emptyList()
+        // Keep suggestion lookup bounded for huge documents; prioritize nearby context.
+        val windowStart = (position - 120_000).coerceAtLeast(0)
+        val windowEnd = (position + 40_000).coerceAtMost(source.length)
+        val visible = visibleCode(source.substring(windowStart, windowEnd), language)
+        val candidates = LinkedHashMap<String, Pair<Int, Int>>()
+        val pattern = Regex("""[A-Za-z_][A-Za-z_0-9]{2,}""")
+        for (match in pattern.findAll(source, windowStart)) {
+            if (match.range.first >= windowEnd) break
+            val word = match.value
+            if (word == prefix || !word.startsWith(prefix) ||
+                !visible[match.range.first - windowStart]) continue
+            val distance = kotlin.math.abs(match.range.first - position)
+            val current = candidates[word]
+            // Sort by closest occurrence, breaking ties by repeated use and name.
+            candidates[word] = minOf(distance, current?.first ?: Int.MAX_VALUE) to
+                ((current?.second ?: 0) + 1)
+        }
+        return candidates.entries.sortedWith(
+            compareBy<Map.Entry<String, Pair<Int, Int>>> { it.value.first }
+                .thenByDescending { it.value.second }
+                .thenBy { it.key }
+        ).take(25).map { it.key }
+    }
+
+    /** Complete-file count for explicit user confirmation, not the capped reference UI. */
+    fun renameCount(source: String, identifier: String, language: String = ""): Int {
+        if (!identifier.matches(Regex("[A-Za-z_][A-Za-z_0-9]*"))) return 0
+        val visible = visibleCode(source, language)
+        val pattern = Regex("(?<![A-Za-z_0-9])" + Regex.escape(identifier) + "(?![A-Za-z_0-9])")
+        return pattern.findAll(source).count { visible[it.range.first] }
     }
 }
