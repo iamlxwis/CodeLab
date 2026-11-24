@@ -84,24 +84,16 @@ internal fun FileExplorerSheet(
     onNewFolder: () -> Unit
 ) {
     var search by rememberSaveable(m.project) { mutableStateOf("") }
-    var directory by rememberSaveable(m.project, initialDirectory) {
-        mutableStateOf(initialDirectory)
+    var expanded by remember(m.project, initialDirectory) {
+        mutableStateOf(initialDirectory.trim('/').split('/').filter { it.isNotBlank() }
+            .runningFold("") { prefix, part -> prefix + part + "/" }.drop(1).toSet())
     }
     var menuFor by remember { mutableStateOf<String?>(null) }
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val allFiles = m.files
-    val matching = if (search.isBlank()) allFiles.filter { it.startsWith(directory) }
-        else allFiles.filter { it.contains(search, ignoreCase = true) }
-    val folders = if (search.isNotBlank()) emptyList() else (matching.mapNotNull {
-        val next = it.removePrefix(directory).substringBefore('/', "")
-        if (next.isEmpty()) null else directory + next + "/"
-    } + m.folders.filter { it.startsWith(directory) }.mapNotNull {
-        val next = it.removePrefix(directory).substringBefore('/', "")
-        if (next.isEmpty()) null else directory + next + "/"
-    }).distinct().sorted()
-    val visibleFiles = if (search.isBlank()) matching.filter {
-        !it.removePrefix(directory).contains('/')
-    } else matching
+    val rows = remember(allFiles, m.folders, expanded, search) {
+        explorerRows(allFiles, m.folders, expanded, search)
+    }
 
     ModalBottomSheet(onDismissRequest = onClose, sheetState = state,
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -128,21 +120,19 @@ internal fun FileExplorerSheet(
                 singleLine = true, placeholder = { Text("Search files") },
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 shape = RoundedCornerShape(12.dp))
-            if (directory.isNotEmpty() && search.isBlank()) {
-                TextButton(onClick = {
-                    directory = directory.removeSuffix("/").substringBeforeLast('/', "")
-                        .let { if (it.isEmpty()) "" else it + "/" }
-                }) { Icon(Icons.Default.ArrowBack, null, Modifier.size(18.dp)); Text("Parent folder") }
-            }
             LazyColumn(Modifier.fillMaxWidth().weight(1f),
                 verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                items(folders, key = { "folder:" + it }) { folder ->
-                    Surface(onClick = { directory = folder },
+                items(rows, key = { if (it.folder) "folder:" + it.path else "file:" + it.path }) { row ->
+                if (row.folder) {
+                    val folder = row.path
+                    Surface(onClick = { expanded = if (folder in expanded) expanded - folder else expanded + folder },
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         shape = RoundedCornerShape(11.dp)) {
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 14.dp),
+                        Row(Modifier.fillMaxWidth().padding(start = (8 + row.depth.coerceAtMost(6) * 14).dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
                             verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.FolderOpen, null, Modifier.size(18.dp),
+                            Icon(if (folder in expanded) Icons.Default.ExpandMore else Icons.Default.ChevronRight,
+                                if (folder in expanded) "Collapse folder" else "Expand folder", Modifier.size(18.dp))
+                            Icon(if (folder in expanded) Icons.Default.FolderOpen else Icons.Default.Folder, null, Modifier.size(18.dp),
                                 tint = MaterialTheme.colorScheme.primary)
                             Text(folder.removeSuffix("/").substringAfterLast('/'),
                                 Modifier.weight(1f).padding(start = 12.dp),
@@ -160,14 +150,14 @@ internal fun FileExplorerSheet(
                             }
                         }
                     }
-                }
-                items(visibleFiles, key = { "file:" + it }) { file ->
+                } else {
+                    val file = row.path
                     Row(Modifier.fillMaxWidth().heightIn(min = 52.dp)
                         .background(if (file == m.active) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                            RoundedCornerShape(10.dp)).padding(horizontal = 8.dp),
+                            RoundedCornerShape(10.dp)).padding(start = (8 + row.depth.coerceAtMost(6) * 14).dp, end = 8.dp),
                         verticalAlignment = Alignment.CenterVertically) {
                         FileTypeIcon(file, Modifier.size(18.dp), selected = file == m.active)
-                        Text(if (search.isBlank()) file.removePrefix(directory) else file,
+                        Text(if (search.isBlank()) file.substringAfterLast('/') else file,
                             Modifier.weight(1f).clickable { onOpen(file) }
                                 .padding(horizontal = 12.dp, vertical = 13.dp),
                             color = if (file == m.active) MaterialTheme.colorScheme.primary
@@ -188,7 +178,8 @@ internal fun FileExplorerSheet(
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
                 }
-                if (folders.isEmpty() && visibleFiles.isEmpty()) item {
+                }
+                if (rows.isEmpty()) item {
                     Text("No matching files", Modifier.padding(16.dp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
