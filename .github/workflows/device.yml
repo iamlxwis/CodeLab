@@ -55,17 +55,7 @@ jobs:
           target: google_apis
           profile: pixel_2
           disable-animations: true
-          script: |
-            python3 qa/clean_install_smoke.py
-            python3 qa/tutorial_resume_smoke.py
-            python3 qa/missing_python_smoke.py
-            python3 qa/device_smoke.py
-            bash gradlew :app:connectedDebugAndroidTest
-            python3 qa/performance_smoke.py
-            python3 qa/motion_smoke.py
-            python3 qa/accessibility_audit.py
-            python3 qa/font_scale_smoke.py
-            python3 qa/layout_screenshots.py
+          script: python3 qa/device_suite.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

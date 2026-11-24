@@ -54,7 +54,8 @@ fun CodeEditor(
     workspaceToolbar: List<String>? = null,
     onWorkspaceToolbarChange: ((List<String>) -> Unit)? = null,
     onSelectionChange: (String, Int) -> Unit = { _, _ -> },
-    touchFeedback: Boolean = false
+    touchFeedback: Boolean = false,
+    readCurrentText: () -> String = { text }
 ) = key(fileKey) {
     val context = LocalContext.current
     val hardwareKeyboard = LocalConfiguration.current.keyboard != Configuration.KEYBOARD_NOKEYS
@@ -963,7 +964,7 @@ fun CodeEditor(
         AndroidView(
             factory = {
                 SourceView(it, filename).apply {
-                    setText(text)
+                    setText(readCurrentText())
                     cursorStatus.lineCount = logicalLineCount
                     changed = { source ->
                         cursorStatus.lineCount = logicalLineCount
@@ -1012,7 +1013,10 @@ fun CodeEditor(
                     chooseEditorSize(fontSize + delta)
                 }
                 editor.isEnabled = !readOnly
-                if (editor.sourceSnapshot != text) editor.replaceSource(text)
+                // AndroidView updates can run after newer native key events. Read the
+                // live model, not a String captured by an earlier composition frame.
+                val currentSource = readCurrentText()
+                if (editor.sourceSnapshot != currentSource) editor.replaceSource(currentSource)
                 cursorStatus.lineCount = editor.logicalLineCount
             }
         )

@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Rule
 import org.junit.Test
@@ -17,7 +18,11 @@ import org.junit.Test
 class RunConsoleInputTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun inputAndSendRemainUsableInKeyboardSizedPane() {
+    @Test fun inputAndSendRemainUsableInKeyboardSizedPane() = verifyInput(240.dp)
+
+    @Test fun inputIsReservedBeforeChromeInShortSplitPane() = verifyInput(112.dp)
+
+    private fun verifyInput(height: Dp) {
         lateinit var session: RunSession
         compose.runOnUiThread {
             session = RunSession(ApplicationProvider.getApplicationContext<Context>())
@@ -25,7 +30,7 @@ class RunConsoleInputTest {
         }
         try {
             compose.setContent { MaterialTheme {
-                RunConsole(session, Modifier.height(240.dp), fileName = "input.js")
+                RunConsole(session, Modifier.height(height), fileName = "input.js")
             } }
             compose.waitUntil(15_000) { session.waiting }
             compose.onNodeWithText("Program input").performTextInput("Ada")

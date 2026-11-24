@@ -73,7 +73,7 @@ jobs:
       - name: Test same-commit release gate behavior
         run: python3 -m unittest discover -s qa -p 'test_release_gate.py' -v
       - name: Test production publication guards
-        run: python3 -m unittest discover -s qa -p 'test_production_signing_gate.py' -v && python3 -m unittest discover -s qa -p 'test_release_acceptance.py' -v
+        run: python3 -m unittest discover -s qa -p 'test_production_signing_gate.py' -v && python3 -m unittest discover -s qa -p 'test_release_acceptance.py' -v && python3 -m unittest discover -s qa -p 'test_device_suite.py' -v
       - name: Test workflow artifact safety
         run: python3 -m unittest discover -s qa -p 'test_artifact_layout.py' -v
       - name: Build release, test, lint, and coverage report

@@ -28,15 +28,15 @@ Write, run, and manage projects from your phone.
 | --- | --- |
 | Update | CodeLab — Reimagined |
 | Status | **ACTIVE — Final Release Stabilization; 0/9 verified, 9/9 remaining** |
-| Current-pass checks | [35f356c build](https://github.com/iamlxwis/CodeLab/actions/runs/45507512842) passed; strict lint: 0 errors, 37 warnings; [API35](https://github.com/iamlxwis/CodeLab/actions/runs/45507530180) passed stdin then failed clipped active tab close |
+| Current-pass checks | [1a179f8 build](https://github.com/iamlxwis/CodeLab/actions/runs/45509834023) passed: 208 JVM tests, 0 lint errors/37 warnings; [API35](https://github.com/iamlxwis/CodeLab/actions/runs/45509847377) verified tab close fix, then exposed rapid typing reduced to first character |
 | Source coverage | **37/37 decisions mapped; 8/8 audited implementation gaps addressed** — validation is separate |
 | Current workstream | Final stabilization W1/W2/W6/W7; [acceptance matrix](docs/development/RELEASE_ACCEPTANCE.md): 0/37 redesign, 0/10 UI accepted |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [35f356c Android APK](https://github.com/iamlxwis/CodeLab/actions/runs/45507512842); production fingerprint independently matched; full device/upgrade acceptance pending |
-| Next to build | Build tab/trust fixes, run API35, inspect instrumentation and actual layout/viewport artifacts; then production upgrade and remaining acceptance |
-| Last activity | November 25, 2026 — 07:24:55 AM PHT |
+| Latest verified build | [1a179f8 APK](https://github.com/iamlxwis/CodeLab/actions/runs/45509834023); editor + 6 packs permanent signer and pack checksums matched; full device/upgrade acceptance pending |
+| Next to build | Verify fast native input survives viewport changes, inspect all API35 test/layout/performance artifacts, then production upgrade and remaining acceptance |
+| Last activity | November 25, 2026 — 07:46:41 AM PHT |
 
-**Current activity:** November 25, 2026 — 07:24:55 AM PHT — W1/W2/W6/W7/W8: strict build passed at 35f356c; API35 verified stdin/Send with IME, then exposed partial-tab close clipping; fixing tab sizing, Git transport trust and adding actual 3-size/2-theme viewport evidence. 0/9 verified complete, 9 remaining; next cumulative build and API35 rerun.
+**Current activity:** November 25, 2026 — 07:46:41 AM PHT — W1/W2/W7: fixing rapid-input loss by reading the live editor model; keeping stdin visible in short panes and guidance compact; 0/9 verified complete, 9 remaining; next cumulative build plus all independent API35 checks with failures retained.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

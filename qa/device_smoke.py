@@ -286,6 +286,10 @@ def main():
     adb("shell", "input", "text", shlex.quote("print(6*7)"))
     snapshot("06-after-input")
     wait_for("print(6*7)", contains=True)
+    # Mode controls intentionally collapse during typing; reveal them before choosing.
+    ime = adb("shell", "dumpsys", "input_method")
+    if re.search(r"(?:mInputShown|mIsInputViewShown|isInputViewShown)=true", ime):
+        adb("shell", "input", "keyevent", "4")
     # Primary Run honors the preferred entry file; explicitly choose this tab.
     # Run modes are deliberate, never a silent fallback to cloud.
     wait_for("Ready: local runtime")

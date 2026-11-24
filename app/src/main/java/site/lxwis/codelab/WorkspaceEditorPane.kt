@@ -51,6 +51,7 @@ internal fun WorkspaceEditorPane(
                 fileKey = "$project/$file",
                 filename = file,
                 text = m.source,
+                readCurrentText = { m.source },
                 onTextChange = m::edit,
                 jumpLine = m.pendingLine,
                 onJumpHandled = m::consumeJump,

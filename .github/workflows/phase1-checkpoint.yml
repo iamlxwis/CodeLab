@@ -1,5 +1,5 @@
 # Explicit Reimagined APK delivery checkpoint; routine source pushes remain fast.
-# Final stabilization: verify the keyboard-aware console; retain all publication gates.
+# Final stabilization: retain rapid input across recomposition and collect every device result.
 name: Guarded release checkpoint
 on:
   push:

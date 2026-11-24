@@ -54,6 +54,7 @@ internal fun InteractiveCodeLesson(close: () -> Unit) {
                     Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.bodyMedium)
                 CodeEditor(fileKey = "tutorial/practice.js", filename = "practice.js", text = code,
                     onTextChange = { code = it; notice = "" },
+                    readCurrentText = { code },
                     onRun = ::run, onSave = { notice = "Practice draft retained in this lesson" },
                     workspaceToolbar = listOf("undo", "redo", "wrap"),
                     modifier = Modifier.weight(1f).fillMaxWidth())

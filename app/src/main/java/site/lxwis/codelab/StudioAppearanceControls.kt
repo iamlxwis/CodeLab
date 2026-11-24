@@ -308,7 +308,8 @@ private fun StudioLivePreview(m: WorkspaceModel) {
                         studioReadable(c.onSurfaceVariant, background).toArgb(), c.primary.toArgb(), background.luminance() < .5f)
                     view.setStudioEditorStyle(s)
                     view.setGutterOptions(true, true)
-                    if (view.sourceSnapshot != code) view.replaceSource(code)
+                    val currentCode = if (python) pyCode else jsCode
+                    if (view.sourceSnapshot != currentCode) view.replaceSource(currentCode)
                     view.zoomShortcut = { delta -> m.updateStudioAppearance(m.studioAppearance.copy(
                         editorTextSize = ((m.studioAppearance.editorTextSize.takeIf { it in 10..28 } ?: 15) + delta).coerceIn(10, 28))) }
                 })

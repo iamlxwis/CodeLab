@@ -1,5 +1,19 @@
 
 
+## November 25, 2026 — 07:46:41 AM PHT — Native editor input blocker and independent QA
+
+W1/W2/W7: fixing rapid-input loss by reading the live editor model; keeping stdin visible in short panes and guidance compact; 0/9 verified complete, 9 remaining; next cumulative build plus all independent API35 checks with failures retained.
+
+Parent/current verified build source: 1a179f8a5c92cafd0b8f89b03d370f46ae856fef, CI 45509834023. Retrieved actual JUnit XML: 208 tests, 0 failures/errors/skips, including all 3 Git transport-policy tests. Lint XML: 0 errors, 37 warnings. Independently extracted all seven actual APK signing certificates: permanent c81d2aa187febd5252ad0369f2b4cfba368b5f16f6b4b049963fa284c9e42392; all six SHA256SUMS.txt entries matched. Candidate editor 4,382,328 bytes. Existing published b4adaa96 metadata is production/1337 with upgrade QA not_run; newer candidate ordering is compatible but real upgrade is still unverified. HEAD requests to editor, six packs and checksum all returned HTTP200 (older public assets). Default online language GET returned HTTP403 Cloudflare Error1010 from this environment; no source was sent; live online verification is blocked.
+
+API35 45509847377 reached 05-new-file.png with full active Close answer.js visible, verifying the previous tab repair. It failed at qa/device_smoke.py:288 waiting for print(6*7); screenshot/XML contain only p after rapid input with IME open. This is an application release blocker, not a selector substitution. AndroidView update compared native text with a plain String captured by an earlier composition. New update reads the current model directly (workspace and lesson), and Theme Studio reads current editable preview state. Added real physical-key rapid-input + changing-height regression asserting original native-view identity, entire source, and subsequent external replacement. Root correction remains unverified until new Android execution.
+
+Additional source: stdin allocated before optional console chrome/output with clipping to protect the input row in short panes; real 112dp and 240dp input tests. Contextual discovery now starts as a compact, accessible expandable strip; all details/guide/dismissal preserved with localized controls and persistence UI regression. Smoke deliberately dismisses a shown IME before testing mode selectors, retaining all assertions. The API35 runner now executes independent checks and records each result in suite-results.json, returning failure if ANY stage fails; first UI failure no longer prevents instrumentation, performance, accessibility and authentic layout evidence from running. Two regressions prove later success/unavailable commands cannot erase failure. All 14 local Python guard tests and static security passed.
+
+Exact next action: inspect the new exact-source compile/JVM/strict-lint result; fix any failure, then inspect the full API35 suite results, fast-input test, 3-size/2-theme images, >=12-line native measurement and actual performance reports. No complete workstream/37-decision/UI acceptance or stable release is claimed. Do not rerun an identical failing workflow or weaken assertions. Publication still requires same-SHA device success, production certificate continuity, real upgrade, and accepted prepublication criteria; W09 is recorded after publication only.
+
+
+
 ## November 25, 2026 — 07:24:55 AM PHT — Strict build and first device correction verified
 
 W1/W2/W6/W7/W8: strict build passed at 35f356c; API35 verified stdin/Send with IME, then exposed partial-tab close clipping; fixing tab sizing, Git transport trust and adding actual 3-size/2-theme viewport evidence. 0/9 verified complete, 9 remaining; next cumulative build and API35 rerun.

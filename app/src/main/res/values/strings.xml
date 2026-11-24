@@ -32,4 +32,8 @@
     <string name="console_program_input">Program input</string>
     <string name="console_send">Send</string>
     <string name="git_unsafe_configuration">Review the repository origin, push destination and TLS settings before syncing.</string>
+    <string name="tip_expand">Show %1$s details</string>
+    <string name="tip_collapse">Hide %1$s details</string>
+    <string name="tip_dismiss">Dismiss %1$s tip</string>
+    <string name="tip_open_guide">Open guide</string>
 </resources>

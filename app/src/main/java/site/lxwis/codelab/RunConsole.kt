@@ -26,6 +26,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -160,6 +161,9 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     val consoleAccent = contrastAccent(palette.primary, consoleBackground)
     Surface(modifier, color = consoleBackground, contentColor = consoleInk) {
         Column(Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
+            // Reserve stdin before laying out optional console chrome and output.
+            // A short split pane must still let a waiting program receive input.
+            Column(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Console", modifier = if (onToggleMaximize != null)
@@ -297,6 +301,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                 }
                 Text(formatted, fontFamily = FontFamily.Monospace, fontSize = consoleFontSize.sp,
                     lineHeight = (consoleFontSize + 5).sp)
+            }
             }
             if (session.waiting) Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(value = input, onValueChange = { input = it.take(4096) }, singleLine = true,
