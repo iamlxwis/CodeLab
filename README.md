@@ -29,11 +29,11 @@ Write, run, and manage projects from your phone.
 | Update | CodeLab — Reimagined |
 | Status | **IN PROGRESS** — owner authorized implementation |
 | Workstreams accepted | **0/10** — verification pending |
-| Current workstream | Branding, typography, navigation and quality checks |
+| Current workstream | Workspace personalization, settings and rendering |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Last activity | 24 Nov 2026, 18:36 PHT |
+| Last activity | 24 Nov 2026, 18:38 PHT |
 
-**Current activity:** 24 Nov 2026, 18:36 PHT — Monogram, font assets, syntax colors, HSL/HEX controls, home navigation and tutorial copy implemented in source; continuing workspace and QA.
+**Current activity:** 24 Nov 2026, 18:38 PHT — Added saved/per-project layouts, toolbar ordering, grid view, grouped settings, adaptive backdrop rendering and tutorial transitions in source; CI and device validation pending.
 
 > One current activity sentence. [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

@@ -32,6 +32,8 @@ import android.view.View
 import android.view.WindowInsets as PlatformWindowInsets
 import android.os.Build
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -201,8 +203,14 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             if (!focusMode) Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { dialog = "files" }) {
-                    Icon(Icons.Default.FolderOpen, "Browse files")
+                val threshold = with(LocalDensity.current) { 32.dp.toPx() }
+                var explorerDrag by remember { mutableFloatStateOf(0f) }
+                IconButton(onClick = { dialog = "files" }, modifier = Modifier.pointerInput(threshold) {
+                    detectHorizontalDragGestures(onDragStart = { explorerDrag = 0f },
+                        onDragEnd = { if (explorerDrag >= threshold) dialog = "files" },
+                        onHorizontalDrag = { change, dx -> change.consume(); explorerDrag += dx })
+                }) {
+                    Icon(Icons.Default.FolderOpen, "Browse files or swipe right")
                 }
                 if (m.files.isNotEmpty() && LocalConfiguration.current.screenWidthDp >= 820) {
                     IconButton(onClick = { explorerPinned = !explorerPinned },
@@ -397,6 +405,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             focusMode = focusMode,
             quickActions = if (p != null) m.quickEditorActions else m.quickHomeActions,
             onToggleQuick = { m.toggleQuickAction(it, p != null) },
+            onMoveQuick = { id, offset -> m.moveQuickAction(id, offset, p != null) },
             onAction = ::openAction,
             onDismiss = { dialog = "" })
         "languages" -> LanguageManagerSheet(m, initialLanguage = requestedLanguage) {
@@ -554,11 +563,14 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = m.showEditorStatus, onCheckedChange = m::chooseEditorStatus)
-                        Text("Show editor status label")
+                        Text("Show editor status bar")
                     }
+                    TextButton(onClick = { dialog = "layoutpresets" }) { Text("Save or restore layouts") }
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
         "appearance" -> AppearanceGallery(m) { dialog = "" }
+        "settings" -> ReimaginedSettings(m, onAction = ::openAction, close = { dialog = "" })
+        "layoutpresets" -> WorkspaceLayoutPresets(m) { dialog = "" }
     }
     if (showTutorial) FirstRunTutorial(
         onFinish = {
@@ -647,7 +659,7 @@ private fun HomeNavigation(onAction: (String) -> Unit) {
             listOf(Triple("projects", "Projects", Icons.Default.Folder),
                 Triple("languages", "Languages", Icons.Default.Code),
                 Triple("actions", "Tools", Icons.Default.Build),
-                Triple("appearance", "Settings", Icons.Default.Settings)).forEach { (id, label, icon) ->
+                Triple("settings", "Settings", Icons.Default.Settings)).forEach { (id, label, icon) ->
                 Column(Modifier.weight(1f).heightIn(min = 54.dp).background(
                     if (id == "projects") MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
                     RoundedCornerShape(24.dp)).clickable { if (id != "projects") onAction(id) }.padding(6.dp),

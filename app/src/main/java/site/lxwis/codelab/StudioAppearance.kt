@@ -7,12 +7,14 @@ internal data class StudioAppearance(
     val background: String = "", val surface: String = "", val foreground: String = "",
     val corners: Int = 20, val opacity: Int = 76, val border: Int = 1, val shadow: Int = 0,
     val uiFont: String = "Inter", val editorFont: String = "JetBrains Mono",
-    val comments: String = "", val strings: String = "", val numbers: String = "", val keywords: String = ""
+    val comments: String = "", val strings: String = "", val numbers: String = "", val keywords: String = "",
+    val glassQuality: String = "Auto", val blur: Int = 12
 ) {
     fun encode(): String = JSONObject().put("background", background).put("surface", surface)
         .put("foreground", foreground).put("corners", corners).put("opacity", opacity)
         .put("border", border).put("shadow", shadow).put("uiFont", uiFont).put("editorFont", editorFont)
-        .put("comments", comments).put("strings", strings).put("numbers", numbers).put("keywords", keywords).toString()
+        .put("comments", comments).put("strings", strings).put("numbers", numbers).put("keywords", keywords)
+        .put("glassQuality", glassQuality).put("blur", blur).toString()
 
     companion object {
         fun decode(raw: String?): StudioAppearance = try {
@@ -25,7 +27,9 @@ internal data class StudioAppearance(
                 j.optInt("shadow", 0).coerceIn(0, 12),
                 j.optString("uiFont").takeIf { it in listOf("Inter", "System", "Serif", "Custom") } ?: "Inter",
                 j.optString("editorFont").takeIf { it in listOf("JetBrains Mono", "System Mono", "Custom") } ?: "JetBrains Mono",
-                hex("comments"), hex("strings"), hex("numbers"), hex("keywords"))
+                hex("comments"), hex("strings"), hex("numbers"), hex("keywords"),
+                j.optString("glassQuality").takeIf { it in listOf("Auto", "Lightweight", "High") } ?: "Auto",
+                j.optInt("blur", 12).coerceIn(0,24))
         } catch (_: Exception) { StudioAppearance() }
     }
 }

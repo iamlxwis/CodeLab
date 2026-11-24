@@ -1,6 +1,11 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -108,11 +113,16 @@ internal fun FirstRunTutorial(
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(18.dp).size(30.dp))
                 }
-                Text(current.title, modifier = Modifier.semantics { heading() },
-                    style = MaterialTheme.typography.headlineSmall)
-                Text(current.subtitle, style = MaterialTheme.typography.titleMedium)
-                Text(current.instruction, style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                val duration = rememberCodeLabMotion("System", 100).millis(220)
+                AnimatedContent(targetState = current, transitionSpec = {
+                    fadeIn(tween(duration)) togetherWith fadeOut(tween(duration))
+                }, label = "guide-page") { step ->
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(step.title, modifier = Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineSmall)
+                        Text(step.subtitle, style = MaterialTheme.typography.titleMedium)
+                        Text(step.instruction, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
                 val canTry = current.action != null && (projectOpen ||
                     current.action in setOf("newproject", "importzip", "languages", "appearance", "actions"))
                 if (canTry) {

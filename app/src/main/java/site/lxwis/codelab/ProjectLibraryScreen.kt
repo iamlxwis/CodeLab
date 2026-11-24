@@ -16,6 +16,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.fadeIn
@@ -84,8 +87,16 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
         else IconButton(onClick = { UiLatencyProbe.nextFrame(context, "Home"); m.home() }) {
             Icon(Icons.Default.ArrowBack, "Project library")
         }
+        val swipeThreshold = with(LocalDensity.current) { 44.dp.toPx() }
+        var titleDrag by remember(project) { mutableFloatStateOf(0f) }
         Column(Modifier.weight(1f).padding(start = 4.dp)
-            .clickable(enabled = project != null) { onAction("switchproject") }) {
+            .pointerInput(project, swipeThreshold) {
+                if (project != null) detectHorizontalDragGestures(
+                    onDragStart = { titleDrag = 0f },
+                    onDragEnd = { if (kotlin.math.abs(titleDrag) >= swipeThreshold)
+                        m.moveActiveTab(if (titleDrag > 0) -1 else 1) },
+                    onHorizontalDrag = { change, dx -> change.consume(); titleDrag += dx })
+            }.clickable(enabled = project != null) { onAction("switchproject") }) {
             AnimatedContent(
                 targetState = project ?: "CodeLab",
                 transitionSpec = { fadeIn(tween(duration)) togetherWith fadeOut(tween(duration)) },
@@ -218,8 +229,14 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 verticalAlignment = Alignment.CenterVertically) {
                 Text("ON THIS DEVICE", fontSize = 11.sp, letterSpacing = 1.6.sp,
                     fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("$visibleCount projects", style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("$visibleCount projects", style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    IconButton(onClick = { m.chooseProjectGrid(!m.projectGrid) }) {
+                        Icon(if (m.projectGrid) Icons.Default.ViewList else Icons.Default.GridView,
+                            if (m.projectGrid) "List view" else "Grid view")
+                    }
+                }
             }
         }
         if (m.projects.isEmpty()) item {
@@ -249,31 +266,40 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 }
             }
         }
-        items(visibleProjects, key = { it }) { name ->
+        items(visibleProjects.chunked(if (m.projectGrid) 2 else 1), key = { it.first() }) { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            row.forEach { name ->
             val pressInteraction = remember(name) { MutableInteractionSource() }
             val isPressed by pressInteraction.collectIsPressedAsState()
             val pressScale by animateFloatAsState(
                 if (isPressed) .97f else 1f,
                 animationSpec = tween(motionMillis, easing = FastOutSlowInEasing),
                 label = "project-press")
+            val threshold = with(LocalDensity.current) { 56.dp.toPx() }
+            var drag by remember(name) { mutableFloatStateOf(0f) }
             ClayActionCard(
                 onClick = { UiLatencyProbe.nextFrame(context, "Open project"); m.openProject(name) },
                 interactionSource = pressInteraction,
-                modifier = Modifier.graphicsLayer { scaleX = pressScale; scaleY = pressScale }
+                modifier = Modifier.weight(1f).graphicsLayer { scaleX = pressScale; scaleY = pressScale }
+                    .pointerInput(name, threshold) {
+                        detectHorizontalDragGestures(onDragStart = { drag = 0f },
+                            onDragEnd = { if (kotlin.math.abs(drag) > threshold) options = name },
+                            onHorizontalDrag = { change, dx -> change.consume(); drag += dx })
+                    }
             ) {
-                Row(Modifier.fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Surface(shape = CodeLabCorners.iconTile,
+                Row(Modifier.fillMaxWidth().padding(if (m.projectGrid) 4.dp else 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (!m.projectGrid) Surface(shape = CodeLabCorners.iconTile,
                         tonalElevation = CodeLabElevation.icon,
                         color = MaterialTheme.colorScheme.primaryContainer) {
                         Icon(Icons.Default.Folder, null, Modifier.padding(10.dp).size(22.dp),
                             tint = MaterialTheme.colorScheme.primary)
                     }
-                    if (name in m.favorites) {
+                    if (!m.projectGrid && name in m.favorites) {
                         Icon(Icons.Default.Star, "Favorite project",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(start = 10.dp).size(18.dp))
                     }
-                    Column(Modifier.weight(1f).padding(start = 14.dp),
+                    Column(Modifier.weight(1f).padding(start = if (m.projectGrid) 6.dp else 14.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.titleMedium)
@@ -302,6 +328,9 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                         }
                     }
                 }
+            }
+            }
+            if (m.projectGrid && row.size == 1) Spacer(Modifier.weight(1f))
             }
         }
     }

@@ -47,15 +47,17 @@ internal fun CodeLabTheme(
     studio: StudioAppearance = StudioAppearance(),
     content: @Composable (Boolean) -> Unit
 ) {
-    val dark = when (CodeLabVisualStyles.canonical(visualStyle)) {
-        "Obsidian" -> true
-        "Porcelain", "Sandstone" -> false
-        else -> appearance == "Dark" || (appearance == "System" && isSystemInDarkTheme())
+    val systemDark = isSystemInDarkTheme()
+    val dark = when (appearance) {
+        "System" -> systemDark
+        "Light" -> false
+        else -> true
     }
+    val effectiveStyle = CodeLabVisualStyles.effective(visualStyle, dark)
     // Do not allocate a new ColorScheme on unrelated editor recompositions.
     val scheme = remember(themePreset, visualStyle, accentPreset, highContrast, dark, studio) {
             val palette = if (dark) night else day
-            val presetBase = when (CodeLabVisualStyles.canonical(visualStyle)) {
+            val presetBase = when (effectiveStyle) {
                 "Obsidian" -> night.copy(
                     background = Color.Black, surface = Color.Black,
                     surfaceContainer = Color(0xff090909),
@@ -198,7 +200,7 @@ internal fun CodeLabTheme(
             large = RoundedCornerShape(studio.corners.dp),
             extraLarge = RoundedCornerShape((studio.corners + 8).dp))
     }
-    CompositionLocalProvider(LocalCodeLabVisualStyle provides CodeLabVisualStyles.canonical(visualStyle),
+    CompositionLocalProvider(LocalCodeLabVisualStyle provides effectiveStyle,
         LocalStudioAppearance provides studio) {
         MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes) {
             content(dark)

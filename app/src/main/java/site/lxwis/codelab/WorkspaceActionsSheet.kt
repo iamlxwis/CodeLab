@@ -47,6 +47,7 @@ internal fun WorkspaceActionsSheet(
     focusMode: Boolean,
     quickActions: List<String>,
     onToggleQuick: (String) -> Unit,
+    onMoveQuick: (String, Int) -> Unit = { _, _ -> },
     onAction: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -120,7 +121,7 @@ internal fun WorkspaceActionsSheet(
     ModalBottomSheet(onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(.88f).padding(horizontal = 20.dp),
+        Column(Modifier.fillMaxWidth().fillMaxHeight(.72f).padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 if (section != null && query.isBlank()) IconButton(onClick = { section = null }) {
@@ -143,28 +144,10 @@ internal fun WorkspaceActionsSheet(
             if (section == null && query.isBlank()) {
                 Text("QUICK ACTIONS", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                quickActions.mapNotNull { id -> all.firstOrNull { it.id == id } }
-                    .chunked(2).forEach { pair ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        pair.forEach { item ->
-                            Surface(onClick = { act(item.id) }, modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(14.dp),
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-                                Column(Modifier.fillMaxWidth().padding(14.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Icon(item.icon, null, tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp))
-                                    Text(item.name, style = MaterialTheme.typography.labelLarge,
-                                        maxLines = 2)
-                                }
-                            }
-                        }
-                        if (pair.size == 1) Spacer(Modifier.weight(1f))
-                    }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Pin and reorder actions", Modifier.weight(1f), style = MaterialTheme.typography.bodySmall)
+                    TextButton(onClick = { section = "Settings" }) { Text("Settings") }
                 }
-                Text("Star actions below to customize your quick actions.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text("BROWSE", style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -172,6 +155,19 @@ internal fun WorkspaceActionsSheet(
                 LazyColumn(Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(9.dp),
                     contentPadding = PaddingValues(bottom = 20.dp)) {
+                    items(quickActions.mapNotNull { id -> all.firstOrNull { it.id == id } }, key = { it.id }) { item ->
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(item.icon, null, Modifier.size(20.dp))
+                            Text(item.name, Modifier.weight(1f).clickable { act(item.id) }.padding(8.dp),
+                                style = MaterialTheme.typography.labelLarge)
+                            IconButton(onClick = { onMoveQuick(item.id, -1) }, enabled = quickActions.firstOrNull() != item.id) {
+                                Icon(Icons.Default.ArrowUpward, "Move ${item.name} earlier")
+                            }
+                            IconButton(onClick = { onMoveQuick(item.id, 1) }, enabled = quickActions.lastOrNull() != item.id) {
+                                Icon(Icons.Default.ArrowDownward, "Move ${item.name} later")
+                            }
+                        }
+                    }
                     items(sections) { group ->
                         Surface(onClick = { section = group.title },
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,

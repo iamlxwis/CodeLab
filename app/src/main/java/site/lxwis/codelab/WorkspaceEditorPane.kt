@@ -39,6 +39,7 @@ internal fun WorkspaceEditorPane(
                 onNextTab = { m.moveActiveTab(1) },
                 onOpenCommands = onCommands,
                 onSelectionChange = onSelection,
+                showStatusBar = m.showEditorStatus,
                 modifier = Modifier.fillMaxSize()
             )
         } else Column(Modifier.align(Alignment.Center),

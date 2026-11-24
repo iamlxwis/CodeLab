@@ -1,6 +1,12 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.remember
+import android.app.ActivityManager
+import android.content.Context
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -19,8 +25,13 @@ import androidx.compose.ui.unit.dp
 @Composable
 internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable () -> Unit) {
     val scheme = MaterialTheme.colorScheme
-    val preset = CodeLabVisualStyles.canonical(style)
-    val customBackground = LocalStudioAppearance.current.background.isNotEmpty()
+    val preset = CodeLabVisualStyles.effective(style, dark)
+    val studio = LocalStudioAppearance.current
+    val context = LocalContext.current
+    val lowRam = remember(context) { (context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)?.isLowRamDevice == true }
+    val blurSupported = Build.VERSION.SDK_INT >= 31 && studio.glassQuality != "Lightweight" &&
+        (studio.glassQuality == "High" || !lowRam)
+    val customBackground = studio.background.isNotEmpty()
     val background = if (customBackground) Brush.verticalGradient(listOf(scheme.background, scheme.background)) else when (preset) {
         "Crystal" -> if (dark)
             Brush.verticalGradient(listOf(Color(0xff101214), Color(0xff252a2e), Color(0xff14171a)))
@@ -34,7 +45,9 @@ internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable 
     }
     Box(Modifier.fillMaxSize().background(background)) {
         if (!customBackground && (preset == "Crystal" || preset == "Clay" || preset == "Sandstone")) {
-            Canvas(Modifier.fillMaxSize()) {
+            // Blur only the decorative backdrop; never blur editable text or interactive controls.
+            Canvas(Modifier.fillMaxSize().then(if (preset == "Crystal" && blurSupported && studio.blur > 0)
+                Modifier.blur(studio.blur.dp) else Modifier)) {
                 val radius = maxOf(size.width, size.height * .58f)
                 if (preset == "Crystal") {
                     val firstGlow = if (dark) Color.White.copy(alpha = .12f)

@@ -55,6 +55,14 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
                 m.updateStudioAppearance(m.studioAppearance.copy(foreground = it))
             }
             StudioSlider("Corner radius", s.corners, 4f..32f) { m.updateStudioAppearance(m.studioAppearance.copy(corners = it)) }
+            Text("Glass quality")
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                listOf("Auto", "Lightweight", "High").forEach { quality ->
+                    FilterChip(s.glassQuality == quality, { m.updateStudioAppearance(m.studioAppearance.copy(glassQuality = quality)) },
+                        label = { Text(quality) })
+                }
+            }
+            StudioSlider("Backdrop blur", s.blur, 0f..24f) { m.updateStudioAppearance(m.studioAppearance.copy(blur = it)) }
             StudioSlider("Glass opacity", s.opacity, 35f..100f) { m.updateStudioAppearance(m.studioAppearance.copy(opacity = it)) }
             StudioSlider("Glass border", s.border, 0f..3f) { m.updateStudioAppearance(m.studioAppearance.copy(border = it)) }
             StudioSlider("Panel shadow", s.shadow, 0f..12f) { m.updateStudioAppearance(m.studioAppearance.copy(shadow = it)) }

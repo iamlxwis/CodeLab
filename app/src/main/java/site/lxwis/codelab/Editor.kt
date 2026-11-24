@@ -43,6 +43,7 @@ fun CodeEditor(
     onPreviousTab: () -> Unit = {},
     onNextTab: () -> Unit = {},
     onOpenCommands: () -> Unit = {},
+    showStatusBar: Boolean = true,
     onSelectionChange: (String, Int) -> Unit = { _, _ -> }
 ) = key(fileKey) {
     val context = LocalContext.current
@@ -948,7 +949,7 @@ fun CodeEditor(
                 }
             }
         }
-        if (!compactEditor) EditorStatusBar(
+        if (!compactEditor && showStatusBar) EditorStatusBar(
             fileKey = fileKey, filename = filename, text = text, status = cursorStatus,
             readOnly = readOnly, wordWrap = wordWrap,
             onPreviousTab = onPreviousTab, onNextTab = onNextTab

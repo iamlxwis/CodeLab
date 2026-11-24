@@ -39,6 +39,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         if (projectOpen) {
             quickEditorActions = updatedQuickActionIds(quickEditorActions, id)
             preferences.edit().putString("quick-editor", quickEditorActions.joinToString(",")).apply()
+            rememberProjectLayout()
         } else {
             quickHomeActions = updatedQuickActionIds(quickHomeActions, id)
             preferences.edit().putString("quick-home", quickHomeActions.joinToString(",")).apply()
@@ -53,12 +54,59 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         ids.add(to, ids.removeAt(from))
         if (projectOpen) quickEditorActions = ids else quickHomeActions = ids
         preferences.edit().putString(if (projectOpen) "quick-editor" else "quick-home", ids.joinToString(",")).apply()
+        if (projectOpen) rememberProjectLayout()
     }
     var showEditorStatus by mutableStateOf(preferences.getBoolean("show-editor-status", true))
         private set
     fun chooseEditorStatus(value: Boolean) {
         showEditorStatus = value
         preferences.edit().putBoolean("show-editor-status", value).apply()
+        rememberProjectLayout()
+    }
+    var projectGrid by mutableStateOf(preferences.getBoolean("project-grid", false))
+        private set
+    fun chooseProjectGrid(value: Boolean) {
+        projectGrid = value
+        preferences.edit().putBoolean("project-grid", value).apply()
+    }
+    internal var savedWorkspaceLayouts by mutableStateOf(WorkspaceLayout.decode(preferences.getString("workspace-layouts", null)))
+        private set
+    private fun currentLayout(name: String) = WorkspaceLayout(name, phoneSplitEnabled, phoneSplitPercent,
+        panelSplitPercent, showEditorStatus, interfaceDensity, quickEditorActions)
+    private fun rememberProjectLayout() {
+        val name = project ?: return
+        preferences.edit().putString("project-layout:$name", currentLayout(name).json().toString()).apply()
+    }
+    private fun applyWorkspaceLayout(value: WorkspaceLayout) {
+        phoneSplitEnabled = value.phoneSplit
+        phoneSplitPercent = value.phonePercent
+        panelSplitPercent = value.tabletPercent
+        showEditorStatus = value.status
+        interfaceDensity = value.density
+        quickEditorActions = value.actions
+        preferences.edit().putBoolean("phone-split", value.phoneSplit)
+            .putInt("phone-split-percent", value.phonePercent).putInt("panel-split", value.tabletPercent)
+            .putBoolean("show-editor-status", value.status).putString("density", value.density)
+            .putString("quick-editor", value.actions.joinToString(",")).apply()
+    }
+    private fun loadProjectLayout(name: String) {
+        val raw = preferences.getString("project-layout:$name", null) ?: return
+        runCatching { WorkspaceLayout.from(org.json.JSONObject(raw)) }.getOrNull()?.let(::applyWorkspaceLayout)
+    }
+    internal fun saveNamedLayout(name: String): Boolean {
+        val clean = name.trim()
+        if (clean.isBlank() || clean.length > 64) return false
+        if (savedWorkspaceLayouts.size >= 64 && savedWorkspaceLayouts.none { it.name == clean }) return false
+        savedWorkspaceLayouts = savedWorkspaceLayouts.filterNot { it.name == clean } + currentLayout(clean)
+        preferences.edit().putString("workspace-layouts", WorkspaceLayout.encode(savedWorkspaceLayouts)).apply()
+        return true
+    }
+    internal fun restoreNamedLayout(name: String) {
+        savedWorkspaceLayouts.firstOrNull { it.name == name }?.let { applyWorkspaceLayout(it); rememberProjectLayout() }
+    }
+    internal fun deleteNamedLayout(name: String) {
+        savedWorkspaceLayouts = savedWorkspaceLayouts.filterNot { it.name == name }
+        preferences.edit().putString("workspace-layouts", WorkspaceLayout.encode(savedWorkspaceLayouts)).apply()
     }
     private val io = Executors.newSingleThreadExecutor()
     private val cloudIo = Executors.newSingleThreadExecutor()
@@ -265,6 +313,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun choosePhoneSplitEnabled(enabled: Boolean) {
         phoneSplitEnabled = enabled
         preferences.edit().putBoolean("phone-split", enabled).apply()
+        rememberProjectLayout()
     }
     var phoneSplitPercent by mutableIntStateOf(
         clampPhoneSplit(preferences.getInt("phone-split-percent", 60)))
@@ -272,6 +321,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun choosePhoneSplitPercent(percent: Int) {
         phoneSplitPercent = clampPhoneSplit(percent)
         preferences.edit().putInt("phone-split-percent", phoneSplitPercent).apply()
+        rememberProjectLayout()
     }
 
     var panelSplitPercent by mutableIntStateOf(preferences.getInt("panel-split", 60))
@@ -279,6 +329,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun setPanelSplit(value: Int) {
         panelSplitPercent = value.coerceIn(35, 80)
         preferences.edit().putInt("panel-split", panelSplitPercent).apply()
+        rememberProjectLayout()
     }
     var motionIntensity by mutableIntStateOf(preferences.getInt("motion-intensity", 100))
         private set
@@ -316,6 +367,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         if (value !in listOf("Compact", "Comfortable", "Spacious")) return
         interfaceDensity = value
         preferences.edit().putString("density", value).apply()
+        rememberProjectLayout()
     }
     var accent by mutableStateOf(
         preferences.getString("accent:" + visualStyle,
@@ -773,6 +825,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
 
     private fun apply(open: Open) {
         if (project != open.project) {
+            loadProjectLayout(open.project)
             shellSession = null
             shellProject = null
             clearWorkspaceTerminal()
@@ -888,11 +941,13 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     fun flush() = saveAsync(durable = true)
 
     fun openProject(name: String, create: Boolean = false, template: String = "JavaScript", starter: String = StarterExamples.BEGINNER) {
+        rememberProjectLayout()
         flush()
         val nav = ++navigationVersion
         pinnedTabs = preferences.getStringSet("pinned:$name", emptySet())?.toSet()
             ?: emptySet()
         project = name
+        loadProjectLayout(name)
         files = emptyList()
         tabs = emptyList()
         active = null
@@ -977,6 +1032,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun home() {
+        rememberProjectLayout()
         flush()
         val nav = ++navigationVersion
         runner.stop()
