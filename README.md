@@ -22,21 +22,24 @@ Write, run, and manage projects from your phone.
 </p>
 <p align="center"><sub>Actual Android emulator screenshots from CodeLab's automated device tests.</sub></p>
 
-## Development tracker
+## CodeLab Development Tracker
 
-**Phase 2 · Easy/medium editor batch:** **6/6 source checkpoints verified · 0 remaining source tasks**. **Phone acceptance: pending (owner).**
+| Field | Latest committed checkpoint |
+| --- | --- |
+| Phase | Phase 3 — Project Management & Developer Workflow |
+| Status | **STARTED** (source audit pending) |
+| Workstreams completed | **0/7 verified** |
+| Workstreams remaining | **7** |
+| Current workstream | **1 — Project Management** |
+| Last verified commit | [`22d7dd5e77b4`](https://github.com/iamlxwis/CodeLab/commit/22d7dd5e77b479b63c1f873130aaae5925c78093) (baseline before startup) |
+| CI status | **Pending** for Phase 3; last known successful Phase 2 APK CI [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) |
+| Last activity | Nov 24, 2026 · 5:16 PM PHT |
 
-**Current activity · Nov 24, 2026 · 2:15 PM PHT:** Verified the six scoped easy/medium editor improvements in [Android CI 45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) and handed the APK to the owner for testing.
+**Current activity:** Nov 24, 2026 · 5:16 PM PHT — Phase 3 development started; auditing the repository and preparing seven workstreams.
 
-**Status:** CI PASSED / HANDED OFF · [Latest APK workflow](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) · [APK artifacts](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953#artifacts).
+> This README displays **one** current activity only. Historical events: [progress log](docs/development/PROGRESS_LOG.md). Resumption context: [project memory](docs/development/PROJECT_MEMORY.md). This checkpoint begins Phase 3; it does not claim completed features, Phase 3 CI success or phone acceptance. Git history contains the SHA of this startup commit; the next checkpoint records it.
 
-> One **committed checkpoint**, not a live running agent. Each meaningful implementation commit replaces the single activity sentence and uses actual Asia/Manila date/time; the [progress log](docs/development/PROGRESS_LOG.md) retains history. Completed source checks do **not** mean owner device acceptance or complete semantic language analysis.
-
-**Implemented:** Lexical member-context autocomplete, nearby same-file references/symbol navigation, preview-protected lexical rename, Python folding and cursor-first structural diagnostics, recent-first open-file switcher, JVM regressions/build/docs. No LSP, multi-cursor, new languages or device smoke.
-
-**Next:** Owner installs and tests the new workflow APK; reported defects become focused follow-up tasks. Hard Phase 2 tasks remain deferred.
-
-[Development audit](docs/development/PROGRESS_LOG.md) · [Project memory](docs/development/PROJECT_MEMORY.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md)
+[Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Roadmap](docs/ROADMAP.md) · [GitHub Actions](https://github.com/iamlxwis/CodeLab/actions)
 
 ## Features
 

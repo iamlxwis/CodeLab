@@ -1,3 +1,20 @@
+# Phase 3 active checkpoint — Nov 24, 2026 · 5:16 PM PHT
+
+- **Phase:** Phase 3 — Project Management & Developer Workflow.
+- **Status:** STARTED; 0/7 Phase 3 workstreams verified, 7 remaining.
+- **Last verified repository SHA before startup:** `22d7dd5e77b479b63c1f873130aaae5925c78093`; startup commit recorded in Git history, to be cited at next checkpoint.
+- **Latest known successful Android APK CI:** [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953), for earlier Phase 2 source; **no Phase 3 result yet**.
+- **Completed Phase 3 workstreams:** none verified at startup; re-evaluate actual implementation instead of duplicating pre-existing functionality.
+- **Unfinished workstreams:** WS1 Project Management; WS2 Git Integration; WS3 GitHub Synchronization; WS4 Files/Imports/Exports/Backups; WS5 Developer Productivity; WS6 Performance; WS7 Reliability/Security.
+- **Current task:** inspect main source and CI; determine whether the previously prepared but unpushed Phase 3 batch is present; begin with first unfinished WS1 task.
+- **Files modified at this checkpoint:** README.md, docs/development/PROGRESS_LOG.md, docs/development/PROJECT_MEMORY.md (documentation only).
+- **Architecture and constraints:** Android Kotlin/Compose, local projects and encrypted token storage; preserve six offline companion packs and bundled engines; retain CI Option B source-only checks, cancel-in-progress, three artifacts, manual-only API35 device smoke. No LSP, multi-cursor, semantic rename, new runtimes, automatic emulator test or destructive Git operations. Owner accepts on physical device.
+- **Known issues:** Phase 3 code state not yet audited; no fresh CI; the earlier Phase 3 prepared batch push was not confirmed; no development activity can be claimed until committed.
+- **Next exact action:** list main tree and recent commits/workflows, inspect WS1 Kotlin and tests, implement first missing safe WS1 feature, commit alongside one-line README tracker/log/memory; verify remote SHA and source CI.
+- **Continuation:** work directly on `iamlxwis/CodeLab` branch `main`; fetch latest commit and re-read README, PROGRESS_LOG and this checkpoint; never repeat verified changes; update README's single activity line, append historical log and rewrite active memory in the same coherent commit; after each workstream continue through WS7 until verified or explicitly PAUSED/BLOCKED.
+
+---
+
 ## Nov 24, 2026, 2:15 PM PHT — Verified Phase 2 handoff
 
 Commit 399a1380e846929198051638e24b1ad07e18c2b9 succeeded in Android APK workflow 45338205953 (all build/JVM/lint/APK steps completed). Scoped easy/medium Phase 2 batch source checks now 6/6 verified, zero remaining in this batch; owner handles actual physical-device verification. Existing source remains lexical/text-level; no LSP, multi-cursor, semantic project-wide rename or runtime/catalog additions. README contains exactly one latest activity sentence, with full chronology in PROGRESS_LOG; a previous progress row stamped 2:12 PM was premature, so rely on Git commit timestamps. Assistant HANDED OFF. Next: owner tests installable workflow APK and reports defects; create a new scoped batch only on request.
