@@ -24,15 +24,15 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Phase 2 · Easy/medium editor batch:** **0/6 verified · 6 remaining** (new scoped batch; source changes for 4 areas committed, CI pending).
+**Phase 2 · Easy/medium editor batch:** **0/6 verified · 6 remaining** (source improvements implemented; current commit's CI pending).
 
-**Current activity · Nov 24, 2026 · 2:12 PM PHT:** Committed lexical reference ordering, safe rename line previews, recent-first tab switching and regression tests; awaiting source checks.
+**Current activity · Nov 24, 2026 · 2:08 PM PHT:** Refined member-context autocomplete and Python fold detection while retaining nearby references, rename previews and recent-file switching; awaiting CI.
 
-**Status:** COMMITTED / CI PENDING · [Current Android build](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml) · [Prior passing build](https://github.com/iamlxwis/CodeLab/actions/runs/45336987696).
+**Status:** COMMITTED / CI PENDING · [Android build](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml) · [Prior passing build](https://github.com/iamlxwis/CodeLab/actions/runs/45336987696).
 
-> This line is the latest **committed checkpoint**, not continuous background work. Every substantive commit **replaces this single activity sentence** with an Asia/Manila timestamp. Prior entries live in the [progress audit](docs/development/PROGRESS_LOG.md). A committed feature is not counted as verified until its checks pass. Physical-device testing is performed by the owner.
+> This is one **committed checkpoint**, not a live agent heartbeat. Every substantive commit **replaces this activity sentence** with its actual Philippine timestamp. Historical entries go to the [progress audit](docs/development/PROGRESS_LOG.md). Source changes count as verified only when the relevant checks pass. All phone testing belongs to the owner.
 
-**Next:** Inspect source CI; finish contextual autocomplete and folding/diagnostics, then synchronize evidence and close the batch. No LSP, multi-cursor, runtime expansion or device smoke.
+**Next:** Check exact-commit Gradle build/JVM tests; resolve failures, synchronize verification evidence and hand off APK for user testing. No LSP, multi-cursor, new runtimes or device smoke.
 
 [Development audit](docs/development/PROGRESS_LOG.md) · [Project memory](docs/development/PROJECT_MEMORY.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md)
 

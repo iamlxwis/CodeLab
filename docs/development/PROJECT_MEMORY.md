@@ -1,3 +1,7 @@
+## Nov 24, 2026, 2:08 PM PHT — Phase 2 latest source checkpoint
+
+Improved lexical autocomplete to favor member tokens seen after a dot, without semantic type assumptions; repaired Python indentation-fold recognition for colons with trailing comments and masked multiline strings. Refs nearby-first, snapshot-based rename line preview, and recent-first quick tab switcher committed immediately prior. README one-line timestamp refreshed to current PHT. Source test/Gradle CI awaits confirmation; owner handles phone testing; no emulator dispatch.
+
 ## Nov 24, 2026, 2:12 PM PHT — Phase 2 source checkpoint
 
 Current scope remains six easy/medium tasks. Committed nearest-first lexical references, safe snapshot-based rename line previews, quick-switch open files ordered by recent visits. New CodeAnalysis JUnit regression; exact-source CI pending. README holds exactly one timestamped current activity line and count, replaced in each substantive commit. No LSP, multi-cursor, runtime expansion, device smoke. Owner performs physical testing.

@@ -41,6 +41,8 @@ internal object CodeFolds {
         val regions = mutableListOf<Region>()
         var previousCodeLine = 0
         val lines = source.split('\n')
+        val codeMask = CodeAnalysis.visibleCode(source, "py")
+        var offset = 0
         fun indentOf(line: String): Int {
             var width = 0
             for (ch in line) {
@@ -52,14 +54,19 @@ internal object CodeFolds {
         }
         lines.forEachIndexed { index, raw ->
             val line = index + 1
-            val trimmed = raw.trim()
-            if (trimmed.isBlank() || trimmed.startsWith("#")) return@forEachIndexed
+            // Ignore indentation and colons inside triple-quoted strings/comments.
+            val lastCode = raw.indices.lastOrNull { at ->
+                at + offset < codeMask.size && codeMask[at + offset] &&
+                    !raw[at].isWhitespace()
+            }
+            offset += raw.length + 1
+            if (lastCode == null) return@forEachIndexed
             val indent = indentOf(raw)
             while (stack.isNotEmpty() && indent <= stack.last().indent) {
                 val open = stack.removeLast()
                 if (previousCodeLine - open.line >= 2) regions.add(Region(open.line, previousCodeLine))
             }
-            if (trimmed.endsWith(":") && !trimmed.startsWith("#")) {
+            if (raw[lastCode] == ':') {
                 stack.addLast(Open(line, indent))
             }
             previousCodeLine = line

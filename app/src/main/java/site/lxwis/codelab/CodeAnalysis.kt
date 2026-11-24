@@ -207,7 +207,10 @@ internal object CodeAnalysis {
         val windowStart = (position - 120_000).coerceAtLeast(0)
         val windowEnd = (position + 40_000).coerceAtMost(source.length)
         val visible = visibleCode(source.substring(windowStart, windowEnd), language)
-        val candidates = LinkedHashMap<String, Pair<Int, Int>>()
+        val candidates = LinkedHashMap<String, Triple<Int, Int, Boolean>>()
+        // When completing obj.met, prioritize properties/methods seen after a dot.
+        // This remains lexical: it does not infer object types or promise semantic accuracy.
+        val memberContext = start > 0 && source[start - 1] == '.'
         val pattern = Regex("""[A-Za-z_][A-Za-z_0-9]{2,}""")
         for (match in pattern.findAll(source, windowStart)) {
             if (match.range.first >= windowEnd) break
@@ -217,11 +220,16 @@ internal object CodeAnalysis {
             val distance = kotlin.math.abs(match.range.first - position)
             val current = candidates[word]
             // Sort by closest occurrence, breaking ties by repeated use and name.
-            candidates[word] = minOf(distance, current?.first ?: Int.MAX_VALUE) to
-                ((current?.second ?: 0) + 1)
+            candidates[word] = Triple(
+                minOf(distance, current?.first ?: Int.MAX_VALUE),
+                (current?.second ?: 0) + 1,
+                (current?.third ?: false) || source.getOrNull(match.range.first - 1) == '.'
+            )
         }
         return candidates.entries.sortedWith(
-            compareBy<Map.Entry<String, Pair<Int, Int>>> { it.value.first }
+            compareByDescending<Map.Entry<String, Triple<Int, Int, Boolean>>> {
+                memberContext && it.value.third
+            }.thenBy { it.value.first }
                 .thenByDescending { it.value.second }
                 .thenBy { it.key }
         ).take(25).map { it.key }

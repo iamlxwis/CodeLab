@@ -72,6 +72,13 @@ class CodeAnalysisTest {
         assertEquals(1, CodeAnalysis.renamePreview(source, "item", "kt", 1).size)
     }
 
+    @Test fun memberCompletionPrefersDottedUsesOverNearbyPlainWords() {
+        val source = "val renderPlain = 0\nobj.renderMethod()\nrenderOther()\nobj.ren"
+        val items = CodeAnalysis.wordCompletions(source, source.length, "js")
+        assertEquals("renderMethod", items.first())
+        assertTrue(items.contains("renderPlain"))
+    }
+
     @Test fun renameUpdatesAllOccurrencesBeyondReferenceDisplayCap() {
         val source = buildString {
             append("val item = 0\n")

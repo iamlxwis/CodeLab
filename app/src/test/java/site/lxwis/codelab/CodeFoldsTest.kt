@@ -28,6 +28,11 @@ class CodeFoldsTest {
         assertEquals(listOf(CodeFolds.Region(1, 5)), CodeFolds.regions(source, "py"))
     }
 
+    @Test fun pythonFoldIgnoresTripleQuotedPseudoCodeAndTrailingComments() {
+        val source = "def top(): # comment\n    print(1)\n    \"\"\"\nif fake:\n    value = 3\n\"\"\"\n    print(2)\nnext_call()\n"
+        assertEquals(listOf(CodeFolds.Region(1, 7)), CodeFolds.regions(source, "py"))
+    }
+
     @Test fun bracesInStringsAndCommentsAreNotFoldable() {
         val source = "const str = \"{\\nnot a fold\\n}\";\n// {\n/* {\nmore\n} */\n"
         assertTrue(CodeFolds.regions(source).isEmpty())

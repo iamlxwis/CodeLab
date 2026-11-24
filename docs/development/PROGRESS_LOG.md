@@ -129,3 +129,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | 2026-11-24 2:06 PM PHT | Phase 2 easy/medium | 0/6 new batch verified | Introduced one replaceable README activity line; six remaining tasks scoped separately from earlier verified editor enhancements; physical testing remains with owner. |
 
 | 2026-11-24 2:12 PM PHT | Phase 2 easy/medium | 0/6 verified; CI pending | Added lexical reference nearest-first listing, preview of affected rename lines with source-change guard, and recent-first open tab switcher. JVM regression added; user remains physical tester. |
+
+| 2026-11-24 2:08 PM PHT | Phase 2 easy/medium | 0/6 verified; current source build pending | Member-style lexical completion now favors existing dotted identifiers; Python fold preview ignores triple-quoted pseudo-code and supports colon before comments. JVM regression tests added. Earlier checkpoint timestamp corrected at this commit; user does all phone testing. |
