@@ -72,6 +72,8 @@ jobs:
         run: python3 qa/security_gate.py
       - name: Test same-commit release gate behavior
         run: python3 -m unittest discover -s qa -p 'test_release_gate.py' -v
+      - name: Test workflow artifact safety
+        run: python3 -m unittest discover -s qa -p 'test_artifact_layout.py' -v
       - name: Build release, test, lint, and coverage report
         env:
           CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
@@ -103,10 +105,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: CodeLab-quality-reports
+          name: CodeLab-CI-Reports
           path: |
             app/build/reports/jacoco/
             app/build/reports/lint-results-debug.*
+            qa-results/
           if-no-files-found: warn
       - name: Verify APK signature
         run: '"$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk'
@@ -194,55 +197,35 @@ jobs:
               echo "::warning title=CodeLab upgrade cannot replace prior installation::Signing certificate differs from the previously published APK. Back up projects before uninstalling; configure stable GitHub Actions signing secrets."
             fi
           fi
-      # Android emulators are expensive: manual device.yml is the single device gate.
-      # Publishing still requires the same-commit API 35 device run below.
-      - name: Upload production upgrade evidence
-        if: always() && github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+      # No emulator on routine source pushes; preserve the manual same-SHA
+      # release gate below. GitHub Release assets remain individual APKs because
+      # the in-app module manager downloads those exact public asset filenames.
+      - name: Prepare three user-facing downloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifact-out/app artifact-out/packs
+          cp app/build/outputs/apk/release/app-release.apk artifact-out/app/CodeLab.apk
+          cp engine-python/build/outputs/apk/release/engine-python-release.apk artifact-out/packs/CodeLab-Python.apk
+          cp engine-js/build/outputs/apk/release/engine-js-release.apk artifact-out/packs/CodeLab-JavaScript.apk
+          cp engine-lua/build/outputs/apk/release/engine-lua-release.apk artifact-out/packs/CodeLab-Lua.apk
+          cp engine-java/build/outputs/apk/release/engine-java-release.apk artifact-out/packs/CodeLab-Java.apk
+          cp engine-ts/build/outputs/apk/release/engine-ts-release.apk artifact-out/packs/CodeLab-TypeScript.apk
+          cp engine-sql/build/outputs/apk/release/engine-sql-release.apk artifact-out/packs/CodeLab-SQLite.apk
+          (cd artifact-out/packs && sha256sum CodeLab-*.apk > SHA256SUMS.txt)
+          test "$(find artifact-out/packs -maxdepth 1 -name 'CodeLab-*.apk' | wc -l)" -eq 6
+      - name: Upload app APK
         uses: actions/upload-artifact@v4
         with:
-          name: production-upgrade-evidence
-          path: qa-results/
-          if-no-files-found: ignore
-      - uses: actions/upload-artifact@v4
-        with:
-          name: CodeLab-JavaScript-module
-          path: engine-js/build/outputs/apk/release/engine-js-release.apk
+          name: CodeLab-APK
+          path: artifact-out/app/CodeLab.apk
           if-no-files-found: error
           retention-days: 90
-      - uses: actions/upload-artifact@v4
+      - name: Upload six optional offline packs
+        uses: actions/upload-artifact@v4
         with:
-          name: CodeLab-Lua-module
-          path: engine-lua/build/outputs/apk/release/engine-lua-release.apk
-          if-no-files-found: error
-          retention-days: 90
-      - uses: actions/upload-artifact@v4
-        with:
-          name: CodeLab-Java-beta-module
-          path: engine-java/build/outputs/apk/release/engine-java-release.apk
-          if-no-files-found: error
-          retention-days: 90
-      - uses: actions/upload-artifact@v4
-        with:
-          name: CodeLab-TypeScript-module
-          path: engine-ts/build/outputs/apk/release/engine-ts-release.apk
-          if-no-files-found: error
-          retention-days: 90
-      - uses: actions/upload-artifact@v4
-        with:
-          name: CodeLab-SQLite-module
-          path: engine-sql/build/outputs/apk/release/engine-sql-release.apk
-          if-no-files-found: error
-          retention-days: 90
-      - uses: actions/upload-artifact@v4
-        with:
-          name: CodeLab-Python-module
-          path: engine-python/build/outputs/apk/release/engine-python-release.apk
-          if-no-files-found: error
-          retention-days: 90
-      - uses: actions/upload-artifact@v4
-        with:
-          name: CodeLab-release
-          path: app/build/outputs/apk/release/app-release.apk
+          name: CodeLab-Offline-Packs
+          path: artifact-out/packs/
           if-no-files-found: error
           retention-days: 90
       - name: Prepare installable release APK and checksum

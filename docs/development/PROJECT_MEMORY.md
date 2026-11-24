@@ -1,3 +1,7 @@
+## Nov 24, 2026 — GitHub artifact consolidation
+
+Routine Android build now uploads exactly three artifacts: CodeLab-APK (app APK), CodeLab-Offline-Packs (six signed optional APKs plus checksums) and CodeLab-CI-Reports. Existing per-pack GitHub Release assets are preserved because in-app module downloads depend on CodeLab-Language.apk URLs. Release signer audits, guarded manual same-SHA API35 gate, cancel-in-progress and source-only CI preserved. Static workflow tests added. New fast CI still pending; user handles device testing.
+
 ## Nov 24, 2026 — Language Manager visual simplification
 
 Owner screenshot showed cluttered Downloads view with repeated installer state lines and Manage buttons. Retained existing Python and five optional pack installation dialogs, signature checks, transfers, Wi-Fi/network setting and Android confirmation; replaced list with compact full-row clickable entries, Available/Installed/All filter, scoped download/online panels and pure-JVM label tests. Six offline languages and existing online catalog frozen. New source awaits CI and owner physical-device acceptance. Next: consolidate GitHub Actions artifacts to three while retaining release gating and signed individual release assets. Assistant HANDOFF at commit.

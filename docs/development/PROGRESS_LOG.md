@@ -123,3 +123,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026 | Phase 2 medium | Source committed; CI pending | Python indentation-aware read-only fold preview (no source editing), same-file definition lookup no longer capped by 120-symbol outline. JVM coverage for nested Python suites, comments/blanks and long symbol lists. No LSP or project-wide semantic support claimed. |
 
 | Nov 24, 2026 | T07 / UX | Source committed; CI pending | Replaced crowded Language Manager downloads list with compact tappable language cards, clear Available/Installed/All filters, expandable downloads and online panels, and verified capability label logic with unit tests. Existing optional pack and Python detail flows retained. User handles phone testing. |
+
+| Nov 24, 2026 | CI / UX | Source committed, CI pending | Eight separate workflow artifact entries consolidated to three: CodeLab-APK, CodeLab-Offline-Packs (six APKs and SHA256SUMS), CodeLab-CI-Reports. Added no-emulator workflow safety tests. Individual signed release APK files and same-commit API35 publication gate preserved. |

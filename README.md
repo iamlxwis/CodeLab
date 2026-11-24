@@ -24,7 +24,7 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last committed checkpoint:** Nov 24, 2026 · **Assistant: HANDED OFF** · **CI: Language Manager redesign awaiting source build**
+**Last committed checkpoint:** Nov 24, 2026 · **Assistant: HANDED OFF** · **CI: Language Manager and 3-artifact workflow awaiting build**
 
 > This is a **commit checkpoint**, not a live clock or background agent. `HANDED OFF` means this interactive turn stopped after committing; independent GitHub Actions may still run. Each subsequent turn can resume from the [project memory](docs/development/PROJECT_MEMORY.md).
 
@@ -36,9 +36,9 @@ Write, run, and manage projects from your phone.
 
 **Current counts:** Six optional signed module APKs published (Python, JavaScript, Lua, Java beta, TypeScript, SQLite). Their installation lifecycle and physical-device runtime acceptance are owner-delegated. Language roster is frozen by owner request; no additional compiler packs in Phase 1. UI/accessibility, tutorial and release/documentation stabilization remain open.
 
-**Latest implementation:** Simplified Language Manager to compact tappable rows with Available/Installed/All filters, on-demand download/online settings, and verified status labels. Existing module dialogs and all six packs retained. UI and JVM status regressions pending fresh CI.
+**Latest implementation:** Compact Language Manager with contextual download settings; Android Actions now uploads CodeLab-APK, CodeLab-Offline-Packs (six signed APKs plus SHA256SUMS.txt), and CodeLab-CI-Reports. In-app release URLs, release signers and publication gate unchanged. Source CI pending.
 
-**Next:** verify source build/JVM regressions and consolidate workflow artifacts into app APK, six-pack ZIP artifact and CI reports. Owner handles all on-device acceptance. Phase 1 UI/tutorial remains owner-acceptance pending.
+**Next:** check fast APK build, Kotlin unit tests and artifact-layout safety regressions; repair failures if needed. Owner performs all physical-device acceptance.
 
 [Compiler feasibility](docs/development/LANGUAGE_FEASIBILITY.md) · [Full audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Project memory](docs/development/PROJECT_MEMORY.md)
 
