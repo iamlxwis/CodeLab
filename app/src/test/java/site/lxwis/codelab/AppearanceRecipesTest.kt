@@ -83,4 +83,14 @@ class AppearanceRecipesTest {
         assertEquals(32, long.length)
         assertTrue(AppearanceRecipes.validName(long))
     }
+    @Test fun typographySizingSurvivesRecipesAndLegacyImports() {
+        val studio = StudioAppearance(uiScale = 130, editorTextSize = 22)
+        assertEquals(studio, StudioAppearance.decode(studio.encode()))
+        val legacy = StudioAppearance.decode("{}")
+        assertEquals(100, legacy.uiScale)
+        assertEquals(0, legacy.editorTextSize)
+        val invalid = StudioAppearance.decode("""{"uiScale":999,"editorTextSize":1000}""")
+        assertEquals(140, invalid.uiScale)
+        assertEquals(0, invalid.editorTextSize)
+    }
 }

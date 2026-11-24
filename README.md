@@ -27,16 +27,16 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **SOURCE PASS COMMITTED — testing deferred by owner** |
-| Current-pass checks | **Not run** — no build, tests or device smoke in this implementation-first pass |
+| Status | **ACTIVE — cumulative build/error checks and APK delivery** |
+| Current-pass checks | Starting cumulative Android build, unit tests, instrumentation compilation and lint |
 | Source coverage | **37/37 decisions mapped; 8/8 audited implementation gaps addressed** — validation is separate |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [03ef032 — earlier baseline](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404); does **not** include the new implementation pass |
-| Next to build | Deferred cumulative build/error checks, then visual, runtime, persistence, accessibility and performance validation |
-| Last activity | Nov 24, 2026, 9:16:04 PM PHT |
+| Next to build | Fix cumulative build errors; run existing guarded API35/release checkpoint and publish direct APK |
+| Last activity | Nov 24, 2026, 9:39:00 PM PHT |
 
-**Current activity:** Nov 24, 2026, 9:16:04 PM PHT — SESSION STOPPED: implementation-first source pass committed at 2fded2e; all eight audited source gaps addressed across the 37-decision ledger, with builds/tests deferred.
+**Current activity:** Nov 24, 2026, 9:39:00 PM PHT — Owner approved cumulative checks and direct APK delivery; starting source CI with layout/typography regressions, then guarded Android 15 release.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

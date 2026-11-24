@@ -39,3 +39,8 @@ README keeps one concise activity, completed/remaining source distinction and ne
 ## Continuation prompt
 
 Continue iamlxwis/CodeLab main from 2fded2e, using the full approved REIMAGINED_SPEC.md and current source coverage in REIMAGINED.md. The implementation-first pass addressed eight audited source gaps across the 37 decisions without running checks. Next perform cumulative compile/error checking, then deferred functional/visual/accessibility/performance/device acceptance and fixes. Preserve existing capabilities/data/runtime/privacy/release/CI policies, commit directly to main, and keep the README/current memory accurate in 12-hour PHT. Do not falsely mark source-only additions as verified or link the old APK as the new app.
+
+
+## Build and direct APK delivery resumed — Nov 24, 2026, 9:39:00 PM PHT
+
+Owner authorized the deferred build/error-check pass and requested a direct app download link. Added regression coverage for complete workspace profiles and theme typography sizes/legacy defaults; cumulative Android CI next. Existing explicit release checkpoint can dispatch manual API35 smoke and guarded publication on the same SHA; retain all release/signing guards and do not publish an older APK as the new source. Next: inspect compiler/test failures and fix them; then run the existing guarded checkpoint.

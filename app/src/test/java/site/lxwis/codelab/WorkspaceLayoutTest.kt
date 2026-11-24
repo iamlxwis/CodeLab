@@ -31,4 +31,17 @@ class WorkspaceLayoutTest {
         assertNull(WorkspaceLayout.from(JSONObject("""{"name":"Old"}"""))?.focus)
         assertEquals(false, WorkspaceLayout.from(focus.copy(focus = false).json())?.focus)
     }
+    @Test fun fullWorkspaceProfileRoundTripAndLegacyInheritance() {
+        val profile = WorkspaceLayout("Complete", true, 45, 65, false, "Compact", listOf("files"),
+            toolbar = listOf("run", "undo"), explorer = false, focus = true, systemStatus = false,
+            output = "Console", maximized = true, keyboardLayout = "Custom", keyboardSymbols = "; { Tab }",
+            accessory = true, keyboardOnly = true)
+        assertEquals(profile, WorkspaceLayout.decode(WorkspaceLayout.encode(listOf(profile))).single())
+        val legacy = requireNotNull(WorkspaceLayout.from(JSONObject("""{"name":"Old"}""")))
+        assertNull(legacy.output)
+        assertNull(legacy.systemStatus)
+        assertNull(legacy.keyboardLayout)
+        assertNull(legacy.keyboardSymbols)
+        assertNull(legacy.accessory)
+    }
 }

@@ -252,3 +252,8 @@ SESSION STOPPED; no background coding continues. Source checkpoints 16556e4b2bdd
 New source: shared app-motion dialogs, full tool pages, actual anchored animated/keyboard-navigable menus; native editable Theme Studio preview and persisted independent typography sizes; reorderable coding shortcuts; full named/per-project output/system-bar/accessory layouts with live updates; persistent optional/replayable contextual discovery; animated loading/search/icon/tab polish and scalable status layout; bounded opt-in foreground-only performance instrumentation. Real performance measurements and the quality execution portions of decisions 20/29/36 remain deferred, not falsely complete.
 
 Next: cumulative build/error checking after this source implementation pass, then the deferred functional/visual/device/accessibility/performance work. No APK includes the current changes yet. Continue from the latest source, preserve existing data/capabilities/security/runtime architecture and the complete approved contract.
+
+
+## Build and direct APK delivery resumed — Nov 24, 2026, 9:39:00 PM PHT
+
+Owner authorized the deferred build/error-check pass and requested a direct app download link. Added regression coverage for complete workspace profiles and theme typography sizes/legacy defaults; cumulative Android CI next. Existing explicit release checkpoint can dispatch manual API35 smoke and guarded publication on the same SHA; retain all release/signing guards and do not publish an older APK as the new source. Next: inspect compiler/test failures and fix them; then run the existing guarded checkpoint.
