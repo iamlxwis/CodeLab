@@ -27,15 +27,15 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **IN PROGRESS — final quality and remaining UI work** |
+| Status | **SOURCE UPDATED — CI and device verification pending** |
 | Workstreams accepted | **0/10 fully device-accepted** — source and CI verified separately |
 | Current workstream | Final quality and stability verification |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [6e33876 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45384534494) · [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45384534494/artifacts/14915104647) |
 | Next to build | Manual API35 regression; repair observed UI, runtime and performance issues | 
-| Last activity | Nov 24, 2026, 7:40:08 PM PHT |
+| Last activity | Nov 24, 2026, 7:41:00 PM PHT |
 
-**Current activity:** Nov 24, 2026, 7:40:08 PM PHT — Owner authorized continuation; auditing remaining gesture, editor and application polish against the passing build before implementing targeted fixes.
+**Current activity:** Nov 24, 2026, 7:41:00 PM PHT — Editor line navigation and selection now use the incremental line index; bounded selection, density-aware swipe and accessible tab save state added with a device regression test; CI pending.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

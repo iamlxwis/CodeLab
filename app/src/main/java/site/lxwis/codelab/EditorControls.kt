@@ -58,24 +58,27 @@ import java.util.concurrent.Future
 @Stable
 internal class EditorCursorStatus {
     var label by mutableStateOf("Ln 1 · Col 1")
+    var lineCount by mutableIntStateOf(1)
 }
 
 @Composable
 internal fun EditorStatusBar(
-    fileKey: String, filename: String, text: String, status: EditorCursorStatus,
+    fileKey: String, filename: String, status: EditorCursorStatus,
     readOnly: Boolean, wordWrap: Boolean,
     onPreviousTab: () -> Unit, onNextTab: () -> Unit
 ) {
     var tabSwipe by remember { mutableFloatStateOf(0f) }
-    val lines = remember(text) { text.count { it == '\n' } + 1 }
+    val previous by rememberUpdatedState(onPreviousTab)
+    val next by rememberUpdatedState(onNextTab)
+    val threshold = with(androidx.compose.ui.platform.LocalDensity.current) { 56.dp.toPx() }
     Row(Modifier.fillMaxWidth().height(38.dp)
-        .pointerInput(fileKey) {
+        .pointerInput(fileKey, threshold) {
             detectHorizontalDragGestures(onDragStart = { tabSwipe = 0f },
                 onDragEnd = {
-                    if (tabSwipe > 70f) onPreviousTab()
-                    else if (tabSwipe < -70f) onNextTab()
+                    if (tabSwipe > threshold) previous()
+                    else if (tabSwipe < -threshold) next()
                     tabSwipe = 0f
-                }, onHorizontalDrag = { change, amount ->
+                }, onDragCancel = { tabSwipe = 0f }, onHorizontalDrag = { change, amount ->
                     change.consume()
                     tabSwipe += amount
                 })
@@ -83,7 +86,7 @@ internal fun EditorStatusBar(
         .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(status.label + " · " + lines + " lines",
+        Text(status.label + " · " + status.lineCount + " lines",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text((if (readOnly) "READ ONLY · " else "") +

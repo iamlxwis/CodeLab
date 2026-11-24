@@ -13,6 +13,28 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class SourceViewTest {
+    @Test fun logicalLineSelectionHandlesEmptyFirstLineAndEdits() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.runOnMainSync {
+            val editor = SourceView(ContextThemeWrapper(instrumentation.targetContext,
+                android.R.style.Theme_Material), "main.js")
+            editor.setText("\nsecond\n")
+            assertEquals(3, editor.logicalLineCount)
+            editor.setSelection(0)
+            editor.selectCurrentLine()
+            assertEquals(0, editor.selectionStart)
+            assertEquals(0, editor.selectionEnd)
+            editor.goToLogicalLine(2)
+            editor.selectCurrentLine()
+            assertEquals("second", editor.text.subSequence(editor.selectionStart, editor.selectionEnd).toString())
+            editor.text.insert(0, "new\n")
+            assertEquals(4, editor.logicalLineCount)
+            assertEquals(3, editor.logicalLineAt(5))
+            editor.goToLogicalLine(4)
+            assertEquals(editor.length(), editor.selectionStart)
+        }
+    }
+
     @Test fun composingImeTextRemainsLiteralUntilCommit() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         instrumentation.runOnMainSync {

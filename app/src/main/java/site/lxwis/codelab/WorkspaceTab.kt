@@ -17,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,6 +53,7 @@ internal fun WorkspaceTab(
         animationSpec = tween(motionMillis), label = "tab-ink")
     val moveThreshold = with(LocalDensity.current) { 32.dp.toPx() }
     var dragX by remember(path) { mutableFloatStateOf(0f) }
+    val move by rememberUpdatedState(onMove)
     Row(
         Modifier.padding(end = 2.dp)
             .background(background, RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp)),
@@ -63,6 +67,10 @@ internal fun WorkspaceTab(
             },
             Modifier.heightIn(min = 48.dp)
                 .combinedClickable(onClick = onSelect, onLongClick = { menu = true })
+                .semantics {
+                    selected = active
+                    stateDescription = if (dirty) "Unsaved changes" else "Saved"
+                }
                 .padding(horizontal = 8.dp, vertical = 14.dp),
             color = selectedInk,
             fontFamily = FontFamily.Monospace,
@@ -77,8 +85,10 @@ internal fun WorkspaceTab(
                     detectDragGesturesAfterLongPress(
                         onDragStart = { dragX = 0f },
                         onDragEnd = {
-                            if (abs(dragX) > moveThreshold) onMove(if (dragX > 0f) 1 else -1)
+                            if (abs(dragX) > moveThreshold) move(if (dragX > 0f) 1 else -1)
+                            dragX = 0f
                         },
+                        onDragCancel = { dragX = 0f },
                         onDrag = { change, delta -> change.consume(); dragX += delta.x }
                     )
                 }) {

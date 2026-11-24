@@ -98,6 +98,7 @@ fun CodeEditor(
     var readOnly by remember { mutableStateOf(false) }
     var view by remember { mutableStateOf<SourceView?>(null) }
     val cursorStatus = remember { EditorCursorStatus() }
+    val selectionCallback by rememberUpdatedState(onSelectionChange)
     var find by remember { mutableStateOf(false) }
     var advancedTools by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf("") }
@@ -897,7 +898,11 @@ fun CodeEditor(
                 SourceView(it, filename).apply {
                     setText(text)
                     restorePosition(fileKey)
-                    changed = { source -> changes(source) }
+                    cursorStatus.lineCount = logicalLineCount
+                    changed = { source ->
+                        cursorStatus.lineCount = logicalLineCount
+                        changes(source)
+                    }
                     selectionChanged = { line, col ->
                         cursorStatus.label = "Ln " + line + " · Col " + col
                         // Use the live Editable, not the captured Composable text snapshot.
@@ -905,11 +910,11 @@ fun CodeEditor(
                         val live = this.text
                         val start = minOf(selectionStart, selectionEnd).coerceIn(0, live.length)
                         val end = maxOf(selectionStart, selectionEnd).coerceIn(0, live.length)
-                        if (start == end) onSelectionChange("", line)
+                        if (start == end) selectionCallback("", line)
                         else {
-                            val firstLine = live.subSequence(0, start).count { it == '\n' } + 1
-                            onSelectionChange(live.subSequence(start, end).toString().take(24000),
-                                firstLine)
+                            val firstLine = logicalLineAt(start)
+                            val boundedEnd = start + (end - start).coerceAtMost(24000)
+                            selectionCallback(live.subSequence(start, boundedEnd).toString(), firstLine)
                         }
                     }
                     view = this
@@ -936,6 +941,7 @@ fun CodeEditor(
                 }
                 editor.isEnabled = !readOnly
                 if (editor.sourceSnapshot != text) editor.replaceSource(text)
+                cursorStatus.lineCount = editor.logicalLineCount
             }
         )
         if (minimap) EditorMinimap(text = text, onNavigate = { line ->
@@ -999,7 +1005,7 @@ fun CodeEditor(
             }
         }
         if (!compactEditor && showStatusBar) EditorStatusBar(
-            fileKey = fileKey, filename = filename, text = text, status = cursorStatus,
+            fileKey = fileKey, filename = filename, status = cursorStatus,
             readOnly = readOnly, wordWrap = wordWrap,
             onPreviousTab = onPreviousTab, onNextTab = onNextTab
         )

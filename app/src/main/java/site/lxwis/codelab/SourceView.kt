@@ -67,7 +67,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     }
     fun bookmarkedLines(): List<Int> = bookmarks.toList()
     fun toggleBookmark() {
-        val line = text.substring(0, selectionStart.coerceIn(0, length())).count { it == '\n' } + 1
+        val line = logicalLineAt(selectionStart)
         if (!bookmarks.add(line)) bookmarks.remove(line)
         persistBookmarks()
         invalidate()
@@ -79,16 +79,9 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         }
     }
     fun goToLogicalLine(number: Int) {
-        if (number < 1) return
-        val content = text.toString()
-        var position = 0
-        repeat(number - 1) {
-            val next = content.indexOf('\n', position)
-            if (next < 0) return
-            position = next + 1
-        }
+        if (number !in 1..logicalLineCount) return
         requestFocus()
-        setSelection(position)
+        setSelection(logicalLines.start(number - 1).coerceIn(0, length()))
     }
     var findShortcut: (() -> Unit)? = null
     var lineShortcut: (() -> Unit)? = null
@@ -130,10 +123,11 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         clearFocus()
     }
     fun selectCurrentLine() {
-        val value = text.toString()
-        val caret = selectionStart.coerceIn(0, value.length)
-        val first = value.lastIndexOf('\n', (caret - 1).coerceAtLeast(0)) + 1
-        val last = value.indexOf('\n', caret).let { if (it < 0) value.length else it }
+        val line = logicalLineAt(selectionStart)
+        val first = logicalLines.start(line - 1).coerceIn(0, length())
+        val last = if (line < logicalLineCount)
+            (logicalLines.start(line) - 1).coerceIn(first, length())
+        else length()
         requestFocus()
         setSelection(first, last)
     }
@@ -178,6 +172,9 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     var sourceSnapshot = ""
         private set
     private var logicalLines = LogicalLines("")
+    val logicalLineCount: Int get() = logicalLines.count
+    fun logicalLineAt(offset: Int): Int =
+        logicalLines.lineAt(offset.coerceIn(0, length())) + 1
     private var bracketPair: Pair<Int, Int>? = null
     private var bracketTask: Future<*>? = null
     private var bracketGeneration = 0
