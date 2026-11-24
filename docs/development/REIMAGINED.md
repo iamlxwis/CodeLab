@@ -2,8 +2,8 @@
 
 Owner approved one comprehensive update, without numbered development phases. This ledger distinguishes committed source changes from tested acceptance.
 
-**Exact implementation SHA:** [f23d62f](https://github.com/iamlxwis/CodeLab/commit/f23d62ff5388f48898db625030a81f018b80b553)  
-**Android build:** [45377658562](https://github.com/iamlxwis/CodeLab/actions/runs/45377658562) — in progress when this record was written.  
+**Exact implementation SHA:** [e9be726](https://github.com/iamlxwis/CodeLab/commit/e9be726ff7f11de2f337910e0df37283c734c325)  
+**Android build:** [45380854708](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708) — success; compile, tests, lint, security and signature checks passed. [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14912949223) · [Six runtime packs](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14915170119) · [Quality reports](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14914990293).  
 **Device validation:** not run for this source. **Workstreams accepted: 0/10.** A prior APK is not evidence for this update.
 
 | Workstream | Source changes | Unfinished / verification |
@@ -21,13 +21,13 @@ Owner approved one comprehensive update, without numbered development phases. Th
 
 ## Continuation
 
-1. Check exact-source Android Actions run 45377658562; repair any compile/test failures first.
+1. Cumulative CI passed at e9be726; verify artifacts remain available, then proceed to manual device acceptance.
 2. Keep the existing production signing, six optional runtime packs, explicit online upload approval, and source-only CI with cancel-in-progress. Do not change unrelated IDE features.
 3. Finish the open items above; audit all screens against the owner-approved Reimagined specification, including all 37 design decisions and the editor/application polish lists.
 4. Run Android 15/API35 device smoke manually on the same implementation source when appropriate; inspect rendered screens, test data-preserving upgrade, runtime and editor regressions, and record measured performance instead of inventing it.
 5. Update README, this ledger and historical log at each verified milestone. Do not mark a workstream accepted without evidence. Keep one concise current README activity sentence.
 
-No claim is made that the redesign is fully complete or that an APK for it is currently available.
+A CI APK is available for testing. Full visual and device acceptance is not yet claimed.
 
 
 ## Recovery and cumulative implementation checkpoint — Nov 24, 2026, 7:06:02 PM PHT
@@ -40,3 +40,10 @@ No claim is made that the redesign is fully complete or that an APK for it is cu
 - Next: inspect the definitive cumulative build result and fix failures; validate APK artifacts before reporting success. Manual API35 device smoke is unchanged and requires a workflow dispatch; do not bypass release safety checks. Physical device visual acceptance remains open.
 
 - Nov 24, 2026, 7:08:54 PM PHT: standalone Kotlin compiler and Java execution verified both hash-matched pure Kotlin files: 10,000 randomized edits against freshly rebuilt indexes, every line start/offset, and three explorer scenarios. This is not Android device verification.
+
+## Verified cumulative Android build — Nov 24, 2026, 7:11:47 PM PHT
+
+- Exact source: e9be726ff7f11de2f337910e0df37283c734c325. [Run 45380854708](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708) completed successfully (Gradle BUILD SUCCESSFUL in 5m 7s).
+- Release compilation, JVM tests, lint, coverage reporting, static security, release-gate and artifact-safety tests, packaged offline TypeScript exercise, APK and all optional runtime signature verification passed.
+- Uploaded, unexpired artifacts: [CodeLab-APK](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14912949223), [CodeLab-Offline-Packs](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14915170119), [CodeLab-CI-Reports](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14914990293). Stable signing configuration was present; the production certificate enforcement/upgrade audit and release publishing steps were skipped by the source-only workflow. Do not represent this as a published release or verified in-place upgrade.
+- API35 emulator/device smoke was not dispatched. Full workstream device acceptance remains 0/10; the source-only build does not establish visual fidelity or performance. Manual device workflow remains unchanged.

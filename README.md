@@ -27,13 +27,13 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **IN PROGRESS — cumulative build verification** |
-| Workstreams accepted | **0/10** — verification pending |
-| Current workstream | Compile, tests, lint, signed APK and remaining visual acceptance |
+| Status | **BUILD PASSED — device acceptance pending** |
+| Workstreams accepted | **0/10 fully device-accepted** — source and CI verified separately |
+| Current workstream | Android 15/API35 smoke and visual/interaction acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Last activity | Nov 24, 2026, 7:08:54 PM PHT |
+| Last activity | Nov 24, 2026, 7:11:47 PM PHT |
 
-**Current activity:** Nov 24, 2026, 7:08:54 PM PHT — Local Kotlin verification passed 10,000 randomized editor edits and three file-tree scenarios against hash-matched source; [cumulative Android CI](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708) continues.
+**Current activity:** Nov 24, 2026, 7:11:47 PM PHT — [Android CI passed](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708) for [e9be726](https://github.com/iamlxwis/CodeLab/commit/e9be726ff7f11de2f337910e0df37283c734c325); [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14912949223), [six runtime packs](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14915170119) and [quality reports](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14914990293) uploaded; device acceptance remains pending.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 
