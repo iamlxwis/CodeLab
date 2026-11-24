@@ -93,7 +93,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var selectedSnippet by remember { mutableStateOf("") }
     var selectedSnippetLine by remember { mutableIntStateOf(1) }
     var focusMode by rememberSaveable { mutableStateOf(false) }
-    var explorerPinned by rememberSaveable { mutableStateOf(true) }
+    val explorerPinned = m.explorerPinned
     val context = androidx.compose.ui.platform.LocalContext.current
     val tutorialPrefs = remember(context) {
         context.getSharedPreferences("first-run-guide", android.content.Context.MODE_PRIVATE)
@@ -214,7 +214,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     Icon(Icons.Default.FolderOpen, "Browse files or swipe right")
                 }
                 if (m.files.isNotEmpty() && LocalConfiguration.current.screenWidthDp >= 820) {
-                    IconButton(onClick = { explorerPinned = !explorerPinned },
+                    IconButton(onClick = { m.chooseExplorerPinned(!explorerPinned) },
                         modifier = Modifier.size(38.dp)) {
                         Icon(if (explorerPinned) Icons.Default.VerticalSplit else Icons.Default.ViewSidebar,
                             "Toggle tablet explorer", Modifier.size(19.dp))
@@ -593,7 +593,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = explorerPinned,
-                            onCheckedChange = { explorerPinned = it })
+                            onCheckedChange = m::chooseExplorerPinned)
                         Text("Show explorer sidebar on larger screens")
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {

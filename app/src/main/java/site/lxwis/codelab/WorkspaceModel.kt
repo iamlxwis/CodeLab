@@ -56,6 +56,21 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         preferences.edit().putString(if (projectOpen) "quick-editor" else "quick-home", ids.joinToString(",")).apply()
         if (projectOpen) rememberProjectLayout()
     }
+    private val editorPreferences = app.getSharedPreferences("editor", Context.MODE_PRIVATE)
+    internal var editorToolbarIds by mutableStateOf(EditorToolbarOrder.decode(editorPreferences.getString("toolbar-actions", null)))
+        private set
+    internal fun chooseEditorToolbar(ids: List<String>) {
+        editorToolbarIds = ids.filter { it in EditorToolbarOrder.known }.distinct()
+        editorPreferences.edit().putString("toolbar-actions", editorToolbarIds.joinToString(",")).apply()
+        rememberProjectLayout()
+    }
+    internal var explorerPinned by mutableStateOf(preferences.getBoolean("explorer-pinned", true))
+        private set
+    internal fun chooseExplorerPinned(value: Boolean) {
+        explorerPinned = value
+        preferences.edit().putBoolean("explorer-pinned", value).apply()
+        rememberProjectLayout()
+    }
     var showEditorStatus by mutableStateOf(preferences.getBoolean("show-editor-status", true))
         private set
     fun chooseEditorStatus(value: Boolean) {
@@ -72,7 +87,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     internal var savedWorkspaceLayouts by mutableStateOf(WorkspaceLayout.decode(preferences.getString("workspace-layouts", null)))
         private set
     private fun currentLayout(name: String) = WorkspaceLayout(name, phoneSplitEnabled, phoneSplitPercent,
-        panelSplitPercent, showEditorStatus, interfaceDensity, quickEditorActions)
+        panelSplitPercent, showEditorStatus, interfaceDensity, quickEditorActions, editorToolbarIds, explorerPinned)
     private fun rememberProjectLayout() {
         val name = project ?: return
         preferences.edit().putString("project-layout:$name", currentLayout(name).json().toString()).apply()
@@ -84,7 +99,12 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         showEditorStatus = value.status
         interfaceDensity = value.density
         quickEditorActions = value.actions
-        preferences.edit().putBoolean("phone-split", value.phoneSplit)
+        explorerPinned = value.explorer
+        value.toolbar?.let {
+            editorToolbarIds = it
+            editorPreferences.edit().putString("toolbar-actions", it.joinToString(",")).apply()
+        }
+        preferences.edit().putBoolean("explorer-pinned", value.explorer).putBoolean("phone-split", value.phoneSplit)
             .putInt("phone-split-percent", value.phonePercent).putInt("panel-split", value.tabletPercent)
             .putBoolean("show-editor-status", value.status).putString("density", value.density)
             .putString("quick-editor", value.actions.joinToString(",")).apply()

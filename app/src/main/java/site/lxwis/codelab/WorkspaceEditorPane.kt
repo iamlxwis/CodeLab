@@ -55,6 +55,8 @@ internal fun WorkspaceEditorPane(
                 onSelectionChange = onSelection,
                 showStatusBar = m.showEditorStatus,
                 motionMillis = motion.millis(170),
+                workspaceToolbar = m.editorToolbarIds,
+                onWorkspaceToolbarChange = m::chooseEditorToolbar,
                 modifier = Modifier.fillMaxSize()
             )
         } else if (m.busy) CircularProgressIndicator(Modifier.align(Alignment.Center).size(24.dp), strokeWidth = 2.dp)

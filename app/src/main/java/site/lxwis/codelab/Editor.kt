@@ -49,17 +49,23 @@ fun CodeEditor(
     onOpenCommands: () -> Unit = {},
     showStatusBar: Boolean = true,
     motionMillis: Int = 0,
+    workspaceToolbar: List<String>? = null,
+    onWorkspaceToolbarChange: ((List<String>) -> Unit)? = null,
     onSelectionChange: (String, Int) -> Unit = { _, _ -> }
 ) = key(fileKey) {
     val context = LocalContext.current
     val hardwareKeyboard = LocalConfiguration.current.keyboard != Configuration.KEYBOARD_NOKEYS
     val preferences = remember { context.getSharedPreferences("editor", Context.MODE_PRIVATE) }
-    var toolbarIds by remember { mutableStateOf(EditorToolbarOrder.decode(preferences.getString("toolbar-actions", null))) }
+    var localToolbarIds by remember { mutableStateOf(EditorToolbarOrder.decode(preferences.getString("toolbar-actions", null))) }
+    val toolbarIds = workspaceToolbar ?: localToolbarIds
     var toolbarCustomize by remember { mutableStateOf(false) }
     var toolbarMenu by remember { mutableStateOf(false) }
     fun saveToolbar(ids: List<String>) {
-        toolbarIds = ids
-        preferences.edit().putString("toolbar-actions", ids.joinToString(",")).apply()
+        if (onWorkspaceToolbarChange != null) onWorkspaceToolbarChange(ids)
+        else {
+            localToolbarIds = ids
+            preferences.edit().putString("toolbar-actions", ids.joinToString(",")).apply()
+        }
     }
     var fontSize by remember { mutableStateOf(preferences.getInt("font-size", 15)) }
     var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", true)) }

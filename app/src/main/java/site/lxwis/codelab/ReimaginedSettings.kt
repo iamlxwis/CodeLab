@@ -81,7 +81,11 @@ internal fun WorkspaceLayoutPresets(m: WorkspaceModel, close: () -> Unit) {
             LazyColumn(Modifier.heightIn(max = 240.dp)) {
                 items(m.savedWorkspaceLayouts, key = { it.name }) { layout ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(layout.name, Modifier.weight(1f))
+                        Column(Modifier.weight(1f)) {
+                            Text(layout.name, style = MaterialTheme.typography.titleSmall)
+                            Text("${layout.density} · ${layout.phonePercent}% editor · ${layout.toolbar?.size ?: 0} pinned tools",
+                                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                         TextButton(onClick = { m.restoreNamedLayout(layout.name); notice = "Layout restored" }) { Text("Restore") }
                         IconButton(onClick = { m.deleteNamedLayout(layout.name) }) { Icon(Icons.Default.DeleteOutline, "Delete layout ${layout.name}") }
                     }

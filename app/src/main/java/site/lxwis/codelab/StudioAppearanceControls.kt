@@ -44,7 +44,7 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Theme Studio", style = MaterialTheme.typography.titleLarge)
-        StudioLivePreview()
+        StudioLivePreview(m)
         ThemeColor("Accent", MaterialTheme.colorScheme.primary) { m.chooseAccent(it) }
         TextButton(onClick = { open = !open }) { Text(if (open) "Hide customization" else "Customize theme") }
         if (open) {
@@ -244,43 +244,95 @@ private fun ThemeColor(label: String, color: Color, onChange: (String) -> Unit) 
 }
 
 @Composable
-private fun StudioLivePreview() {
+private fun StudioLivePreview(m: WorkspaceModel) {
     val s = LocalStudioAppearance.current
     val c = MaterialTheme.colorScheme
+    val context = LocalContext.current
     val editor = studioColor(s.editorBackground, c.surface)
     val console = studioColor(s.consoleBackground, c.surface)
     val nav = studioColor(s.navigationBackground, c.surfaceContainerHigh)
     val ink = studioReadable(c.onSurface, editor)
+    val font = remember(s.editorFont, s.editorFontRevision) {
+        when (s.editorFont) {
+            "System Mono" -> androidx.compose.ui.text.font.FontFamily.Monospace
+            "Custom" -> ImportedFonts.load(context, true, s.editorFontRevision)?.let {
+                androidx.compose.ui.text.font.FontFamily(it)
+            } ?: androidx.compose.ui.text.font.FontFamily.Monospace
+            else -> androidx.compose.ui.text.font.FontFamily(androidx.compose.ui.text.font.Font(R.font.jetbrains_mono))
+        }
+    }
+    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
+    var python by remember { mutableStateOf(false) }
+    var output by remember { mutableStateOf(false) }
+    var selectedLine by remember { mutableIntStateOf(0) }
+    val selection = studioColor(s.selectionColor, c.primary)
+    val selectedSurface = selection.copy(alpha = .26f).let { androidx.compose.ui.graphics.Color(
+        red = it.red * it.alpha + editor.red * (1f - it.alpha),
+        green = it.green * it.alpha + editor.green * (1f - it.alpha),
+        blue = it.blue * it.alpha + editor.blue * (1f - it.alpha)) }
     ClayPanel {
         Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Live workspace preview", style = MaterialTheme.typography.labelMedium)
+            Text("Interactive workspace preview", style = MaterialTheme.typography.labelMedium)
             Surface(color = nav, contentColor = studioReadable(c.onSurface, nav), shape = MaterialTheme.shapes.medium) {
-                Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    FileTypeIcon("main.js", Modifier.size(18.dp))
-                    Text("main.js", Modifier.weight(1f).padding(start = 6.dp))
-                    Surface(color = c.primaryContainer, shape = MaterialTheme.shapes.small) {
-                        Text("Run", Modifier.padding(horizontal = 12.dp, vertical = 5.dp), color = c.onPrimaryContainer)
+                Row(Modifier.fillMaxWidth().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    listOf("main.js", "main.py").forEachIndexed { index, file ->
+                        val selected = python == (index == 1)
+                        Surface(onClick = { python = index == 1; output = false; selectedLine = 0 },
+                            modifier = Modifier.weight(1f), color = if (selected) c.primaryContainer else Color.Transparent,
+                            shape = MaterialTheme.shapes.small) {
+                            Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                FileTypeIcon(file, Modifier.size(15.dp), selected = selected)
+                                Text(file, Modifier.padding(start = 4.dp), maxLines = 1,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (selected) c.onPrimaryContainer else studioReadable(c.onSurface, nav))
+                            }
+                        }
                     }
+                    TextButton(onClick = { output = !output }) { Text(if (output) "Hide" else "Output") }
                 }
             }
             Surface(color = editor, contentColor = ink, shape = MaterialTheme.shapes.medium) {
-                Column(Modifier.fillMaxWidth().padding(10.dp)) {
-                    val font = androidx.compose.ui.text.font.FontFamily(androidx.compose.ui.text.font.Font(R.font.jetbrains_mono))
-                    Text("1  // Main program", fontFamily = font, color = studioColor(s.comments, c.onSurfaceVariant))
-                    Row {
-                        Text("2  const ", fontFamily = font, color = studioColor(s.keywords, c.primary))
-                        Text("answer = ", fontFamily = font)
-                        Text("42", fontFamily = font, color = studioColor(s.numbers, c.primary))
-                        Text(";", fontFamily = font)
+                Column(Modifier.fillMaxWidth().padding(6.dp)) {
+                    val lines = if (python) listOf("# Main program", "answer = 42", "print(answer)")
+                        else listOf("// Main program", "const answer = 42;", "print(answer);")
+                    lines.forEachIndexed { index, line ->
+                        val fill = if (selectedLine == index) selectedSurface else editor
+                        Surface(onClick = { selectedLine = index }, color = fill,
+                            contentColor = studioReadable(ink, fill), shape = MaterialTheme.shapes.small) {
+                            Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 6.dp)) {
+                                Text((index + 1).toString(), Modifier.width(24.dp), fontFamily = font,
+                                    color = studioReadable(c.onSurfaceVariant, fill))
+                                val code = androidx.compose.ui.text.buildAnnotatedString {
+                                    fun segment(value: String, color: Color) {
+                                        pushStyle(androidx.compose.ui.text.SpanStyle(color = studioReadable(color, fill)))
+                                        append(value); pop()
+                                    }
+                                    when (index) {
+                                        0 -> segment(line, studioColor(s.comments, c.onSurfaceVariant))
+                                        1 -> {
+                                            if (!python) segment("const ", studioColor(s.keywords, c.primary))
+                                            segment("answer = ", ink)
+                                            segment("42", studioColor(s.numbers, c.primary))
+                                            if (!python) append(";")
+                                        }
+                                        else -> segment(line, ink)
+                                    }
+                                }
+                                Text(code, fontFamily = font, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
                     }
-                    Text("3  print(\"Hello\");", fontFamily = font, color = studioColor(s.strings, ink))
                 }
             }
-            Surface(color = console, contentColor = studioReadable(c.onSurface, console), shape = MaterialTheme.shapes.medium) {
-                Column(Modifier.fillMaxWidth().padding(10.dp)) {
-                    Text("Console", style = MaterialTheme.typography.labelMedium)
-                    Text("Hello", fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
-                    Text("Exit 0", style = MaterialTheme.typography.labelSmall)
+            androidx.compose.animation.AnimatedVisibility(output,
+                enter = androidx.compose.animation.fadeIn(androidx.compose.animation.core.tween(motion.millis(180))),
+                exit = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(motion.millis(180)))) {
+                Surface(color = console, contentColor = studioReadable(c.onSurface, console), shape = MaterialTheme.shapes.medium) {
+                    Column(Modifier.fillMaxWidth().padding(10.dp)) {
+                        Text("Sample output", style = MaterialTheme.typography.labelMedium)
+                        Text("42", fontFamily = font)
+                        Text("Preview only · no code executed", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
         }
