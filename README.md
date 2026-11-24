@@ -34,9 +34,9 @@ Write, run, and manage projects from your phone.
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [1e5bb5d — complete implementation pass](https://github.com/iamlxwis/CodeLab/actions/runs/45405666239) |
 | Next to build | Rerun API35 with corrected accessible navigation; publish guarded APK; physical-device acceptance |
-| Last activity | Nov 24, 2026, 10:04:49 PM PHT |
+| Last activity | Nov 24, 2026, 10:29:52 PM PHT |
 
-**Current activity:** Nov 24, 2026, 10:04:49 PM PHT — Source CI passed; corrected the smoke selector using observed Compose accessibility XML and restarted exact-commit API35 verification/publication.
+**Current activity:** Nov 24, 2026, 10:29:52 PM PHT — Six themes and native preview reached on API35; correcting off-screen sample-console navigation and exact-run retry selection, then continuing guarded APK delivery.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

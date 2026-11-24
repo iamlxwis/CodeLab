@@ -272,3 +272,8 @@ Run 45406809675 passed clean-install, resumable tutorial and missing-Python chec
 ### Observed accessibility selector correction — Nov 24, 2026, 10:04:49 PM PHT
 
 Source CI 45408533135 passed. Device retry 45408550556 stopped at the new search selector: actual XML has an unlabeled android.widget.EditText parent containing a child view with content-desc Search actions. Corrected smoke to first require the accessible search hint, then tap the real editable field, as the existing production-upgrade helper does. No app source changed; assertions and release gates remain. Explicit checkpoint retriggered.
+
+
+### Native preview viewport and checkpoint retry correction — Nov 24, 2026, 10:29:52 PM PHT
+
+Fresh API35 run 45412227253 stayed connected, verified six themes and reached actual syntax-highlighted native SourceView. It failed waiting for Sample output because that panel was below the viewport; screenshot confirms the larger editable preview occupies the screen. Smoke now scrolls the outer gutter to reveal output and back upward to toggle it, preserving native editing gestures and all assertions. Failure capture now preserves the original exception even if ADB disappears. Checkpoint polling now filters created_at to its newly dispatched device run, preventing a retry from consuming an older failed same-SHA result. Exact-SHA, production signing, source-only CI, cancel-in-progress and manual API35 policies remain intact. Next rerun gated delivery.

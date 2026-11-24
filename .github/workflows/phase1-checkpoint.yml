@@ -1,5 +1,5 @@
 # Explicit Reimagined APK delivery checkpoint; routine source pushes remain fast.
-# Retry with the observed Compose editable-parent/search-label-child accessibility structure.
+# Retry after revealing the native preview console below the viewport; isolate newly dispatched run.
 name: Guarded release checkpoint
 on:
   push:
@@ -33,7 +33,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
-        run: gh workflow run device.yml --repo "$GITHUB_REPOSITORY" --ref main
+        run: |
+          echo "CHECKPOINT_DEVICE_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+          gh workflow run device.yml --repo "$GITHUB_REPOSITORY" --ref main
       - name: Require successful API 35 workflow on the exact commit
         env:
           GH_TOKEN: ${{ github.token }}
@@ -43,8 +45,8 @@ jobs:
           run_id=""
           for attempt in $(seq 1 210); do
             data="$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/device.yml/runs?event=workflow_dispatch&per_page=30")"
-            chosen="$(echo "$data" | jq -c --arg sha "$GITHUB_SHA" '
-              [.workflow_runs[] | select(.head_sha == $sha and .event == "workflow_dispatch")]
+            chosen="$(echo "$data" | jq -c --arg sha "$GITHUB_SHA" --arg started "$CHECKPOINT_DEVICE_STARTED_AT" '
+              [.workflow_runs[] | select(.head_sha == $sha and .event == "workflow_dispatch" and .created_at >= $started)]
               | sort_by(.run_number, .run_attempt) | last // null')"
             if [[ "$chosen" != "null" ]]; then
               run_id="$(echo "$chosen" | jq -r .id)"

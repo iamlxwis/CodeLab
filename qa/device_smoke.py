@@ -75,17 +75,18 @@ def tap(*labels):
     tap_node(wait_for(*labels))
 
 
-def scroll_to(*labels, attempts=6):
+def scroll_to(*labels, attempts=6, direction="down", swipe_x=.5):
     """Reach a real visible UI target on varied screen sizes without fixed pixel coordinates."""
     size = adb("shell", "wm", "size")
     matches = re.findall(r"(\d+)x(\d+)", size)
     w, h = map(int, matches[-1])
+    start, end = (.77, .35) if direction == "down" else (.35, .77)
     for _ in range(attempts):
         try:
             return wait_for(*labels, timeout=2.5)
         except AssertionError:
-            adb("shell", "input", "swipe", str(w//2), str(int(h*.77)),
-                str(w//2), str(int(h*.35)), "350")
+            adb("shell", "input", "swipe", str(int(w*swipe_x)), str(int(h*start)),
+                str(int(w*swipe_x)), str(int(h*end)), "350")
     return wait_for(*labels, timeout=4)
 
 
@@ -187,10 +188,11 @@ def main():
             str(w//2), str(int(h*.8)), "350")
     select_style("Obsidian")
     tap_node(scroll_to("Toggle sample console"))
-    wait_for("Sample output")
+    # Scroll in the outer gutter: native code editing retains its own gestures.
+    scroll_to("Sample output", swipe_x=.04)
     wait_for("Hello 42")
     snapshot("theme-interactive-preview")
-    tap_node(scroll_to("Toggle sample console"))
+    tap_node(scroll_to("Toggle sample console", direction="up", swipe_x=.04))
     tap("Done")
     wait_for("New project")
     # The Python pack is installed by this smoke run; verify native in-app
@@ -436,8 +438,15 @@ if __name__ == "__main__":
         main()
     except Exception:
         OUT.mkdir(exist_ok=True)
-        snapshot("failure")
-        (OUT / "logcat.txt").write_text(adb("logcat", "-d", "-t", "12000"))
-        (OUT / "crash-log.txt").write_text(
-            adb("logcat", "-d", "-b", "crash", "-t", "1000", check=False))
+        # Preserve the original failure even if the emulator itself disappeared.
+        try:
+            snapshot("failure")
+        except Exception as capture_error:
+            (OUT / "failure-capture-error.txt").write_text(str(capture_error))
+        for filename, args in (("logcat.txt", ("logcat", "-d", "-t", "12000")),
+                               ("crash-log.txt", ("logcat", "-d", "-b", "crash", "-t", "1000"))):
+            try:
+                (OUT / filename).write_text(adb(*args, check=False))
+            except Exception as capture_error:
+                (OUT / filename).write_text(str(capture_error))
         raise
