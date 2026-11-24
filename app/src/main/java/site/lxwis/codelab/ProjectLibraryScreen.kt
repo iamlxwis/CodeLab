@@ -247,13 +247,9 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
         }
         if (m.projects.isEmpty() && !m.busy) item {
             ClayPanel {
-                Column(Modifier.fillMaxWidth().padding(20.dp)) {
-                    Text("No projects yet", fontWeight = FontWeight.Medium)
-                    Spacer(Modifier.height(6.dp))
-                    Text("Choose New project to start with a template, or import work you already have.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                 }
+                ReimaginedEmptyState(Icons.Default.FolderOpen, "No projects yet",
+                    "Start with a template or import work you already have.",
+                    action = "New project", onAction = new)
             }
         }
         if (visibleProjects.isEmpty() && m.projects.isNotEmpty()) item {

@@ -89,7 +89,7 @@ internal fun FileExplorerSheet(
             .runningFold("") { prefix, part -> prefix + part + "/" }.drop(1).toSet())
     }
     var menuFor by remember { mutableStateOf<String?>(null) }
-    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val state = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val motionMillis = rememberCodeLabMotion(m.motionPreference, m.motionIntensity,
         m.motionSpeed, m.springIntensity).millis(170)
     val allFiles = m.files
@@ -112,6 +112,7 @@ internal fun FileExplorerSheet(
                 }
                 IconButton(onClick = onNewFolder) { Icon(Icons.Default.CreateNewFolder, "New folder") }
                 IconButton(onClick = onNew) { Icon(Icons.Default.NoteAdd, "New file") }
+                ReimaginedSheetSizeButton(state)
                 IconButton(onClick = onClose) { Icon(Icons.Default.Close, "Close explorer") }
             }
             CodeLabSearch(search, { search = it }, "Search files")
@@ -181,8 +182,11 @@ internal fun FileExplorerSheet(
                 }
                 }
                 if (rows.isEmpty()) item {
-                    Text("No matching files", Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (search.isNotBlank()) ReimaginedEmptyState(Icons.Default.SearchOff,
+                        "No matching files", "Try a different file name.", action = "Clear search",
+                        onAction = { search = "" })
+                    else ReimaginedEmptyState(Icons.Default.FolderOpen, "No files yet",
+                        "Create a file to start editing.", action = "New file", onAction = onNew)
                 }
             }
         }

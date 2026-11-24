@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.core.tween
+import kotlinx.coroutines.launch
 
 private data class ActionEntry(
     val id: String, val name: String, val description: String,
@@ -49,7 +51,8 @@ internal fun WorkspaceActionsSheet(
     onToggleQuick: (String) -> Unit,
     onMoveQuick: (String, Int) -> Unit = { _, _ -> },
     onAction: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    motionMillis: Int = 170
 ) {
     var search by rememberSaveable { mutableStateOf("") }
     var editQuick by rememberSaveable { mutableStateOf(false) }
@@ -120,8 +123,9 @@ internal fun WorkspaceActionsSheet(
         onDismiss()
         onAction(id)
     }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     ModalBottomSheet(onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(.72f).padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -137,6 +141,7 @@ internal fun WorkspaceActionsSheet(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodySmall)
                 }
+                ReimaginedSheetSizeButton(sheetState)
                 IconButton(onClick = onDismiss) { Icon(Icons.Default.Close, "Close actions") }
             }
             CodeLabSearch(search, { search = it }, if (section == "Settings") "Search settings" else "Search actions")
@@ -190,10 +195,15 @@ internal fun WorkspaceActionsSheet(
                     verticalArrangement = Arrangement.spacedBy(3.dp),
                     contentPadding = PaddingValues(bottom = 20.dp)) {
                     if (matches.isEmpty()) item {
-                        Text("No matching actions", Modifier.padding(18.dp))
+                        ReimaginedEmptyState(Icons.Default.SearchOff, "No matching actions",
+                            "Try a different search or clear the filter.", action = "Clear search",
+                            onAction = { search = ""; section = null })
                     }
                     items(matches, key = { it.id }) { item ->
-                        Row(Modifier.fillMaxWidth().clickable { act(item.id) }
+                        Row(Modifier.fillMaxWidth().animateItem(
+                            fadeInSpec = if (motionMillis > 0) tween(motionMillis) else null,
+                            placementSpec = if (motionMillis > 0) tween(motionMillis) else null,
+                            fadeOutSpec = if (motionMillis > 0) tween(motionMillis) else null).clickable { act(item.id) }
                             .padding(horizontal = 8.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically) {
                             Icon(item.icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -216,5 +226,42 @@ internal fun WorkspaceActionsSheet(
                 }
             }
         }
+    }
+}
+
+
+/** Native partial/expanded sheet anchors, with an accessible alternative to dragging. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ReimaginedSheetSizeButton(state: SheetState) {
+    val scope = rememberCoroutineScope()
+    if (state.hasPartiallyExpandedState && state.hasExpandedState) {
+        val expanded = state.currentValue == SheetValue.Expanded
+        IconButton(onClick = {
+            scope.launch { if (expanded) state.partialExpand() else state.expand() }
+        }) {
+            Icon(if (expanded) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
+                if (expanded) "Collapse sheet" else "Expand sheet")
+        }
+    }
+}
+
+/** Consistent, actionable empty state using the current theme. */
+@Composable
+internal fun ReimaginedEmptyState(icon: ImageVector, title: String, detail: String,
+    modifier: Modifier = Modifier, action: String? = null, onAction: (() -> Unit)? = null) {
+    Column(modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Surface(shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+            Icon(icon, null, Modifier.padding(14.dp).size(28.dp),
+                tint = MaterialTheme.colorScheme.primary)
+        }
+        Text(title, style = MaterialTheme.typography.titleMedium,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        Text(detail, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        if (action != null && onAction != null) TextButton(onClick = onAction) { Text(action) }
     }
 }

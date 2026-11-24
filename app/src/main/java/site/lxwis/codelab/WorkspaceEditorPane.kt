@@ -3,6 +3,8 @@ package site.lxwis.codelab
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -33,7 +35,7 @@ internal fun WorkspaceEditorPane(
     val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
     val file = m.active
     val alpha = remember { Animatable(1f) }
-    LaunchedEffect(file, project) {
+    LaunchedEffect(file, project, motion.millis(160)) {
         if (motion.millis(160) > 0) { alpha.snapTo(.75f); alpha.animateTo(1f, tween(motion.millis(160))) }
         else alpha.snapTo(1f)
     }
@@ -60,11 +62,8 @@ internal fun WorkspaceEditorPane(
                 modifier = Modifier.fillMaxSize()
             )
         } else if (m.busy) CircularProgressIndicator(Modifier.align(Alignment.Center).size(24.dp), strokeWidth = 2.dp)
-        else Column(Modifier.align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-            TextButton(onClick = onFiles) { Text("Open a file") }
-            Text("Select a file from Explorer or create one.",
-                style = androidx.compose.material3.MaterialTheme.typography.bodySmall)
-        }
+        else ReimaginedEmptyState(Icons.Default.Code, "No file open",
+            "Select a file from Explorer or create one.", Modifier.align(Alignment.Center),
+            action = "Open a file", onAction = onFiles)
     }
 }

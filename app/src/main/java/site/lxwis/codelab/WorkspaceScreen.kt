@@ -73,6 +73,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
@@ -80,6 +81,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var requestedLanguage by rememberSaveable { mutableStateOf<String?>(null) }
     var selected by rememberSaveable { mutableStateOf("") }
     val snackbarHost = remember { SnackbarHostState() }
+    val snackbarScope = rememberCoroutineScope()
     LaunchedEffect(m.transferNotice) {
         val notice = m.transferNotice ?: return@LaunchedEffect
         snackbarHost.showSnackbar(notice)
@@ -275,7 +277,10 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 val outputPane: @Composable (Modifier) -> Unit = { pane ->
                     if (m.console) RunConsole(m.runner, pane, m.active, m.files,
                         onToggleMaximize = { if (wide) wideOutputExpanded = !wideOutputExpanded
-                            else m.choosePhoneSplitEnabled(!m.phoneSplitEnabled) }) { path, line ->
+                            else m.choosePhoneSplitEnabled(!m.phoneSplitEnabled) },
+                        onNotice = { message ->
+                            snackbarScope.launch { snackbarHost.showSnackbar(message) }
+                        }, motionMillis = motionMillis) { path, line ->
                         m.select(path, goToLine = line)
                     }
                     else if (m.preview && m.active != null)
@@ -444,6 +449,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             onToggleQuick = { m.toggleQuickAction(it, p != null) },
             onMoveQuick = { id, offset -> m.moveQuickAction(id, offset, p != null) },
             onAction = ::openAction,
+            motionMillis = motionMillis,
             onDismiss = { dialog = "" })
         "languages" -> LanguageManagerSheet(m, initialLanguage = requestedLanguage) {
             dialog = ""

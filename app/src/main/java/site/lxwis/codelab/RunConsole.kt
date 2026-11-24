@@ -1,5 +1,9 @@
 package site.lxwis.codelab
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,6 +37,8 @@ import androidx.compose.ui.unit.*
 fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: String? = null,
     knownFiles: List<String> = emptyList(),
     onToggleMaximize: (() -> Unit)? = null,
+    onNotice: ((String) -> Unit)? = null,
+    motionMillis: Int = 0,
     onOpenError: (String, Int) -> Unit = { _, _ -> }) {
     var tableMode by rememberSaveable(fileName) { mutableStateOf(true) }
     val sqlResult = remember(session.transcript, fileName, session.running) {
@@ -41,6 +47,12 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     }
     val clipboard = LocalClipboardManager.current
     val context = LocalContext.current
+    val notice by rememberUpdatedState(onNotice)
+    fun report(message: String) {
+        val handler = notice
+        if (handler != null) handler(message)
+        else Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
     var showActions by remember { mutableStateOf(false) }
     var showExecutionSettings by remember { mutableStateOf(false) }
     var showHistory by remember { mutableStateOf(false) }
@@ -66,7 +78,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             val saved = runCatching {
                 checkNotNull(context.contentResolver.openOutputStream(uri, "wt")).bufferedWriter().use { it.write(session.transcript) }
             }.isSuccess
-            Toast.makeText(context, if (saved) "Output saved" else "Could not save output", Toast.LENGTH_SHORT).show()
+            report(if (saved) "Output saved" else "Could not save output")
         }
     }
     val scroll = rememberScrollState()
@@ -187,6 +199,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                         DropdownMenuItem(text = { Text("Copy output") }, enabled = hasOutput, onClick = {
                             clipboard.setText(AnnotatedString(session.transcript))
                             showActions = false
+                            report("Output copied")
                         })
                         DropdownMenuItem(text = { Text("Save output…") }, enabled = hasOutput, onClick = {
                             showActions = false
@@ -212,7 +225,8 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                     }
                 }
             }
-            if (showFilter) {
+            AnimatedVisibility(showFilter, enter = fadeIn(tween(motionMillis)),
+                exit = fadeOut(tween(motionMillis))) {
                 OutlinedTextField(filterOutput, { filterOutput = it },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Filter console lines") },
