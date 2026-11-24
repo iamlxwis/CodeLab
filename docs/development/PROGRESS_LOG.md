@@ -131,3 +131,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | 2026-11-24 2:12 PM PHT | Phase 2 easy/medium | 0/6 verified; CI pending | Added lexical reference nearest-first listing, preview of affected rename lines with source-change guard, and recent-first open tab switcher. JVM regression added; user remains physical tester. |
 
 | 2026-11-24 2:08 PM PHT | Phase 2 easy/medium | 0/6 verified; current source build pending | Member-style lexical completion now favors existing dotted identifiers; Python fold preview ignores triple-quoted pseudo-code and supports colon before comments. JVM regression tests added. Earlier checkpoint timestamp corrected at this commit; user does all phone testing. |
+
+| 2026-11-24 2:15 PM PHT | Phase 2 easy/medium | 6/6 source checkpoints verified; owner acceptance pending | Exact-source Android APK workflow [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) passed compiler, JVM unit tests, lint, signed APK packaging and artifact upload; handoff to owner physical testing. Historical 2:12 PM entry was premature; commit timestamps are authoritative. |

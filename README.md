@@ -24,15 +24,17 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Phase 2 · Easy/medium editor batch:** **0/6 verified · 6 remaining** (source improvements implemented; current commit's CI pending).
+**Phase 2 · Easy/medium editor batch:** **6/6 source checkpoints verified · 0 remaining source tasks**. **Phone acceptance: pending (owner).**
 
-**Current activity · Nov 24, 2026 · 2:08 PM PHT:** Refined member-context autocomplete and Python fold detection while retaining nearby references, rename previews and recent-file switching; awaiting CI.
+**Current activity · Nov 24, 2026 · 2:15 PM PHT:** Verified the six scoped easy/medium editor improvements in [Android CI 45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) and handed the APK to the owner for testing.
 
-**Status:** COMMITTED / CI PENDING · [Android build](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml) · [Prior passing build](https://github.com/iamlxwis/CodeLab/actions/runs/45336987696).
+**Status:** CI PASSED / HANDED OFF · [Latest APK workflow](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953) · [APK artifacts](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953#artifacts).
 
-> This is one **committed checkpoint**, not a live agent heartbeat. Every substantive commit **replaces this activity sentence** with its actual Philippine timestamp. Historical entries go to the [progress audit](docs/development/PROGRESS_LOG.md). Source changes count as verified only when the relevant checks pass. All phone testing belongs to the owner.
+> One **committed checkpoint**, not a live running agent. Each meaningful implementation commit replaces the single activity sentence and uses actual Asia/Manila date/time; the [progress log](docs/development/PROGRESS_LOG.md) retains history. Completed source checks do **not** mean owner device acceptance or complete semantic language analysis.
 
-**Next:** Check exact-commit Gradle build/JVM tests; resolve failures, synchronize verification evidence and hand off APK for user testing. No LSP, multi-cursor, new runtimes or device smoke.
+**Implemented:** Lexical member-context autocomplete, nearby same-file references/symbol navigation, preview-protected lexical rename, Python folding and cursor-first structural diagnostics, recent-first open-file switcher, JVM regressions/build/docs. No LSP, multi-cursor, new languages or device smoke.
+
+**Next:** Owner installs and tests the new workflow APK; reported defects become focused follow-up tasks. Hard Phase 2 tasks remain deferred.
 
 [Development audit](docs/development/PROGRESS_LOG.md) · [Project memory](docs/development/PROJECT_MEMORY.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md)
 
