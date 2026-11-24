@@ -27,13 +27,13 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **PARTIAL — source committed, verification pending** |
+| Status | **IN PROGRESS — build recovery** |
 | Workstreams accepted | **0/10** — verification pending |
-| Current workstream | Exact-source CI, remaining visual fidelity and device acceptance |
+| Current workstream | Kotlin compile repair and UI acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Last activity | 24 Nov 2026, 18:45 PHT |
+| Last activity | Nov 24, 2026, 6:52:31 PM PHT |
 
-**Current activity:** 24 Nov 2026, 18:45 PHT — Committed Reimagined source through [f23d62f](https://github.com/iamlxwis/CodeLab/commit/f23d62ff5388f48898db625030a81f018b80b553); [APK CI](https://github.com/iamlxwis/CodeLab/actions/runs/45377658562) running, acceptance and remaining fidelity work open.
+**Current activity:** Nov 24, 2026, 6:52:31 PM PHT — Fixed undefined animation duration from [failed CI](https://github.com/iamlxwis/CodeLab/actions/runs/45377658562); rebuilding while reviewing remaining UI requirements.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

@@ -1,3 +1,7 @@
+# Recovery checkpoint — Nov 24, 2026, 6:52:31 PM PHT
+
+CI 45377658562 failed at Kotlin compilation (undefined duration). Restored duration from the configured motion policy; rebuild required. Owner requires continuous README updates in 12-hour Asia/Manila time, no premature completion, and continued implementation in one session.
+
 # CodeLab — Reimagined checkpoint — 24 Nov 2026, 18:45 PHT
 
 - Owner authorized a single comprehensive Apple-inspired redesign, not a new phase. Direct commits on main.

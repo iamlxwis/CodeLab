@@ -166,3 +166,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | 24 Nov 2026, 18:43:35 PHT | Refine language badges, adaptive launcher and project import destinations | Source committed; acceptance pending | [95a4acb](https://github.com/iamlxwis/CodeLab/commit/95a4acb1fe1f6e52f4b803018cc486501d67fc2c) |
 | 24 Nov 2026, 18:44:34 PHT | Present expandable file tree and add hierarchy and gutter regression tests | Source committed; acceptance pending | [f23d62f](https://github.com/iamlxwis/CodeLab/commit/f23d62ff5388f48898db625030a81f018b80b553) |
 | 24 Nov 2026, 18:45 PHT | Acceptance ledger | Partial; build pending; 0/10 accepted | [Exact source CI](https://github.com/iamlxwis/CodeLab/actions/runs/45377658562) · [Remaining work](REIMAGINED.md) |
+
+| Nov 24, 2026, 6:52:31 PM PHT | Build recovery | In progress | CI 45377658562 failed debug/release Kotlin compilation: undefined duration in ProjectLibraryScreen.kt; restored motion-derived duration. Rebuild pending. |
