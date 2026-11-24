@@ -90,6 +90,8 @@ internal fun FileExplorerSheet(
     }
     var menuFor by remember { mutableStateOf<String?>(null) }
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val motionMillis = rememberCodeLabMotion(m.motionPreference, m.motionIntensity,
+        m.motionSpeed, m.springIntensity).millis(170)
     val allFiles = m.files
     val rows = remember(allFiles, m.folders, expanded, search) {
         explorerRows(allFiles, m.folders, expanded, search)
@@ -116,6 +118,10 @@ internal fun FileExplorerSheet(
             LazyColumn(Modifier.fillMaxWidth().weight(1f),
                 verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 items(rows, key = { if (it.folder) "folder:" + it.path else "file:" + it.path }) { row ->
+                Column(Modifier.animateItem(
+                    fadeInSpec = if (motionMillis > 0) tween(motionMillis) else null,
+                    placementSpec = if (motionMillis > 0) tween(motionMillis) else null,
+                    fadeOutSpec = if (motionMillis > 0) tween(motionMillis) else null)) {
                 if (row.folder) {
                     val folder = row.path
                     Surface(onClick = { expanded = if (folder in expanded) expanded - folder else expanded + folder },
@@ -171,6 +177,7 @@ internal fun FileExplorerSheet(
                         }
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
+                }
                 }
                 }
                 if (rows.isEmpty()) item {

@@ -35,6 +35,28 @@ class SourceViewTest {
         }
     }
 
+    @Test fun duplicateAndDeletePreserveEmptyLinesAndTrailingNewline() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.runOnMainSync {
+            val editor = SourceView(ContextThemeWrapper(instrumentation.targetContext,
+                android.R.style.Theme_Material), "main.js")
+            editor.setText("\nsecond\n")
+            editor.setSelection(0)
+            editor.duplicateCurrentLine()
+            assertEquals("\n\nsecond\n", editor.text.toString())
+            editor.deleteCurrentLine()
+            assertEquals("\nsecond\n", editor.text.toString())
+            editor.setText("first\nsecond\n")
+            editor.goToLogicalLine(2)
+            editor.deleteCurrentLine()
+            assertEquals("first\n", editor.text.toString())
+            editor.goToLogicalLine(2)
+            assertEquals(1, editor.logicalColumnAt(editor.selectionEnd))
+            editor.deleteCurrentLine()
+            assertEquals("first", editor.text.toString())
+        }
+    }
+
     @Test fun composingImeTextRemainsLiteralUntilCommit() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         instrumentation.runOnMainSync {

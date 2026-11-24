@@ -109,6 +109,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     val haptics = LocalHapticFeedback.current
     val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
     val motionMillis = motion.millis(170)
+    val keyboardEditing = WindowInsets.ime.getBottom(LocalDensity.current) > 0 &&
+        !m.console && !m.preview
     val activity = context as? ComponentActivity
     DisposableEffect(activity, focusMode) {
         val window = activity?.window
@@ -213,7 +215,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 var explorerDrag by remember { mutableFloatStateOf(0f) }
                 IconButton(onClick = { dialog = "files" }, modifier = Modifier.pointerInput(threshold) {
                     detectHorizontalDragGestures(onDragStart = { explorerDrag = 0f },
-                        onDragEnd = { if (explorerDrag >= threshold) dialog = "files" },
+                        onDragEnd = { if (explorerDrag >= threshold) dialog = "files"; explorerDrag = 0f },
+                        onDragCancel = { explorerDrag = 0f },
                         onHorizontalDrag = { change, dx -> change.consume(); explorerDrag += dx })
                 }) {
                     Icon(Icons.Default.FolderOpen, "Browse files or swipe right")
@@ -360,7 +363,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Spacer(Modifier.width(6.dp))
                 Text("Exit Focus Mode")
             }
-            if (!focusMode) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+            if (!focusMode && !keyboardEditing) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 PanelButton("Editor", !m.console && !m.preview, motionMillis) { wideOutputExpanded = false; m.console = false; m.preview = false }
                 PanelButton("Console", m.console && (!m.phoneSplitEnabled || LocalConfiguration.current.screenWidthDp >= 820), motionMillis) {

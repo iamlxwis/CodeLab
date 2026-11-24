@@ -897,7 +897,6 @@ fun CodeEditor(
             factory = {
                 SourceView(it, filename).apply {
                     setText(text)
-                    restorePosition(fileKey)
                     cursorStatus.lineCount = logicalLineCount
                     changed = { source ->
                         cursorStatus.lineCount = logicalLineCount
@@ -917,6 +916,11 @@ fun CodeEditor(
                             selectionCallback(live.subSequence(start, boundedEnd).toString(), firstLine)
                         }
                     }
+                    restorePosition(fileKey)
+                    val restoredLine = logicalLineAt(selectionEnd)
+                    // The callback may not fire when restoring an unchanged position.
+                    cursorStatus.label = "Ln " + restoredLine + " · Col " +
+                        logicalColumnAt(selectionEnd)
                     view = this
                 }
             },

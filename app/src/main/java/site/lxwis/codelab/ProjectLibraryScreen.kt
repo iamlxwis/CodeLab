@@ -273,7 +273,11 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
             }
         }
         items(visibleProjects.chunked(if (m.projectGrid) 2 else 1), key = { it.first() }) { row ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth().animateItem(
+                fadeInSpec = if (motionMillis > 0) tween(motionMillis) else null,
+                placementSpec = if (motionMillis > 0) tween(motionMillis) else null,
+                fadeOutSpec = if (motionMillis > 0) tween(motionMillis) else null),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             row.forEach { name ->
             val pressInteraction = remember(name) { MutableInteractionSource() }
             val isPressed by pressInteraction.collectIsPressedAsState()
@@ -289,7 +293,8 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 modifier = Modifier.weight(1f).graphicsLayer { scaleX = pressScale; scaleY = pressScale }
                     .pointerInput(name, threshold) {
                         detectHorizontalDragGestures(onDragStart = { drag = 0f },
-                            onDragEnd = { if (kotlin.math.abs(drag) > threshold) options = name },
+                            onDragEnd = { if (kotlin.math.abs(drag) > threshold) options = name; drag = 0f },
+                            onDragCancel = { drag = 0f },
                             onHorizontalDrag = { change, dx -> change.consume(); drag += dx })
                     }
             ) {
@@ -300,10 +305,10 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                         Icon(Icons.Default.Folder, null, Modifier.padding(10.dp).size(22.dp),
                             tint = MaterialTheme.colorScheme.primary)
                     }
-                    if (!m.projectGrid && name in m.favorites) {
+                    if (name in m.favorites) {
                         Icon(Icons.Default.Star, "Favorite project",
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 10.dp).size(18.dp))
+                            modifier = Modifier.padding(start = if (m.projectGrid) 2.dp else 10.dp).size(18.dp))
                     }
                     Column(Modifier.weight(1f).padding(start = if (m.projectGrid) 6.dp else 14.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)) {

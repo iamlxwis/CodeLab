@@ -110,9 +110,25 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             }
         })
 
+    private var multiTouchGesture = false
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) multiTouchGesture = false
+        if (event.pointerCount > 1 && !multiTouchGesture) {
+            // End native selection/scroll handling before the pinch owns the stream.
+            val cancel = MotionEvent.obtain(event)
+            cancel.action = MotionEvent.ACTION_CANCEL
+            try { super.onTouchEvent(cancel) } finally { cancel.recycle() }
+            multiTouchGesture = true
+            parent?.requestDisallowInterceptTouchEvent(true)
+        }
         zoomDetector.onTouchEvent(event)
-        if (zoomDetector.isInProgress || event.pointerCount > 1) return true
+        if (multiTouchGesture) {
+            if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                multiTouchGesture = false
+                parent?.requestDisallowInterceptTouchEvent(false)
+            }
+            return true
+        }
         return super.onTouchEvent(event)
     }
 
@@ -175,6 +191,10 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     val logicalLineCount: Int get() = logicalLines.count
     fun logicalLineAt(offset: Int): Int =
         logicalLines.lineAt(offset.coerceIn(0, length())) + 1
+    fun logicalColumnAt(offset: Int): Int {
+        val safe = offset.coerceIn(0, length())
+        return safe - logicalLines.start(logicalLines.lineAt(safe)) + 1
+    }
     private var bracketPair: Pair<Int, Int>? = null
     private var bracketTask: Future<*>? = null
     private var bracketGeneration = 0
@@ -414,10 +434,9 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     fun duplicateCurrentLine() {
         val source = text ?: return
         val position = selectionStart.coerceIn(0, source.length)
-        val start = source.lastIndexOf('\n', (position - 1).coerceAtLeast(0)).let {
-            if (it < 0) 0 else it + 1
-        }
-        val lineEnd = source.indexOf('\n', position).let { if (it < 0) source.length else it }
+        val lineNumber = logicalLineAt(position)
+        val start = logicalLines.start(lineNumber - 1)
+        val lineEnd = if (lineNumber < logicalLineCount) logicalLines.start(lineNumber) - 1 else source.length
         val line = source.subSequence(start, lineEnd).toString()
         source.insert(lineEnd, "\n" + line)
         setSelection((position + line.length + 1).coerceAtMost(source.length))
@@ -426,17 +445,13 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     fun deleteCurrentLine() {
         val source = text ?: return
         if (source.isEmpty()) return
-        val position = selectionStart.coerceIn(0, source.length)
-        val start = source.lastIndexOf('\n', (position - 1).coerceAtLeast(0)).let {
-            if (it < 0) 0 else it + 1
-        }
-        val end = source.indexOf('\n', position).let {
-            if (it < 0) source.length else it + 1
-        }
-        if (start == 0 && end == source.length) source.clear()
-        else if (end == source.length && start > 0) source.delete(start - 1, end)
-        else source.delete(start, end)
-        setSelection(start.coerceAtMost(source.length))
+        val lineNumber = logicalLineAt(selectionStart)
+        val start = logicalLines.start(lineNumber - 1)
+        val last = lineNumber == logicalLineCount
+        val end = if (last) source.length else logicalLines.start(lineNumber)
+        val deleteStart = if (last && start > 0) start - 1 else start
+        source.delete(deleteStart, end)
+        setSelection(deleteStart.coerceAtMost(source.length))
     }
 
     fun indentSelection() {
