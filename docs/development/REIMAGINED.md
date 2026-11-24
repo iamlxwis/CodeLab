@@ -2,15 +2,15 @@
 
 Owner approved one comprehensive update, without numbered development phases. This ledger distinguishes committed source changes from tested acceptance.
 
-**Approved contract:** [All 37 decisions and associated requirements](REIMAGINED_SPEC.md).  
-**Latest verified source:** [f2990a9](https://github.com/iamlxwis/CodeLab/commit/f2990a971982f54f14568c1ce65a10186c291e5c), [Android CI 45391600449](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449) — success.  
-**Current source:** additional theme/palette/effect fixes below; new CI pending.  
+**Approved contract:** [All 37 decisions and associated requirements](REIMAGINED_SPEC.md).
+**Latest verified source:** [f2990a9](https://github.com/iamlxwis/CodeLab/commit/f2990a971982f54f14568c1ce65a10186c291e5c), [Android CI 45391600449](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449) — success.
+**Current source:** `2b04bd19f0e17f697baf325ff1a08b8a51e27b0f`; exact-source CI pending at this checkpoint.
 **Acceptance:** **0/37 fully accepted**; API35 and physical acceptance for this redesign remain unverified. Historical 0/10 workstreams are an earlier grouping, not the decision denominator.
 
 | Workstream | Source changes | Unfinished / verification |
 | --- | --- | --- |
 | Identity | Monogram, adaptive icon, animated splash, Inter and JetBrains Mono (licensed) | Check icon masks, startup and typography on hardware |
-| Theme system | Six named presets; aliases for legacy styles; auto light/dark; material, color and font controls; no arbitrary saved-theme cap; JSON import/export | Verify theme upgrade and contrast across custom colors; full per-component theme styling and exact live-preview fidelity remain open |
+| Theme system | Six named presets; aliases for legacy styles; auto light/dark; material, color and font controls; no arbitrary saved-theme cap; JSON import/export | Verify theme upgrade and contrast across custom colors; actual component customization and exact live-preview fidelity need device acceptance |
 | Workspace | Home destination bar, compact project list/grid, favorites retained, project-row gesture | Verify small screens, all navigation destinations and layout responsiveness |
 | Project and import | Quick/guided setup, offline/online selection, file/folder/GitHub import entry points | Apple Files-style previews, conflict/progress UX and full import/export regression still open |
 | Editor | Logical gutter and cursor positions, current line, indentation and async bracket cues, syntax overrides, native font selection, tab icon and status controls | Verify large files, wrap and cursor correctness, selection and accessory behavior, keyboard layouts; do not assume improvements from source alone |
