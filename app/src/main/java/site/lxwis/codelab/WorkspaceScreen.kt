@@ -100,7 +100,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
     var showTutorial by rememberSaveable { mutableStateOf(!tutorialPrefs.getBoolean("complete", false)) }
     val haptics = LocalHapticFeedback.current
-    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity)
+    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
     val motionMillis = motion.millis(170)
     val activity = context as? ComponentActivity
     DisposableEffect(activity, focusMode) {
@@ -590,7 +590,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             } else m.error = "Could not save tutorial progress. Retry."
         },
         projectOpen = p != null,
-        resumeFrom = tutorialPrefs.getInt("resume-index", 0)
+        resumeFrom = tutorialPrefs.getInt("resume-index", 0),
+        motion = motion
     )
     m.cloudPending?.let { filename ->
         val language = m.cloudLanguages[CloudJudge0.extension(filename)]

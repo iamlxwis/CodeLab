@@ -1,5 +1,8 @@
 package site.lxwis.codelab
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.platform.LocalContext
@@ -23,7 +26,7 @@ import androidx.compose.ui.unit.dp
  * Full-canvas radial gradients fade continuously, without large blur layers.
  */
 @Composable
-internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable () -> Unit) {
+internal fun CodeLabBackdrop(style: String, dark: Boolean, motionMillis: Int = 0, content: @Composable () -> Unit) {
     val scheme = MaterialTheme.colorScheme
     val preset = CodeLabVisualStyles.effective(style, dark)
     val studio = LocalStudioAppearance.current
@@ -32,7 +35,8 @@ internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable 
     val blurSupported = Build.VERSION.SDK_INT >= 31 && studio.glassQuality != "Lightweight" &&
         (studio.glassQuality == "High" || !lowRam)
     val customBackground = studio.background.isNotEmpty()
-    val background = if (customBackground) Brush.verticalGradient(listOf(scheme.background, scheme.background)) else when (preset) {
+    val canvasColor by animateColorAsState(scheme.background, tween(motionMillis), label = "theme-background")
+    val background = if (customBackground) Brush.verticalGradient(listOf(canvasColor, canvasColor)) else when (preset) {
         "Crystal" -> if (dark)
             Brush.verticalGradient(listOf(Color(0xff101214), Color(0xff252a2e), Color(0xff14171a)))
             else Brush.verticalGradient(listOf(Color(0xfff8f9fa), Color(0xffdfe3e6), Color(0xfff2f4f5)))
@@ -40,8 +44,8 @@ internal fun CodeLabBackdrop(style: String, dark: Boolean, content: @Composable 
             Brush.verticalGradient(listOf(Color(0xff18232a), Color(0xff111b23)))
             else Brush.verticalGradient(listOf(Color(0xfff4f5f0), Color(0xffe3ebe8)))
         "Sandstone" -> Brush.verticalGradient(listOf(Color(0xfffdfbf4), Color(0xfff5f0e4)))
-        "Obsidian" -> Brush.verticalGradient(listOf(Color.Black, Color.Black))
-        else -> Brush.verticalGradient(listOf(scheme.background, scheme.background))
+        "Obsidian" -> Brush.verticalGradient(listOf(canvasColor, canvasColor))
+        else -> Brush.verticalGradient(listOf(canvasColor, canvasColor))
     }
     Box(Modifier.fillMaxSize().background(background)) {
         if (!customBackground && (preset == "Crystal" || preset == "Clay" || preset == "Sandstone")) {

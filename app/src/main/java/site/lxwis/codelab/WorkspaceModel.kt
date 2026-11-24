@@ -337,6 +337,18 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         motionIntensity = value.coerceIn(0, 100)
         preferences.edit().putInt("motion-intensity", motionIntensity).apply()
     }
+    var motionSpeed by mutableIntStateOf(preferences.getInt("motion-speed", 100).coerceIn(50, 200))
+        private set
+    fun chooseMotionSpeed(value: Int) {
+        motionSpeed = value.coerceIn(50, 200)
+        preferences.edit().putInt("motion-speed", motionSpeed).apply()
+    }
+    var springIntensity by mutableIntStateOf(preferences.getInt("spring-intensity", 35).coerceIn(0, 100))
+        private set
+    fun chooseSpringIntensity(value: Int) {
+        springIntensity = value.coerceIn(0, 100)
+        preferences.edit().putInt("spring-intensity", springIntensity).apply()
+    }
     var highContrast by mutableStateOf(preferences.getBoolean("high-contrast", false))
         private set
     fun chooseHighContrast(value: Boolean) {

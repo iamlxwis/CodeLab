@@ -78,9 +78,9 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
     val context = androidx.compose.ui.platform.LocalContext.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val duration = rememberCodeLabMotion(m.motionPreference, m.motionIntensity).millis(170)
+    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
     val scale by animateFloatAsState(if (pressed) .97f else 1f,
-        animationSpec = tween(duration, easing = FastOutSlowInEasing), label = "run-press")
+        animationSpec = motion.pressSpec(), label = "run-press")
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically) {
         if (project == null) Mark(Modifier.padding(horizontal = 8.dp).size(34.dp))
@@ -273,7 +273,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
             val isPressed by pressInteraction.collectIsPressedAsState()
             val pressScale by animateFloatAsState(
                 if (isPressed) .97f else 1f,
-                animationSpec = tween(motionMillis, easing = FastOutSlowInEasing),
+                animationSpec = CodeLabMotion(motionMillis / 170f, m.springIntensity).pressSpec(),
                 label = "project-press")
             val threshold = with(LocalDensity.current) { 56.dp.toPx() }
             var drag by remember(name) { mutableFloatStateOf(0f) }

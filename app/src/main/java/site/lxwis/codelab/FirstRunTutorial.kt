@@ -79,7 +79,8 @@ internal fun FirstRunTutorial(
     onFinish: () -> Unit,
     onTryAction: (String, Int) -> Unit = { _, _ -> },
     projectOpen: Boolean = false,
-    resumeFrom: Int = 0
+    resumeFrom: Int = 0,
+    motion: CodeLabMotion? = null
 ) {
     val start = TutorialProgress.restore(resumeFrom, guide.size)
     var index by rememberSaveable { mutableIntStateOf(start) }
@@ -113,7 +114,8 @@ internal fun FirstRunTutorial(
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(18.dp).size(30.dp))
                 }
-                val duration = rememberCodeLabMotion("System", 100).millis(220)
+                val systemMotion = rememberCodeLabMotion("System", 100)
+                val duration = (motion ?: systemMotion).millis(220)
                 AnimatedContent(targetState = current, transitionSpec = {
                     fadeIn(tween(duration)) togetherWith fadeOut(tween(duration))
                 }, label = "guide-page") { step ->

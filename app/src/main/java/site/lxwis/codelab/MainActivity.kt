@@ -18,6 +18,7 @@ class MainActivity : ComponentActivity() {
         // Transparent system bars; content still accounts for safeDrawing and IME insets.
         enableEdgeToEdge()
         setContent {
+            val motion = rememberCodeLabMotion(model.motionPreference, model.motionIntensity, model.motionSpeed, model.springIntensity)
             CodeLabTheme(
                 themePreset = model.themePreset,
                 visualStyle = model.visualStyle,
@@ -33,7 +34,7 @@ class MainActivity : ComponentActivity() {
                         isAppearanceLightNavigationBars = !dark
                     }
                 }
-                CodeLabBackdrop(model.visualStyle, dark) {
+                CodeLabBackdrop(model.visualStyle, dark, motion.millis(300)) {
                     CodeLabForegroundSurface(Modifier.fillMaxSize()) {
                         Studio(model, Modifier.windowInsetsPadding(WindowInsets.safeDrawing).imePadding())
                     }

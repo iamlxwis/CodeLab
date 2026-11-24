@@ -361,6 +361,10 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                             Slider(value = m.motionIntensity.toFloat(),
                                 onValueChange = { m.chooseMotionIntensity(it.toInt()) },
                                 valueRange = 0f..100f)
+                            Text("Animation speed · " + m.motionSpeed + "%", style = MaterialTheme.typography.bodySmall)
+                            Slider(m.motionSpeed.toFloat(), { m.chooseMotionSpeed(it.toInt()) }, valueRange = 50f..200f)
+                            Text("Spring response · " + m.springIntensity + "%", style = MaterialTheme.typography.bodySmall)
+                            Slider(m.springIntensity.toFloat(), { m.chooseSpringIntensity(it.toInt()) }, valueRange = 0f..100f)
                             Text("Reduced motion and Android's Remove animations setting are respected.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
