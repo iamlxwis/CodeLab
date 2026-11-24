@@ -27,13 +27,13 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **IN PROGRESS — build recovery** |
+| Status | **IN PROGRESS — cumulative build verification** |
 | Workstreams accepted | **0/10** — verification pending |
-| Current workstream | Kotlin compile repair and UI acceptance |
+| Current workstream | Compile, tests, lint, signed APK and remaining visual acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Last activity | Nov 24, 2026, 7:04:50 PM PHT |
+| Last activity | Nov 24, 2026, 7:06:02 PM PHT |
 
-**Current activity:** Nov 24, 2026, 7:04:50 PM PHT — Organized Theme Studio into color/material/font/syntax sections, added real JSON file import/export and independent font assets for saved looks; cumulative build verification active.
+**Current activity:** Nov 24, 2026, 7:06:02 PM PHT — Cumulative Reimagined source [e9be726](https://github.com/iamlxwis/CodeLab/commit/e9be726ff7f11de2f337910e0df37283c734c325) is under [Android CI](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708); holding source commits for a definitive result.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

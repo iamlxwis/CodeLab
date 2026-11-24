@@ -28,3 +28,13 @@ Owner approved one comprehensive update, without numbered development phases. Th
 5. Update README, this ledger and historical log at each verified milestone. Do not mark a workstream accepted without evidence. Keep one concise current README activity sentence.
 
 No claim is made that the redesign is fully complete or that an APK for it is currently available.
+
+
+## Recovery and cumulative implementation checkpoint — Nov 24, 2026, 7:06:02 PM PHT
+
+- Owner requires one continuous implementation session, direct main commits, and 12-hour AM/PM Philippine time in the live tracker.
+- Failed initial build [45377658562](https://github.com/iamlxwis/CodeLab/actions/runs/45377658562): undefined motion duration. Fixed at 94bd38b. Second build [45379503511](https://github.com/iamlxwis/CodeLab/actions/runs/45379503511): missing dp import. Fixed at a58e88d.
+- Exact source now under [CI 45380854708](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708) at e9be726ff7f11de2f337910e0df37283c734c325; in_progress/not concluded at this checkpoint. Superseded runs cancelled by the existing concurrency policy are not evidence of success or failure.
+- Added independent component colors, live workspace sample, grouped Theme Studio controls, bounded JSON file import/export, independent custom font assets, editable toolbar ordering, adaptive line numbers, incremental line indexing, keyboard-aware shortcuts, separate favorites/sort, compact project language choices, import metadata/conflict review, active-file expansion, explicit Offline/Online segments, themed snackbar, launch and editor transitions and resumable guide. Device fidelity and performance still unverified.
+- Repository comparison against prior verified Phase 3 source confirms no engine module, Gradle dependency or workflow file changes.
+- Next: inspect the definitive cumulative build result and fix failures; validate APK artifacts before reporting success. Manual API35 device smoke is unchanged and requires a workflow dispatch; do not bypass release safety checks. Physical device visual acceptance remains open.

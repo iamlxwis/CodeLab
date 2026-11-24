@@ -1,3 +1,11 @@
+# Cumulative Reimagined checkpoint — Nov 24, 2026, 7:06:02 PM PHT
+
+- Current exact implementation source: `e9be726ff7f11de2f337910e0df37283c734c325`; [CI 45380854708](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708) in_progress/pending.
+- Source recovery and additional UI work recorded in [Reimagined ledger](REIMAGINED.md). No verified Reimagined APK yet. Preserve existing Phase 1–3 capability, release signer and manual API35 workflow. Do not mark 37 decisions or ten workstreams accepted without evidence.
+- User requires one concise live README activity in 12-hour PHT, updated with every meaningful checkpoint.
+
+---
+
 # Recovery checkpoint — Nov 24, 2026, 6:52:31 PM PHT
 
 CI 45377658562 failed at Kotlin compilation (undefined duration). Restored duration from the configured motion policy; rebuild required. Owner requires continuous README updates in 12-hour Asia/Manila time, no premature completion, and continued implementation in one session.
