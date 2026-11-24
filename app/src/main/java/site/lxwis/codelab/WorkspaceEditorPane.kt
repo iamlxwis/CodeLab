@@ -33,7 +33,7 @@ internal fun WorkspaceEditorPane(
     onCommands: () -> Unit,
     onSelection: (String, Int) -> Unit
 ) {
-    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
+    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity, m.transitionEffect)
     val file = m.active
     val alpha = remember { Animatable(1f) }
     val transitionMillis = if (m.transitionEffect == "None") 0 else motion.millis(160)

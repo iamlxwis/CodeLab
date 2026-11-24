@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
         // Transparent system bars; content still accounts for safeDrawing and IME insets.
         enableEdgeToEdge()
         setContent {
-            val motion = rememberCodeLabMotion(model.motionPreference, model.motionIntensity, model.motionSpeed, model.springIntensity)
+            val motion = rememberCodeLabMotion(model.motionPreference, model.motionIntensity, model.motionSpeed, model.springIntensity, model.transitionEffect)
             val entrance = remember { Animatable(1f) }
             LaunchedEffect(Unit) {
                 if (motion.millis(240) > 0) { entrance.snapTo(.82f); entrance.animateTo(1f, tween(motion.millis(240))) }

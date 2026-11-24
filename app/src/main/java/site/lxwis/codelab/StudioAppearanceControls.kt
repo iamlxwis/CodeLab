@@ -266,7 +266,7 @@ private fun StudioLivePreview(m: WorkspaceModel) {
             else -> androidx.compose.ui.text.font.FontFamily(androidx.compose.ui.text.font.Font(R.font.jetbrains_mono))
         }
     }
-    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
+    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity, m.transitionEffect)
     var python by remember { mutableStateOf(false) }
     var output by remember { mutableStateOf(false) }
     var selectedLine by remember { mutableIntStateOf(0) }

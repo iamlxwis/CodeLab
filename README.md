@@ -20,22 +20,22 @@ Write, run, and manage projects from your phone.
   &nbsp;&nbsp;
   <img src="docs/screenshots/web-preview.png" alt="CodeLab offline HTML preview on Android" width="290" />
 </p>
-<p align="center"><sub>Actual Android emulator screenshots from CodeLab's automated device tests.</sub></p>
+<p align="center"><sub>Earlier-build Android emulator screenshots; Reimagined visual acceptance is pending.</sub></p>
 
 ## CodeLab Development Tracker
 
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **ACTIVE — interactive lesson, language logos, layout and console verification** |
+| Status | **ACTIVE — theme operations, exact preset colors and adaptive effects; CI pending** |
 | Decisions accepted | **0/37 fully accepted** — 37 require current visual/function/device evidence; source and CI tracked separately |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [bb5172d — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45390387550) · [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45390387550/artifacts/14919245609) |
+| Latest verified build | [f2990a9 — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449) · APK and packs available in Actions |
 | Next to build | Verify cumulative lesson/icons/layout/console APK; fix failures, then remaining whole-app visual and interaction gaps from API35 evidence |
-| Last activity | Nov 24, 2026, 8:13:24 PM PHT |
+| Last activity | Nov 24, 2026, 8:22:14 PM PHT |
 
-**Current activity:** Nov 24, 2026, 8:13:24 PM PHT — Settings/motion CI passed; interactive practice, 19 language logos, persistent focus layouts and console severity controls implemented, cumulative CI next.
+**Current activity:** Nov 24, 2026, 8:22:14 PM PHT — Lesson/logos/layout/console CI passed; explicit theme rename/duplicate, exact palette and adaptive effect fixes implemented, cumulative verification next.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -145,6 +146,7 @@ private fun SettingChoices(title: String, choices: List<String>, currentChoice: 
 /** Full-width, scrollable visual settings page, replacing the cramped modal. */
 @Composable
 internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, dismiss: () -> Unit) {
+    val galleryState = rememberLazyListState(initialFirstVisibleItemIndex = if (openStudio) 6 else 0)
     var customHex by remember(m.visualStyle) {
         mutableStateOf(if (m.accent.startsWith("#")) m.accent else "#")
     }
@@ -152,6 +154,10 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
     var notice by remember { mutableStateOf("") }
     var advanced by rememberSaveable { mutableStateOf(false) }
+    var menuId by remember { mutableStateOf<String?>(null) }
+    var renameId by rememberSaveable { mutableStateOf<String?>(null) }
+    var renameName by rememberSaveable { mutableStateOf("") }
+    var renameError by remember { mutableStateOf(false) }
     var pendingDelete by remember { mutableStateOf<String?>(null) }
     val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
     val context = LocalContext.current
@@ -201,6 +207,19 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
             importOpen = false
         }) { Text("Import") } },
         dismissButton = { TextButton(onClick = { importOpen = false }) { Text("Cancel") } })
+    if (renameId != null) AlertDialog(onDismissRequest = { renameId = null },
+        title = { Text("Rename theme") }, text = {
+            OutlinedTextField(renameName, { renameName = it.take(32); renameError = false },
+                label = { Text("Theme name") }, singleLine = true, isError = renameError,
+                supportingText = { if (renameError) Text("Enter a name using 1–32 characters") })
+        }, confirmButton = { TextButton(onClick = {
+            val id = renameId ?: return@TextButton
+            if (m.renameAppearanceRecipe(id, renameName)) {
+                if (editingId == id) recipeName = renameName.trim()
+                renameId = null
+                notice = "Theme renamed"
+            } else renameError = true
+        }) { Text("Rename") } }, dismissButton = { TextButton(onClick = { renameId = null }) { Text("Cancel") } })
     Dialog(onDismissRequest = dismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -210,12 +229,12 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
                     IconButton(onClick = dismiss) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Close appearance")
                     }
-                    Text("Appearance", Modifier.weight(1f),
+                    Text(if (openStudio) "Theme Studio" else "Appearance", Modifier.weight(1f),
                         style = MaterialTheme.typography.headlineSmall)
                     TextButton(onClick = dismiss) { Text("Done") }
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .4f))
-                LazyColumn(Modifier.weight(1f),
+                LazyColumn(Modifier.weight(1f), state = galleryState,
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     item {
@@ -321,24 +340,33 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
-                                        IconButton(onClick = {
-                                            m.useAppearanceRecipe(recipe.id)
-                                            editingId = recipe.id
-                                            recipeName = recipe.name
-                                            notice = "Adjust the look, then select Update"
-                                        }) {
-                                            Icon(Icons.Default.Edit,
-                                                contentDescription = "Edit " + recipe.name)
-                                        }
-                                        IconButton(onClick = {
-                                            exportId = recipe.id
-                                            exportTheme.launch(recipe.name.replace(Regex("[^a-zA-Z0-9_-]"), "_") + ".json")
-                                        }) {
-                                            Icon(Icons.Default.FileDownload, contentDescription = "Export theme " + recipe.name)
-                                        }
-                                        IconButton(onClick = { pendingDelete = recipe.id }) {
-                                            Icon(Icons.Default.DeleteOutline,
-                                                contentDescription = "Delete " + recipe.name)
+                                        Box {
+                                            IconButton(onClick = { menuId = recipe.id }) {
+                                                Icon(Icons.Default.MoreVert, "Actions for theme " + recipe.name)
+                                            }
+                                            DropdownMenu(menuId == recipe.id, { menuId = null }) {
+                                                DropdownMenuItem(text = { Text("Edit") }, onClick = {
+                                                    menuId = null
+                                                    m.useAppearanceRecipe(recipe.id)
+                                                    editingId = recipe.id
+                                                    recipeName = recipe.name
+                                                    notice = "Adjust the look, then select Update"
+                                                })
+                                                DropdownMenuItem(text = { Text("Rename") }, onClick = {
+                                                    menuId = null; renameId = recipe.id; renameName = recipe.name; renameError = false
+                                                })
+                                                DropdownMenuItem(text = { Text("Duplicate") }, onClick = {
+                                                    menuId = null
+                                                    notice = if (m.duplicateAppearanceRecipe(recipe.id)) "Theme duplicated" else "Could not duplicate theme"
+                                                })
+                                                DropdownMenuItem(text = { Text("Export") }, onClick = {
+                                                    menuId = null; exportId = recipe.id
+                                                    exportTheme.launch(recipe.name.replace(Regex("[^a-zA-Z0-9_-]"), "_") + ".json")
+                                                })
+                                                HorizontalDivider()
+                                                DropdownMenuItem(text = { Text("Delete", color = MaterialTheme.colorScheme.error) },
+                                                    onClick = { menuId = null; pendingDelete = recipe.id })
+                                            }
                                         }
                                     }
                                 }

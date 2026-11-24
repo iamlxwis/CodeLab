@@ -38,6 +38,16 @@ internal object AppearanceRecipes {
         name == name.trim() && name.isNotBlank() && name.length <= 32 &&
             name.none { it.isISOControl() }
 
+    fun copyName(name: String, existing: Set<String>): String {
+        var number = 1
+        while (true) {
+            val suffix = if (number == 1) " copy" else " copy $number"
+            val candidate = name.take((32 - suffix.length).coerceAtLeast(1)).trimEnd() + suffix
+            if (candidate !in existing) return candidate
+            number++
+        }
+    }
+
     fun decode(raw: String?): List<AppearanceRecipe> = try {
         val array = JSONArray(raw ?: "[]")
         val result = mutableListOf<AppearanceRecipe>()

@@ -24,7 +24,7 @@ class ReimaginedSettingsTest {
         val before = prefs.all.toMap()
         try {
             compose.setContent { MaterialTheme { ReimaginedSettings(model, {}, {}) } }
-            compose.onNodeWithText("Search settings").performTextInput("motion")
+            compose.onNodeWithContentDescription("Search settings").performTextInput("motion")
             compose.onNodeWithText("Motion & Haptics").performClick()
             compose.onNodeWithText("Reduced").performClick()
             compose.runOnIdle { assertEquals("Reduced", model.motionPreference) }
@@ -36,7 +36,7 @@ class ReimaginedSettingsTest {
                 assertEquals("Slide", WorkspaceModel(app).transitionEffect)
             }
             compose.onNodeWithContentDescription("Back to settings").performClick()
-            compose.onNodeWithText("Search settings").assertExists()
+            compose.onNodeWithContentDescription("Search settings").assertExists()
         } finally {
             // Restore only keys changed by this test; no unrelated project data is touched.
             val edit = prefs.edit()

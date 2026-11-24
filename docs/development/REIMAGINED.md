@@ -2,9 +2,10 @@
 
 Owner approved one comprehensive update, without numbered development phases. This ledger distinguishes committed source changes from tested acceptance.
 
-**Exact implementation SHA:** [e9be726](https://github.com/iamlxwis/CodeLab/commit/e9be726ff7f11de2f337910e0df37283c734c325)  
-**Android build:** [45380854708](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708) — success; compile, tests, lint, security and signature checks passed. [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14912949223) · [Six runtime packs](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14915170119) · [Quality reports](https://github.com/iamlxwis/CodeLab/actions/runs/45380854708/artifacts/14914990293).  
-**Device validation:** not run for this source. **Workstreams accepted: 0/10.** A prior APK is not evidence for this update.
+**Approved contract:** [All 37 decisions and associated requirements](REIMAGINED_SPEC.md).  
+**Latest verified source:** [f2990a9](https://github.com/iamlxwis/CodeLab/commit/f2990a971982f54f14568c1ce65a10186c291e5c), [Android CI 45391600449](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449) — success.  
+**Current source:** additional theme/palette/effect fixes below; new CI pending.  
+**Acceptance:** **0/37 fully accepted**; API35 and physical acceptance for this redesign remain unverified. Historical 0/10 workstreams are an earlier grouping, not the decision denominator.
 
 | Workstream | Source changes | Unfinished / verification |
 | --- | --- | --- |
@@ -14,9 +15,9 @@ Owner approved one comprehensive update, without numbered development phases. Th
 | Project and import | Quick/guided setup, offline/online selection, file/folder/GitHub import entry points | Apple Files-style previews, conflict/progress UX and full import/export regression still open |
 | Editor | Logical gutter and cursor positions, current line, indentation and async bracket cues, syntax overrides, native font selection, tab icon and status controls | Verify large files, wrap and cursor correctness, selection and accessory behavior, keyboard layouts; do not assume improvements from source alone |
 | Console and execution | Compact execution selector, output filtering, console expansion | Confirm real offline and approved online execution; split drag and console states |
-| Explorer and tools | Expandable file tree, contextual operations, grouped search/settings, language-specific badges | Badges are not official language logos; inspect all existing tool/dialog screens; verify tree and file operations |
+| Explorer and tools | Expandable file tree, contextual operations, grouped search/settings, language-specific badges | 19 licensed language-logo glyphs added; inspect all existing tool/dialog screens; verify tree and file operations |
 | Workspace personalization | Named and per-project layouts, reorderable quick actions, density and status bar options | Verify persistence, project rename/reopen, phone/tablet/landscape and all selected gesture behaviors |
-| Onboarding and motion | Updated guide, animated transitions, press springs, speed/intensity, reduced-motion policy, backdrop quality modes | Full interactive tutorial and consistent motion across every screen still need inspection; Android blur is a backdrop approximation, not Apple optical rendering |
+| Onboarding and motion | Updated guide, animated transitions, press springs, speed/intensity, reduced-motion policy, backdrop quality modes | Real interactive code practice added; tutorial and consistent motion across every screen still need device inspection; Android blur is a backdrop approximation, not Apple optical rendering |
 | Quality and delivery | Added recipe, hierarchy and logical-line tests; existing CI retained | Compile, unit tests, lint, installable artifact, API35 smoke, physical-device UX, accessibility, screenshots and measured startup/typing/frame times remain outstanding |
 
 ## Continuation
@@ -143,3 +144,12 @@ Verified preceding checkpoint bb5172d7957f1584a39cf4679e893f4b6d6e60f1 passed An
 New source: optional practice lesson uses the real CodeEditor and existing RunSession isolated/offline architecture; records success only from actual expected output, stops its run on dismissal and returns to the same guide topic. Replaced letter badges with 19 licensed Android language-logo vectors (Simple Icons pinned d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97 CC0, Devicon Java MIT). Added offline license reader from Help. Focus mode now participates in named/per-project layouts, with legacy nullable compatibility. JavaScript and TypeScript warnings now have an explicit Warning prefix distinct from errors in all three existing engines; console supports error/warning/text filters and readable severity colors while preserving cross-line ANSI formatting and full raw copy/export.
 
 Local checks: static security gate and eight Python release/artifact checks passed; all 19 new vector XML files parsed. Added focused JVM and Android regressions; new Android build not yet verified. Runtime architecture, dependencies, workflows, production signer and six existing pack capabilities unchanged. Next: exact-source CI and fixes; manual API35 source-matched screenshots, gestures, persistence, all runtime/file operations, accessibility and measured performance remain outstanding. Cannot dispatch device workflow through current tools/authentication.
+
+
+## Theme operations, exact palette and adaptive effects — Nov 24, 2026, 8:22:14 PM PHT
+
+Prior cumulative source f2990a971982f54f14568c1ce65a10186c291e5c passed Android CI 45391600449, including release builds, JVM tests, instrumentation Kotlin compilation, lint and signature checks. This validates lesson/logo/layout/console source compilation and unit tests, not execution of the new instrumentation or device fidelity.
+
+New source audit fixes: explicit saved-theme Rename and Duplicate operations preserve every recipe field and use a new ID; compact anchored theme menus replace crowded icons. Theme Studio now opens at its customization section. Crystal/Sandstone base colors corrected to exact approved #252932/#EAE3D7; neutral backdrop uses the actual theme base and removes decorative Sandstone lines. Glass border zero now removes the border rather than creating Android's zero-width hairline. Auto blur respects battery saver live, without polling. None transition preference now reaches all custom workspace transitions; persistent search semantics and labelled accessibility switches added. Full owner contract preserved in REIMAGINED_SPEC.md. Focused codec/policy/instrumentation regressions added; current batch Android verification pending.
+
+Next to build: repair any exact-source CI failure; then outstanding device-driven screen/motion/accessibility corrections. API35 smoke/screenshots, live lesson execution, all-eight gesture conflict testing, real theme/font/import/export persistence, runtime acceptance and measured startup/typing/frame/memory evidence remain outstanding. Manual device dispatch still blocked by tool/auth availability. No workflow, dependency, runtime capability or release gate changes in this batch.

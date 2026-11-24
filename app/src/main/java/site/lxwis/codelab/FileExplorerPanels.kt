@@ -91,7 +91,7 @@ internal fun FileExplorerSheet(
     var menuFor by remember { mutableStateOf<String?>(null) }
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val motionMillis = rememberCodeLabMotion(m.motionPreference, m.motionIntensity,
-        m.motionSpeed, m.springIntensity).millis(170)
+        m.motionSpeed, m.springIntensity, m.transitionEffect).millis(170)
     val allFiles = m.files
     val rows = remember(allFiles, m.folders, expanded, search) {
         explorerRows(allFiles, m.folders, expanded, search)

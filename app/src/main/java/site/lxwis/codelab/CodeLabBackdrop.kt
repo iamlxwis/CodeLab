@@ -32,23 +32,14 @@ internal fun CodeLabBackdrop(style: String, dark: Boolean, motionMillis: Int = 0
     val studio = LocalStudioAppearance.current
     val context = LocalContext.current
     val lowRam = remember(context) { (context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)?.isLowRamDevice == true }
-    val blurSupported = Build.VERSION.SDK_INT >= 31 && studio.glassQuality != "Lightweight" &&
-        (studio.glassQuality == "High" || !lowRam)
+    val powerSave = if (preset == "Crystal") rememberPowerSaveMode() else false
+    val blurSupported = glassBlurEnabled(Build.VERSION.SDK_INT, studio.glassQuality, lowRam, powerSave)
     val customBackground = studio.background.isNotEmpty()
     val canvasColor by animateColorAsState(scheme.background, tween(motionMillis), label = "theme-background")
-    val background = if (customBackground) Brush.verticalGradient(listOf(canvasColor, canvasColor)) else when (preset) {
-        "Crystal" -> if (dark)
-            Brush.verticalGradient(listOf(Color(0xff101214), Color(0xff252a2e), Color(0xff14171a)))
-            else Brush.verticalGradient(listOf(Color(0xfff8f9fa), Color(0xffdfe3e6), Color(0xfff2f4f5)))
-        "Clay" -> if (dark)
-            Brush.verticalGradient(listOf(Color(0xff18232a), Color(0xff111b23)))
-            else Brush.verticalGradient(listOf(Color(0xfff4f5f0), Color(0xffe3ebe8)))
-        "Sandstone" -> Brush.verticalGradient(listOf(Color(0xfffdfbf4), Color(0xfff5f0e4)))
-        "Obsidian" -> Brush.verticalGradient(listOf(canvasColor, canvasColor))
-        else -> Brush.verticalGradient(listOf(canvasColor, canvasColor))
-    }
+    // All six presets use their approved base color. Glass adds only neutral highlights.
+    val background = Brush.verticalGradient(listOf(canvasColor, canvasColor))
     Box(Modifier.fillMaxSize().background(background)) {
-        if (!customBackground && (preset == "Crystal" || preset == "Clay" || preset == "Sandstone")) {
+        if (!customBackground && preset == "Crystal") {
             // Blur only the decorative backdrop; never blur editable text or interactive controls.
             Canvas(Modifier.fillMaxSize().then(if (preset == "Crystal" && blurSupported && studio.blur > 0)
                 Modifier.blur(studio.blur.dp) else Modifier)) {
@@ -69,24 +60,7 @@ internal fun CodeLabBackdrop(style: String, dark: Boolean, motionMillis: Int = 0
                         radius = radius * .73f
                     ))
                 }
-                if (preset == "Clay") {
-                    val glow = if (dark) Color(0xff748ca2).copy(alpha = .13f)
-                        else Color.White.copy(alpha = .52f)
-                    drawRect(Brush.radialGradient(
-                        colors = listOf(glow, glow.copy(alpha = 0f)),
-                        center = Offset(size.width * .16f, size.height * .08f),
-                        radius = radius * .80f
-                    ))
-                }
-                if (preset == "Sandstone") {
-                    val step = 50.dp.toPx()
-                    var y = step
-                    while (y < size.height) {
-                        drawLine(Color(0xffb7a788).copy(alpha = .09f),
-                            Offset(0f, y), Offset(size.width, y), strokeWidth = 1f)
-                        y += step
-                    }
-                }
+
             }
         }
         content()

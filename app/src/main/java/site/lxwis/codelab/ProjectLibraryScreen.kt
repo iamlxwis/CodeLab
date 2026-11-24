@@ -78,7 +78,7 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
     val context = androidx.compose.ui.platform.LocalContext.current
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
+    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity, m.transitionEffect)
     val duration = motion.millis(170)
     val scale by animateFloatAsState(if (pressed) .97f else 1f,
         animationSpec = motion.pressSpec(), label = "run-press")
@@ -230,8 +230,6 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
             val visibleCount = visibleProjects.size
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
-                Text("ON THIS DEVICE", fontSize = 11.sp, letterSpacing = 1.6.sp,
-                    fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("$visibleCount " + if (visibleCount == 1) "project" else "projects", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)

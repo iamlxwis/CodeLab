@@ -66,9 +66,9 @@ internal fun ClayPanel(
         tonalElevation = if (style == "Clay") 2.dp else 0.dp,
         shadowElevation = if (style == "Clay") 3.dp else 0.dp,
         border = when (style) {
-            "Crystal" -> BorderStroke(studio.border.dp, Brush.linearGradient(listOf(
+            "Crystal" -> if (studio.border > 0) BorderStroke(studio.border.dp, Brush.linearGradient(listOf(
                 Color.White.copy(alpha = .58f),
-                colors.outlineVariant.copy(alpha = .28f))))
+                colors.outlineVariant.copy(alpha = .28f)))) else null
             "Clay" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
                 Color.White.copy(alpha = .30f),
                 colors.outlineVariant.copy(alpha = .5f))))
@@ -101,8 +101,8 @@ internal fun ClayActionCard(
         tonalElevation = if (style == "Clay") CodeLabElevation.tonal else 0.dp,
         shadowElevation = if (style == "Clay") 9.dp else 0.dp,
         border = when (style) {
-            "Crystal" -> BorderStroke(studio.border.dp, Brush.linearGradient(listOf(
-                Color.White.copy(alpha = .55f), colors.outlineVariant.copy(alpha = .20f))))
+            "Crystal" -> if (studio.border > 0) BorderStroke(studio.border.dp, Brush.linearGradient(listOf(
+                Color.White.copy(alpha = .55f), colors.outlineVariant.copy(alpha = .20f)))) else null
             "Clay" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
                 Color.White.copy(alpha = .35f), colors.outlineVariant.copy(alpha = .55f))))
             "Obsidian" -> BorderStroke(1.dp, colors.outlineVariant.copy(alpha = .75f))

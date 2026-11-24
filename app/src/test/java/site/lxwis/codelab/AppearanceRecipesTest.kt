@@ -76,4 +76,11 @@ class AppearanceRecipesTest {
         assertEquals("Fade", ThemeMotionRecipe.decode(legacy)?.transition)
     }
 
+    @Test fun duplicateNamesAreUniqueAndBoundedWithoutLimitingCollectionSize() {
+        assertEquals("Glass copy", AppearanceRecipes.copyName("Glass", emptySet()))
+        assertEquals("Glass copy 3", AppearanceRecipes.copyName("Glass", setOf("Glass copy", "Glass copy 2")))
+        val long = AppearanceRecipes.copyName("x".repeat(32), emptySet())
+        assertEquals(32, long.length)
+        assertTrue(AppearanceRecipes.validName(long))
+    }
 }

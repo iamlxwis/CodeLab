@@ -65,15 +65,15 @@ internal fun CodeLabTheme(
                     surfaceVariant = Color(0xff0a0a0a),
                     outlineVariant = Color(0xff303030))
                 "Sandstone" -> day.copy(
-                    background = Color(0xfffaf8f1), surface = Color(0xfffaf8f1),
+                    background = Color(0xffeae3d7), surface = Color(0xffeae3d7),
                     surfaceContainer = Color(0xfff3efe5),
                     surfaceContainerHigh = Color(0xffeae5d8),
                     surfaceVariant = Color(0xffe9e4d8),
                     onSurface = Color(0xff272922),
                     onSurfaceVariant = Color(0xff555950))
                 "Crystal" -> palette.copy(
-                    background = if (dark) Color(0xff111416) else Color(0xffeef0f1),
-                    surface = if (dark) Color(0xff24282b) else Color(0xfff7f8f9),
+                    background = if (dark) Color(0xff252932) else Color(0xffeef0f1),
+                    surface = if (dark) Color(0xff252932) else Color(0xfff7f8f9),
                     surfaceContainer = if (dark) Color(0xff393d41).copy(alpha = .77f)
                         else Color.White.copy(alpha = .73f),
                     surfaceContainerHigh = if (dark) Color(0xff494d51).copy(alpha = .84f)

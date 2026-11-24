@@ -109,7 +109,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var showTutorial by rememberSaveable { mutableStateOf(!tutorialPrefs.getBoolean("complete", false)) }
     var tutorialDetour by rememberSaveable { mutableStateOf(false) }
     val haptics = LocalHapticFeedback.current
-    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
+    val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity, m.transitionEffect)
     val motionMillis = motion.millis(170)
     val keyboardEditing = WindowInsets.ime.getBottom(LocalDensity.current) > 0 &&
         !m.console && !m.preview
@@ -569,16 +569,19 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("High contrast", Modifier.weight(1f))
-                        Switch(checked = m.highContrast, onCheckedChange = m::chooseHighContrast)
+                        Switch(checked = m.highContrast, onCheckedChange = m::chooseHighContrast,
+                            modifier = Modifier.semantics { contentDescription = "High contrast" })
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Larger interface text", Modifier.weight(1f))
                         Switch(checked = m.largeInterfaceText,
-                            onCheckedChange = m::chooseLargeInterfaceText)
+                            onCheckedChange = m::chooseLargeInterfaceText,
+                            modifier = Modifier.semantics { contentDescription = "Larger interface text" })
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Run-button haptic feedback", Modifier.weight(1f))
-                        Switch(checked = m.touchFeedback, onCheckedChange = m::chooseTouchFeedback)
+                        Text("Touch feedback", Modifier.weight(1f))
+                        Switch(checked = m.touchFeedback, onCheckedChange = m::chooseTouchFeedback,
+                            modifier = Modifier.semantics { contentDescription = "Touch feedback" })
                     }
                     Text("System font scaling and reduced-motion settings remain supported. These options apply immediately.",
                         style = MaterialTheme.typography.bodySmall,

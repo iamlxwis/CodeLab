@@ -496,6 +496,23 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun renameAppearanceRecipe(id: String, name: String): Boolean {
+        val clean = name.trim()
+        if (!AppearanceRecipes.validName(clean) || savedAppearanceRecipes.none { it.id == id }) return false
+        savedAppearanceRecipes = savedAppearanceRecipes.map { if (it.id == id) it.copy(name = clean) else it }
+        preferences.edit().putString("saved-appearance-recipes", AppearanceRecipes.encode(savedAppearanceRecipes)).apply()
+        return true
+    }
+
+    fun duplicateAppearanceRecipe(id: String): Boolean {
+        val original = savedAppearanceRecipes.firstOrNull { it.id == id } ?: return false
+        val copy = original.copy(id = java.util.UUID.randomUUID().toString(),
+            name = AppearanceRecipes.copyName(original.name, savedAppearanceRecipes.map { it.name }.toSet()))
+        savedAppearanceRecipes = savedAppearanceRecipes + copy
+        preferences.edit().putString("saved-appearance-recipes", AppearanceRecipes.encode(savedAppearanceRecipes)).apply()
+        return true
+    }
+
     fun deleteAppearanceRecipe(id: String) {
         savedAppearanceRecipes = savedAppearanceRecipes.filterNot { it.id == id }
         preferences.edit().putString("saved-appearance-recipes",

@@ -91,4 +91,22 @@ class ThemeContrastTest {
         }
     }
 
+    @Test fun sixPresetsUseTheApprovedBaseColors() {
+        var style by mutableStateOf("Obsidian")
+        var actual = Color.Unspecified
+        compose.setContent {
+            CodeLabTheme("Obsidian", style, CodeLabVisualStyles.defaultMode(style), "Mono", false, false) {
+                val current = MaterialTheme.colorScheme.background
+                SideEffect { actual = current }
+            }
+        }
+        val expected = linkedMapOf("Obsidian" to 0xFF000000, "Titanium" to 0xFF17191C,
+            "Crystal" to 0xFF252932, "Midnight" to 0xFF090F1D,
+            "Porcelain" to 0xFFF5F5F7, "Sandstone" to 0xFFEAE3D7)
+        for ((name, value) in expected) {
+            compose.runOnIdle { style = name }
+            compose.waitForIdle()
+            compose.runOnIdle { assertEquals(name, Color(value), actual) }
+        }
+    }
 }

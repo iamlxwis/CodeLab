@@ -23,11 +23,11 @@ import kotlin.math.roundToInt
  * A global scale of 0 (or the app's Reduced / intensity=0 setting) always
  * yields instant state changes, without hidden spring animations.
  */
-internal data class CodeLabMotion(val durationScale: Float, val springIntensity: Int = 35) {
+internal data class CodeLabMotion(val durationScale: Float, val springIntensity: Int = 35, val transitionsEnabled: Boolean = true) {
     fun pressSpec(): FiniteAnimationSpec<Float> = if (durationScale <= 0f || springIntensity == 0) tween(millis(140))
         else spring(dampingRatio = 1f - springIntensity.coerceIn(0,100) * .003f, stiffness = 750f / durationScale.coerceIn(.4f, 3f))
     fun millis(base: Int): Int =
-        (base.coerceAtLeast(0) * durationScale).roundToInt().coerceIn(0, 900)
+        if (transitionsEnabled) (base.coerceAtLeast(0) * durationScale).roundToInt().coerceIn(0, 900) else 0
 }
 
 internal fun resolveMotionScale(preference: String, intensity: Int, systemScale: Float): Float {
@@ -40,7 +40,7 @@ internal fun resolveMotionScale(preference: String, intensity: Int, systemScale:
 
 /** Observes live Android animator-scale changes; no restart needed. */
 @Composable
-internal fun rememberCodeLabMotion(preference: String, intensity: Int, speed: Int = 100, springIntensity: Int = 35): CodeLabMotion {
+internal fun rememberCodeLabMotion(preference: String, intensity: Int, speed: Int = 100, springIntensity: Int = 35, transitionEffect: String = "Fade"): CodeLabMotion {
     val context = LocalContext.current
     val resolver = context.contentResolver
     fun currentScale(): Float = Settings.Global.getFloat(
@@ -59,7 +59,7 @@ internal fun rememberCodeLabMotion(preference: String, intensity: Int, speed: In
         )
         onDispose { resolver.unregisterContentObserver(observer) }
     }
-    return remember(preference, intensity, scale, speed, springIntensity) {
-        CodeLabMotion((resolveMotionScale(preference, intensity, scale) * 100f / speed.coerceIn(50, 200)).coerceIn(0f, 3f), springIntensity)
+    return remember(preference, intensity, scale, speed, springIntensity, transitionEffect) {
+        CodeLabMotion((resolveMotionScale(preference, intensity, scale) * 100f / speed.coerceIn(50, 200)).coerceIn(0f, 3f), springIntensity, transitionEffect != "None")
     }
 }

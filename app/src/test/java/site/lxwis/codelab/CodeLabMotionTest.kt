@@ -28,4 +28,10 @@ class CodeLabMotionTest {
         assertEquals(0f, resolveMotionScale("Full", 100, -1f), 0f)
         assertEquals(3f, resolveMotionScale("Full", 100, 10f), 0f)
     }
+    @Test fun transitionsCanBeDisabledAndNewPresetsHonorSystemReduction() {
+        assertEquals(0, CodeLabMotion(1f, 60, transitionsEnabled = false).millis(240))
+        assertEquals(0f, resolveMotionScale("Fluid", 100, 0f), 0f)
+        assertEquals(0f, resolveMotionScale("Standard", 100, 0f), 0f)
+        assertEquals(resolveMotionScale("System", 100, 1f), resolveMotionScale("Standard", 100, 1f), 0f)
+    }
 }
