@@ -1,12 +1,12 @@
 <resources>
     <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#98E3B8</item>
-        <item name="android:windowBackground">#101416</item>
-        <item name="android:statusBarColor">#101416</item>
-        <item name="android:navigationBarColor">#101416</item>
-        <item name="android:windowSplashScreenBackground">#101416</item>
+        <item name="android:colorAccent">#CED4D5</item>
+        <item name="android:windowBackground">#000000</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
+        <item name="android:windowSplashScreenBackground">#000000</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_codelab_splash</item>
-        <item name="android:windowSplashScreenAnimationDuration">260</item>
+        <item name="android:windowSplashScreenAnimationDuration">420</item>
     </style>
 </resources>

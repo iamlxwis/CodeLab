@@ -1,4 +1,5 @@
-<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
-    android:propertyName="rotation" android:duration="260"
-    android:valueFrom="-18" android:valueTo="0" android:valueType="floatType"
-    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+<set xmlns:android="http://schemas.android.com/apk/res/android" android:ordering="together">
+    <objectAnimator android:propertyName="scaleX" android:duration="420" android:valueFrom="0.78" android:valueTo="1" android:valueType="floatType" android:interpolator="@android:interpolator/fast_out_slow_in"/>
+    <objectAnimator android:propertyName="scaleY" android:duration="420" android:valueFrom="0.78" android:valueTo="1" android:valueType="floatType" android:interpolator="@android:interpolator/fast_out_slow_in"/>
+    <objectAnimator android:propertyName="rotation" android:duration="420" android:valueFrom="-8" android:valueTo="0" android:valueType="floatType" android:interpolator="@android:interpolator/fast_out_slow_in"/>
+</set>

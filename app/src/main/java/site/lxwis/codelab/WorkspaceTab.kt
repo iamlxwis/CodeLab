@@ -53,6 +53,7 @@ internal fun WorkspaceTab(
             .background(background, RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        FileTypeIcon(path, Modifier.padding(start = 8.dp).size(16.dp), selected = active)
         Text(
             buildString {
                 append(path.substringAfterLast('/'))

@@ -44,6 +44,22 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             preferences.edit().putString("quick-home", quickHomeActions.joinToString(",")).apply()
         }
     }
+    fun moveQuickAction(id: String, delta: Int, projectOpen: Boolean) {
+        val ids = (if (projectOpen) quickEditorActions else quickHomeActions).toMutableList()
+        val from = ids.indexOf(id)
+        if (from < 0) return
+        val to = (from + delta).coerceIn(0, ids.lastIndex)
+        if (from == to) return
+        ids.add(to, ids.removeAt(from))
+        if (projectOpen) quickEditorActions = ids else quickHomeActions = ids
+        preferences.edit().putString(if (projectOpen) "quick-editor" else "quick-home", ids.joinToString(",")).apply()
+    }
+    var showEditorStatus by mutableStateOf(preferences.getBoolean("show-editor-status", true))
+        private set
+    fun chooseEditorStatus(value: Boolean) {
+        showEditorStatus = value
+        preferences.edit().putBoolean("show-editor-status", value).apply()
+    }
     private val io = Executors.newSingleThreadExecutor()
     private val cloudIo = Executors.newSingleThreadExecutor()
     private val connectivity = app.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager

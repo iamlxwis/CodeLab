@@ -303,6 +303,7 @@ fun CodeEditor(
         }
     }
     val palette = MaterialTheme.colorScheme
+    val studioStyle = LocalStudioAppearance.current
     val foreground = palette.onSurface.toArgb()
     val background = palette.surface.toArgb()
     val secondary = palette.onSurfaceVariant.toArgb()
@@ -871,6 +872,7 @@ fun CodeEditor(
                 editor.setGutterOptions(showLineNumbers, showActiveLine)
                 editor.setIndentPolicy(indentWidth, useTabs)
                 editor.setSyntaxPalette(syntaxPalette)
+                editor.setStudioEditorStyle(studioStyle)
                 editor.setStructuralHints(diagnosticMarkers)
                 editor.findShortcut = { find = true }
                 editor.lineShortcut = { lineInput = ""; lineDialog = true }

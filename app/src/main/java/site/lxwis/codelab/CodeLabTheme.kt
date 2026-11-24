@@ -11,6 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -156,22 +159,37 @@ internal fun CodeLabTheme(
                 onPrimaryContainer = if (dark) Color.White else Color.Black
             ) else schemeNormal
     }
-    val typography = remember(largeInterfaceText) {
+    val fontContext = LocalContext.current
+    val typography = remember(largeInterfaceText, studio.uiFont) {
+        val family = when (studio.uiFont) {
+            "System" -> FontFamily.Default
+            "Serif" -> FontFamily.Serif
+            "Custom" -> ImportedFonts.load(fontContext, false)?.let { FontFamily(it) }
+                ?: FontFamily(Font(R.font.inter))
+            else -> FontFamily(Font(R.font.inter))
+        }
         val baseTypography = Typography()
             val textScale = if (largeInterfaceText) 1.16f else 1f
-            Typography(
-                headlineLarge = baseTypography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-                headlineSmall = baseTypography.headlineSmall.copy(fontWeight = FontWeight.SemiBold,
-                    fontSize = baseTypography.headlineSmall.fontSize * textScale),
-                titleLarge = baseTypography.titleLarge.copy(fontWeight = FontWeight.SemiBold,
-                    fontSize = baseTypography.titleLarge.fontSize * textScale),
-                titleMedium = baseTypography.titleMedium.copy(fontWeight = FontWeight.SemiBold,
-                    fontSize = baseTypography.titleMedium.fontSize * textScale),
-                bodyMedium = baseTypography.bodyMedium.copy(
-                    fontSize = baseTypography.bodyMedium.fontSize * textScale),
-                labelSmall = baseTypography.labelSmall.copy(letterSpacing = .3.sp,
-                    fontSize = baseTypography.labelSmall.fontSize * textScale)
-            )
+        fun styled(style: androidx.compose.ui.text.TextStyle, weight: FontWeight? = null) =
+            style.copy(fontFamily = family, fontSize = style.fontSize * textScale,
+                fontWeight = weight ?: style.fontWeight)
+        Typography(
+            displayLarge = styled(baseTypography.displayLarge),
+            displayMedium = styled(baseTypography.displayMedium),
+            displaySmall = styled(baseTypography.displaySmall),
+            headlineLarge = styled(baseTypography.headlineLarge, FontWeight.Bold),
+            headlineMedium = styled(baseTypography.headlineMedium, FontWeight.SemiBold),
+            headlineSmall = styled(baseTypography.headlineSmall, FontWeight.SemiBold),
+            titleLarge = styled(baseTypography.titleLarge, FontWeight.SemiBold),
+            titleMedium = styled(baseTypography.titleMedium, FontWeight.SemiBold),
+            titleSmall = styled(baseTypography.titleSmall, FontWeight.Medium),
+            bodyLarge = styled(baseTypography.bodyLarge),
+            bodyMedium = styled(baseTypography.bodyMedium),
+            bodySmall = styled(baseTypography.bodySmall),
+            labelLarge = styled(baseTypography.labelLarge),
+            labelMedium = styled(baseTypography.labelMedium),
+            labelSmall = styled(baseTypography.labelSmall)
+        )
     }
     val shapes = remember(studio.corners) {
         Shapes(extraSmall = RoundedCornerShape((studio.corners / 3).dp),

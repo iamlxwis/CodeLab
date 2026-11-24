@@ -149,9 +149,9 @@ private fun Mark(modifier: Modifier) {
         val w = size.width
         val h = size.height
         fun stroke(a: Float,b: Float,c: Float,d: Float) = drawLine(ink, Offset(w*a,h*b), Offset(w*c,h*d), w*.095f, StrokeCap.Round)
-        stroke(.28f,.29f,.07f,.5f); stroke(.07f,.5f,.28f,.71f)
-        stroke(.59f,.15f,.42f,.85f)
-        stroke(.73f,.29f,.94f,.5f); stroke(.94f,.5f,.73f,.71f)
+        stroke(.72f,.20f,.34f,.20f); stroke(.34f,.20f,.15f,.39f)
+        stroke(.15f,.39f,.15f,.61f); stroke(.15f,.61f,.34f,.80f); stroke(.34f,.80f,.72f,.80f)
+        stroke(.53f,.38f,.53f,.65f); stroke(.53f,.65f,.88f,.65f)
     }
 }
 

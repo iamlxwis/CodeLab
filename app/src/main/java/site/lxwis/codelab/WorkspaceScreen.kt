@@ -192,11 +192,12 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             },
             onProjectSettings = { dialog = "projectsettings" })
         if (p == null) {
-            ProjectLibrary(m, motionMillis, { dialog = "newproject" },
+            Box(Modifier.weight(1f)) { ProjectLibrary(m, motionMillis, { dialog = "newproject" },
                 { importZip.launch(arrayOf("*/*")) }, { dialog = "githubimport" },
                 { selected = it; dialog = "renameproject" },
                 { selected = it; dialog = "deleteproject" },
-                { selected = it; dialog = "duplicateproject" })
+                { selected = it; dialog = "duplicateproject" }) }
+            HomeNavigation { openAction(it) }
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             if (!focusMode) Row(verticalAlignment = Alignment.CenterVertically) {
@@ -359,7 +360,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     m.active?.let(m::cloudAvailable) == true -> "Cloud available"
                     else -> "Text · cloud setup"
                 }
-                AnimatedContent(targetState = languageLabel,
+                if (m.showEditorStatus) AnimatedContent(targetState = languageLabel,
                     transitionSpec = {
                         fadeIn(tween(motionMillis)) togetherWith fadeOut(tween(motionMillis))
                     }, label = "language-label") { value ->
@@ -470,12 +471,12 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Text("Move to trash", color = MaterialTheme.colorScheme.error)
             } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
-        "delete" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Delete file?") },
-            text = { Text(selected) }, confirmButton = { TextButton(onClick = { m.changeFile(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
+        "delete" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Move file to trash?") },
+            text = { Text(selected) }, confirmButton = { TextButton(onClick = { m.changeFile(selected, null); dialog = "" }) { Text("Move to trash", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
-        "deleteproject" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Delete project?") },
-            text = { Text("Delete $selected and all its files from this device?") },
-            confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Delete", color = MaterialTheme.colorScheme.error) } },
+        "deleteproject" -> AlertDialog(onDismissRequest = { dialog = "" }, title = { Text("Move project to trash?") },
+            text = { Text("$selected and its files can be recovered from Recently deleted.") },
+            confirmButton = { TextButton(onClick = { m.manageProject(selected, null); dialog = "" }) { Text("Move to trash", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
         "folderimport" -> NameDialog("Import folder as project", "", "Project name",
             "MyExternalProject", { dialog = "" }) { name ->
@@ -550,6 +551,10 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         Checkbox(checked = explorerPinned,
                             onCheckedChange = { explorerPinned = it })
                         Text("Show explorer sidebar on larger screens")
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(checked = m.showEditorStatus, onCheckedChange = m::chooseEditorStatus)
+                        Text("Show editor status label")
                     }
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
@@ -629,5 +634,29 @@ private fun PanelButton(text: String, active: Boolean, motionMillis: Int, click:
             style = MaterialTheme.typography.labelLarge,
             color = if (active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium)
+    }
+}
+
+/** Direct destinations replace hidden home overflow navigation. */
+@Composable
+private fun HomeNavigation(onAction: (String) -> Unit) {
+    Surface(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))) {
+        Row(Modifier.fillMaxWidth().padding(4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            listOf(Triple("projects", "Projects", Icons.Default.Folder),
+                Triple("languages", "Languages", Icons.Default.Code),
+                Triple("actions", "Tools", Icons.Default.Build),
+                Triple("appearance", "Settings", Icons.Default.Settings)).forEach { (id, label, icon) ->
+                Column(Modifier.weight(1f).heightIn(min = 54.dp).background(
+                    if (id == "projects") MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                    RoundedCornerShape(24.dp)).clickable { if (id != "projects") onAction(id) }.padding(6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                    Icon(icon, null, Modifier.size(20.dp), tint = if (id == "projects")
+                        MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
+                }
+            }
+        }
     }
 }

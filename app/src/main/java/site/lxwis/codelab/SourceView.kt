@@ -221,6 +221,25 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     private var active = 0
     private var darkMode = true
     private var syntaxPalette = "Classic"
+    private var customInk = listOf<String>()
+    private var editorFontChoice = ""
+    fun setStudioEditorStyle(style: StudioAppearance) {
+        val colors = listOf(style.comments, style.strings, style.numbers, style.keywords)
+        if (customInk != colors) { customInk = colors; scheduleHighlight(true) }
+        if (editorFontChoice != style.editorFont) {
+            editorFontChoice = style.editorFont
+            typeface = when (style.editorFont) {
+                "Custom" -> ImportedFonts.load(context, true) ?: Typeface.MONOSPACE
+                "System Mono" -> Typeface.MONOSPACE
+                else -> androidx.core.content.res.ResourcesCompat.getFont(context, R.font.jetbrains_mono)
+                    ?: Typeface.MONOSPACE
+            }
+            linePaint.typeface = typeface
+            gutterWidth = dp(18) + linePaint.measureText("0000").roundToInt()
+            setPadding(gutterWidth + dp(10), dp(8), dp(16), dp(36))
+            invalidate()
+        }
+    }
     fun setSyntaxPalette(value: String) {
         if (syntaxPalette != value) {
             syntaxPalette = value
@@ -748,6 +767,10 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             "GitHub Light" -> lightInk
             else -> if (darkMode) darkInk else lightInk
         }.copyOf()
+        customInk.forEachIndexed { i, hex ->
+            if (i in colors.indices && hex.matches(Regex("#[0-9a-fA-F]{6}")))
+                colors[i] = android.graphics.Color.parseColor(hex)
+        }
         highlightTask = highlightWorker.submit(Runnable {
             val marks = ArrayList<HighlightMark>()
             fun add(from: Int, to: Int, kind: Int) {
