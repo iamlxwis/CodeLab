@@ -143,3 +143,7 @@ Nov 24, 2026, 2:56 AM PHT: IDEA-022 UX revision. Dedicated Downloads pane separa
 | IDEA-030 | 2026-11-24 | Modules must not display an active download action until an official GitHub release actually publishes the matching signed module APK; check metadata inside app, preserve cached signed installer flow, avoid automatic download. | In progress | Source RuntimeReleaseAssets + tests; CI and network/device QA pending. |
 
 | IDEA-031 | 2026-11-24 | Maintain a grounded per-language Android offline compiler feasibility matrix with technical blockers/next evidence; only mark genuine, isolated, signed and offline execution done after tests. | In progress | docs/development/LANGUAGE_FEASIBILITY.md added; future real compilers remain open. |
+
+
+### R37 — Full CodeLab Reimagined specification (Nov 24, 2026, 8:00:34 PM PHT)
+Status: In progress. All 37 decisions supplied by owner are authoritative; supersedes historical uncertainty about exact decision labels. Implement the entire design, retain functionality and data, direct main commits, medium thinking requested, continuous concise PHT tracking, no numbered phases. Acceptance remains evidence-based; see REIMAGINED.md for per-decision audit.

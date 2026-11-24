@@ -208,3 +208,8 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 7:42:12 PM PHT | Editor and interaction polish | Source committed; cumulative CI pending | Indexed navigation and selection, accessible dirty tabs, pinch cancellation, empty-line editing, animated filtering, keyboard-aware chrome, new regression tests. Prior APK still last verified. |
 
 | Nov 24, 2026, 7:47:09 PM PHT | Decision 34 — application-wide polish | Source committed; CI pending | Expandable sheets, actionable empty states, animated filtering, themed console notifications. Scope limited to the original 37 decisions. |
+
+
+## Full specification resumed — Nov 24, 2026, 8:00:34 PM PHT
+
+Owner supplied all 37 confirmed decisions in this session. Prior missing-label caveat is obsolete. Latest implementation 7304cbf passed Android CI 45387376191; screenshots, API35 execution and physical acceptance remain unverified. Source audit confirms settings currently has only eight mixed destinations rather than the nine approved groups. Next: implement navigable settings subpages and motion presets, then remaining gaps and exact-source CI. No runtime, signing or CI policy changes authorized beyond the approved design specification.

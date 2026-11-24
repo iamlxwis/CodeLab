@@ -604,3 +604,8 @@ Nov 24, 2026, 7:42:12 PM PHT — Source: [4311417](https://github.com/iamlxwis/C
 
 
 Nov 24, 2026, 7:47:09 PM PHT — Owner explicitly limited scope to the 37 approved decisions. Decision 34 source: native expandable/collapsible and dismissible Explorer/actions sheets with accessible size buttons, consistent theme-aware empty states, scrollable import sheet, reduced-motion-aware action/console filtering and shared console success/error notices. Existing tools, runtime packs, dependencies, signing and workflow policies unchanged. Source committed; build and device acceptance pending. The exact original labels for decisions 1–10, 12–16, 18–24 and 26–28 are not available in the recovered conversation text; do not invent missing requirements or assert 37/37 accepted.
+
+
+## Full specification resumed — Nov 24, 2026, 8:00:34 PM PHT
+
+Owner supplied all 37 confirmed decisions in this session. Prior missing-label caveat is obsolete. Latest implementation 7304cbf passed Android CI 45387376191; screenshots, API35 execution and physical acceptance remain unverified. Source audit confirms settings currently has only eight mixed destinations rather than the nine approved groups. Next: implement navigable settings subpages and motion presets, then remaining gaps and exact-source CI. No runtime, signing or CI policy changes authorized beyond the approved design specification.
