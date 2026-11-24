@@ -27,15 +27,15 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **ACTIVE — unlimited-theme list rendering correction; new CI pending** |
+| Status | **BUILD RUNNING — cumulative Reimagined source and lazy theme list** |
 | Decisions accepted | **0/37 fully accepted** — 37 require current visual/function/device evidence; source and CI tracked separately |
 | Current workstream | Reimagined decision implementation and acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [97e31ad — passed](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) · [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948/artifacts/14920642082) |
 | Next to build | Verify cumulative lazy theme-list build; then source-matched API35 fidelity, interaction and accessibility fixes |
-| Last activity | Nov 24, 2026, 8:36:53 PM PHT |
+| Last activity | Nov 24, 2026, 8:38:05 PM PHT |
 
-**Current activity:** Nov 24, 2026, 8:36:53 PM PHT — Runtime selector CI passed; saved themes now render as keyed lazy rows without a count limit, cumulative build next.
+**Current activity:** Nov 24, 2026, 8:38:05 PM PHT — Exact-source [CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) running for 03ef032; four preceding source batches passed, API35 acceptance remains pending.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

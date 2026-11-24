@@ -3,8 +3,8 @@
 Owner approved one comprehensive update, without numbered development phases. This ledger distinguishes committed source changes from tested acceptance.
 
 **Approved contract:** [All 37 decisions and associated requirements](REIMAGINED_SPEC.md).
-**Latest verified source:** [2b04bd1](https://github.com/iamlxwis/CodeLab/commit/2b04bd19f0e17f697baf325ff1a08b8a51e27b0f), [CI 45392971931](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931) — success.
-**Current source:** `97e31ad2668de8cb127c7c1bc9a171d16cd7e013`; [CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) running at this checkpoint.
+**Latest verified source:** [97e31ad](https://github.com/iamlxwis/CodeLab/commit/97e31ad2668de8cb127c7c1bc9a171d16cd7e013), [CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) — success.
+**Current source:** `03ef0325cf68de989add4622796bc9c0450191e3`; [CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) running at this checkpoint.
 **Acceptance:** **0/37 fully accepted**; API35 and physical acceptance for this redesign remain unverified. Historical 0/10 workstreams are an earlier grouping, not the decision denominator.
 
 | Workstream | Source changes | Unfinished / verification |

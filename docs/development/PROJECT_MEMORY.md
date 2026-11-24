@@ -1,6 +1,6 @@
 # CodeLab — Reimagined: current continuation record
 
-Updated Nov 24, 2026, 8:33:19 PM PHT. Session ACTIVE at this checkpoint; README records the final session state. Historical checkpoint text has been preserved without deletion in [PROJECT_MEMORY_ARCHIVE.md](PROJECT_MEMORY_ARCHIVE.md); milestone history is [PROGRESS_LOG.md](PROGRESS_LOG.md). This file supersedes obsolete pending-build claims in that archive.
+Updated Nov 24, 2026, 8:38:05 PM PHT. Session ACTIVE at this checkpoint; README records the final session state. Historical checkpoint text has been preserved without deletion in [PROJECT_MEMORY_ARCHIVE.md](PROJECT_MEMORY_ARCHIVE.md); milestone history is [PROGRESS_LOG.md](PROGRESS_LOG.md). This file supersedes obsolete pending-build claims in that archive.
 
 ## Approved scope
 
@@ -8,7 +8,8 @@ Read [REIMAGINED_SPEC.md](REIMAGINED_SPEC.md): the complete owner-approved 37 de
 
 ## Current source and evidence
 
-- Latest verified implementation: `97e31ad2668de8cb127c7c1bc9a171d16cd7e013`; [CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) passed; [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948/artifacts/14920642082), packs 14920337964, reports 14920756656. Additional saved-theme lazy-row rendering correction is being committed in this checkpoint; new CI required.
+- Latest implementation: `03ef0325cf68de989add4622796bc9c0450191e3`; [CI 45395252404](https://github.com/iamlxwis/CodeLab/actions/runs/45395252404) running for the cumulative source including keyed lazy theme rows.
+- Latest verified implementation: `97e31ad2668de8cb127c7c1bc9a171d16cd7e013`; [CI 45394263948](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948) passed; [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45394263948/artifacts/14920642082), packs 14920337964, reports 14920756656.
 - Prior verified `2b04bd19f0e17f697baf325ff1a08b8a51e27b0f`: [CI 45392971931](https://github.com/iamlxwis/CodeLab/actions/runs/45392971931) passed.
 - Verified implementation `f2990a971982f54f14568c1ce65a10186c291e5c`: [CI 45391600449](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449) passed release builds, JVM tests, instrumentation Kotlin compilation, lint, security and signature checks. [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449/artifacts/14919956476), [six packs](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449/artifacts/14919582010), [reports](https://github.com/iamlxwis/CodeLab/actions/runs/45391600449/artifacts/14919048305).
 - Previous `bb5172d7957f1584a39cf4679e893f4b6d6e60f1`: [CI 45390387550](https://github.com/iamlxwis/CodeLab/actions/runs/45390387550) passed settings/motion/live-editor preference source.
