@@ -99,6 +99,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         context.getSharedPreferences("first-run-guide", android.content.Context.MODE_PRIVATE)
     }
     var showTutorial by rememberSaveable { mutableStateOf(!tutorialPrefs.getBoolean("complete", false)) }
+    var tutorialDetour by rememberSaveable { mutableStateOf(false) }
     val haptics = LocalHapticFeedback.current
     val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity)
     val motionMillis = motion.millis(170)
@@ -384,6 +385,17 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 QuickActionsBar(m.quickEditorActions, onAction = ::openAction)
             }
         }
+        AnimatedVisibility(tutorialDetour && dialog.isEmpty() && !showTutorial,
+            enter = fadeIn(tween(motionMillis)), exit = fadeOut(tween(motionMillis))) {
+            Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.School, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+                    Text("Quick start", Modifier.weight(1f).padding(start = 8.dp), style = MaterialTheme.typography.labelLarge)
+                    TextButton(onClick = { tutorialDetour = false; showTutorial = true }) { Text("Continue guide") }
+                }
+            }
+        }
         AnimatedVisibility(m.busy,
             enter = fadeIn(tween(motionMillis)),
             exit = fadeOut(tween(motionMillis))) {
@@ -453,7 +465,13 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             m.openProject(name, true, template, starter)
             dialog = ""
         }
-        "newfile", "newfolder", "rename", "renamefolder", "renameproject", "duplicateproject", "import", "importfile", "duplicate" -> {
+        "import" -> incoming?.let { source -> ImportReviewDialog(Uri.parse(source), true, m.projects, { dialog = "" }) { name ->
+            m.importArchive(name, Uri.parse(source)); dialog = ""
+        } }
+        "importfile" -> importedFile?.let { source -> ImportReviewDialog(Uri.parse(source), false, m.files, { dialog = "" }) { name ->
+            m.importFile(Uri.parse(source), name); dialog = ""
+        } }
+        "newfile", "newfolder", "rename", "renamefolder", "renameproject", "duplicateproject", "duplicate" -> {
             val title = when (dialog) { "newproject" -> "New project"; "newfile" -> "New file"; "newfolder" -> "New folder"; "renamefolder" -> "Rename folder"; "duplicateproject" -> "Duplicate project"; "rename" -> "Rename file"; "renameproject" -> "Rename project"; "importfile" -> "Import file"; "duplicate" -> "Duplicate file"; else -> "Import project" }
             val file = dialog == "newfile" || dialog == "newfolder" || dialog == "renamefolder" || dialog == "rename" || dialog == "importfile" || dialog == "duplicate"
             NameDialog(title, if (dialog.startsWith("rename")) selected else if (dialog == "duplicateproject") selected + "-copy" else if (dialog == "duplicate") selected.substringBeforeLast(".") + "-copy" + (if (selected.contains(".")) "." + selected.substringAfterLast(".") else "") else "", if (file) "File path" else "Project name",
@@ -594,7 +612,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             // A process killed after Skip must not discard asynchronous preference writes.
             val saved = tutorialPrefs.edit().putBoolean("complete", true)
                 .remove("resume-index").commit()
-            if (saved) showTutorial = false
+            if (saved) { showTutorial = false; tutorialDetour = false }
             else m.error = "Could not save tutorial completion. Retry."
         },
         onTryAction = { action, resumeAt ->
@@ -603,6 +621,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 .putInt("resume-index", resumeAt).commit()
             if (saved) {
                 showTutorial = false
+                tutorialDetour = true
                 openAction(action)
             } else m.error = "Could not save tutorial progress. Retry."
         },

@@ -117,7 +117,8 @@ internal fun FirstRunTutorial(
                 val systemMotion = rememberCodeLabMotion("System", 100)
                 val duration = (motion ?: systemMotion).millis(220)
                 AnimatedContent(targetState = current, transitionSpec = {
-                    fadeIn(tween(duration)) togetherWith fadeOut(tween(duration))
+                    (fadeIn(tween(duration)) + androidx.compose.animation.slideInHorizontally(tween(duration)) { it / 12 }) togetherWith
+                        (fadeOut(tween(duration)) + androidx.compose.animation.slideOutHorizontally(tween(duration)) { -it / 12 })
                 }, label = "guide-page") { step ->
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(step.title, modifier = Modifier.semantics { heading() }, style = MaterialTheme.typography.headlineSmall)

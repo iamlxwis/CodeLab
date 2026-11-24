@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -65,6 +66,8 @@ fun CodeEditor(
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", true)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
     var shortcutSettings by remember { mutableStateOf(false) }
+    var keyboardOnlySymbols by remember { mutableStateOf(preferences.getBoolean("keyboard-only-symbols", false)) }
+    val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     var customizeShortcuts by remember { mutableStateOf(false) }
     val availableShortcuts = listOf("Tab", "Esc", "←", "→", "↑", "↓", "{", "}",
         "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">")
@@ -593,6 +596,12 @@ fun CodeEditor(
             Box {
                 EditorIcon(Icons.Default.Keyboard, "Mobile shortcut layout") { shortcutSettings = true }
                 DropdownMenu(expanded = shortcutSettings, onDismissRequest = { shortcutSettings = false }) {
+                    DropdownMenuItem(text = { Text(if (keyboardOnlySymbols) "Keep symbols visible without keyboard" else "Show symbols only with keyboard") },
+                        onClick = {
+                            keyboardOnlySymbols = !keyboardOnlySymbols
+                            preferences.edit().putBoolean("keyboard-only-symbols", keyboardOnlySymbols).apply()
+                            shortcutSettings = false
+                        })
                     DropdownMenuItem(
                         text = { Text(if (hideToolbarOnHardware) "Show toolbar with hardware keyboard" else "Hide toolbar with hardware keyboard") },
                         onClick = {
@@ -927,7 +936,7 @@ fun CodeEditor(
             view?.goToLogicalLine(line)
         })
         }
-        if (!compactEditor && symbols && !(hardwareKeyboard && hideToolbarOnHardware)) {
+        if (!compactEditor && symbols && (!keyboardOnlySymbols || imeVisible) && !(hardwareKeyboard && hideToolbarOnHardware)) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically) {
                 if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") EditorAction("Tab") { if (!readOnly) view?.indentSelection() }

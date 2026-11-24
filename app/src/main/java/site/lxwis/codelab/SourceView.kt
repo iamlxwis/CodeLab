@@ -239,8 +239,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
                     ?: Typeface.MONOSPACE
             }
             linePaint.typeface = typeface
-            gutterWidth = dp(18) + linePaint.measureText("0000").roundToInt()
-            setPadding(gutterWidth + dp(10), dp(8), dp(16), dp(36))
+            updateGutterWidth()
             invalidate()
         }
     }
@@ -268,6 +267,8 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     private var highlightedEnd = -1
     private var highlightedSnapshot = ""
     private var pendingEditStart = -1
+    private var pendingEditBefore = 0
+    private var pendingEditCount = 0
     private data class HighlightMark(val start: Int, val end: Int, val ink: Int)
     private fun dp(value: Int) = (value * resources.displayMetrics.density).roundToInt()
     private fun dp(value: Float) = (value * resources.displayMetrics.density)
@@ -289,10 +290,19 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 pendingEditStart = start
+                pendingEditBefore = before
+                pendingEditCount = count
             }
             override fun afterTextChanged(s: Editable?) {
+                val previousLength = sourceSnapshot.length
                 sourceSnapshot = s?.toString().orEmpty()
-                logicalLines = LogicalLines(sourceSnapshot)
+                val start = pendingEditStart
+                logicalLines = if (!syncing && start >= 0 && start + pendingEditBefore <= previousLength &&
+                    start + pendingEditCount <= sourceSnapshot.length &&
+                    previousLength - pendingEditBefore + pendingEditCount == sourceSnapshot.length)
+                    logicalLines.edited(start, pendingEditBefore, sourceSnapshot.subSequence(start, start + pendingEditCount))
+                else LogicalLines(sourceSnapshot)
+                updateGutterWidth()
                 if (ready) refreshBracket()
                 if (!syncing) changed?.invoke(sourceSnapshot)
                 // Editable moves existing spans as users edit. Changes *after* our
@@ -322,10 +332,18 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         active = accent
         muted = secondary
         linePaint.textSize = textSize * .77f
-        gutterWidth = dp(18) + linePaint.measureText("0000").roundToInt()
-        setPadding(gutterWidth + dp(10), dp(8), dp(16), dp(36))
+        updateGutterWidth()
         scheduleHighlight(true)
         invalidate()
+    }
+
+    private fun updateGutterWidth() {
+        val digits = logicalLines.count.toString().length.coerceAtLeast(3)
+        val next = dp(18) + linePaint.measureText("0".repeat(digits)).roundToInt()
+        if (next != gutterWidth) {
+            gutterWidth = next
+            setPadding(gutterWidth + dp(10), dp(8), dp(16), dp(36))
+        }
     }
 
     fun setCodeWrap(enabled: Boolean) {

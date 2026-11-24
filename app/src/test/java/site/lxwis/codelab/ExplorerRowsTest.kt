@@ -15,6 +15,19 @@ class ExplorerRowsTest {
         assertEquals(listOf(ExplorerRow("src/deep/b.js", false, 0)),
             explorerRows(listOf("src/deep/b.js", "main.py"), emptyList(), emptySet(), "B.JS"))
     }
+    @Test fun incrementalLineIndexMatchesRebuiltIndex() {
+        var source = "one\ntwo\nthree\n"
+        var index = LogicalLines(source)
+        val edits = listOf(Triple(3, 1, ""), Triple(3, 0, "\n\n"), Triple(0, 3, "alpha"), Triple(2, 5, "X\nY"))
+        edits.forEach { (start, removed, inserted) ->
+            index = index.edited(start, removed, inserted)
+            source = source.replaceRange(start, start + removed, inserted)
+            val expected = LogicalLines(source)
+            assertEquals(expected.count, index.count)
+            for (offset in 0..source.length) assertEquals(expected.lineAt(offset), index.lineAt(offset))
+            for (line in 0 until expected.count) assertEquals(expected.start(line), index.start(line))
+        }
+    }
     @Test fun logicalLinesIgnoreVisualWrapping() {
         val lines = LogicalLines("abcdefghij\nsecond\n")
         assertEquals(0, lines.lineAt(9))
