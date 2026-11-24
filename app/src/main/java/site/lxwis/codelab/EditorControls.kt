@@ -174,9 +174,10 @@ internal fun EditorKey(label: String, motionMillis: Int, touchFeedback: Boolean,
 internal fun EditorMinimap(text: String, onNavigate: (Int) -> Unit) {
     val ink = MaterialTheme.colorScheme.onSurfaceVariant
     val surface = MaterialTheme.colorScheme.surfaceContainer
-    val model by produceState(initialValue = Pair(emptyList<Int>(), 1), text) {
+    var model by remember { mutableStateOf(Pair(emptyList<Int>(), 1)) }
+    LaunchedEffect(text) {
         delay(180)
-        value = withContext(Dispatchers.Default) {
+        model = withContext(Dispatchers.Default) {
             Pair(text.lineSequence().map { it.trimEnd().length }.take(240).toList(),
                 text.count { it == '\n' } + 1)
         }

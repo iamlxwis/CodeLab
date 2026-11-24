@@ -1,5 +1,5 @@
 # Explicit Reimagined APK delivery checkpoint; routine source pushes remain fast.
-# Retry after revealing the native preview console below the viewport; isolate newly dispatched run.
+# Final stabilization: verify the keyboard-aware console; retain all publication gates.
 name: Guarded release checkpoint
 on:
   push:
@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 80
     steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Assert source was not superseded
         env:
           GH_TOKEN: ${{ github.token }}
@@ -66,6 +69,8 @@ jobs:
           done
           echo "::error::Android 15 QA did not pass within the checkpoint timeout."
           exit 1
+      - name: Require complete production acceptance
+        run: python3 qa/require_release_acceptance.py
       - name: Dispatch guarded public release (requires same-commit device success)
         env:
           GH_TOKEN: ${{ github.token }}

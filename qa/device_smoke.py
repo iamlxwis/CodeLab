@@ -255,6 +255,9 @@ def main():
     snapshot("03-input")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "Ada")
+    # Keep the IME open: Send must remain reachable without hiding the keyboard.
+    wait_for("Send")
+    snapshot("03a-input-keyboard")
     tap("Send")
     wait_for("Hello, Ada!", contains=True)
     wait_for("Exit 0", contains=True)
@@ -388,6 +391,9 @@ def main():
     wait_for("Waiting for input")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "Ada")
+    # Keep the IME open: Send must remain reachable without hiding the keyboard.
+    wait_for("Send")
+    snapshot("03a-input-keyboard")
     tap("Send")
     wait_for("Hello, Ada!", contains=True)
     wait_for("Exit 0", contains=True)

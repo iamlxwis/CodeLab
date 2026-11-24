@@ -26,8 +26,9 @@ private data class ImportMetadata(val name: String, val bytes: Long?)
 internal fun ImportReviewDialog(uri: Uri, project: Boolean, existing: List<String>, close: () -> Unit,
     folder: Boolean = false, submit: (String) -> Unit) {
     val context = LocalContext.current
-    val metadata by produceState<ImportMetadata?>(null, uri, folder) {
-        value = withContext(Dispatchers.IO) {
+    var metadata by remember(uri, folder) { mutableStateOf<ImportMetadata?>(null) }
+    LaunchedEffect(uri, folder) {
+        metadata = withContext(Dispatchers.IO) {
             runCatching {
                 if (folder) ImportMetadata(DocumentFile.fromTreeUri(context, uri)?.name.orEmpty(), null)
                 else context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME, OpenableColumns.SIZE),
@@ -41,15 +42,16 @@ internal fun ImportReviewDialog(uri: Uri, project: Boolean, existing: List<Strin
     var name by rememberSaveable(uri.toString()) { mutableStateOf("") }
     var touched by rememberSaveable(uri.toString()) { mutableStateOf(false) }
     var previewRequested by rememberSaveable(uri.toString()) { mutableStateOf(false) }
-    val preview by produceState<DocumentPreview?>(null, uri, previewRequested) {
+    var preview by remember(uri) { mutableStateOf<DocumentPreview?>(null) }
+    LaunchedEffect(uri, previewRequested, folder, project) {
         if (previewRequested && !folder) {
-            value = withContext(Dispatchers.IO) {
+            preview = withContext(Dispatchers.IO) {
                 runCatching {
                     val stream = checkNotNull(context.contentResolver.openInputStream(uri))
                     if (project) DocumentPreviews.archive(stream) else DocumentPreviews.text(stream)
                 }.getOrElse { DocumentPreview(message = "Could not preview the selected document.") }
             }
-        } else value = null
+        } else preview = null
     }
     LaunchedEffect(metadata) {
         if (!touched && name.isBlank()) name = metadata?.name.orEmpty().let {

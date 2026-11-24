@@ -31,8 +31,8 @@ android {
     }
     buildFeatures { compose = true }
     lint {
-        // Report existing warnings before enforcing a graduated error baseline.
-        abortOnError = false
+        // Release checks must fail on real lint errors; warnings remain visible.
+        abortOnError = true
         warningsAsErrors = false
     }
     compileOptions {

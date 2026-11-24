@@ -528,10 +528,11 @@ fun CodeEditor(
             Box {
                 EditorIcon(Icons.Default.List, "File symbol outline") { outlineMenu = true }
                 CodeLabDropdownMenu(expanded = outlineMenu, onDismissRequest = { outlineMenu = false }) {
-                    val outline by produceState(initialValue = emptyList<CodeAnalysis.Symbol>(), text, outlineMenu) {
+                    var outline by remember(text) { mutableStateOf(emptyList<CodeAnalysis.Symbol>()) }
+                    LaunchedEffect(text, outlineMenu) {
                         if (outlineMenu) {
                             delay(100)
-                            value = withContext(Dispatchers.Default) { CodeAnalysis.symbols(text).take(400) }
+                            outline = withContext(Dispatchers.Default) { CodeAnalysis.symbols(text).take(400) }
                         }
                     }
                     if (outline.isEmpty()) DropdownMenuItem(

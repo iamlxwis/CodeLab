@@ -111,8 +111,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     val haptics = LocalHapticFeedback.current
     val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity, m.transitionEffect)
     val motionMillis = motion.millis(170)
-    val keyboardEditing = WindowInsets.ime.getBottom(LocalDensity.current) > 0 &&
-        !m.console && !m.preview
+    // Reclaim chrome for every text input, including runtime stdin and WebView forms.
+    val keyboardEditing = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     val activity = context as? ComponentActivity
     DisposableEffect(activity, focusMode, m.systemStatusVisible) {
         val window = activity?.window

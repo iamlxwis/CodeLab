@@ -189,3 +189,8 @@ UI10-001 source checkpoint: enforce usable medium-width split ranges, add prefer
 ### Nov 25, 2026, 12:33:50 AM PHT — UI10-001 handoff
 
 SESSION STOPPED — UI10-001 handoff. Source commits 852ef2e, bfe7366, f61a774 address portions of all ten workstreams; 0/10 accepted, 10/10 still require validation. Cumulative Android APK run 45438526779 pending at handoff. No new release, device screenshots, measured 12-line viewport, predictive gesture proof, complete localization or comprehensive consistency audit. Preserve approved pure-black Obsidian default; saved light palette applies to activity window but OS starting splash still needs validation. Next inspect exact-run Gradle build/JVM/instrumentation compilation/lint, fix failures, complete toolbar/language UI regression coverage, back audit and remaining design cleanup, then manual API35 and three-size/two-theme screenshots. Existing signing, data and security gates preserved. No assistant coding continues after this checkpoint.
+
+
+## RELEASE-001 — November 25, 2026 — 07:09:05 AM PHT
+
+Owner requests all nine final stabilization workstreams, all 37/10 documented acceptance criteria, genuine screenshot/measurement evidence, strict lint/security and production signing/upgrade/same-SHA smoke before stable publication. High thinking; direct main; no unrelated features, data loss or weakened gates. In progress; canonical current matrix RELEASE_ACCEPTANCE.md.

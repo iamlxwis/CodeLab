@@ -1,3 +1,11 @@
+
+
+## November 25, 2026 — 07:09:05 AM PHT — Final stabilization
+
+Workstreams 1/2/6/7: fixed keyboard starvation of runtime input, restored lint error enforcement and fail-closed production signing; added real upgrade and acceptance gates. 0/9 verified complete, 9 remaining; next exact-source build and API35 regression.
+
+Evidence: API35 45414804243 failure.png shows console shrunk by persistent chrome above the IME; baseline CI 45438526779 lint XML contains four ProduceStateDoesNotAssignValue errors while abortOnError=false. Replaced those producer wrappers with explicit remembered state/LaunchedEffect; lint now blocks errors. Production-signing guard actually executes fallback branch in regression and exits nonzero. Restored API35 production_upgrade_smoke.py gate (no routine emulator added). All 12 Python QA guard tests and static security passed locally. Android compile and new runtime UI regression are not yet verified. Existing same-SHA and signer continuity checks retained. Added full 37-decision/10-UI/9-release acceptance ledger and fail-closed publication requirement; source coverage is not acceptance.
+
 # CodeLab — Reimagined: current continuation record
 
 Nov 24, 2026, 9:45:33 PM PHT — **ACTIVE: cumulative build passed; guarded APK delivery underway.**
