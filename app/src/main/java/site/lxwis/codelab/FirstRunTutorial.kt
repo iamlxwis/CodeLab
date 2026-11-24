@@ -81,11 +81,17 @@ internal fun FirstRunTutorial(
     projectOpen: Boolean = false,
     resumeFrom: Int = 0,
     motion: CodeLabMotion? = null,
-    transitionEffect: String = "Slide"
+    transitionEffect: String = "Slide",
+    runtimeBusy: Boolean = false
 ) {
+    var practice by rememberSaveable { mutableStateOf(false) }
     val start = TutorialProgress.restore(resumeFrom, guide.size)
     var index by rememberSaveable { mutableIntStateOf(start) }
     var advanced by rememberSaveable { mutableStateOf(TutorialProgress.showExtendedTopics(start)) }
+    if (practice) {
+        InteractiveCodeLesson { practice = false }
+        return
+    }
     val current = guide[index]
     val total = if (advanced) guide.size else 4
     Dialog(onDismissRequest = onFinish,
@@ -128,6 +134,14 @@ internal fun FirstRunTutorial(
                         Text(step.subtitle, style = MaterialTheme.typography.titleMedium)
                         Text(step.instruction, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                }
+                if (index == 0 || index == 4 || index == 6 || index == 9) {
+                    OutlinedButton(onClick = { practice = true }, enabled = !runtimeBusy) {
+                        Icon(Icons.Default.Edit, null, Modifier.size(17.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Practice editing and running")
+                    }
+                    if (runtimeBusy) Text("Stop the current execution before starting practice.", style = MaterialTheme.typography.bodySmall)
                 }
                 val canTry = current.action != null && (projectOpen ||
                     current.action in setOf("newproject", "importzip", "languages", "appearance", "actions"))

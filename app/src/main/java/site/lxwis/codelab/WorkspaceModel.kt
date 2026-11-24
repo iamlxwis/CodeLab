@@ -84,10 +84,17 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         projectGrid = value
         preferences.edit().putBoolean("project-grid", value).apply()
     }
+    var focusMode by mutableStateOf(preferences.getBoolean("focus-mode", false))
+        private set
+    fun chooseFocusMode(value: Boolean) {
+        focusMode = value
+        preferences.edit().putBoolean("focus-mode", value).apply()
+        rememberProjectLayout()
+    }
     internal var savedWorkspaceLayouts by mutableStateOf(WorkspaceLayout.decode(preferences.getString("workspace-layouts", null)))
         private set
     private fun currentLayout(name: String) = WorkspaceLayout(name, phoneSplitEnabled, phoneSplitPercent,
-        panelSplitPercent, showEditorStatus, interfaceDensity, quickEditorActions, editorToolbarIds, explorerPinned)
+        panelSplitPercent, showEditorStatus, interfaceDensity, quickEditorActions, editorToolbarIds, explorerPinned, focusMode)
     private fun rememberProjectLayout() {
         val name = project ?: return
         preferences.edit().putString("project-layout:$name", currentLayout(name).json().toString()).apply()
@@ -100,6 +107,10 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         interfaceDensity = value.density
         quickEditorActions = value.actions
         explorerPinned = value.explorer
+        value.focus?.let {
+            focusMode = it
+            preferences.edit().putBoolean("focus-mode", it).apply()
+        }
         value.toolbar?.let {
             editorToolbarIds = it
             editorPreferences.edit().putString("toolbar-actions", it.joinToString(",")).apply()

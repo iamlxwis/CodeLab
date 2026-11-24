@@ -25,4 +25,10 @@ class WorkspaceLayoutTest {
         assertEquals(35, decoded.phonePercent)
         assertEquals(80, decoded.tabletPercent)
     }
+    @Test fun focusPreferencePersistsWithoutChangingLegacyLayouts() {
+        val focus = WorkspaceLayout("Focus", false, 60, 60, true, "Compact", emptyList(), focus = true)
+        assertEquals(true, WorkspaceLayout.decode(WorkspaceLayout.encode(listOf(focus))).single().focus)
+        assertNull(WorkspaceLayout.from(JSONObject("""{"name":"Old"}"""))?.focus)
+        assertEquals(false, WorkspaceLayout.from(focus.copy(focus = false).json())?.focus)
+    }
 }

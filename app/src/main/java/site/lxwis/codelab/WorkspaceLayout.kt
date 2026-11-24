@@ -6,12 +6,13 @@ import org.json.JSONObject
 internal data class WorkspaceLayout(
     val name: String, val phoneSplit: Boolean, val phonePercent: Int, val tabletPercent: Int,
     val status: Boolean, val density: String, val actions: List<String>,
-    val toolbar: List<String>? = null, val explorer: Boolean = true
+    val toolbar: List<String>? = null, val explorer: Boolean = true, val focus: Boolean? = null
 ) {
     fun json() = JSONObject().put("name", name).put("split", phoneSplit)
         .put("phone", phonePercent).put("tablet", tabletPercent).put("status", status)
         .put("density", density).put("actions", JSONArray(actions))
         .put("toolbar", toolbar?.let { JSONArray(it) } ?: JSONObject.NULL).put("explorer", explorer)
+        .put("focus", focus ?: JSONObject.NULL)
     companion object {
         fun from(j: JSONObject): WorkspaceLayout? = runCatching {
             val name = j.optString("name").takeIf { it.isNotBlank() && it.length <= 64 } ?: return null
@@ -24,7 +25,8 @@ internal data class WorkspaceLayout(
                 j.optInt("tablet",60).coerceIn(35,80), j.optBoolean("status",true),
                 j.optString("density").takeIf { it in listOf("Compact","Comfortable","Spacious") } ?: "Comfortable",
                 (0 until minOf(actions.length(),6)).map { actions.optString(it) }.filter { it.matches(Regex("[a-z-]{1,40}")) }.distinct(),
-                toolbar, j.optBoolean("explorer", true))
+                toolbar, j.optBoolean("explorer", true),
+                if (j.has("focus") && !j.isNull("focus")) j.optBoolean("focus") else null)
         }.getOrNull()
         fun decode(raw: String?): List<WorkspaceLayout> = runCatching {
             val a = JSONArray(raw ?: "[]")

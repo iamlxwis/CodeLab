@@ -2,15 +2,6 @@ package site.lxwis.codelab
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -42,30 +33,33 @@ internal fun projectFileKind(path: String): ProjectFileKind {
 @Composable
 internal fun FileTypeIcon(path: String, modifier: Modifier = Modifier, selected: Boolean = false) {
     val extension = path.substringAfterLast('/').substringAfterLast('.', "").lowercase(Locale.ROOT)
-    val badge = when (extension) {
-        "js", "jsx" -> "JS" to 0xffc5a629
-        "ts", "tsx" -> "TS" to 0xff3178c6
-        "py" -> "Py" to 0xff3476a8
-        "java" -> "J" to 0xffb65b35
-        "lua" -> "L" to 0xff555ca7
-        "kt", "kts" -> "K" to 0xff9661c7
-        "html", "htm" -> "H" to 0xffd75c39
-        "css" -> "C" to 0xff3478bd
-        "sql", "sqlite" -> "DB" to 0xff4089a2
-        "cpp", "hpp" -> "C+" to 0xff536cbb
-        "c" -> "C" to 0xff526a9b
-        "rs" -> "R" to 0xffa66740
-        "go" -> "Go" to 0xff387d91
-        "json" -> "{}" to 0xff7c7f87
+    val logo = when (extension) {
+        "js", "jsx", "mjs", "cjs" -> R.drawable.ic_lang_javascript
+        "ts", "tsx" -> R.drawable.ic_lang_typescript
+        "py", "pyw" -> R.drawable.ic_lang_python
+        "java" -> R.drawable.ic_lang_java
+        "lua" -> R.drawable.ic_lang_lua
+        "kt", "kts" -> R.drawable.ic_lang_kotlin
+        "html", "htm" -> R.drawable.ic_lang_html5
+        "css", "scss", "sass", "less" -> R.drawable.ic_lang_css
+        "sql", "sqlite", "db" -> R.drawable.ic_lang_sqlite
+        "cpp", "hpp", "cc", "cxx", "hxx" -> R.drawable.ic_lang_cplusplus
+        "c", "h" -> R.drawable.ic_lang_c
+        "rs" -> R.drawable.ic_lang_rust
+        "go" -> R.drawable.ic_lang_go
+        "json", "jsonl" -> R.drawable.ic_lang_json
+        "php" -> R.drawable.ic_lang_php
+        "rb" -> R.drawable.ic_lang_ruby
+        "swift" -> R.drawable.ic_lang_swift
+        "dart" -> R.drawable.ic_lang_dart
+        "sh", "bash" -> R.drawable.ic_lang_gnubash
         else -> null
     }
-    if (badge != null) {
-        Box(modifier.background(Color(badge.second).copy(alpha = .22f), RoundedCornerShape(4.dp)),
-            contentAlignment = Alignment.Center) {
-            Text(badge.first, fontSize = 8.sp, fontWeight = FontWeight.Bold,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                maxLines = 1)
-        }
+    if (logo != null) {
+        // Monochrome glyphs inherit the readable theme foreground; active tabs use accent.
+        Icon(androidx.compose.ui.res.painterResource(logo), contentDescription = null,
+            modifier = modifier, tint = if (selected) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant)
         return
     }
     val icon = when (projectFileKind(path)) {

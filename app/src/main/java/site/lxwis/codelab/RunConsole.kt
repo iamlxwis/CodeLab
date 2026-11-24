@@ -59,6 +59,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     var selectedRun by remember { mutableStateOf<RunSession.RunRecord?>(null) }
     var showFilter by rememberSaveable { mutableStateOf(false) }
     var filterOutput by rememberSaveable { mutableStateOf("") }
+    var severityFilter by rememberSaveable { mutableStateOf("All") }
     val consolePreferences = remember { context.getSharedPreferences("console-settings", android.content.Context.MODE_PRIVATE) }
     var consoleFontSize by remember {
         mutableIntStateOf(consolePreferences.getInt("font-size", 13))
@@ -66,12 +67,8 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     val errorLinks = remember(session.transcript, fileName, knownFiles) {
         parseErrorLocations(session.transcript, fileName, knownFiles)
     }
-    val displayedOutput = remember(session.transcript, filterOutput, showFilter) {
-        if (showFilter && filterOutput.isNotBlank())
-            session.transcript.lineSequence().filter {
-                it.contains(filterOutput, ignoreCase = true)
-            }.joinToString("\n")
-        else session.transcript
+    val displayedOutput = remember(session.transcript, filterOutput, showFilter, severityFilter) {
+        filterConsoleOutput(session.transcript, if (showFilter) filterOutput else "", severityFilter)
     }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         if (uri != null) {
@@ -227,10 +224,16 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             }
             AnimatedVisibility(showFilter, enter = fadeIn(tween(motionMillis)),
                 exit = fadeOut(tween(motionMillis))) {
-                OutlinedTextField(filterOutput, { filterOutput = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Filter console lines") },
-                    singleLine = true)
+                Column {
+                    OutlinedTextField(filterOutput, { filterOutput = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Filter console lines") }, singleLine = true)
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("All", "Errors", "Warnings").forEach { filter ->
+                            FilterChip(severityFilter == filter, { severityFilter = filter }, label = { Text(filter) })
+                        }
+                    }
+                }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             if (session.paused) {
@@ -269,12 +272,27 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             if (sqlResult != null && tableMode) SqlDataGrid(sqlResult, Modifier.weight(1f).fillMaxWidth())
             else SelectionContainer(Modifier.weight(1f).fillMaxWidth().verticalScroll(scroll)) {
                 val textToShow = displayedOutput.ifEmpty {
-                    if (showFilter && filterOutput.isNotEmpty()) "No matching lines"
+                    if ((showFilter && filterOutput.isNotEmpty()) || severityFilter != "All") "No matching lines"
                     else if (session.running) "Waiting for program output…" else "Run a file to see output here."
                 }
                 val defaultInk = consoleInk
-                val formatted = remember(textToShow, defaultInk) {
-                    ConsoleAnsi.format(textToShow, defaultInk)
+                val errorInk = contrastAccent(palette.error, consoleBackground)
+                val warningInk = contrastAccent(androidx.compose.ui.graphics.Color(0xFFB87500), consoleBackground)
+                val formatted = remember(textToShow, defaultInk, errorInk, warningInk) {
+                    val ansi = ConsoleAnsi.format(textToShow, defaultInk)
+                    val builder = AnnotatedString.Builder(ansi)
+                    var offset = 0
+                    ansi.text.splitToSequence('\n').forEach { line ->
+                        val start = offset
+                        val ink = when (consoleSeverity(line)) {
+                            ConsoleSeverity.Error -> errorInk
+                            ConsoleSeverity.Warning -> warningInk
+                            else -> null
+                        }
+                        if (ink != null && line.isNotEmpty()) builder.addStyle(androidx.compose.ui.text.SpanStyle(color = ink), start, start + line.length)
+                        offset += line.length + 1
+                    }
+                    builder.toAnnotatedString()
                 }
                 Text(formatted, fontFamily = FontFamily.Monospace, fontSize = consoleFontSize.sp,
                     lineHeight = (consoleFontSize + 5).sp)

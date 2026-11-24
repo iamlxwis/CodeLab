@@ -110,13 +110,13 @@ The full owner specification was supplied in the current session. This matrix su
 | 13 Developer console | RunConsole, RunStatePanels, split controls | Source; errors/warnings/filtering and real runs unverified |
 | 14 Bottom explorer | FileExplorerPanels, FileExplorerHierarchy | Source; tree/file operations and sheet resize unverified |
 | 15 Nine settings groups | ReimaginedSettings; direct Theme Studio entry | Source changed this session; build and navigation/persistence unverified |
-| 16 Adaptive onboarding | FirstRunTutorial, resume/detour persistence | Partial; practical detours exist, interactive editing/execution lessons still incomplete |
+| 16 Adaptive onboarding | FirstRunTutorial plus real InteractiveCodeLesson; resume/detour persistence | Source; practice, replay and detour device acceptance pending |
 | 17 All eight gestures | SourceView, Editor, WorkspaceTab, ProjectLibraryScreen, PhoneSplitPanel | Source; gesture interactions and accessible alternatives unverified |
 | 18 Explicit execution | RunModeStrip, ProjectDialogs, OnlineRunConfirmation | Source; real offline packs, consent and failure states unverified |
 | 19 Adaptive glass | ClayDesign, backdrop quality and material controls | Source approximation; fidelity/readability/performance unverified |
 | 20 Strict visual QA | qa device/accessibility/font/motion scripts | Unverified; no screenshots inspected for current redesign |
 | 21 Custom typography | Licensed Inter/JetBrains assets; ImportedFonts | Source; system scaling and custom font imports unverified |
-| 22 Contextual icons | Rounded Material icons and FileTypeIcon letter badges | Partial; recognizable programming-language logo assets missing |
+| 22 Contextual icons | Rounded Material icons and 19 licensed language-logo vector glyphs | Source; small-size clarity, alignment and selected-state device QA pending |
 | 23 Language pack library | LanguageManager; real signed optional pack architecture retained | Source; detail/install/remove/download journeys unverified for redesign |
 | 24 Contextual presentations | Alerts, anchored menus, action/explorer sheets | Source; all existing tool screens require visual audit |
 | 25 All nine workspace controls | EditorToolbarOrder, WorkspaceLayout, per-project preferences | Source; focus and named/per-project layout restoration unverified |
@@ -133,4 +133,13 @@ The full owner specification was supplied in the current session. This matrix su
 | 36 Quality and installable APK | Prior source 7304cbf passed CI; new code must build | Unverified; latest APK, API35 acceptance and physical review still required |
 | 37 CodeLab — Reimagined | Current documentation and in-app identity | Source; comprehensive update remains in progress |
 
-Next unfinished implementation: real guided editor lesson (decision 16), language-logo icons (22); then remaining screen/interaction polish. Obtain exact-source build before claiming delivery. Full visual/accessibility/runtime/performance acceptance remains open.
+Next unfinished work: exact-source build and real device screen/interaction polish. Lesson and language-logo source gaps are addressed in the new checkpoint below; do not assume device acceptance. Obtain exact-source build before claiming delivery. Full visual/accessibility/runtime/performance acceptance remains open.
+
+
+## Interactive lesson, logos, layouts and console — Nov 24, 2026, 8:13:24 PM PHT
+
+Verified preceding checkpoint bb5172d7957f1584a39cf4679e893f4b6d6e60f1 passed Android CI 45390387550 (release, unit tests, instrumentation compilation, lint, security/signature gates). APK artifact 14919245609; offline packs 14918028788; reports 14917738844. No emulator or physical acceptance.
+
+New source: optional practice lesson uses the real CodeEditor and existing RunSession isolated/offline architecture; records success only from actual expected output, stops its run on dismissal and returns to the same guide topic. Replaced letter badges with 19 licensed Android language-logo vectors (Simple Icons pinned d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97 CC0, Devicon Java MIT). Added offline license reader from Help. Focus mode now participates in named/per-project layouts, with legacy nullable compatibility. JavaScript and TypeScript warnings now have an explicit Warning prefix distinct from errors in all three existing engines; console supports error/warning/text filters and readable severity colors while preserving cross-line ANSI formatting and full raw copy/export.
+
+Local checks: static security gate and eight Python release/artifact checks passed; all 19 new vector XML files parsed. Added focused JVM and Android regressions; new Android build not yet verified. Runtime architecture, dependencies, workflows, production signer and six existing pack capabilities unchanged. Next: exact-source CI and fixes; manual API35 source-matched screenshots, gestures, persistence, all runtime/file operations, accessibility and measured performance remain outstanding. Cannot dispatch device workflow through current tools/authentication.

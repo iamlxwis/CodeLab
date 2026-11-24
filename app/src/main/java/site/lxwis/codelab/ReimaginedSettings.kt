@@ -68,6 +68,7 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                                 "motion" -> MotionSettingsControls(m)
                                 "editor" -> {
                                     EditorPreferenceControls(false)
+                                    SettingToggle("Focus mode", m.focusMode, m::chooseFocusMode)
                                     SettingsLink("Workspace layout", "Density, panel sizes and status bar", Icons.Default.ViewSidebar) { onAction("panels") }
                                     SettingsLink("Saved layouts", "Save and restore pinned actions and proportions", Icons.Default.Dashboard) { onAction("layoutpresets") }
                                 }
@@ -104,6 +105,7 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                                     SettingsLink("Quick start guide", "Replay practical lessons and try real features", Icons.Default.School) { onAction("tutorial") }
                                     SettingsLink("Accessibility", "Contrast, interface text and touch feedback", Icons.Default.AccessibilityNew) { onAction("accessibility") }
                                     if (m.project != null) SettingsLink("Performance diagnostics", "Actual local save and workspace timings", Icons.Default.Speed) { onAction("performance") }
+                                    SettingsLink("Licenses & acknowledgements", "Bundled font, icon and runtime notices", Icons.Default.Description) { onAction("licenses") }
                                     Text("Inter and JetBrains Mono use the SIL Open Font License. Third-party runtime notices are included with the app.", style = MaterialTheme.typography.bodySmall)
                                 }
                             }

@@ -1,0 +1,7 @@
+Language glyphs: Simple Icons (CC0 1.0).
+Source: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons
+Converted SVG paths to native Android vector drawables without changing geometry.
+Icons identify file languages only. They do not imply installed execution support or endorsement.
+Trademarks remain the property of their respective owners; CC0 does not grant trademark rights.
+
+Java glyph: Devicon java-plain.svg, MIT; https://github.com/devicons/devicon/blob/master/icons/java/java-plain.svg

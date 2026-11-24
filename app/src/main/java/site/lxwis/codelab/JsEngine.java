@@ -70,7 +70,7 @@ public final class JsEngine {
                 BaseFunction err = printer(scope, io, true);
                 ScriptableObject.putProperty(scope, "print", out);
                 ScriptableObject.putProperty(console, "log", out);
-                ScriptableObject.putProperty(console, "warn", err);
+                ScriptableObject.putProperty(console, "warn", printer(scope, io, false, "Warning: "));
                 ScriptableObject.putProperty(console, "error", err);
                 ScriptableObject.putProperty(scope, "console", console);
                 ScriptableObject.putProperty(scope, "readLine", new BaseFunction(scope, ScriptableObject.getFunctionPrototype(scope)) {
@@ -123,6 +123,10 @@ public final class JsEngine {
     }
 
     private static BaseFunction printer(Scriptable scope, Terminal io, boolean error) {
+        return printer(scope, io, error, "");
+    }
+
+    private static BaseFunction printer(Scriptable scope, Terminal io, boolean error, String prefix) {
         return new BaseFunction(scope, ScriptableObject.getFunctionPrototype(scope)) {
             @Override public Object call(Context cx, Scriptable s, Scriptable self, Object[] args) {
                 StringBuilder line = new StringBuilder();
@@ -133,7 +137,7 @@ public final class JsEngine {
                     line.append(value, 0, count);
                     if (line.length() >= 8192) break;
                 }
-                io.write(line.toString(), error);
+                io.write(prefix + line, error);
                 return Context.getUndefinedValue();
             }
         };

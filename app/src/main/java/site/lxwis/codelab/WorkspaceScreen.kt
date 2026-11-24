@@ -99,7 +99,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var incoming by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedSnippet by remember { mutableStateOf("") }
     var selectedSnippetLine by remember { mutableIntStateOf(1) }
-    var focusMode by rememberSaveable { mutableStateOf(false) }
+    val focusMode = m.focusMode && m.project != null
     val explorerPinned = m.explorerPinned
     var wideOutputExpanded by rememberSaveable { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -180,7 +180,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             "run-active" -> m.run()
             "save" -> m.flush()
             "focus" -> {
-                focusMode = !focusMode
+                m.chooseFocusMode(!focusMode)
                 m.console = false
                 m.preview = false
             }
@@ -188,7 +188,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         }
     }
     BackHandler(enabled = p != null && dialog.isEmpty()) {
-        if (focusMode) focusMode = false
+        if (focusMode) m.chooseFocusMode(false)
         else if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
     }
 
@@ -363,7 +363,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 }
             }
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            if (focusMode) TextButton(onClick = { focusMode = false }, modifier = Modifier.padding(start = 8.dp)) {
+            if (focusMode) TextButton(onClick = { m.chooseFocusMode(false) }, modifier = Modifier.padding(start = 8.dp)) {
                 Icon(Icons.Default.FullscreenExit, null, Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Exit Focus Mode")
@@ -636,6 +636,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
         "appearance", "studio" -> AppearanceGallery(m, openStudio = dialog == "studio") { dialog = "" }
         "settings" -> ReimaginedSettings(m, onAction = ::openAction, close = { dialog = "" })
+        "licenses" -> LicenseNotices { dialog = "" }
         "layoutpresets" -> WorkspaceLayoutPresets(m) { dialog = "" }
     }
     if (showTutorial) FirstRunTutorial(
@@ -659,7 +660,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         projectOpen = p != null,
         resumeFrom = tutorialPrefs.getInt("resume-index", 0),
         motion = motion,
-        transitionEffect = m.transitionEffect
+        transitionEffect = m.transitionEffect,
+        runtimeBusy = m.runner.running
     )
     m.cloudPending?.let { filename ->
         val language = m.cloudLanguages[CloudJudge0.extension(filename)]

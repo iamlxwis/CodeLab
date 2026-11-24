@@ -69,4 +69,10 @@ public class JsEngineTest {
         assertThrows(Stop.class, () -> JsEngine.execute("loop.js", "while (true) {}", capture));
         assertTrue(capture.checkpoints >= 3);
     }
+    @Test public void warningsAreDistinctFromErrorsAndOrdinaryOutput() {
+        Capture capture = new Capture();
+        assertEquals(0, JsEngine.execute("levels.js", "console.log('normal'); console.warn('careful', 7); console.error('failed');", capture));
+        assertEquals("normal\nWarning: careful 7\n", capture.out);
+        assertEquals("failed\n", capture.err);
+    }
 }
