@@ -406,7 +406,7 @@ fun CodeEditor(
         EditorToolbarAction("save", "Save file", Icons.Default.Save, invoke = onSave),
         EditorToolbarAction("run", "Run active file", Icons.Default.PlayArrow, invoke = onRun),
         EditorToolbarAction("commands", "Command palette", Icons.Default.Terminal, invoke = onOpenCommands),
-        EditorToolbarAction("settings", "Editor preferences", Icons.Default.Settings) { settings = true },
+        EditorToolbarAction("settings", "Editor preferences", Icons.Default.Settings) { advancedTools = true; settings = true },
         EditorToolbarAction("symbols", "Show code symbols", Icons.Default.Code, symbols) {
             symbols = !symbols; preferences.edit().putBoolean("symbol-toolbar", symbols).apply()
         }

@@ -172,3 +172,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 6:54:55 PM PHT | Theme Studio component fidelity | Source | Independent component color persistence, editor selection and workspace preview; CI pending. |
 
 | Nov 24, 2026, 6:56:18 PM PHT | Workspace/editor polish | Source; tests added | Toolbar order/pin settings, motion, template choice, console panel states, project layout rename and notification styling. |
+
+| Nov 24, 2026, 6:58:26 PM PHT | Regression compatibility | Source | Legacy appearance migration and current-device smoke selectors for six presets, signed runtimes, and explicit online/offline changes. Tests not yet executed. |

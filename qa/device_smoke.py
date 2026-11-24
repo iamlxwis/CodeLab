@@ -75,6 +75,26 @@ def tap(*labels):
     tap_node(wait_for(*labels))
 
 
+def scroll_to(*labels, attempts=6):
+    """Reach a real visible UI target on varied screen sizes without fixed pixel coordinates."""
+    size = adb("shell", "wm", "size")
+    matches = re.findall(r"(\d+)x(\d+)", size)
+    w, h = map(int, matches[-1])
+    for _ in range(attempts):
+        try:
+            return wait_for(*labels, timeout=2.5)
+        except AssertionError:
+            adb("shell", "input", "swipe", str(w//2), str(int(h*.77)),
+                str(w//2), str(int(h*.35)), "350")
+    return wait_for(*labels, timeout=4)
+
+
+def select_style(name):
+    tap_node(scroll_to(name, f"{name} style", f"{name} style, selected"))
+    wait_for(f"{name} style, selected")
+    snapshot("theme-" + name.lower())
+
+
 def tap_text_result(name):
     """Tap the actual result TextView, never a search EditText with the same text."""
     until = time.monotonic() + 16
@@ -144,52 +164,36 @@ def main():
     # Verify actual theme settings, not merely preview names.
     tap("More tools and settings")
     tap("Appearance")
-    wait_for("Choose your style")
-    tap("Glass")
-    snapshot("theme-glass")
-    tap("Clay")
-    snapshot("theme-clay")
-    tap("AMOLED")
-    snapshot("theme-amoled")
-    # Paper is the third row of the lazy appearance gallery.
-    adb("shell", "input", "swipe", "420", "1230", "420", "520", "350")
-    tap("Paper")
-    snapshot("theme-paper")
-    adb("shell", "input", "swipe", "420", "520", "420", "1230", "350")
-    tap("Minimal")
-    snapshot("theme-minimal")
+    wait_for("Themes")
+    for style in ("Obsidian", "Titanium", "Crystal", "Midnight", "Porcelain", "Sandstone"):
+        select_style(style)
+    # Return to the top before verifying the intended default dark treatment.
+    size = adb("shell", "wm", "size")
+    w, h = map(int, re.findall(r"(\d+)x(\d+)", size)[-1])
+    for _ in range(3):
+        adb("shell", "input", "swipe", str(w//2), str(int(h*.3)),
+            str(w//2), str(int(h*.8)), "350")
+    select_style("Obsidian")
     tap("Done")
     wait_for("New project")
     # The Python pack is installed by this smoke run; verify native in-app
     # management affordances without downloading on the airplane-mode emulator.
     tap("More tools and settings")
     tap("Languages")
-    wait_for("Language Manager")
-    # Download status no longer pushes installed languages below the screen.
+    wait_for("Offline packs and editor support")
     wait_for("Installed")
-    wait_for("executable engines", contains=True)
     tap("Downloads")
-    wait_for("DOWNLOAD MANAGER")
-    wait_for("Manage Python")
-    wait_for("Wi-Fi only downloads")
-    # The Downloads section may scroll on small phones. Search the short
-    # Downloadable list instead of assuming every management button is visible.
-    tap("Downloadable")
-    wait_for("Python")
-    tap_text_result("JavaScript")
-    wait_for("Verified optional JavaScript module installed", contains=True)
-    tap("Close")
-    tap_text_result("Lua")
-    wait_for("Verified optional Lua module installed", contains=True)
-    tap("Close")
-    tap_text_result("Java")
-    wait_for("Verified optional Java module installed", contains=True)
-    tap("Close")
-    tap_text_result("TypeScript")
-    wait_for("Verified optional TypeScript module installed", contains=True)
-    tap("Close")
+    wait_for("Download settings")
+    wait_for("Python: Wi-Fi only")
+    tap("Downloads")
+    tap("Available")
+    # Validate installed signed companions through their actual detail dialogs.
+    for language in ("JavaScript", "Lua", "Java", "TypeScript", "SQLite"):
+        tap_node(scroll_to(language))
+        wait_for(f"Verified optional {language} module installed", contains=True)
+        tap("Close")
     tap("Installed")
-    wait_for("executable engines", contains=True)
+    wait_for("languages", contains=True)
     # Searching automatically expands to All instead of hiding an edit-only language.
     search = wait_for(field=True)
     tap_node(search)
@@ -264,6 +268,7 @@ def main():
     # Primary Run honors the preferred entry file; explicitly choose this tab.
     # Run modes are deliberate, never a silent fallback to cloud.
     wait_for("Ready: local runtime")
+    tap("Offline")  # Open the explicit mode selector.
     tap("Online")
     # The emulator can retain a validated default network even with its
     # airplane toggle on. Both states are legitimate: no network or no
@@ -271,6 +276,7 @@ def main():
     # airplane mode implies the app cannot access an online compiler.
     wait_for("Internet connection required", "No online compiler for this file",
              "Online: source upload needs confirmation")
+    tap("Online")  # Open the mode selector again.
     tap("Offline")
     wait_for("Ready: local runtime")
     tap("Run file and entry options")
@@ -278,10 +284,10 @@ def main():
     wait_for("42", contains=True)
     wait_for("Exit 0", contains=True)
     tap("Editor")
-    tap("All open tabs")
+    tap("Quick switch open files")
     tap("main.js")
     wait_for("Close main.js")
-    tap("All open tabs")
+    tap("Quick switch open files")
     tap("answer.js")
     wait_for("Close answer.js")
     # Read the actual project file, not an accessibility node that can disappear

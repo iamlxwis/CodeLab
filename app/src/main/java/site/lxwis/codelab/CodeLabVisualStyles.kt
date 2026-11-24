@@ -7,6 +7,7 @@ internal object CodeLabVisualStyles {
     val all = listOf("Obsidian", "Titanium", "Crystal", "Midnight", "Porcelain", "Sandstone")
     private val legacy = mapOf("Minimal" to "Titanium", "Glass" to "Crystal",
         "Clay" to "Titanium", "AMOLED" to "Obsidian", "Paper" to "Sandstone")
+    fun legacyNames(style: String) = legacy.filterValues { it == canonical(style) }.keys.toList()
     fun accepts(style: String) = style in all || style in legacy
     fun canonical(style: String) = legacy[style] ?: style.takeIf { it in all } ?: "Obsidian"
     fun effective(style: String, dark: Boolean): String = when (val preset = canonical(style)) {

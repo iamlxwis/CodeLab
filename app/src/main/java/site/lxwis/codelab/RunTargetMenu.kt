@@ -64,7 +64,7 @@ internal fun RunModeStrip(
             }
             if (m.runner.running) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
             Text(status, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                color = studioReadable(colors.onSurfaceVariant, toolbar), maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (missingModule || (m.executionMode == "Online" && !cloudReady)) {
                 TextButton(onClick = onLanguages) { Text(if (missingModule) "Packs" else "Setup") }
             }

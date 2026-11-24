@@ -278,18 +278,30 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     )
         private set
     fun chooseVisualStyle(value: String) {
-        if (!CodeLabVisualStyles.accepts(value) || value == visualStyle) return
+        if (!CodeLabVisualStyles.accepts(value)) return
         val old = visualStyle
-        // Each visual style remembers its own mode and accent independently.
-        preferences.edit().putString("accent:$old", accent)
-            .putString("mode:$old", appearance).apply()
-        visualStyle = value
-        studioAppearance = StudioAppearance.decode(preferences.getString("studio:$value", null))
-        accent = preferences.getString("accent:$value", AppearanceRecipes.defaultAccent(value))
-            ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(value)
-        appearance = preferences.getString("mode:$value", CodeLabVisualStyles.defaultMode(value))
-            ?.takeIf { it in listOf("Dark", "Light", "System") } ?: CodeLabVisualStyles.defaultMode(value)
-        preferences.edit().putString("visual-style", value)
+        val canonical = CodeLabVisualStyles.canonical(value)
+        val oldCanonical = CodeLabVisualStyles.canonical(old)
+        // Migrate legacy style preferences rather than discarding saved customization.
+        preferences.edit().putString("accent:$old", accent).putString("accent:$oldCanonical", accent)
+            .putString("mode:$old", appearance).putString("mode:$oldCanonical", appearance)
+            .putString("studio:$oldCanonical", studioAppearance.encode()).apply()
+        if (canonical == oldCanonical) {
+            visualStyle = canonical
+            preferences.edit().putString("visual-style", canonical).apply()
+            return
+        }
+        fun stored(key: String, fallback: String?): String? {
+            val candidates = listOf(canonical, value) + CodeLabVisualStyles.legacyNames(canonical)
+            return candidates.asSequence().mapNotNull { preferences.getString("$key:$it", null) }.firstOrNull() ?: fallback
+        }
+        visualStyle = canonical
+        studioAppearance = StudioAppearance.decode(stored("studio", null))
+        accent = stored("accent", AppearanceRecipes.defaultAccent(canonical))
+            ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(canonical)
+        appearance = stored("mode", CodeLabVisualStyles.defaultMode(canonical))
+            ?.takeIf { it in listOf("Dark", "Light", "System") } ?: CodeLabVisualStyles.defaultMode(canonical)
+        preferences.edit().putString("visual-style", canonical)
             .putString("accent", accent).putString("mode", appearance).apply()
     }
     var themePreset by mutableStateOf(preferences.getString("preset", "Obsidian") ?: "Obsidian")

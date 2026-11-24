@@ -75,10 +75,12 @@ def verify_clay():
     # Newer APKs expose a contextual, accessible style/selection label on the
     # clickable card; the previous production release used a separate check icon.
     # Verify either representation so the real OLD -> NEW upgrade stays testable.
-    if any(n.attrib.get("content-desc") == "Clay style, selected" for n in tree):
-        assert any(n.attrib.get("text") == "Clay" for n in tree), (
-            "Clay selection label was detached from its visible style")
-        return
+    # The new Titanium preset is the documented migration target for Clay.
+    for name in ("Clay", "Titanium"):
+        if any(n.attrib.get("content-desc") == name + " style, selected" for n in tree):
+            assert any(n.attrib.get("text") == name for n in tree), (
+                "Selection label was detached from its visible style")
+            return
     labels = [n for n in tree if n.attrib.get("text") == "Clay"]
     old_markers = [n for n in tree if n.attrib.get("content-desc") == "Selected"]
     assert any(abs(point(a)[1] - point(b)[1]) < 80 and point(b)[0] > point(a)[0]
@@ -118,8 +120,8 @@ def create_test_data():
     ui.wait_for(MARKER, contains=True)
     ui.tap("Save file")
     open_workspace_action("Appearance")
-    ui.wait_for("Choose your style")
-    ui.tap("Clay")
+    ui.wait_for("Choose your style", "Themes")
+    ui.tap("Clay", "Titanium", "Titanium style")
     verify_clay()
     ui.tap("Done")
     ui.adb("shell", "am", "force-stop", APP)
@@ -137,14 +139,16 @@ def validate_persistence_and_python():
     ui.tap("UpgradeProof")
     ui.wait_for(MARKER, contains=True, timeout=45)
     open_workspace_action("Appearance")
-    ui.wait_for("Choose your style")
+    ui.wait_for("Choose your style", "Themes")
     verify_clay()
     ui.tap("Done")
     ui.snapshot("signed-upgrade-after")
     open_workspace_action("Languages")
-    ui.wait_for("Language Manager")
+    ui.wait_for("Language Manager", "Offline packs and editor support")
     ui.tap("Downloads")
-    ui.wait_for("DOWNLOAD MANAGER")
+    ui.wait_for("DOWNLOAD MANAGER", "Download settings")
+    if any(n.attrib.get("text") == "Download settings" for n in ui.nodes()):
+        ui.tap("Downloads")
     ui.tap_node(ui.wait_for(field=True))
     ui.adb("shell", "input", "text", "Python")
     ui.adb("shell", "input", "keyevent", "4")
@@ -185,7 +189,7 @@ def main():
     (OUT / f"production-upgrade-api-{api}.txt").write_text(
         f"PASS API{api}: same-certificate editor/Python adb install -r, "
         f"monotonic versions {a[1]}->{b[1]} and {c[1]}->{d[1]}, "
-        "persisted project text and Clay setting, trusted companion and real Python execution.\n")
+        "persisted project text and migrated Clay/Titanium setting, trusted companion and real Python execution.\n")
 
 
 if __name__ == "__main__":
