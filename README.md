@@ -27,18 +27,17 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Phase | Phase 3 — Project Management & Developer Workflow |
-| Status | **CI RUNNING** (source review underway) |
+| Status | **FIXING** (previous source CI failed 1/174 JVM tests) |
 | Workstreams completed | **0/7 verified** |
 | Workstreams remaining | **7** |
-| Current workstream | **Cross-workstream source review and CI verification** |
-| Latest source commit | [`c0fd4d7f841a`](https://github.com/iamlxwis/CodeLab/commit/c0fd4d7f841a79bebdc7dbc74746ed6270b7d4c0) |
-| Last CI-verified source commit | [`399a1380e846`](https://github.com/iamlxwis/CodeLab/commit/399a1380e846929198051638e24b1ad07e18c2b9) (Phase 2) |
-| CI status | **CI RUNNING** — [Android APK run 45365272240](https://github.com/iamlxwis/CodeLab/actions/runs/45365272240) |
-| Last activity | Nov 24, 2026 · 5:27 PM PHT |
+| Current workstream | **2 — Git Integration / regression fix; all seven under review** |
+| Latest source baseline | [`c0fd4d7f841a`](https://github.com/iamlxwis/CodeLab/commit/c0fd4d7f841a79bebdc7dbc74746ed6270b7d4c0) (failed CI; new fix in this commit) |
+| CI status | **CI FAILED** — [Android APK run 45365272240](https://github.com/iamlxwis/CodeLab/actions/runs/45365272240); repaired source awaiting new CI |
+| Last activity | Nov 24, 2026 · 5:32 PM PHT |
 
-**Current activity:** Nov 24, 2026 · 5:27 PM PHT — Reviewing seven Phase 3 workstreams while Android APK CI 45365272240 builds and runs source tests.
+**Current activity:** Nov 24, 2026 · 5:32 PM PHT — Fixing a failed JGit unborn-branch unstage regression by writing the index before commit; rerunning APK CI.
 
-> README contains one activity sentence; [PROGRESS_LOG](docs/development/PROGRESS_LOG.md) holds history. CI evidence applies to the recorded **source SHA**, not automatically to later code. Owner handles physical-device acceptance; no automatic device smoke is dispatched.
+> This is a committed source checkpoint, not continuous background execution. One current activity entry only; [progress history](docs/development/PROGRESS_LOG.md) keeps failures and remediation. Phone acceptance belongs to the owner; no emulator tests were dispatched.
 
 [Project memory](docs/development/PROJECT_MEMORY.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Roadmap](docs/ROADMAP.md)
 

@@ -1,3 +1,17 @@
+# Phase 3 Git index CI failure / source fix — Nov 24, 2026 · 5:32 PM PHT
+
+- **Status:** FIXING; 0/7 fully source/CI verified, 7 remaining. WS2 Git index safety regression addressed in source but new CI pending.
+- **Last pushed SHA before this fix:** `37be95d1c9a3dc336e46bac4291b53e43430f5b7` docs-only; tested source `c0fd4d7f841a79bebdc7dbc74746ed6270b7d4c0`.
+- **Verified CI failure:** [45365272240](https://github.com/iamlxwis/CodeLab/actions/runs/45365272240): 174 JVM tests, 1 failed, `GitWorkspaceTest.unstagingOnUnbornBranchPreservesWorkingFilesAndOtherStagedPaths`; JGitInternalException wrapping EOFException at line 85 on `git.inspect().staged`. All APK CI success claims blocked.
+- **Root cause and repair:** In JGit unborn HEAD unstage path, `DirCacheEditor.finish()` updates in-memory index but does not write it. `DirCache.commit()` alone swaps an unwritten lock, causing broken index. Use `DirCacheEditor.commit()` (finish + write + commit) and keep index unlock in finally. Existing JVM test validates both index and working-tree integrity.
+- **Files changed:** `GitWorkspace.kt`, README.md, PROGRESS_LOG.md, PROJECT_MEMORY.md.
+- **Latest known successful APK CI:** Phase2 [45338205953](https://github.com/iamlxwis/CodeLab/actions/runs/45338205953), *not* Phase3.
+- **Prior Phase3 changes:** WS1 recently opened order; WS2 selective JGit staging/unstaging; WS3 tracking/redacted transport failures; WS4 atomic imports/ZIP protection; WS5 user snippets + commands; WS6 search/switcher efficiency; WS7 security/test coverage. No workstream certified yet.
+- **Next exact action:** Check new Android APK run on current new source SHA; if failed inspect logs and repair; if green review source scope and update verified workstream counts with exact CI evidence. Owner performs physical phone acceptance only.
+- **Constraints:** direct main commits, source-only fast checks, cancel-in-progress, three CI artifacts, manual Android15 device smoke (do NOT run), production signing gates, six offline packs preserved, no new runtimes or advanced editor Phase2.
+
+---
+
 # Phase 3 CI checkpoint — Nov 24, 2026 · 5:27 PM PHT
 
 - **Source SHA being verified:** `c0fd4d7f841a79bebdc7dbc74746ed6270b7d4c0`.

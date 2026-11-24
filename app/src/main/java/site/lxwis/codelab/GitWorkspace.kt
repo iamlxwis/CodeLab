@@ -110,8 +110,10 @@ internal class GitWorkspace(private val folder: File) {
                 try {
                     val editor = index.editor()
                     selected.forEach { editor.add(DirCacheEditor.DeletePath(it)) }
-                    editor.finish()
-                    check(index.commit()) { "Git index changed; refresh and retry." }
+                    // JGit's editor.commit() writes the updated index before
+                    // swapping the lock file. A bare index.commit() would publish
+                    // an unwritten/truncated index and break subsequent Git reads.
+                    check(editor.commit()) { "Git index changed; refresh and retry." }
                 } finally {
                     index.unlock()
                 }
