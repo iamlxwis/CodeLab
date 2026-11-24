@@ -1,3 +1,5 @@
+> **Current Phase 3 status (Nov 24, 2026 · 5:37 PM PHT):** Project Management & Developer Workflow **7/7 source/CI complete** on [`55a65774d56e`](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b) with passing [Android APK workflow 45366121115](https://github.com/iamlxwis/CodeLab/actions/runs/45366121115) and three artifacts. Owner physical-device acceptance and real GitHub credential integration checks remain pending. Historic Phase1/2 entries below are retained as past scopes; declined advanced Phase2 features are not part of this acceptance. [Details](IMPLEMENTATION_STATUS.md).
+
 > **Current next-work priorities (superseding the older workstreams below):** [docs/development/ROADMAP.md](development/ROADMAP.md). New product requirement: online/offline user choice and optional install of **all** language runtimes, including Python.
 
 # CodeLab engineering roadmap

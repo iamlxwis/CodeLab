@@ -1,3 +1,19 @@
+# Phase 3 final source/CI checkpoint — Nov 24, 2026 · 5:37 PM PHT
+
+- **Phase / verified status:** Phase 3 COMPLETED at agreed source/CI level. **7/7 workstreams verified; 0 remaining source workstreams.** Owner Android physical-device acceptance remains outstanding.
+- **Last exact-source SHA verified:** `55a65774d56e949dd06ca1eb1db306026983ed0b`; [commit](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b).
+- **Latest successful GitHub Actions:** [Android APK 45366121115](https://github.com/iamlxwis/CodeLab/actions/runs/45366121115), status **completed/success** on exact SHA `55a65774d56e949dd06ca1eb1db306026983ed0b`; Gradle :app:assembleRelease, six optional runtime APKs, JVM tests, lint, signing verification, TypeScript offline packaging and artifact uploads succeeded.
+- **Uploaded artifacts:** `CodeLab-APK`, `CodeLab-Offline-Packs` (six signed optional packs), and `CodeLab-CI-Reports`.
+- **Completed workstreams:** WS1 Project Management (recent ordering, favorites, switcher, existing templates); WS2 Git Integration (selected unstage, repaired unborn HEAD index); WS3 GitHub Sync (origin tracking and masked errors with existing FF pull/non-force push); WS4 Files/Imports/Backups (atomic multi-import and ZIP internal metadata rejection); WS5 Productivity (custom saved snippets, palette actions); WS6 Performance (O(n) switcher and fewer search allocations, no benchmark numbers); WS7 Reliability/Security (transactional recovery, security tests, credentials preserved).
+- **Final changed implementation files:** `ProjectStore.java`, `GitWorkspace.kt`, `GitPanels.kt`, `WorkspaceModel.kt`, `ProjectOrdering.kt`, `ProjectDialogs.kt`, `Editor.kt`, `CommandDiscovery.kt`, new `SavedSnippetCodec.kt`, and corresponding JVM tests. See [status](../IMPLEMENTATION_STATUS.md).
+- **Failure history:** CI [45365272240](https://github.com/iamlxwis/CodeLab/actions/runs/45365272240) failed 1/174 tests due to JGit index EOF on unborn HEAD; `DirCacheEditor.commit()` repair at source `55a65774d56e` passed CI 45366121115.
+- **Architecture/CI decisions:** app-private serialized project storage; encrypted GitHub credentials; safe, explicit remote actions; six existing offline packs untouched; source-only Option B checks, `cancel-in-progress`, manual Android 15/API35 smoke only, three artifacts and release signing gates preserved. Declined LSP/multi-cursor/semantic rename not implemented.
+- **Known remaining acceptance:** owner installs CI APK on Android, checks project persistence/switching, Git stage/unstage without data loss, imports/backup roundtrip, snippets, and offline runtimes; real GitHub credential/network flows and user-experience/performance checks not verified by this source-only run.
+- **Next exact action:** Owner downloads `CodeLab-APK` from CI 45366121115, performs physical-device Phase 3 acceptance, reports reproducible defects. Future AI should fix actual defects, not reimplement completed source workstreams.
+- **Continuation for future AI:** fetch latest `main` SHA and README, PROGRESS_LOG and memory; confirm latest CI rather than assuming source HEAD remains this docs-only final checkpoint; maintain a single README activity sentence and append historical log at meaningful commits; preserve CI restrictions, six packs, security, and source-first coverage.
+
+---
+
 # Phase 3 Git index CI failure / source fix — Nov 24, 2026 · 5:32 PM PHT
 
 - **Status:** FIXING; 0/7 fully source/CI verified, 7 remaining. WS2 Git index safety regression addressed in source but new CI pending.

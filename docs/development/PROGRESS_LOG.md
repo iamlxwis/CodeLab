@@ -1,6 +1,6 @@
 # CodeLab — task progress audit
 
-Short, append-only development checkpoints. The [README tracker](../../README.md#development-tracker) shows the current summary. **Every meaningful change to a task's status or implementation progress must be committed with an update to both this log and the README in the same commit.** Never mark a task complete without verifiable test/build evidence.
+Short, append-only development checkpoints. The [README tracker](../../README.md#codelab-development-tracker) shows the current summary. **Every meaningful change to a task's status or implementation progress must be committed with an update to both this log and the README in the same commit.** Never mark a task complete without verifiable test/build evidence.
 
 ### Initial baseline — 2026-11-23
 
@@ -147,3 +147,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026 · 5:27 PM PHT | Phase 3 / all 7 workstreams | CI RUNNING; 0/7 accepted yet | Verified source checkpoint c0fd4d7f841a exists on remote main; [Android APK CI 45365272240](https://github.com/iamlxwis/CodeLab/actions/runs/45365272240) state in_progress/none when checked. Audit/source review underway, no physical device test. Next: inspect exact-source build/test result, fix failures or record verified scope. |
 
 | Nov 24, 2026 · 5:32 PM PHT | Phase 3 / WS2 Git | CI FAILED → FIXING; 0/7 accepted | Exact source c0fd4d7f841a [Android APK run 45365272240](https://github.com/iamlxwis/CodeLab/actions/runs/45365272240) completed 174 JVM tests, 1 failed: `GitWorkspaceTest.unstagingOnUnbornBranchPreservesWorkingFilesAndOtherStagedPaths` at test line 85 with JGitInternalException/EOFException due to committing an unwritten index. Replaced editor.finish + bare index.commit with editor.commit, which writes and publishes index atomically; new source CI pending. All other build/test stages not declared passed. |
+
+| Nov 24, 2026 · 5:37 PM PHT | Phase 3 / WS1–WS7 | COMPLETED — 7/7 source/CI verified; physical acceptance pending | [Exact source 55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b) passed [Android APK run 45366121115](https://github.com/iamlxwis/CodeLab/actions/runs/45366121115); build, tests, lint, signature checks, TypeScript packaging and all three named artifacts succeeded. Prior failed CI 45365272240 was fixed in GitWorkspace `editor.commit()`; latest run passed. Existing offline packs and CI Option B preserved; no emulator run. Next owner phone QA and optional live GitHub/network checks. |
