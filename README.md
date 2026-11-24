@@ -36,7 +36,7 @@ Write, run, and manage projects from your phone.
 
 **Current counts:** Six optional signed module APKs published (Python, JavaScript, Lua, Java beta, TypeScript, SQLite). Their installation lifecycle and physical-device runtime acceptance are owner-delegated. Language roster is frozen by owner request; no additional compiler packs in Phase 1. UI/accessibility, tutorial and release/documentation stabilization remain open.
 
-**Latest implementation:** Phase 2 easy/medium source work: rank same-file completions by proximity, ignore comments/strings in candidates, show rename impact count, navigate structural hints from cursor, and preserve caret when indenting a single line. JVM regressions added; new fast CI pending. User retains all handset testing.
+**Latest implementation:** Phase 2 easy/medium source improvements: proximity-ranked lexical completion, rename impact count, cursor-relative issue navigation, caret-preserving indentation, Python indentation-aware fold preview and uncapped same-file definition lookup. Added JVM regressions; source CI pending. Device testing delegated to owner.
 
 **Next:** verify exact-source fast APK build/JVM tests, resolve failures if any, then continue Phase 2 easy/medium changes. Owner handles physical APK testing and module/runtime acceptance. Phase 1 UI/tutorial remains owner-acceptance pending.
 

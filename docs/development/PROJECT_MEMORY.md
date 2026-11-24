@@ -1,3 +1,7 @@
+## Nov 24, 2026 — Further Phase 2 medium refinements
+
+Added read-only Python indentation-suite folding and fixed go-to-definition lookup beyond the 120-entry outline display cap. Unit tests cover both. Source commits must pass fast APK workflow before verified status. User is sole physical-device tester; assistant handles source changes/CI errors only. No expensive LSP, multi-cursor or project-wide semantic work authorized.
+
 ## Nov 24, 2026 — Phase 2 easy/medium editor changes
 
 User authorized Phase 2 easy and medium only; explicitly excludes hard projects (LSP, multi-cursor, project-wide semantic rename/indexing). User performs all device testing; assistant may check GitHub Actions for compile/CI errors. Source update adds visible-only nearby-ranked same-file completions, precise rename occurrence count in the rename dialog (not capped like reference list), cursor-first structural issue navigation and corrected caret preservation for single-line Tab indentation. Added focused JVM regressions; awaiting CI on new SHA. No new language modules or runtime changes. Do not call full LSP/semantic support complete. Handoff after commit.

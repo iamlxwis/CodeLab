@@ -7,6 +7,7 @@ internal object CodeFolds {
 
     fun regions(source: String, language: String = ""): List<Region> {
         if (source.length > 2_000_000) return emptyList()
+        if (language.lowercase() in setOf("py", "python")) return pythonRegions(source)
         val visible = CodeAnalysis.visibleCode(source, language)
         val stack = ArrayDeque<Pair<Int, Int>>()
         val found = mutableListOf<Region>()
@@ -31,6 +32,45 @@ internal object CodeFolds {
             .values.map { group -> group.maxBy { it.endLine } }
             .sortedBy { it.startLine }
             .take(300)
+    }
+
+    /** Indentation-aware preview for Python suites; never edits the source text. */
+    private fun pythonRegions(source: String): List<Region> {
+        data class Open(val line: Int, val indent: Int)
+        val stack = ArrayDeque<Open>()
+        val regions = mutableListOf<Region>()
+        var previousCodeLine = 0
+        val lines = source.split('\n')
+        fun indentOf(line: String): Int {
+            var width = 0
+            for (ch in line) {
+                if (ch == ' ') width++
+                else if (ch == '\t') width += 4
+                else break
+            }
+            return width
+        }
+        lines.forEachIndexed { index, raw ->
+            val line = index + 1
+            val trimmed = raw.trim()
+            if (trimmed.isBlank() || trimmed.startsWith("#")) return@forEachIndexed
+            val indent = indentOf(raw)
+            while (stack.isNotEmpty() && indent <= stack.last().indent) {
+                val open = stack.removeLast()
+                if (previousCodeLine - open.line >= 2) regions.add(Region(open.line, previousCodeLine))
+            }
+            if (trimmed.endsWith(":") && !trimmed.startsWith("#")) {
+                stack.addLast(Open(line, indent))
+            }
+            previousCodeLine = line
+        }
+        while (stack.isNotEmpty()) {
+            val open = stack.removeLast()
+            if (previousCodeLine - open.line >= 2) regions.add(Region(open.line, previousCodeLine))
+        }
+        return regions.groupBy { it.startLine }.values.map { group ->
+            group.maxBy { it.endLine }
+        }.sortedBy { it.startLine }.take(300)
     }
 
     fun preview(source: String, regions: List<Region>, collapsed: Set<Int>): List<Row> {

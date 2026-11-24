@@ -95,6 +95,12 @@ class CodeAnalysisTest {
         assertEquals(3, CodeAnalysis.references(source, "amount", language = "py").size)
     }
 
+    @Test fun definitionLookupIsNotLimitedByOutlineSize() {
+        val source = (1..150).joinToString("\n") { "val symbol$it = $it" }
+        assertEquals(150, CodeAnalysis.definition(source, "symbol150")?.line)
+        assertEquals(null, CodeAnalysis.definition(source, "missing"))
+    }
+
     @Test fun diagnosticsHandleLongFilesWithAccurateLineNumbers() {
         val source = "val x = 1\n".repeat(4000) + "fun broken() {\n"
         val issues = CodeAnalysis.bracketIssues(source)

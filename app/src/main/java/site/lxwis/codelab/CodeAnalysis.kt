@@ -58,11 +58,16 @@ internal object CodeAnalysis {
     }
 
     fun definition(source: String, identifier: String): Reference? {
-        for (symbol in symbols(source)) {
-            if (symbol.title.substringAfter(' ') == identifier) {
-                val at = source.lineSequence().take(symbol.line - 1).sumOf { it.length + 1 }
-                return Reference(at, symbol.line, symbol.title)
+        if (!identifier.matches(Regex("[A-Za-z_][A-Za-z_0-9]*"))) return null
+        // The outline is capped at 120 entries for the UI; definition lookup must not be.
+        var offset = 0
+        source.lineSequence().forEachIndexed { index, line ->
+            val match = declarations.find(line.trimStart())
+            if (match?.groupValues?.get(2) == identifier) {
+                return Reference(offset + line.indexOfFirst { !it.isWhitespace() }.coerceAtLeast(0),
+                    index + 1, match.groupValues[1] + " " + identifier)
             }
+            offset += line.length + 1
         }
         return null
     }

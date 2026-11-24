@@ -15,6 +15,19 @@ class CodeFoldsTest {
             CodeFolds.preview(source, regions, emptySet()).size)
     }
 
+    @Test fun pythonIndentationCreatesNonDestructiveFoldRegions() {
+        val source = "def main():\n    if True:\n        print(1)\n        print(2)\n    print(3)\nprint(4)\n"
+        val regions = CodeFolds.regions(source, "py")
+        assertEquals(listOf(CodeFolds.Region(1, 5), CodeFolds.Region(2, 4)), regions)
+        assertEquals(listOf(1, 5, 6, 7),
+            CodeFolds.preview(source, regions, setOf(1)).map { it.line })
+    }
+
+    @Test fun pythonBlankAndCommentLinesDoNotCloseSuite() {
+        val source = "def run():\n    first()\n\n    # comment\n    second()\nfinally_call()"
+        assertEquals(listOf(CodeFolds.Region(1, 5)), CodeFolds.regions(source, "py"))
+    }
+
     @Test fun bracesInStringsAndCommentsAreNotFoldable() {
         val source = "const str = \"{\\nnot a fold\\n}\";\n// {\n/* {\nmore\n} */\n"
         assertTrue(CodeFolds.regions(source).isEmpty())
