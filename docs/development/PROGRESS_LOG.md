@@ -125,3 +125,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026 | T07 / UX | Source committed; CI pending | Replaced crowded Language Manager downloads list with compact tappable language cards, clear Available/Installed/All filters, expandable downloads and online panels, and verified capability label logic with unit tests. Existing optional pack and Python detail flows retained. User handles phone testing. |
 
 | Nov 24, 2026 | CI / UX | Source committed, CI pending | Eight separate workflow artifact entries consolidated to three: CodeLab-APK, CodeLab-Offline-Packs (six APKs and SHA256SUMS), CodeLab-CI-Reports. Added no-emulator workflow safety tests. Individual signed release APK files and same-commit API35 publication gate preserved. |
+
+| 2026-11-24 2:06 PM PHT | Phase 2 easy/medium | 0/6 new batch verified | Introduced one replaceable README activity line; six remaining tasks scoped separately from earlier verified editor enhancements; physical testing remains with owner. |

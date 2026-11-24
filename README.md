@@ -24,23 +24,17 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last committed checkpoint:** Nov 24, 2026 · **Assistant: HANDED OFF** · **CI: Language Manager and 3-artifact workflow awaiting build**
+**Phase 2 · Easy/medium editor improvements** — **0/6 verified**, **6 remaining** (new scoped batch; previous editor improvements already passed [CI](https://github.com/iamlxwis/CodeLab/actions/runs/45314217793)).
 
-> This is a **commit checkpoint**, not a live clock or background agent. `HANDED OFF` means this interactive turn stopped after committing; independent GitHub Actions may still run. Each subsequent turn can resume from the [project memory](docs/development/PROJECT_MEMORY.md).
+**Current activity · Nov 24, 2026 · 2:06 PM PHT:** Established the single-line commit checkpoint and scoped the next six editor improvements; implementation follows.
 
-| Workstream | Verified / implemented | Remaining before completion |
-| --- | --- | --- |
-| **CI Option B — Smart CI** | Fast compile/unit/lint/signed APK, API35 smoke, and protected six-pack release all passed on [b4adaa96](https://github.com/iamlxwis/CodeLab/commit/b4adaa96209a1086df181adbd279c926ff64d62c). Current UI/tutorial change [34d34252](https://github.com/iamlxwis/CodeLab/commit/34d342527c1f650846bc9a2ebeae28cc0f118225) is awaiting fast build verification. | Review current CI and perform targeted narrow-screen, large-font and TalkBack acceptance. |
-| **Phase 1 — Frozen runtime baseline** | [Android 15 device smoke 45306690201](https://github.com/iamlxwis/CodeLab/actions/runs/45306690201) **PASSED**, protected release checkpoint [45306673023](https://github.com/iamlxwis/CodeLab/actions/runs/45306673023) **PASSED**, and all six optional APK assets are published. | Owner handles runtime and module installation acceptance. Assistant is responsible for UI/accessibility T07, tutorial T08, defects T03 and release/docs accuracy T09. Additional compiler packs are explicitly deferred by owner decision. |
-| **Phase 2 — Editor intelligence** | Easy/medium editor changes passed [CI 45314217793](https://github.com/iamlxwis/CodeLab/actions/runs/45314217793); Language Manager compact UI committed as an additional UX task | New UI requires fresh fast CI and owner phone acceptance. Hard editor features deferred. |
+**Status:** COMMITTED · [Latest APK CI](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml) · Last verified UX/artifact build: [0350fad6](https://github.com/iamlxwis/CodeLab/actions/runs/45336987696).
 
-**Current counts:** Six optional signed module APKs published (Python, JavaScript, Lua, Java beta, TypeScript, SQLite). Their installation lifecycle and physical-device runtime acceptance are owner-delegated. Language roster is frozen by owner request; no additional compiler packs in Phase 1. UI/accessibility, tutorial and release/documentation stabilization remain open.
+> This line is the **latest commit checkpoint**, not a continuously running agent or live progress feed. Each substantive commit **replaces** the activity line with one concise sentence and the actual Asia/Manila timestamp. Git history and [progress audit](docs/development/PROGRESS_LOG.md) retain prior events. CI success and physical-device acceptance are separate; the owner handles all phone testing.
 
-**Latest implementation:** Compact Language Manager with contextual download settings; Android Actions now uploads CodeLab-APK, CodeLab-Offline-Packs (six signed APKs plus SHA256SUMS.txt), and CodeLab-CI-Reports. In-app release URLs, release signers and publication gate unchanged. Source CI pending.
+**Remaining:** Contextual autocomplete; symbol/reference navigation; rename change preview; folding/diagnostics refinements; quick file switching; source verification/docs closeout. No LSP, multi-cursor, compiler packs, or emulator testing.
 
-**Next:** check fast APK build, Kotlin unit tests and artifact-layout safety regressions; repair failures if needed. Owner performs all physical-device acceptance.
-
-[Compiler feasibility](docs/development/LANGUAGE_FEASIBILITY.md) · [Full audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Project memory](docs/development/PROJECT_MEMORY.md)
+[Development audit](docs/development/PROGRESS_LOG.md) · [Project memory](docs/development/PROJECT_MEMORY.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md)
 
 ## Features
 
