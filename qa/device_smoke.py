@@ -113,7 +113,9 @@ def tap_text_result(name):
 def open_workspace_action(name):
     """Reach categorized actions through the user-visible accessible search."""
     tap("More tools and settings")
-    tap_node(wait_for("Search actions", field=True))
+    wait_for("Search actions")
+    # Compose places the accessible hint on a child of the editable field.
+    tap_node(wait_for(field=True))
     adb("shell", "input", "text", name)
     adb("shell", "input", "keyevent", "4")
     # The search field repeats the query; select the real result TextView.

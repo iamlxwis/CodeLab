@@ -61,3 +61,8 @@ Owner authorized the deferred build/error-check pass and requested a direct app 
 ### Android 15 smoke navigation correction — Nov 24, 2026, 9:55:35 PM PHT
 
 Run 45406809675 passed clean-install, resumable tutorial and missing-Python checks, then stopped because device_smoke.py tapped Appearance as a top-level action. Screenshot shows the healthy categorized Workspace sheet. Updated smoke to use accessible action search and select the actual TextView result, matching the production-upgrade test route, and changed old Output/Hide preview selectors to Toggle sample console. Existing assertions/runtime checks remain. No app crash observed or release published. Triggered explicit guarded retry; keep main stable.
+
+
+### Observed accessibility selector correction — Nov 24, 2026, 10:04:49 PM PHT
+
+Source CI 45408533135 passed. Device retry 45408550556 stopped at the new search selector: actual XML has an unlabeled android.widget.EditText parent containing a child view with content-desc Search actions. Corrected smoke to first require the accessible search hint, then tap the real editable field, as the existing production-upgrade helper does. No app source changed; assertions and release gates remain. Explicit checkpoint retriggered.
