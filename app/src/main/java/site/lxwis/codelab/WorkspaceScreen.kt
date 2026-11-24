@@ -300,13 +300,13 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         m.select(path, goToLine = line)
                     }
                     else if (m.preview && m.active != null)
-                        HtmlPreview(p, m.active!!, m.source, pane)
+                        HtmlPreview(p, m.active!!, m.source, pane, m.touchFeedback)
                 }
                 if (phoneSplit) {
                     val heightPx = with(LocalDensity.current) { (maxHeight - 48.dp).coerceAtLeast(1.dp).toPx() }
                     Column(Modifier.fillMaxSize()) {
                         editorPane(Modifier.weight(m.phoneSplitPercent.toFloat()).fillMaxWidth())
-                        PhonePanelDivider(m.phoneSplitPercent, heightPx, m::choosePhoneSplitPercent)
+                        PhonePanelDivider(m.phoneSplitPercent, heightPx, m::choosePhoneSplitPercent, m.touchFeedback)
                         outputPane(Modifier.weight((100 - m.phoneSplitPercent).toFloat()).fillMaxWidth())
                     }
                 } else {
@@ -314,8 +314,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     val wideSplit = wide && !wideOutputExpanded && (m.console || m.preview)
                     val panelWidth = (maxWidth - (if (showSidebar) 225.dp else 0.dp) - 48.dp).coerceAtLeast(1.dp)
                     val panelWidthPx = with(LocalDensity.current) { panelWidth.toPx() }
-                    val maxEditor = ((panelWidth.value - 180f) / panelWidth.value * 100f).toInt().coerceIn(35, 80)
-                    val widePercent = m.panelSplitPercent.coerceIn(35, maxEditor)
+                    val splitRange = WorkspaceSizeClass.editorPercentRange(panelWidth.value)
+                    val maxEditor = splitRange.last
+                    val widePercent = m.panelSplitPercent.coerceIn(splitRange)
                     Row(Modifier.fillMaxSize()) {
                     AnimatedVisibility(visible = showSidebar,
                         // Translate the fixed-width sidebar; do not continuously
@@ -370,7 +371,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             editorPane(Modifier.weight(
                                 if (wideSplit) widePercent.toFloat() else 1f
                             ).fillMaxHeight())
-                        if (wideSplit) WidePanelDivider(widePercent, panelWidthPx, maxEditor, m::setPanelSplit)
+                        if (wideSplit) WidePanelDivider(widePercent, panelWidthPx, maxEditor, m::setPanelSplit, splitRange.first, m.touchFeedback)
                         if (m.console || m.preview)
                             outputPane(Modifier.weight(
                                 if (wideSplit) (100 - widePercent).toFloat() else 1f
@@ -386,8 +387,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }
             if (!focusMode && !keyboardEditing) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                PanelButton("Editor", !m.console && !m.preview, motionMillis) { m.chooseOutputMaximized(false); m.console = false; m.preview = false }
-                PanelButton("Console", m.console && (!m.phoneSplitEnabled || WorkspaceSizeClass.of(LocalConfiguration.current.screenWidthDp) != WorkspaceSizeClass.Compact), motionMillis) {
+                PanelButton("Editor", !m.console && !m.preview, motionMillis, m.touchFeedback) { m.chooseOutputMaximized(false); m.console = false; m.preview = false }
+                PanelButton("Console", m.console && (!m.phoneSplitEnabled || WorkspaceSizeClass.of(LocalConfiguration.current.screenWidthDp) != WorkspaceSizeClass.Compact), motionMillis, m.touchFeedback) {
                     m.choosePhoneSplitEnabled(false); m.console = true; m.preview = false
                 }
                 if (WorkspaceSizeClass.of(LocalConfiguration.current.screenWidthDp) == WorkspaceSizeClass.Compact) {
@@ -399,7 +400,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }
                 }
                 if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
-                    PanelButton("Preview", m.preview, motionMillis) { m.chooseOutputMaximized(false); m.console = false; m.preview = true }
+                    PanelButton("Preview", m.preview, motionMillis, m.touchFeedback) { m.chooseOutputMaximized(false); m.console = false; m.preview = true }
                 QuickActionsBar(m.quickEditorActions, onAction = ::openAction)
             }
         }
@@ -701,10 +702,14 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
 }
 
 @Composable
-private fun PanelButton(text: String, active: Boolean, motionMillis: Int, click: () -> Unit) {
+private fun PanelButton(text: String, active: Boolean, motionMillis: Int, touchFeedback: Boolean, click: () -> Unit) {
+    val haptics = LocalHapticFeedback.current
     val target = if (active) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
     val background by animateColorAsState(target, animationSpec = tween(motionMillis), label = "panel-selection")
-    Surface(onClick = click, color = background, shape = RoundedCornerShape(10.dp)) {
+    Surface(onClick = {
+        if (touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        click()
+    }, modifier = Modifier.heightIn(min = 48.dp), color = background, shape = CodeLabCorners.iconTile) {
         Text(text, Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
             style = MaterialTheme.typography.labelLarge,
             color = if (active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,

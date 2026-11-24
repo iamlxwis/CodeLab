@@ -1079,7 +1079,7 @@ fun CodeEditor(
             }
             }
         }
-        if (!compactEditor && showStatusBar) EditorStatusBar(
+        if (!compactEditor && showStatusBar && !imeVisible) EditorStatusBar(
             fileKey = fileKey, filename = filename, status = cursorStatus,
             readOnly = readOnly, wordWrap = wordWrap,
             onPreviousTab = onPreviousTab, onNextTab = onNextTab

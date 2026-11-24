@@ -179,3 +179,8 @@ Owner-supplied UI 10/10 quality specification: 1 chrome, 5 key row, 6 syntax, 3 
 ### Nov 25, 2026, 12:27 AM PHT — UI10-001 source follow-up
 
 UI refinement source follow-up: opt-in API31 Material You mode, persisted new syntax ink overrides, real scheme JVM contrast assertions, accessible key test, compact Run, status language and predictive-back manifest opt-in; actual default Obsidian is black, so static splash matches it and the activity window uses saved colors. Full initial OS splash for user-selected light presets, predictive gesture audit/device tests, 12-line measurement, broader localization, haptics and style consistency remain pending. No new APK or test pass claimed.
+
+
+### Nov 25, 2026, 12:32 AM PHT — UI10-001 refinement
+
+UI10-001 source checkpoint: enforce usable medium-width split ranges, add preference-gated panel and handle haptics, keep preview log toggle fixed beside scrollable viewport choices, localize touched preview/header copy, add preview control regression and maximize keyboard space. Source-only; latest cumulative Gradle and emulator acceptance still required. Existing signing and security gates unchanged.

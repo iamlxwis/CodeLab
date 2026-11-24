@@ -10,6 +10,12 @@ internal object EditorChromePolicy {
 internal enum class WorkspaceSizeClass {
     Compact, Medium, Expanded;
     companion object {
+        fun editorPercentRange(availableDp: Float): IntRange {
+            val width = availableDp.coerceAtLeast(1f)
+            val max = ((width - 180f) / width * 100f).toInt().coerceIn(35, 80)
+            val min = kotlin.math.ceil(260f / width * 100f).toInt().coerceIn(35, max)
+            return min..max
+        }
         fun of(widthDp: Int) = when {
             widthDp < 600 -> Compact
             widthDp < 840 -> Medium

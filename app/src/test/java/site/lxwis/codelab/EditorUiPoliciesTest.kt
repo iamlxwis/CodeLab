@@ -15,6 +15,12 @@ class EditorUiPoliciesTest {
         assertEquals(WorkspaceSizeClass.Medium, WorkspaceSizeClass.of(839))
         assertEquals(WorkspaceSizeClass.Expanded, WorkspaceSizeClass.of(840))
     }
+    @Test fun splitWidths() {
+        val medium = WorkspaceSizeClass.editorPercentRange(552f)
+        assertTrue(medium.first * 552f / 100f >= 260f)
+        assertTrue((100 - medium.last) * 552f / 100f >= 180f)
+        assertTrue(!WorkspaceSizeClass.editorPercentRange(1f).isEmpty())
+    }
     @Test fun identifiers() {
         assertEquals(4, EditorSyntaxPolicy.identifierKind("render (x)", 0, 6))
         assertEquals(5, EditorSyntaxPolicy.identifierKind("Widget", 0, 6))

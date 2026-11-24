@@ -27,16 +27,16 @@ Write, run, and manage projects from your phone.
 | Field | Latest committed checkpoint |
 | --- | --- |
 | Update | CodeLab — Reimagined |
-| Status | **ACTIVE — UI 10/10 refinement; source checks pending** |
+| Status | **ACTIVE — UI 10/10 refinement; cumulative source validation pending** |
 | Current-pass checks | Not yet run for UI 10/10 source; baseline Android APK passed, device and guarded release failed |
 | Source coverage | **37/37 decisions mapped; 8/8 audited implementation gaps addressed** — validation is separate |
 | Current workstream | UI 10/10: 10/10 workstreams touched, 0/10 accepted, 10/10 pending acceptance |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
 | Latest verified build | [6d81def Android APK](https://github.com/iamlxwis/CodeLab/actions/runs/45414788437); [device failed](https://github.com/iamlxwis/CodeLab/actions/runs/45414804243) |
-| Next to build | Complete remaining polish and check current Android APK CI; run visual and device acceptance |
-| Last activity | Nov 25, 2026, 12:27 AM PHT |
+| Next to build | Check cumulative Gradle, finish remaining localization and consistency, validate toolbar/IME/back and screenshots |
+| Last activity | Nov 25, 2026, 12:32 AM PHT |
 
-**Current activity:** Nov 25, 2026, 12:27 AM PHT — UI refinement source follow-up: opt-in API31 Material You mode, persisted new syntax ink overrides, real scheme JVM contrast assertions, accessible key test, compact Run, status language and predictive-back manifest opt-in; actual default Obsidian is black, so static splash matches it and the activity window uses saved colors. Full initial OS splash for user-selected light presets, predictive gesture audit/device tests, 12-line measurement, broader localization, haptics and style consistency remain pending. No new APK or test pass claimed.
+**Current activity:** Nov 25, 2026, 12:32 AM PHT — UI10-001 source checkpoint: enforce usable medium-width split ranges, add preference-gated panel and handle haptics, keep preview log toggle fixed beside scrollable viewport choices, localize touched preview/header copy, add preview control regression and maximize keyboard space. Source-only; latest cumulative Gradle and emulator acceptance still required. Existing signing and security gates unchanged.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

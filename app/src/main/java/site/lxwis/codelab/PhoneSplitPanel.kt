@@ -18,6 +18,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -45,8 +47,11 @@ internal fun PhoneSplitToggle(enabled: Boolean, onToggle: () -> Unit) {
 internal fun PhonePanelDivider(
     percent: Int,
     availableHeightPx: Float,
-    onPercentChange: (Int) -> Unit
+    onPercentChange: (Int) -> Unit,
+    touchFeedback: Boolean = false
 ) {
+    val haptics = LocalHapticFeedback.current
+    val feedback by rememberUpdatedState(touchFeedback)
     var dragPosition by remember { mutableFloatStateOf(percent.toFloat()) }
     val currentPercent by rememberUpdatedState(percent)
     val currentCallback by rememberUpdatedState(onPercentChange)
@@ -55,7 +60,10 @@ internal fun PhonePanelDivider(
         Modifier.fillMaxWidth().height(48.dp)
             .pointerInput(safeHeight) {
                 detectVerticalDragGestures(
-                    onDragStart = { dragPosition = currentPercent.toFloat() },
+                    onDragStart = {
+                        if (feedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        dragPosition = currentPercent.toFloat()
+                    },
                     onDragEnd = { currentCallback(snapPhoneSplit(dragPosition.roundToInt())) },
                     onVerticalDrag = { change, dy ->
                         change.consume()
@@ -80,25 +88,31 @@ internal fun PhonePanelDivider(
 
 /** Tablet divider also exposes a range action for TalkBack/keyboard users. */
 @Composable
-internal fun WidePanelDivider(percent: Int, availableWidthPx: Float, maxPercent: Int, onPercentChange: (Int) -> Unit) {
+internal fun WidePanelDivider(percent: Int, availableWidthPx: Float, maxPercent: Int, onPercentChange: (Int) -> Unit,
+    minPercent: Int = 35, touchFeedback: Boolean = false) {
+    val haptics = LocalHapticFeedback.current
+    val feedback by rememberUpdatedState(touchFeedback)
     val currentPercent by rememberUpdatedState(percent)
     val currentCallback by rememberUpdatedState(onPercentChange)
     var drag by remember { mutableFloatStateOf(percent.toFloat()) }
     Box(Modifier.fillMaxHeight().width(48.dp)
-        .pointerInput(availableWidthPx, maxPercent) {
+        .pointerInput(availableWidthPx, maxPercent, minPercent) {
             detectHorizontalDragGestures(
-                onDragStart = { drag = currentPercent.toFloat() },
-                onDragEnd = { currentCallback(drag.roundToInt().coerceIn(35, maxPercent)) },
+                onDragStart = {
+                    if (feedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    drag = currentPercent.toFloat()
+                },
+                onDragEnd = { currentCallback(drag.roundToInt().coerceIn(minPercent, maxPercent)) },
                 onHorizontalDrag = { change, dx ->
                     change.consume()
-                    drag = (drag + dx * 100f / availableWidthPx.coerceAtLeast(1f)).coerceIn(35f, maxPercent.toFloat())
+                    drag = (drag + dx * 100f / availableWidthPx.coerceAtLeast(1f)).coerceIn(minPercent.toFloat(), maxPercent.toFloat())
                     currentCallback(drag.roundToInt())
                 })
         }.semantics {
             contentDescription = "Resize side-by-side panels"
             stateDescription = "Editor $percent percent"
-            progressBarRangeInfo = ProgressBarRangeInfo(percent.toFloat(), 35f..maxPercent.toFloat())
-            setProgress { target -> currentCallback(target.roundToInt().coerceIn(35, maxPercent)); true }
+            progressBarRangeInfo = ProgressBarRangeInfo(percent.toFloat(), minPercent.toFloat()..maxPercent.toFloat())
+            setProgress { target -> currentCallback(target.roundToInt().coerceIn(minPercent, maxPercent)); true }
         }, contentAlignment = Alignment.Center) {
         VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Icon(Icons.Default.DragHandle, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -13,4 +13,20 @@
     <string name="syntax_functions">Functions</string>
     <string name="syntax_types">Types</string>
     <string name="syntax_properties">Properties</string>
+    <string name="workspace_saving">Saving changes…</string>
+    <string name="workspace_local">Local workspace</string>
+    <string name="workspace_run">Run</string>
+    <string name="workspace_stop">Stop</string>
+    <string name="workspace_preview">Preview</string>
+    <string name="preview_local">Local preview</string>
+    <string name="preview_loading">Loading…</string>
+    <string name="preview_unavailable">Preview unavailable</string>
+    <string name="preview_offline_file">Offline · %1$s</string>
+    <string name="preview_refresh">Refresh preview</string>
+    <string name="preview_error">Preview error: %1$s</string>
+    <string name="preview_web_console">WEB CONSOLE</string>
+    <string name="preview_auto">Auto</string>
+    <string name="preview_phone">Phone</string>
+    <string name="preview_tablet">Tablet</string>
+    <string name="preview_desktop">Desktop</string>
 </resources>

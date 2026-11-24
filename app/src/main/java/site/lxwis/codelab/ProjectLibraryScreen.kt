@@ -108,7 +108,7 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                 Text(title, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            if (project != null) Text(if (m.dirty) "Saving changes…" else m.active?.substringAfterLast('/') ?: "Local workspace",
+            if (project != null) Text(if (m.dirty) androidx.compose.ui.res.stringResource(R.string.workspace_saving) else m.active?.substringAfterLast('/') ?: androidx.compose.ui.res.stringResource(R.string.workspace_local),
                 style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -120,7 +120,7 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                     if (m.runner.running) m.runner.stop() else m.runPreferred()
                 },
                 interactionSource = interaction,
-                modifier = Modifier.graphicsLayer { scaleX = scale; scaleY = scale },
+                modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp).graphicsLayer { scaleX = scale; scaleY = scale },
                 shape = CodeLabCorners.iconTile,
                 contentPadding = PaddingValues(horizontal = if (compactRun) 8.dp else 12.dp, vertical = 8.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -132,8 +132,8 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                     label = "execution-state") { running ->
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                        val runLabel = if (running) "Stop" else if (m.active?.endsWith(".html", true) == true)
-                            "Preview" else "Run"
+                        val runLabel = androidx.compose.ui.res.stringResource(if (running) R.string.workspace_stop
+                            else if (m.active?.substringAfterLast('.', "")?.lowercase() in listOf("html", "htm")) R.string.workspace_preview else R.string.workspace_run)
                         Icon(if (running) Icons.Default.Stop else Icons.Default.PlayArrow,
                             contentDescription = if (compactRun) runLabel else null, modifier = Modifier.size(18.dp))
                         if (!compactRun) Text(runLabel, fontWeight = FontWeight.SemiBold)

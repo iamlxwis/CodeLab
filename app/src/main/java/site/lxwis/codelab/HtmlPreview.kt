@@ -23,6 +23,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.res.stringResource
@@ -38,7 +40,7 @@ private const val PREVIEW_ROOT = "https://appassets.androidplatform.net/project/
 
 /** An offline virtual HTTPS origin: project assets never leave the device. */
 @Composable
-fun HtmlPreview(project: String, path: String, source: String, modifier: Modifier = Modifier) {
+fun HtmlPreview(project: String, path: String, source: String, modifier: Modifier = Modifier, touchFeedback: Boolean = false) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val store = remember(project) { ProjectStore(File(context.filesDir, "workspace")) }
     val live = remember(project, path) { PreviewSource(source) }
@@ -60,40 +62,17 @@ fun HtmlPreview(project: String, path: String, source: String, modifier: Modifie
         Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(start = 16.dp, end = 8.dp),
             verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Local preview", style = MaterialTheme.typography.titleSmall)
-                Text(if (loading) "Loading…" else if (failure != null) "Preview unavailable" else "Offline · " + path,
+                Text(stringResource(R.string.preview_local), style = MaterialTheme.typography.titleSmall)
+                Text(if (loading) stringResource(R.string.preview_loading) else if (failure != null) stringResource(R.string.preview_unavailable) else stringResource(R.string.preview_offline_file, path),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             }
             IconButton(onClick = { revision++; failure = null; messages = emptyList(); loading = true }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Refresh preview")
+                Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.preview_refresh))
             }
         }
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            Icon(Icons.Default.Devices, null, Modifier.size(18.dp)
-                .align(Alignment.CenterVertically),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            val choices = listOf("Auto", "Phone", "Tablet", "Desktop")
-            SingleChoiceSegmentedButtonRow {
-                choices.forEachIndexed { index, choice ->
-                    val stateLabel = stringResource(if (viewport == choice) R.string.preview_selected else R.string.preview_not_selected)
-                    SegmentedButton(selected = viewport == choice, onClick = { viewport = choice },
-                        shape = SegmentedButtonDefaults.itemShape(index, choices.size),
-                        modifier = Modifier.heightIn(min = 48.dp).semantics { stateDescription = stateLabel }) {
-                        Text(choice)
-                    }
-                }
-            }
-            val logState = stringResource(if (consoleVisible) R.string.preview_log_visible else R.string.preview_log_hidden)
-            OutlinedIconToggleButton(checked = consoleVisible, onCheckedChange = { consoleVisible = it },
-                modifier = Modifier.size(48.dp).semantics { stateDescription = logState }) {
-                BadgedBox(badge = { if (messages.isNotEmpty()) Badge { Text(messages.size.toString()) } }) {
-                    Icon(Icons.Default.List, stringResource(R.string.preview_log))
-                }
-            }
-        }
+        PreviewControlBar(viewport, { viewport = it }, consoleVisible, { consoleVisible = it },
+            messages.size, touchFeedback)
         if (loading) LinearProgressIndicator(Modifier.fillMaxWidth().height(2.dp))
         HorizontalDivider()
         Box(Modifier.weight(1f).fillMaxWidth(),
@@ -177,12 +156,12 @@ fun HtmlPreview(project: String, path: String, source: String, modifier: Modifie
         )
         }
         if (failure != null) {
-            Text("Preview error: " + failure, Modifier.padding(12.dp), color = MaterialTheme.colorScheme.error,
+            Text(stringResource(R.string.preview_error, failure.orEmpty()), Modifier.padding(12.dp), color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall)
         }
         if (messages.isNotEmpty() && consoleVisible) {
             HorizontalDivider()
-            Text("WEB CONSOLE", Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp),
+            Text(stringResource(R.string.preview_web_console), Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp),
                 style = MaterialTheme.typography.labelSmall)
             Column(Modifier.fillMaxWidth().heightIn(max = 112.dp).verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 4.dp)) {
@@ -202,3 +181,39 @@ private fun previewResponse(type: String, bytes: ByteArray) =
         if (type.startsWith("image/") || type.startsWith("font/") ||
             type.startsWith("audio/") || type.startsWith("video/")) null else "UTF-8",
         ByteArrayInputStream(bytes))
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun PreviewControlBar(viewport: String, onViewport: (String) -> Unit,
+    consoleVisible: Boolean, onConsole: (Boolean) -> Unit, messageCount: Int,
+    touchFeedback: Boolean = false) {
+    val haptics = LocalHapticFeedback.current
+    fun feedback() { if (touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
+    Row(Modifier.fillMaxWidth().padding(horizontal = CodeLabSpacing.small),
+        horizontalArrangement = Arrangement.spacedBy(CodeLabSpacing.small),
+        verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+            verticalAlignment = Alignment.CenterVertically) {
+            val choices = listOf("Auto" to R.string.preview_auto, "Phone" to R.string.preview_phone,
+                "Tablet" to R.string.preview_tablet, "Desktop" to R.string.preview_desktop)
+            SingleChoiceSegmentedButtonRow {
+                choices.forEachIndexed { index, (choice, label) ->
+                    val stateLabel = stringResource(if (viewport == choice) R.string.preview_selected else R.string.preview_not_selected)
+                    SegmentedButton(selected = viewport == choice,
+                        onClick = { feedback(); onViewport(choice) },
+                        shape = SegmentedButtonDefaults.itemShape(index, choices.size),
+                        modifier = Modifier.heightIn(min = 48.dp).semantics { stateDescription = stateLabel }) {
+                        Text(stringResource(label))
+                    }
+                }
+            }
+        }
+        val logState = stringResource(if (consoleVisible) R.string.preview_log_visible else R.string.preview_log_hidden)
+        OutlinedIconToggleButton(checked = consoleVisible, onCheckedChange = { feedback(); onConsole(it) },
+            modifier = Modifier.size(48.dp).semantics { stateDescription = logState }) {
+            BadgedBox(badge = { if (messageCount > 0) Badge { Text(messageCount.toString()) } }) {
+                Icon(Icons.Default.List, stringResource(R.string.preview_log))
+            }
+        }
+    }
+}
