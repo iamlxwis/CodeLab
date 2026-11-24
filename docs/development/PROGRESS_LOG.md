@@ -174,3 +174,5 @@ With each meaningful task start, commit checkpoint, failure, retry, or verified 
 | Nov 24, 2026, 6:56:18 PM PHT | Workspace/editor polish | Source; tests added | Toolbar order/pin settings, motion, template choice, console panel states, project layout rename and notification styling. |
 
 | Nov 24, 2026, 6:58:26 PM PHT | Regression compatibility | Source | Legacy appearance migration and current-device smoke selectors for six presets, signed runtimes, and explicit online/offline changes. Tests not yet executed. |
+
+| Nov 24, 2026, 6:59:18 PM PHT | Build recovery | In progress | CI 45379503511 failed debug/release compile due to missing dp import in WorkspaceEditorPane.kt; import restored. |
