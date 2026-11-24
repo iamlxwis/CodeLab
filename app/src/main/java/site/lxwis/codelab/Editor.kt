@@ -305,9 +305,10 @@ fun CodeEditor(
     }
     val palette = MaterialTheme.colorScheme
     val studioStyle = LocalStudioAppearance.current
-    val foreground = palette.onSurface.toArgb()
-    val background = palette.surface.toArgb()
-    val secondary = palette.onSurfaceVariant.toArgb()
+    val editorBackground = studioColor(studioStyle.editorBackground, palette.surface)
+    val foreground = studioReadable(palette.onSurface, editorBackground).toArgb()
+    val background = editorBackground.toArgb()
+    val secondary = studioReadable(palette.onSurfaceVariant, editorBackground).toArgb()
     val accent = palette.primary.toArgb()
     val dark = android.graphics.Color.luminance(background) < .35f
     fun matchCount(): Int {

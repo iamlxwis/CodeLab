@@ -127,6 +127,7 @@ internal fun CodeLabTheme(
             }
             val base = presetBase.copy(
                 background = background, surface = surface, onBackground = readable(ink, background),
+                outlineVariant = studioColor(studio.borderColor, presetBase.outlineVariant),
                 onSurface = readable(ink, surface),
                 surfaceContainer = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceContainer,
                 surfaceContainerHigh = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceContainerHigh,
@@ -153,8 +154,8 @@ internal fun CodeLabTheme(
                 secondary = accent, onSecondary = onAccent,
                 secondaryContainer = accentContainer, onSecondaryContainer = base.onSurface)
             if (highContrast) schemeNormal.copy(
-                onSurface = if (dark) Color.White else Color.Black,
-                onSurfaceVariant = if (dark) Color(0xffe3eceb) else Color(0xff243331),
+                onSurface = studioReadable(if (dark) Color.White else Color.Black, base.surface),
+                onSurfaceVariant = studioReadable(if (dark) Color(0xffe3eceb) else Color(0xff243331), base.surface),
                 outline = if (dark) Color.White else Color.Black,
                 outlineVariant = if (dark) Color(0xffaabbb5) else Color(0xff536960),
                 primary = if (dark) Color(0xffbaffd7) else Color(0xff005b46),
@@ -223,3 +224,14 @@ internal fun CodeLabForegroundSurface(
 }
 
 internal val LocalStudioAppearance = androidx.compose.runtime.staticCompositionLocalOf { StudioAppearance() }
+
+/** Shared color resolution used by the real components and Theme Studio preview. */
+internal fun studioColor(value: String, fallback: Color): Color =
+    if (value.matches(Regex("#[0-9a-fA-F]{6}"))) Color(0xff000000 or value.drop(1).toLong(16)) else fallback
+
+internal fun studioReadable(foreground: Color, background: Color): Color {
+    val a = foreground.luminance()
+    val b = background.luminance()
+    return if ((maxOf(a, b) + .05f) / (minOf(a, b) + .05f) >= 4.5f) foreground
+        else if (b > .179f) Color.Black else Color.White
+}

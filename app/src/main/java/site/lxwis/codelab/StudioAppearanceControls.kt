@@ -42,14 +42,30 @@ internal fun StudioAppearanceControls(m: WorkspaceModel) {
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Theme Studio", style = MaterialTheme.typography.titleLarge)
+        StudioLivePreview()
         ThemeColor("Accent", MaterialTheme.colorScheme.primary) { m.chooseAccent(it) }
         TextButton(onClick = { open = !open }) { Text(if (open) "Hide material controls" else "Customize materials") }
         if (open) {
             ThemeColor("Background", MaterialTheme.colorScheme.background) {
                 m.updateStudioAppearance(m.studioAppearance.copy(background = it))
             }
-            ThemeColor("Panel and editor background", MaterialTheme.colorScheme.surface) {
+            ThemeColor("Panel background", MaterialTheme.colorScheme.surface) {
                 m.updateStudioAppearance(m.studioAppearance.copy(surface = it))
+            }
+            ThemeColor("Editor background", studioColor(s.editorBackground, MaterialTheme.colorScheme.surface)) {
+                m.updateStudioAppearance(m.studioAppearance.copy(editorBackground = it))
+            }
+            ThemeColor("Console background", studioColor(s.consoleBackground, MaterialTheme.colorScheme.surface)) {
+                m.updateStudioAppearance(m.studioAppearance.copy(consoleBackground = it))
+            }
+            ThemeColor("Navigation and run toolbar", studioColor(s.navigationBackground, MaterialTheme.colorScheme.surfaceContainerHigh)) {
+                m.updateStudioAppearance(m.studioAppearance.copy(navigationBackground = it))
+            }
+            ThemeColor("Borders", studioColor(s.borderColor, MaterialTheme.colorScheme.outlineVariant)) {
+                m.updateStudioAppearance(m.studioAppearance.copy(borderColor = it))
+            }
+            ThemeColor("Editor selection", studioColor(s.selectionColor, MaterialTheme.colorScheme.primary)) {
+                m.updateStudioAppearance(m.studioAppearance.copy(selectionColor = it))
             }
             ThemeColor("Text", MaterialTheme.colorScheme.onSurface) {
                 m.updateStudioAppearance(m.studioAppearance.copy(foreground = it))
@@ -200,5 +216,49 @@ private fun ThemeColor(label: String, color: Color, onChange: (String) -> Unit) 
             }
         }, confirmButton = { TextButton(enabled = mode != "HEX" || draft.matches(Regex("#[0-9a-fA-F]{6}")), onClick = { onChange(hex); open = false }) { Text("Apply") } },
             dismissButton = { TextButton(onClick = { open = false }) { Text("Cancel") } })
+    }
+}
+
+@Composable
+private fun StudioLivePreview() {
+    val s = LocalStudioAppearance.current
+    val c = MaterialTheme.colorScheme
+    val editor = studioColor(s.editorBackground, c.surface)
+    val console = studioColor(s.consoleBackground, c.surface)
+    val nav = studioColor(s.navigationBackground, c.surfaceContainerHigh)
+    val ink = studioReadable(c.onSurface, editor)
+    ClayPanel {
+        Column(Modifier.fillMaxWidth().padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("Live workspace preview", style = MaterialTheme.typography.labelMedium)
+            Surface(color = nav, contentColor = studioReadable(c.onSurface, nav), shape = MaterialTheme.shapes.medium) {
+                Row(Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    FileTypeIcon("main.js", Modifier.size(18.dp))
+                    Text("main.js", Modifier.weight(1f).padding(start = 6.dp))
+                    Surface(color = c.primaryContainer, shape = MaterialTheme.shapes.small) {
+                        Text("Run", Modifier.padding(horizontal = 12.dp, vertical = 5.dp), color = c.onPrimaryContainer)
+                    }
+                }
+            }
+            Surface(color = editor, contentColor = ink, shape = MaterialTheme.shapes.medium) {
+                Column(Modifier.fillMaxWidth().padding(10.dp)) {
+                    val font = androidx.compose.ui.text.font.FontFamily(androidx.compose.ui.text.font.Font(R.font.jetbrains_mono))
+                    Text("1  // Main program", fontFamily = font, color = studioColor(s.comments, c.onSurfaceVariant))
+                    Row {
+                        Text("2  const ", fontFamily = font, color = studioColor(s.keywords, c.primary))
+                        Text("answer = ", fontFamily = font)
+                        Text("42", fontFamily = font, color = studioColor(s.numbers, c.primary))
+                        Text(";", fontFamily = font)
+                    }
+                    Text("3  print(\"Hello\");", fontFamily = font, color = studioColor(s.strings, ink))
+                }
+            }
+            Surface(color = console, contentColor = studioReadable(c.onSurface, console), shape = MaterialTheme.shapes.medium) {
+                Column(Modifier.fillMaxWidth().padding(10.dp)) {
+                    Text("Console", style = MaterialTheme.typography.labelMedium)
+                    Text("Hello", fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace)
+                    Text("Exit 0", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
     }
 }

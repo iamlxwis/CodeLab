@@ -224,6 +224,9 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     private var customInk = listOf<String>()
     private var editorFontChoice = ""
     fun setStudioEditorStyle(style: StudioAppearance) {
+        if (style.selectionColor.matches(Regex("#[0-9a-fA-F]{6}"))) {
+            highlightColor = (android.graphics.Color.parseColor(style.selectionColor) and 0x00ffffff) or 0x66000000
+        } else highlightColor = (active and 0x00ffffff) or 0x55000000
         val colors = listOf(style.comments, style.strings, style.numbers, style.keywords)
         if (customInk != colors) { customInk = colors; scheduleHighlight(true) }
         val fontKey = style.editorFont + ":" + style.editorFontRevision
@@ -315,6 +318,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         highlightColor = (accent and 0x00ffffff) or 0x55000000
         darkMode = dark
         paper = backgroundColor
+        setBackgroundColor(backgroundColor)
         active = accent
         muted = secondary
         linePaint.textSize = textSize * .77f

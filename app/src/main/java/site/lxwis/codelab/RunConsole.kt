@@ -143,7 +143,9 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
         }, confirmButton = {
             TextButton(onClick = { selectedRun = null; showHistory = false }) { Text("Close") }
         })
-    Surface(modifier, color = MaterialTheme.colorScheme.surface) {
+    val palette = MaterialTheme.colorScheme
+    val consoleBackground = studioColor(LocalStudioAppearance.current.consoleBackground, palette.surface)
+    Surface(modifier, color = consoleBackground, contentColor = studioReadable(palette.onSurface, consoleBackground)) {
         Column(Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {

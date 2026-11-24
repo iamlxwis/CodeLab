@@ -41,7 +41,9 @@ internal fun RunModeStrip(
         else -> "No online compiler for this file"
     }
     var modesOpen by remember { mutableStateOf(false) }
-    Surface(color = MaterialTheme.colorScheme.surfaceContainer) {
+    val colors = MaterialTheme.colorScheme
+    val toolbar = studioColor(LocalStudioAppearance.current.navigationBackground, colors.surfaceContainer)
+    Surface(color = toolbar, contentColor = studioReadable(colors.onSurface, toolbar)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Box {

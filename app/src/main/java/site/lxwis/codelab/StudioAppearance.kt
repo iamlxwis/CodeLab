@@ -9,14 +9,19 @@ internal data class StudioAppearance(
     val uiFont: String = "Inter", val editorFont: String = "JetBrains Mono",
     val comments: String = "", val strings: String = "", val numbers: String = "", val keywords: String = "",
     val glassQuality: String = "Auto", val blur: Int = 12,
-    val uiFontRevision: Long = 0L, val editorFontRevision: Long = 0L
+    val uiFontRevision: Long = 0L, val editorFontRevision: Long = 0L,
+    val editorBackground: String = "", val consoleBackground: String = "",
+    val navigationBackground: String = "", val borderColor: String = "", val selectionColor: String = ""
 ) {
     fun encode(): String = JSONObject().put("background", background).put("surface", surface)
         .put("foreground", foreground).put("corners", corners).put("opacity", opacity)
         .put("border", border).put("shadow", shadow).put("uiFont", uiFont).put("editorFont", editorFont)
         .put("comments", comments).put("strings", strings).put("numbers", numbers).put("keywords", keywords)
         .put("glassQuality", glassQuality).put("blur", blur)
-        .put("uiFontRevision", uiFontRevision).put("editorFontRevision", editorFontRevision).toString()
+        .put("uiFontRevision", uiFontRevision).put("editorFontRevision", editorFontRevision)
+        .put("editorBackground", editorBackground).put("consoleBackground", consoleBackground)
+        .put("navigationBackground", navigationBackground).put("borderColor", borderColor)
+        .put("selectionColor", selectionColor).toString()
 
     companion object {
         fun decode(raw: String?): StudioAppearance = try {
@@ -31,7 +36,8 @@ internal data class StudioAppearance(
                 j.optString("editorFont").takeIf { it in listOf("JetBrains Mono", "System Mono", "Custom") } ?: "JetBrains Mono",
                 hex("comments"), hex("strings"), hex("numbers"), hex("keywords"),
                 j.optString("glassQuality").takeIf { it in listOf("Auto", "Lightweight", "High") } ?: "Auto",
-                j.optInt("blur", 12).coerceIn(0,24), j.optLong("uiFontRevision", 0L), j.optLong("editorFontRevision", 0L))
+                j.optInt("blur", 12).coerceIn(0,24), j.optLong("uiFontRevision", 0L), j.optLong("editorFontRevision", 0L),
+                hex("editorBackground"), hex("consoleBackground"), hex("navigationBackground"), hex("borderColor"), hex("selectionColor"))
         } catch (_: Exception) { StudioAppearance() }
     }
 }

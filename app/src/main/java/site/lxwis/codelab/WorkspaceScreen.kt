@@ -653,8 +653,11 @@ private fun PanelButton(text: String, active: Boolean, motionMillis: Int, click:
 /** Direct destinations replace hidden home overflow navigation. */
 @Composable
 private fun HomeNavigation(onAction: (String) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val navigation = studioColor(LocalStudioAppearance.current.navigationBackground, colors.surfaceContainerHigh)
     Surface(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = RoundedCornerShape(28.dp), color = navigation,
+        contentColor = studioReadable(colors.onSurface, navigation),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))) {
         Row(Modifier.fillMaxWidth().padding(4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
             listOf(Triple("projects", "Projects", Icons.Default.Folder),
@@ -666,7 +669,7 @@ private fun HomeNavigation(onAction: (String) -> Unit) {
                     RoundedCornerShape(24.dp)).clickable { if (id != "projects") onAction(id) }.padding(6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     Icon(icon, null, Modifier.size(20.dp), tint = if (id == "projects")
-                        MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant)
+                        MaterialTheme.colorScheme.onPrimaryContainer else studioReadable(colors.onSurfaceVariant, navigation))
                     Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
                 }
             }
