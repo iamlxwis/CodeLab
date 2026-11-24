@@ -42,3 +42,7 @@ D-025: README is the owner's concise project status dashboard. Every substantive
 ## Nov 24, 2026 — Phase 1 completion authorization
 
 D-026: User authorized completing the broader Phase 1 language-pack scope before Phase 2; user handles final physical Android testing and will report faults. Engineering still builds, checks and truthfully labels runtimes. Keep safe fallbacks until optional replacements proven. Label Java beta as BeanShell interpreter, never javac. Document blocked C/C++/Kotlin/Rust/Go/C# toolchains honestly.
+
+## Nov 24, 2026 — Owner-approved runtime scope freeze
+
+D-027: Retain exactly six optional offline runtime modules: Python, JavaScript, Lua, SQLite, TypeScript (single-file transpilation), and Java (BeanShell beta); retain HTML/CSS local preview and existing dynamic Judge0-compatible online mappings. No additional languages or removals without explicit owner approval. Prior D-026 expanded compiler-pack requirement is superseded for Phase 1, not silently implemented. Owner takes responsibility for module installation/update/removal and offline runtime acceptance on physical Android. Remaining assistant Phase 1 focus is T07 UI/accessibility, T08 interactive tutorial, T03 bugs, T09 release/readme accuracy. These tasks remain open until evidenced.

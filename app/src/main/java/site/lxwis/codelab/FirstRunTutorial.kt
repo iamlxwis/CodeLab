@@ -10,6 +10,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -46,7 +49,7 @@ private val guide = listOf(
         "Choose Online near Run. Source is sent to a configured provider only after you confirm the upload.",
         Icons.Default.Cloud),
     GuideStep("Language modules", "Install only what you need",
-        "In Languages, inspect Python installation and other supported runtimes. Some engines are still being migrated.",
+        "In Languages, manage the six optional offline runtimes: Python, JavaScript, Lua, Java beta, TypeScript and SQLite. HTML/CSS use local preview.",
         Icons.Default.Extension, "languages"),
     GuideStep("Console and output", "Inspect results and errors",
         "Open Console after Run to read program output, execution status and error links to source.",
@@ -90,20 +93,23 @@ internal fun FirstRunTutorial(
                         modifier = Modifier.weight(1f),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelMedium)
-                    Text((index + 1).toString() + " of " + total,
+                    Text(TutorialProgress.progressLabel(index, total),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 LinearProgressIndicator(
                     progress = { (index + 1f) / total.toFloat() },
-                    modifier = Modifier.fillMaxWidth())
+                    modifier = Modifier.fillMaxWidth().semantics {
+                        stateDescription = TutorialProgress.progressLabel(index, total)
+                    })
                 Surface(shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.primaryContainer) {
                     Icon(current.icon, contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(18.dp).size(30.dp))
                 }
-                Text(current.title, style = MaterialTheme.typography.headlineSmall)
+                Text(current.title, modifier = Modifier.semantics { heading() },
+                    style = MaterialTheme.typography.headlineSmall)
                 Text(current.subtitle, style = MaterialTheme.typography.titleMedium)
                 Text(current.instruction, style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -122,14 +128,24 @@ internal fun FirstRunTutorial(
                         Text("Try it in CodeLab")
                     }
                 }
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    TextButton(onClick = onFinish) {
+                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                    val compact = maxWidth < 360.dp
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (compact) {
+                            TextButton(onClick = onFinish, modifier = Modifier.heightIn(min = 48.dp)) {
+                                Text(if (index == 3 || index == guide.lastIndex) "Finish basics" else "Skip")
+                            }
+                        }
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (!compact) TextButton(onClick = onFinish,
+                        modifier = Modifier.heightIn(min = 48.dp)) {
                         Text(if (index == 3 || index == guide.lastIndex) "Finish basics" else "Skip")
                     }
                     Spacer(Modifier.weight(1f))
-                    if (index > 0) TextButton(onClick = { index-- }) { Text("Back") }
-                    Button(onClick = {
+                    if (index > 0) TextButton(onClick = { index-- },
+                        modifier = Modifier.heightIn(min = 48.dp)) { Text("Back") }
+                    Button(modifier = Modifier.heightIn(min = 48.dp), onClick = {
                         if (index == 3 && !advanced) {
                             advanced = true
                             index = 4
@@ -140,6 +156,8 @@ internal fun FirstRunTutorial(
                             else if (index == guide.lastIndex) "Done" else "Next")
                         Icon(Icons.Default.ArrowForward, contentDescription = null,
                             modifier = Modifier.size(18.dp))
+                    }
+                        }
                     }
                 }
                 if (index == 3 && !advanced) Text(

@@ -174,13 +174,25 @@ internal fun AppearanceGallery(m: WorkspaceModel, dismiss: () -> Unit) {
                         }
                     }
                     items(styles.chunked(2)) { row ->
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            row.forEach { style ->
-                                StyleCard(style, isSelected = m.visualStyle == style.name,
-                                    onClick = { m.chooseVisualStyle(style.name) },
-                                    modifier = Modifier.weight(1f), model = m)
+                        BoxWithConstraints(Modifier.fillMaxWidth()) {
+                            if (maxWidth < 340.dp) {
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    row.forEach { style ->
+                                        StyleCard(style, isSelected = m.visualStyle == style.name,
+                                            onClick = { m.chooseVisualStyle(style.name) },
+                                            modifier = Modifier.fillMaxWidth(), model = m)
+                                    }
+                                }
+                            } else {
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    row.forEach { style ->
+                                        StyleCard(style, isSelected = m.visualStyle == style.name,
+                                            onClick = { m.chooseVisualStyle(style.name) },
+                                            modifier = Modifier.weight(1f), model = m)
+                                    }
+                                    if (row.size == 1) Spacer(Modifier.weight(1f))
+                                }
                             }
-                            if (row.size == 1) Spacer(Modifier.weight(1f))
                         }
                     }
                     item {

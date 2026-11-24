@@ -24,7 +24,7 @@ Write, run, and manage projects from your phone.
 
 ## Development tracker
 
-**Last committed checkpoint:** Nov 24, 9:39 AM PHT · **Assistant: WORKING at checkpoint** · **CI: corrected Android TS smoke test, rerun pending**
+**Last committed checkpoint:** Nov 24, 2026 · **Assistant: HANDED OFF** · **CI: UI/tutorial source changes awaiting build verification**
 
 > This is a **commit checkpoint**, not a live clock or background agent. `HANDED OFF` means this interactive turn stopped after committing; independent GitHub Actions may still run. Each subsequent turn can resume from the [project memory](docs/development/PROJECT_MEMORY.md).
 
@@ -32,13 +32,13 @@ Write, run, and manage projects from your phone.
 | --- | --- | --- |
 | **CI Option B — Smart CI** | Fast compile/unit/lint/signed APK and six companions successfully built at [34030469](https://github.com/iamlxwis/CodeLab/actions/runs/45257846511). Normal source builds and manual API35 gate preserved; new retry wrapper targets upstream Maven HTTP 429 without ignoring compiler/test failures. | Re-run device acceptance on exact current SHA, then protected publication. |
 | **Phase 1 — Runtime manager** | Six signed optional APK projects and full source CI [45304307573](https://github.com/iamlxwis/CodeLab/actions/runs/45304307573) **PASSED**. On Android 15 [45304317096](https://github.com/iamlxwis/CodeLab/actions/runs/45304317096) actual TypeScript ran in airplane mode with **Exit 0**, output "Hello from CodeLab!". | Device smoke expected different text ("Hello, CodeLab!"); corrected and added assertion that on-device TypeScript starter contains type annotation. Re-run API35 + protected publication; one previously public module (Python), five other public assets pending. Broader C/C++/PHP/Ruby/Kotlin/Rust/Go/C#/full Java compilers remain missing. |
-| **Phase 2 — Editor intelligence** | Not started | Begin only after agreed Phase 1 completion gate |
+| **Phase 2 — Editor intelligence** | Not started | Begin after Phase 1 UI/tutorial/bug stabilization and owner-provided runtime acceptance |
 
-**Current counts:** Six optional module implementations in source, one historically confirmed public (Python); remaining five need published installer checks. Java beta is not javac; TS is single-file transpilation, SQLite uses Android platform.
+**Current counts:** Six optional signed module APKs published (Python, JavaScript, Lua, Java beta, TypeScript, SQLite). Their installation lifecycle and physical-device runtime acceptance are owner-delegated. Language roster is frozen by owner request; no additional compiler packs in Phase 1. UI/accessibility, tutorial and release/documentation stabilization remain open.
 
-**Latest implementation:** True offline TypeScript verified by Android15 console Exit 0; fixed strict test's expected output to match default project and added typed-source/assertions plus fast JVM test.
+**Latest implementation:** Appearance style cards now stack on narrow widths; onboarding has a readable compact navigation layout, accessible topic/progress semantics and accurate six-module guidance. JVM progress-label regression added. Source not yet build-verified.
 
-**Next:** inspect same-commit API35 full suite, fix remaining failures, and publish production-signed six-pack only after success; continue Phase 1 compiler backlog. Phase 1 not complete.
+**Next:** verify source build/JVM tests; audit appearance and tutorial on narrow screens and large font, then physical-device visual acceptance. Owner separately handles module-install/runtime validation. Phase 1 not complete.
 
 [Compiler feasibility](docs/development/LANGUAGE_FEASIBILITY.md) · [Full audit](docs/development/PROGRESS_LOG.md) · [Implementation inventory](docs/IMPLEMENTATION_STATUS.md) · [Project memory](docs/development/PROJECT_MEMORY.md)
 

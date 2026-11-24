@@ -18,6 +18,14 @@ class TutorialProgressTest {
         assertEquals(0, TutorialProgress.restore(999, 0))
     }
 
+    @Test fun accessibleProgressLabelHandlesValidAndInvalidCheckpoints() {
+        assertEquals("1 of 4", TutorialProgress.progressLabel(0, 4))
+        assertEquals("4 of 4", TutorialProgress.progressLabel(3, 4))
+        assertEquals("14 of 14", TutorialProgress.progressLabel(13, 14))
+        assertEquals("1 of 1", TutorialProgress.progressLabel(-5, 0))
+        assertEquals("4 of 4", TutorialProgress.progressLabel(99, 4))
+    }
+
     @Test fun returningToAdvancedTopicShowsAllFourteenTopics() {
         assertFalse(TutorialProgress.showExtendedTopics(3))
         assertTrue(TutorialProgress.showExtendedTopics(4))

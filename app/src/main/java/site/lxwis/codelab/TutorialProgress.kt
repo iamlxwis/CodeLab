@@ -9,4 +9,7 @@ internal object TutorialProgress {
         restore(currentIndex + 1, topicCount)
 
     fun showExtendedTopics(savedIndex: Int): Boolean = savedIndex >= 4
+
+    fun progressLabel(index: Int, total: Int): String =
+        "${(index + 1).coerceIn(1, total.coerceAtLeast(1))} of ${total.coerceAtLeast(1)}"
 }
