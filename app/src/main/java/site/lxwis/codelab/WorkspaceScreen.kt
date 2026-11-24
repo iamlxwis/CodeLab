@@ -222,7 +222,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 val tabScroll = rememberLazyListState()
                 LaunchedEffect(m.active, m.tabs) {
                     val index = m.tabs.indexOf(m.active)
-                    if (index >= 0) tabScroll.scrollToItem(index)
+                    if (index >= 0 && tabScroll.layoutInfo.visibleItemsInfo.none { it.index == index }) {
+                        if (motionMillis > 0) tabScroll.animateScrollToItem(index) else tabScroll.scrollToItem(index)
+                    }
                 }
                 LazyRow(Modifier.weight(1f), state = tabScroll,
                     verticalAlignment = Alignment.CenterVertically) {
@@ -348,10 +350,12 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             if (!focusMode) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 PanelButton("Editor", !m.console && !m.preview, motionMillis) { m.console = false; m.preview = false }
-                PanelButton("Console", m.console && !m.phoneSplitEnabled, motionMillis) { m.console = true; m.preview = false }
+                PanelButton("Console", m.console && (!m.phoneSplitEnabled || LocalConfiguration.current.screenWidthDp >= 820), motionMillis) {
+                    m.choosePhoneSplitEnabled(false); m.console = true; m.preview = false
+                }
                 if (LocalConfiguration.current.screenWidthDp < 820) {
-                    PhoneSplitToggle(m.phoneSplitEnabled) {
-                        val next = !m.phoneSplitEnabled
+                    PhoneSplitToggle(m.phoneSplitEnabled && (m.console || m.preview)) {
+                        val next = !(m.phoneSplitEnabled && (m.console || m.preview))
                         m.choosePhoneSplitEnabled(next)
                         if (next && !m.console && !m.preview) m.console = true
                         if (!next) { m.console = false; m.preview = false }
@@ -392,7 +396,13 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         }
         }
         SnackbarHost(hostState = snackbarHost,
-            modifier = Modifier.align(Alignment.BottomCenter))
+            modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp)) { data ->
+            Snackbar(snackbarData = data, shape = MaterialTheme.shapes.large,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                actionColor = MaterialTheme.colorScheme.primary,
+                dismissActionContentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 
     when (dialog) {
@@ -545,6 +555,13 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             title = { Text("Workspace panels") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Interface density")
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        listOf("Compact", "Comfortable", "Spacious").forEach { density ->
+                            FilterChip(selected = m.interfaceDensity == density, onClick = { m.chooseDensity(density) },
+                                label = { Text(density, maxLines = 1) })
+                        }
+                    }
                     Text("Tablet editor width · ${m.panelSplitPercent}%")
                     Slider(value = m.panelSplitPercent.toFloat(),
                         onValueChange = { m.setPanelSplit(it.toInt()) },

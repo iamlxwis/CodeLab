@@ -4,6 +4,9 @@ import android.content.Context
 import android.text.Editable
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.background
@@ -44,11 +47,19 @@ fun CodeEditor(
     onNextTab: () -> Unit = {},
     onOpenCommands: () -> Unit = {},
     showStatusBar: Boolean = true,
+    motionMillis: Int = 0,
     onSelectionChange: (String, Int) -> Unit = { _, _ -> }
 ) = key(fileKey) {
     val context = LocalContext.current
     val hardwareKeyboard = LocalConfiguration.current.keyboard != Configuration.KEYBOARD_NOKEYS
     val preferences = remember { context.getSharedPreferences("editor", Context.MODE_PRIVATE) }
+    var toolbarIds by remember { mutableStateOf(EditorToolbarOrder.decode(preferences.getString("toolbar-actions", null))) }
+    var toolbarCustomize by remember { mutableStateOf(false) }
+    var toolbarMenu by remember { mutableStateOf(false) }
+    fun saveToolbar(ids: List<String>) {
+        toolbarIds = ids
+        preferences.edit().putString("toolbar-actions", ids.joinToString(",")).apply()
+    }
     var fontSize by remember { mutableStateOf(preferences.getInt("font-size", 15)) }
     var wordWrap by remember { mutableStateOf(preferences.getBoolean("word-wrap", true)) }
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", true)) }
@@ -371,46 +382,68 @@ fun CodeEditor(
         },
         dismissButton = { TextButton(onClick = { lineDialog = false }) { Text("Cancel") } }
     )
-    // Preserve a usable source viewport when the keyboard or landscape reduces height.
-    // Essential editor tools remain in the first row; optional shortcuts collapse.
+    val toolbarActions = listOf(
+        EditorToolbarAction("undo", "Undo", Icons.Default.Undo) { view?.onTextContextMenuItem(android.R.id.undo) },
+        EditorToolbarAction("redo", "Redo", Icons.Default.Redo) { view?.onTextContextMenuItem(android.R.id.redo) },
+        EditorToolbarAction("format", "Format code", Icons.Default.FormatAlignLeft) {
+            if (!readOnly) view?.let { activeEditor ->
+                val formatted = CodeFormatter.format(filename, activeEditor.text.toString())
+                if (formatted == null) result = "Format supports JS, JSON, HTML, CSS and SQL."
+                else if (formatted != activeEditor.text.toString()) {
+                    val caret = activeEditor.selectionStart.coerceIn(0, formatted.length)
+                    activeEditor.text.replace(0, activeEditor.length(), formatted)
+                    activeEditor.setSelection(caret)
+                    result = "Formatted"
+                }
+            }
+        },
+        EditorToolbarAction("share", "Share code as an image", Icons.Default.Share, invoke = onShare),
+        EditorToolbarAction("find", "Find and replace", Icons.Default.Search, find) { find = !find },
+        EditorToolbarAction("wrap", "Toggle line wrapping", Icons.Default.WrapText, wordWrap) {
+            wordWrap = !wordWrap
+            preferences.edit().putBoolean("word-wrap", wordWrap).apply()
+        },
+        EditorToolbarAction("save", "Save file", Icons.Default.Save, invoke = onSave),
+        EditorToolbarAction("run", "Run active file", Icons.Default.PlayArrow, invoke = onRun),
+        EditorToolbarAction("commands", "Command palette", Icons.Default.Terminal, invoke = onOpenCommands),
+        EditorToolbarAction("settings", "Editor preferences", Icons.Default.Settings) { settings = true },
+        EditorToolbarAction("symbols", "Show code symbols", Icons.Default.Code, symbols) {
+            symbols = !symbols; preferences.edit().putBoolean("symbol-toolbar", symbols).apply()
+        }
+    )
+    if (toolbarCustomize) EditorToolbarSettings(toolbarActions, toolbarIds, ::saveToolbar) { toolbarCustomize = false }
+    // The editor retains one native view; the toolbar never mounts a second editor.
     BoxWithConstraints(modifier) {
     val compactEditor = maxHeight < 280.dp
     Column(Modifier.fillMaxSize()) {
-        Row(
-            Modifier.fillMaxWidth().height(48.dp).horizontalScroll(rememberScrollState())
-                .padding(horizontal = 5.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(3.dp)
-        ) {
-            EditorIcon(Icons.Default.Undo, "Undo") {
-                view?.onTextContextMenuItem(android.R.id.undo)
-            }
-            EditorIcon(Icons.Default.Redo, "Redo") {
-                view?.onTextContextMenuItem(android.R.id.redo)
-            }
-            EditorIcon(Icons.Default.FormatAlignLeft, "Format code") {
-                if (!readOnly) view?.let { activeEditor ->
-                    val formatted = CodeFormatter.format(filename, activeEditor.text.toString())
-                    if (formatted == null) result = "Format supports JS, JSON, HTML, CSS and SQL."
-                    else if (formatted != activeEditor.text.toString()) {
-                        val caret = activeEditor.selectionStart.coerceIn(0, formatted.length)
-                        activeEditor.text.replace(0, activeEditor.length(), formatted)
-                        activeEditor.setSelection(caret)
-                        result = "Formatted"
+        Row(Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()),
+                verticalAlignment = Alignment.CenterVertically) {
+                toolbarIds.forEach { id ->
+                    toolbarActions.firstOrNull { it.id == id }?.let { action ->
+                        EditorIcon(action.icon, action.title, selected = action.selected, onClick = action.invoke)
                     }
                 }
-            }
-            EditorIcon(Icons.Default.Share, "Share code as an image") { onShare() }
-            EditorIcon(Icons.Default.Search, "Find and replace", selected = find) { find = !find }
-            EditorIcon(Icons.Default.WrapText, "Toggle line wrapping", selected = wordWrap) {
-                wordWrap = !wordWrap
-                preferences.edit().putBoolean("word-wrap", wordWrap).apply()
             }
             EditorIcon(if (advancedTools) Icons.Default.ExpandLess else Icons.Default.Tune,
                 if (advancedTools) "Hide advanced editor tools" else "Show advanced editor tools",
                 selected = advancedTools) { advancedTools = !advancedTools }
+            Box {
+                EditorIcon(Icons.Default.MoreHoriz, "Editor actions") { toolbarMenu = true }
+                DropdownMenu(expanded = toolbarMenu, onDismissRequest = { toolbarMenu = false }) {
+                    toolbarActions.filterNot { it.id in toolbarIds }.forEach { action ->
+                        DropdownMenuItem(text = { Text(action.title) }, leadingIcon = { Icon(action.icon, null) },
+                            onClick = { toolbarMenu = false; action.invoke() })
+                    }
+                    HorizontalDivider()
+                    DropdownMenuItem(text = { Text("Customize toolbar") },
+                        leadingIcon = { Icon(Icons.Default.Tune, null) },
+                        onClick = { toolbarMenu = false; toolbarCustomize = true })
+                }
+            }
         }
-        AnimatedVisibility(visible = advancedTools) {
+        AnimatedVisibility(visible = advancedTools, enter = fadeIn(tween(motionMillis)), exit = fadeOut(tween(motionMillis))) {
             Row(Modifier.fillMaxWidth().height(48.dp).horizontalScroll(rememberScrollState())
                 .padding(horizontal = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,

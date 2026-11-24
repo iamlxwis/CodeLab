@@ -1,6 +1,8 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -173,7 +175,8 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                             OutlinedTextField(name, { name = it.take(100) },
                                 Modifier.fillMaxWidth(), singleLine = true,
                                 shape = RoundedCornerShape(14.dp),
-                                placeholder = { Text("My first project") })
+                                placeholder = { Text("Enter project name") },
+                                supportingText = { if (name.isBlank()) Text("A project name is required") })
                         }
                     }
                     item {
@@ -230,15 +233,21 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                                 style = MaterialTheme.typography.bodySmall)
                         }
                     }
-                    if (guided && !isDemo) item {
+                    if (!isDemo) item {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Template", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            listOf(
+                            val templates = listOf(
                                 Triple(StarterExamples.BEGINNER, "Beginner example", "Learn from a short sample"),
                                 Triple(StarterExamples.HELLO, "Hello World", "Minimal starting program"),
                                 Triple(StarterExamples.BLANK, "Blank file", "Write everything yourself")
-                            ).forEach { (mode, title, detail) ->
+                            )
+                            if (!guided) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                                templates.forEach { (mode, title, _) ->
+                                    FilterChip(selected = starter == mode, onClick = { starter = mode }, label = { Text(title) })
+                                }
+                            } else templates.forEach { (mode, title, detail) ->
                                 Surface(onClick = { starter = mode },
                                     shape = RoundedCornerShape(14.dp),
                                     color = if (starter == mode) MaterialTheme.colorScheme.primaryContainer

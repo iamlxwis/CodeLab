@@ -152,7 +152,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                     Text("Console", modifier = if (onToggleMaximize != null)
                         Modifier.pointerInput(onToggleMaximize) { detectTapGestures(onDoubleTap = { onToggleMaximize() }) }
                         else Modifier, style = MaterialTheme.typography.titleSmall)
-                    Text(session.status, style = MaterialTheme.typography.labelSmall,
+                    Text(if (session.status == "Ready" && session.transcript.isBlank()) "No run yet" else session.status, style = MaterialTheme.typography.labelSmall,
                         color = if (session.running) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurfaceVariant)
                 }

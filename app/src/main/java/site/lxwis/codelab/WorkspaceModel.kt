@@ -1037,6 +1037,11 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                 trashItems = deleted
                 newlyDeleted?.let { undoDeletion = UndoDeletion(it.id, "Project $name moved to trash") }
                 storeFavorites(newFavorites)
+                if (replacement != null) {
+                    val existing = preferences.getString("project-layout:$name", null)
+                    if (existing != null) preferences.edit().putString("project-layout:$replacement", existing)
+                        .remove("project-layout:$name").apply()
+                }
             }
             commit
         }

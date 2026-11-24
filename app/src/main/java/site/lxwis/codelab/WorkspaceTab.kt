@@ -46,6 +46,8 @@ internal fun WorkspaceTab(
         animationSpec = tween(motionMillis),
         label = "tab-selection"
     )
+    val selectedInk by animateColorAsState(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(motionMillis), label = "tab-ink")
     val moveThreshold = with(LocalDensity.current) { 32.dp.toPx() }
     var dragX by remember(path) { mutableFloatStateOf(0f) }
     Row(
@@ -62,8 +64,7 @@ internal fun WorkspaceTab(
             Modifier.heightIn(min = 48.dp)
                 .combinedClickable(onClick = onSelect, onLongClick = { menu = true })
                 .padding(horizontal = 8.dp, vertical = 14.dp),
-            color = if (active) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.onSurfaceVariant,
+            color = selectedInk,
             fontFamily = FontFamily.Monospace,
             fontSize = 13.sp,
             maxLines = 1,

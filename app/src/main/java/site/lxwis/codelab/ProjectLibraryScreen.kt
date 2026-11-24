@@ -232,7 +232,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                 Text("ON THIS DEVICE", fontSize = 11.sp, letterSpacing = 1.6.sp,
                     fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("$visibleCount projects", style = MaterialTheme.typography.labelSmall,
+                    Text("$visibleCount " + if (visibleCount == 1) "project" else "projects", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     IconButton(onClick = { m.chooseProjectGrid(!m.projectGrid) }) {
                         Icon(if (m.projectGrid) Icons.Default.ViewList else Icons.Default.GridView,
@@ -324,8 +324,9 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                             DropdownMenuItem(
                                 text = { Text(if (name in m.favorites) "Remove from favorites" else "Add to favorites") },
                                 onClick = { options = null; m.toggleFavoriteProject(name) })
-                            DropdownMenuItem(text = { Text("Duplicate") }, onClick = { options = null; duplicate(name) })
-                            DropdownMenuItem(text = { Text("Rename") }, onClick = { options = null; rename(name) })
+                            DropdownMenuItem(text = { Text("Duplicate") }, leadingIcon = { Icon(Icons.Default.ContentCopy, null) }, onClick = { options = null; duplicate(name) })
+                            DropdownMenuItem(text = { Text("Rename") }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = { options = null; rename(name) })
+                            HorizontalDivider()
                             DropdownMenuItem(text = { Text("Move to trash", color = MaterialTheme.colorScheme.error) }, leadingIcon = { Icon(Icons.Default.DeleteOutline, null, tint = MaterialTheme.colorScheme.error) }, onClick = { options = null; delete(name) })
                         }
                     }
