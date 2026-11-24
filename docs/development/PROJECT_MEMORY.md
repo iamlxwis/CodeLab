@@ -76,3 +76,8 @@ Fresh API35 run 45412227253 stayed connected, verified six themes and reached ac
 ### Nov 25, 2026, 12:27 AM PHT — UI 10/10 refinement
 
 UI 10/10 source checkpoint: toolbar collapse/overflow, symbol keys, new native syntax token inks, redundant header search removal, language-label cleanup, segmented preview, responsive thresholds and default launch color; 8 workstreams touched, none accepted; build/device checks pending; platform polish, localization, theme QA and actual 12-line measurement remain.
+
+
+### Nov 25, 2026, 12:27 AM PHT — UI10-001 source follow-up
+
+UI refinement source follow-up: opt-in API31 Material You mode, persisted new syntax ink overrides, real scheme JVM contrast assertions, accessible key test, compact Run, status language and predictive-back manifest opt-in; actual default Obsidian is black, so static splash matches it and the activity window uses saved colors. Full initial OS splash for user-selected light presets, predictive gesture audit/device tests, 12-line measurement, broader localization, haptics and style consistency remain pending. No new APK or test pass claimed.

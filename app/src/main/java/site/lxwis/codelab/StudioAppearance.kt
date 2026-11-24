@@ -12,7 +12,8 @@ internal data class StudioAppearance(
     val uiFontRevision: Long = 0L, val editorFontRevision: Long = 0L,
     val editorBackground: String = "", val consoleBackground: String = "",
     val navigationBackground: String = "", val borderColor: String = "", val selectionColor: String = "",
-    val uiScale: Int = 100, val editorTextSize: Int = 0
+    val uiScale: Int = 100, val editorTextSize: Int = 0,
+    val functions: String = "", val types: String = "", val properties: String = ""
 ) {
     fun encode(): String = JSONObject().put("background", background).put("surface", surface)
         .put("foreground", foreground).put("corners", corners).put("opacity", opacity)
@@ -22,7 +23,8 @@ internal data class StudioAppearance(
         .put("uiFontRevision", uiFontRevision).put("editorFontRevision", editorFontRevision)
         .put("editorBackground", editorBackground).put("consoleBackground", consoleBackground)
         .put("navigationBackground", navigationBackground).put("borderColor", borderColor)
-        .put("selectionColor", selectionColor).put("uiScale", uiScale).put("editorTextSize", editorTextSize).toString()
+        .put("selectionColor", selectionColor).put("uiScale", uiScale).put("editorTextSize", editorTextSize)
+        .put("functions", functions).put("types", types).put("properties", properties).toString()
 
     companion object {
         fun decode(raw: String?): StudioAppearance = try {
@@ -40,7 +42,8 @@ internal data class StudioAppearance(
                 j.optInt("blur", 12).coerceIn(0,24), j.optLong("uiFontRevision", 0L), j.optLong("editorFontRevision", 0L),
                 hex("editorBackground"), hex("consoleBackground"), hex("navigationBackground"), hex("borderColor"), hex("selectionColor"),
                 j.optInt("uiScale", 100).coerceIn(80, 140),
-                j.optInt("editorTextSize", 0).takeIf { it in 10..28 } ?: 0)
+                j.optInt("editorTextSize", 0).takeIf { it in 10..28 } ?: 0,
+                hex("functions"), hex("types"), hex("properties"))
         } catch (_: Exception) { StudioAppearance() }
     }
 }

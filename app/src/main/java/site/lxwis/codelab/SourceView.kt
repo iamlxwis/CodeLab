@@ -245,7 +245,8 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         if (style.selectionColor.matches(Regex("#[0-9a-fA-F]{6}"))) {
             highlightColor = (android.graphics.Color.parseColor(style.selectionColor) and 0x00ffffff) or 0x66000000
         } else highlightColor = (active and 0x00ffffff) or 0x55000000
-        val colors = listOf(style.comments, style.strings, style.numbers, style.keywords)
+        val colors = listOf(style.comments, style.strings, style.numbers, style.keywords,
+            style.functions, style.types, style.properties)
         if (customInk != colors) { customInk = colors; scheduleHighlight(true) }
         val fontKey = style.editorFont + ":" + style.editorFontRevision
         if (editorFontChoice != fontKey) {
@@ -813,7 +814,8 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         }
         for (i in 4 until colors.size) {
             if (EditorSyntaxPolicy.contrast(colors[i], paper) < 4.5)
-                colors[i] = currentTextColor
+                colors[i] = if (EditorSyntaxPolicy.contrast(currentTextColor, paper) >= 4.5) currentTextColor
+                    else if (EditorSyntaxPolicy.contrast(0xff000000.toInt(), paper) >= 4.5) 0xff000000.toInt() else 0xffffffff.toInt()
         }
         highlightTask = highlightWorker.submit(Runnable {
             val marks = ArrayList<HighlightMark>()

@@ -18,6 +18,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.graphics.graphicsLayer
@@ -80,6 +81,7 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
     val pressed by interaction.collectIsPressedAsState()
     val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity, m.transitionEffect)
     val duration = motion.millis(170)
+    val compactRun = LocalConfiguration.current.screenWidthDp < 400
     val scale by animateFloatAsState(if (pressed) .97f else 1f,
         animationSpec = motion.pressSpec(), label = "run-press")
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
@@ -120,7 +122,7 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                 interactionSource = interaction,
                 modifier = Modifier.graphicsLayer { scaleX = scale; scaleY = scale },
                 shape = CodeLabCorners.iconTile,
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = if (compactRun) 8.dp else 12.dp, vertical = 8.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -130,10 +132,11 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                     label = "execution-state") { running ->
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        val runLabel = if (running) "Stop" else if (m.active?.endsWith(".html", true) == true)
+                            "Preview" else "Run"
                         Icon(if (running) Icons.Default.Stop else Icons.Default.PlayArrow,
-                            contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(if (running) "Stop" else if (m.active?.endsWith(".html", true) == true)
-                            "Preview" else "Run", fontWeight = FontWeight.SemiBold)
+                            contentDescription = if (compactRun) runLabel else null, modifier = Modifier.size(18.dp))
+                        if (!compactRun) Text(runLabel, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

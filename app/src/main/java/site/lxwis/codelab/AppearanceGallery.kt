@@ -130,7 +130,7 @@ private fun SettingChoices(title: String, choices: List<String>, currentChoice: 
                     shape = RoundedCornerShape(12.dp),
                     color = if (active) MaterialTheme.colorScheme.primaryContainer
                         else MaterialTheme.colorScheme.surfaceContainerLow) {
-                    Text(choice, Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    Text(if (choice == MATERIAL_YOU_MODE) androidx.compose.ui.res.stringResource(R.string.material_you_mode) else choice, Modifier.fillMaxWidth().heightIn(min = 48.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically)
                         .padding(horizontal = 3.dp),
                         textAlign = TextAlign.Center,
@@ -270,7 +270,18 @@ internal fun AppearanceGallery(m: WorkspaceModel, openStudio: Boolean = false, d
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             SettingChoices("COLOR MODE", listOf("Dark", "Light", "System"),
-                                m.appearance, m::setMode)
+                                if (m.appearance == MATERIAL_YOU_MODE) "" else m.appearance, m::setMode)
+                            if (android.os.Build.VERSION.SDK_INT >= 31) {
+                                val label = androidx.compose.ui.res.stringResource(R.string.material_you_mode)
+                                val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+                                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                                    Switch(checked = m.appearance == MATERIAL_YOU_MODE, onCheckedChange = { enabled ->
+                                        if (m.touchFeedback) haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                                        m.setMode(if (enabled) MATERIAL_YOU_MODE else "System")
+                                    })
+                                }
+                            }
                             Text("Obsidian is pure black. Porcelain and Sandstone use light palettes.",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodySmall)

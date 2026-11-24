@@ -17,6 +17,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+internal const val MATERIAL_YOU_MODE = "MaterialYou"
+
 private val night = darkColorScheme(
     primary = Color(0xff83e5ca), onPrimary = Color(0xff083329),
     primaryContainer = Color(0xff1d3c35), onPrimaryContainer = Color(0xffadf4df),
@@ -49,15 +51,74 @@ internal fun CodeLabTheme(
 ) {
     val systemDark = isSystemInDarkTheme()
     val dark = when (appearance) {
-        "System" -> systemDark
+        "System", MATERIAL_YOU_MODE -> systemDark
         "Light" -> false
         else -> true
     }
     val effectiveStyle = CodeLabVisualStyles.effective(visualStyle, dark)
     // Do not allocate a new ColorScheme on unrelated editor recompositions.
-    val scheme = remember(themePreset, visualStyle, accentPreset, highContrast, dark, studio) {
+    val colorContext = LocalContext.current
+    val dynamic = if (appearance == MATERIAL_YOU_MODE && android.os.Build.VERSION.SDK_INT >= 31) {
+        if (dark) dynamicDarkColorScheme(colorContext) else dynamicLightColorScheme(colorContext)
+    } else null
+    val scheme = remember(themePreset, visualStyle, accentPreset, highContrast, dark, studio, dynamic) {
+        codeLabColorScheme(themePreset, visualStyle, dark, accentPreset, highContrast, studio, dynamic)
+    }
+    val fontContext = LocalContext.current
+    val typography = remember(largeInterfaceText, studio.uiFont, studio.uiFontRevision, studio.uiScale) {
+        val family = when (studio.uiFont) {
+            "System" -> FontFamily.Default
+            "Serif" -> FontFamily.Serif
+            "Custom" -> ImportedFonts.load(fontContext, false, studio.uiFontRevision)?.let { FontFamily(it) }
+                ?: FontFamily(Font(R.font.inter))
+            else -> FontFamily(Font(R.font.inter))
+        }
+        val baseTypography = Typography()
+            val textScale = (if (largeInterfaceText) 1.16f else 1f) * studio.uiScale.coerceIn(80, 140) / 100f
+        fun styled(style: androidx.compose.ui.text.TextStyle, weight: FontWeight? = null) =
+            style.copy(fontFamily = family, fontSize = style.fontSize * textScale, lineHeight = style.lineHeight * textScale,
+                fontWeight = weight ?: style.fontWeight)
+        Typography(
+            displayLarge = styled(baseTypography.displayLarge),
+            displayMedium = styled(baseTypography.displayMedium),
+            displaySmall = styled(baseTypography.displaySmall),
+            headlineLarge = styled(baseTypography.headlineLarge, FontWeight.Bold),
+            headlineMedium = styled(baseTypography.headlineMedium, FontWeight.SemiBold),
+            headlineSmall = styled(baseTypography.headlineSmall, FontWeight.SemiBold),
+            titleLarge = styled(baseTypography.titleLarge, FontWeight.SemiBold),
+            titleMedium = styled(baseTypography.titleMedium, FontWeight.SemiBold),
+            titleSmall = styled(baseTypography.titleSmall, FontWeight.Medium),
+            bodyLarge = styled(baseTypography.bodyLarge),
+            bodyMedium = styled(baseTypography.bodyMedium),
+            bodySmall = styled(baseTypography.bodySmall),
+            labelLarge = styled(baseTypography.labelLarge),
+            labelMedium = styled(baseTypography.labelMedium),
+            labelSmall = styled(baseTypography.labelSmall)
+        )
+    }
+    val shapes = remember(studio.corners) {
+        Shapes(extraSmall = RoundedCornerShape((studio.corners / 3).dp),
+            small = RoundedCornerShape((studio.corners / 2).dp),
+            medium = RoundedCornerShape((studio.corners * 3 / 4).dp),
+            large = RoundedCornerShape(studio.corners.dp),
+            extraLarge = RoundedCornerShape((studio.corners + 8).dp))
+    }
+    CompositionLocalProvider(LocalCodeLabVisualStyle provides effectiveStyle,
+        LocalStudioAppearance provides studio) {
+        MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes) {
+            content(dark)
+        }
+    }
+}
+
+/** Pure palette resolution shared by the Compose theme, startup window and JVM tests. */
+internal fun codeLabColorScheme(themePreset: String, visualStyle: String, dark: Boolean,
+    accentPreset: String, highContrast: Boolean, studio: StudioAppearance = StudioAppearance(),
+    dynamic: ColorScheme? = null): ColorScheme {
+    val effectiveStyle = CodeLabVisualStyles.effective(visualStyle, dark)
+    return run {
             val palette = if (dark) night else day
-            val presetBase = when (effectiveStyle) {
+            val presetBase = dynamic ?: when (effectiveStyle) {
                 "Obsidian" -> night.copy(
                     background = Color.Black, surface = Color.Black,
                     surfaceContainer = Color(0xff090909),
@@ -136,8 +197,8 @@ internal fun CodeLabTheme(
                 surfaceContainerLowest = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceContainerLowest,
                 surfaceVariant = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceVariant,
                 onSurfaceVariant = if (studio.surface.isNotEmpty() || studio.foreground.isNotEmpty())
-                    readable(ink, surface) else presetBase.onSurfaceVariant)
-            val accent = when (accentPreset) {
+                    readable(ink, surface) else readable(presetBase.onSurfaceVariant, surface))
+            val accent = if (dynamic != null) dynamic.primary else when (accentPreset) {
                 "Blue" -> if (dark) Color(0xff8ab7fa) else Color(0xff245eaf)
                 "Violet" -> if (dark) Color(0xffc4b0ff) else Color(0xff6747b7)
                 "Amber" -> if (dark) Color(0xffffc978) else Color(0xff936000)
@@ -172,51 +233,6 @@ internal fun CodeLabTheme(
                     onPrimaryContainer = studioReadable(strong, accentContainer)
                 )
             } else schemeNormal
-    }
-    val fontContext = LocalContext.current
-    val typography = remember(largeInterfaceText, studio.uiFont, studio.uiFontRevision, studio.uiScale) {
-        val family = when (studio.uiFont) {
-            "System" -> FontFamily.Default
-            "Serif" -> FontFamily.Serif
-            "Custom" -> ImportedFonts.load(fontContext, false, studio.uiFontRevision)?.let { FontFamily(it) }
-                ?: FontFamily(Font(R.font.inter))
-            else -> FontFamily(Font(R.font.inter))
-        }
-        val baseTypography = Typography()
-            val textScale = (if (largeInterfaceText) 1.16f else 1f) * studio.uiScale.coerceIn(80, 140) / 100f
-        fun styled(style: androidx.compose.ui.text.TextStyle, weight: FontWeight? = null) =
-            style.copy(fontFamily = family, fontSize = style.fontSize * textScale, lineHeight = style.lineHeight * textScale,
-                fontWeight = weight ?: style.fontWeight)
-        Typography(
-            displayLarge = styled(baseTypography.displayLarge),
-            displayMedium = styled(baseTypography.displayMedium),
-            displaySmall = styled(baseTypography.displaySmall),
-            headlineLarge = styled(baseTypography.headlineLarge, FontWeight.Bold),
-            headlineMedium = styled(baseTypography.headlineMedium, FontWeight.SemiBold),
-            headlineSmall = styled(baseTypography.headlineSmall, FontWeight.SemiBold),
-            titleLarge = styled(baseTypography.titleLarge, FontWeight.SemiBold),
-            titleMedium = styled(baseTypography.titleMedium, FontWeight.SemiBold),
-            titleSmall = styled(baseTypography.titleSmall, FontWeight.Medium),
-            bodyLarge = styled(baseTypography.bodyLarge),
-            bodyMedium = styled(baseTypography.bodyMedium),
-            bodySmall = styled(baseTypography.bodySmall),
-            labelLarge = styled(baseTypography.labelLarge),
-            labelMedium = styled(baseTypography.labelMedium),
-            labelSmall = styled(baseTypography.labelSmall)
-        )
-    }
-    val shapes = remember(studio.corners) {
-        Shapes(extraSmall = RoundedCornerShape((studio.corners / 3).dp),
-            small = RoundedCornerShape((studio.corners / 2).dp),
-            medium = RoundedCornerShape((studio.corners * 3 / 4).dp),
-            large = RoundedCornerShape(studio.corners.dp),
-            extraLarge = RoundedCornerShape((studio.corners + 8).dp))
-    }
-    CompositionLocalProvider(LocalCodeLabVisualStyle provides effectiveStyle,
-        LocalStudioAppearance provides studio) {
-        MaterialTheme(colorScheme = scheme, typography = typography, shapes = shapes) {
-            content(dark)
-        }
     }
 }
 

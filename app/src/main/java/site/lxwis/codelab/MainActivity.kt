@@ -13,6 +13,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
@@ -25,6 +26,23 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         PerformanceRecorder.beginLaunch(this, launchStarted)
         model = ViewModelProvider(this)[WorkspaceModel::class.java]
+        // The OS starting splash uses the static default; the activity window
+        // follows the saved app palette before Compose renders its first frame.
+        val systemDark = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+            android.content.res.Configuration.UI_MODE_NIGHT_YES
+        val launchDark = when (model.appearance) {
+            "Light" -> false
+            "System", MATERIAL_YOU_MODE -> systemDark
+            else -> true
+        }
+        val launchPalette = if (model.appearance == MATERIAL_YOU_MODE && android.os.Build.VERSION.SDK_INT >= 31) {
+            if (launchDark) androidx.compose.material3.dynamicDarkColorScheme(this)
+            else androidx.compose.material3.dynamicLightColorScheme(this)
+        } else null
+        val launchScheme = codeLabColorScheme(model.themePreset, model.visualStyle, launchDark, model.accent,
+            model.highContrast, model.studioAppearance, launchPalette)
+        window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(
+            launchScheme.background.toArgb()))
         // Transparent system bars; content still accounts for safeDrawing and IME insets.
         enableEdgeToEdge()
         setContent {

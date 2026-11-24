@@ -28,7 +28,7 @@ internal data class ThemeMotionRecipe(val preference: String, val intensity: Int
 
 internal object AppearanceRecipes {
     private fun validStyle(value: String) = CodeLabVisualStyles.accepts(value)
-    private val modes = setOf("Dark", "Light", "System")
+    private val modes = setOf("Dark", "Light", "System", MATERIAL_YOU_MODE)
     private val accents = setOf("Mint", "Blue", "Violet", "Amber", "Rose", "Mono")
     private val hexColor = Regex("#[0-9a-fA-F]{6}")
 

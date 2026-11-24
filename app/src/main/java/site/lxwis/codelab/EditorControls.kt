@@ -98,7 +98,16 @@ internal fun EditorStatusBar(
             color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text((if (readOnly) "READ ONLY · " else "") +
             (if (wordWrap) "Wrap · " else "") + "UTF-8 · " +
-            filename.substringAfterLast('.', "text").uppercase(), Modifier.weight(1f), maxLines = 2,
+            when (filename.substringAfterLast('.', "text").lowercase()) {
+                "js", "mjs" -> "JavaScript"
+                "ts" -> "TypeScript"
+                "py" -> "Python"
+                "lua" -> "Lua"
+                "sql" -> "SQLite"
+                "java" -> "Java"
+                "html", "htm" -> "HTML"
+                else -> filename.substringAfterLast('.', "text").uppercase()
+            }, Modifier.weight(1f), maxLines = 2,
             textAlign = androidx.compose.ui.text.style.TextAlign.End,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -110,7 +119,7 @@ internal fun EditorIcon(icon: ImageVector, description: String, selected: Boolea
                        onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     IconButton(onClick = onClick, modifier = Modifier.size(48.dp)
-        .background(if (selected) colors.primaryContainer else Color.Transparent, RoundedCornerShape(10.dp))) {
+        .background(if (selected) colors.primaryContainer else Color.Transparent, CodeLabCorners.iconTile)) {
         Icon(icon, contentDescription = description, modifier = Modifier.size(20.dp),
             tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant)
     }

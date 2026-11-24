@@ -371,7 +371,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         accent = stored("accent", AppearanceRecipes.defaultAccent(canonical))
             ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(canonical)
         appearance = stored("mode", CodeLabVisualStyles.defaultMode(canonical))
-            ?.takeIf { it in listOf("Dark", "Light", "System") } ?: CodeLabVisualStyles.defaultMode(canonical)
+            ?.takeIf { it in listOf("Dark", "Light", "System", MATERIAL_YOU_MODE) } ?: CodeLabVisualStyles.defaultMode(canonical)
         preferences.edit().putString("visual-style", canonical)
             .putString("accent", accent).putString("mode", appearance).apply()
     }
@@ -1594,7 +1594,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun setMode(mode: String) {
-        if (mode !in listOf("Dark", "Light", "System")) return
+        if (mode !in listOf("Dark", "Light", "System", MATERIAL_YOU_MODE)) return
         appearance = mode
         preferences.edit().putString("mode", mode).putString("mode:$visualStyle", mode).apply()
     }

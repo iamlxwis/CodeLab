@@ -141,6 +141,15 @@ internal fun StudioAppearanceControls(m: WorkspaceModel, initiallyOpen: Boolean 
             ThemeColor("Keywords", ink(s.keywords, Color(0xffb8acff))) {
                 m.updateStudioAppearance(m.studioAppearance.copy(keywords = it))
             }
+            ThemeColor(androidx.compose.ui.res.stringResource(R.string.syntax_functions), ink(s.functions, MaterialTheme.colorScheme.onSurface)) {
+                m.updateStudioAppearance(m.studioAppearance.copy(functions = it))
+            }
+            ThemeColor(androidx.compose.ui.res.stringResource(R.string.syntax_types), ink(s.types, MaterialTheme.colorScheme.onSurface)) {
+                m.updateStudioAppearance(m.studioAppearance.copy(types = it))
+            }
+            ThemeColor(androidx.compose.ui.res.stringResource(R.string.syntax_properties), ink(s.properties, MaterialTheme.colorScheme.onSurface)) {
+                m.updateStudioAppearance(m.studioAppearance.copy(properties = it))
+            }
             }
             if (section == "Motion") {
                 MotionSettingsControls(m)

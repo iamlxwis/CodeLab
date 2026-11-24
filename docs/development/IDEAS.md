@@ -174,3 +174,8 @@ Owner authorized the deferred build/error-check pass and requested a direct app 
 ### UI10-001 — Nov 25, 2026, 12:27 AM PHT
 
 Owner-supplied UI 10/10 quality specification: 1 chrome, 5 key row, 6 syntax, 3 language label, 4 preview, 2 header, 7 responsive, 8 launch, 9 platform, 10 consistency. No new product features except the explicit opt-in system color choice. Preserve existing preferences, accessibility, motion policy, dependencies, signing and security. Pending acceptance, not complete. UI 10/10 source checkpoint: toolbar collapse/overflow, symbol keys, new native syntax token inks, redundant header search removal, language-label cleanup, segmented preview, responsive thresholds and default launch color; 8 workstreams touched, none accepted; build/device checks pending; platform polish, localization, theme QA and actual 12-line measurement remain.
+
+
+### Nov 25, 2026, 12:27 AM PHT — UI10-001 source follow-up
+
+UI refinement source follow-up: opt-in API31 Material You mode, persisted new syntax ink overrides, real scheme JVM contrast assertions, accessible key test, compact Run, status language and predictive-back manifest opt-in; actual default Obsidian is black, so static splash matches it and the activity window uses saved colors. Full initial OS splash for user-selected light presets, predictive gesture audit/device tests, 12-line measurement, broader localization, haptics and style consistency remain pending. No new APK or test pass claimed.
