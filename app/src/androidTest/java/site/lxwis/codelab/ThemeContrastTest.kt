@@ -33,7 +33,7 @@ class ThemeContrastTest {
                 CodeLabBackdrop(visualStyle, dark) {
                     CodeLabForegroundSurface(Modifier.fillMaxSize()) {
                         val foreground = LocalContentColor.current
-                        val onSurface = MaterialTheme.colorScheme.onSurface
+                        val onSurface = studioReadable(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.background)
                         val canvas = MaterialTheme.colorScheme.background
                         SideEffect {
                             actualText = foreground
@@ -63,4 +63,32 @@ class ThemeContrastTest {
             }
         }
     }
+    @Test fun customSurfaceAndAccentRemainLegibleInBothModes() {
+        var mode by mutableStateOf("Dark")
+        var scheme: androidx.compose.material3.ColorScheme? = null
+        compose.setContent {
+            CodeLabTheme("Obsidian", "Crystal", mode, "#FFFFFF", true, false,
+                StudioAppearance(background = "#FFFFFF", surface = "#FAFAFA", foreground = "#FFFFFF")) {
+                val current = MaterialTheme.colorScheme
+                SideEffect { scheme = current }
+            }
+        }
+        for (value in listOf("Dark", "Light")) {
+            compose.runOnIdle { mode = value }
+            compose.waitForIdle()
+            compose.runOnIdle {
+                val c = requireNotNull(scheme)
+                fun contrast(a: Color, b: Color): Float {
+                    val x = a.luminance(); val y = b.luminance()
+                    return (maxOf(x, y) + .05f) / (minOf(x, y) + .05f)
+                }
+                assertTrue(contrast(c.onBackground, c.background) >= 4.5f)
+                assertTrue(contrast(c.onSurface, c.surface) >= 4.5f)
+                assertTrue(contrast(c.primary, c.surface) >= 4.5f)
+                assertTrue(contrast(c.onPrimary, c.primary) >= 4.5f)
+                assertTrue(contrast(c.onPrimaryContainer, c.primaryContainer) >= 4.5f)
+            }
+        }
+    }
+
 }

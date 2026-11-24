@@ -31,9 +31,9 @@ Write, run, and manage projects from your phone.
 | Workstreams accepted | **0/10 fully device-accepted** — source and CI verified separately |
 | Current workstream | Theme and workspace fidelity; device regression preparation |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Last activity | Nov 24, 2026, 7:17:59 PM PHT |
+| Last activity | Nov 24, 2026, 7:19:22 PM PHT |
 
-**Current activity:** Nov 24, 2026, 7:17:59 PM PHT — Workspace layouts now include the editor toolbar and explorer visibility, with backward-compatible serialization tests; Theme Studio preview supports interactive tabs, line selection and sample console output. Next: adaptive panel and theme contrast regression checks.
+**Current activity:** Nov 24, 2026, 7:19:22 PM PHT — Added contrast-safe custom colors and adaptive system bars, corrected console ink, and added tablet drag/maximize plus accessible split controls. Next: compile and Android device regression.
 
 > One current activity sentence. [Reimagined acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

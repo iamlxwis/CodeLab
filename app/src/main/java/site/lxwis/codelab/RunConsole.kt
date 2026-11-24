@@ -145,7 +145,10 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
         })
     val palette = MaterialTheme.colorScheme
     val consoleBackground = studioColor(LocalStudioAppearance.current.consoleBackground, palette.surface)
-    Surface(modifier, color = consoleBackground, contentColor = studioReadable(palette.onSurface, consoleBackground)) {
+    val consoleInk = studioReadable(palette.onSurface, consoleBackground)
+    val consoleMuted = studioReadable(palette.onSurfaceVariant, consoleBackground)
+    val consoleAccent = contrastAccent(palette.primary, consoleBackground)
+    Surface(modifier, color = consoleBackground, contentColor = consoleInk) {
         Column(Modifier.fillMaxSize().padding(horizontal = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -153,8 +156,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                         Modifier.pointerInput(onToggleMaximize) { detectTapGestures(onDoubleTap = { onToggleMaximize() }) }
                         else Modifier, style = MaterialTheme.typography.titleSmall)
                     Text(if (session.status == "Ready" && session.transcript.isBlank()) "No run yet" else session.status, style = MaterialTheme.typography.labelSmall,
-                        color = if (session.running) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurfaceVariant)
+                        color = if (session.running) consoleAccent else consoleMuted)
                 }
                 if (session.paused) {
                     TextButton(onClick = { session.debugAction(false) }) { Text("Continue") }
@@ -165,7 +167,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                 if (session.running) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                 IconButton(onClick = { showFilter = !showFilter }) {
                     Icon(Icons.Default.Search, "Filter output",
-                        tint = if (showFilter) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                        tint = if (showFilter) consoleAccent else consoleMuted)
                 }
                 if (onToggleMaximize != null) IconButton(onClick = onToggleMaximize) {
                     Icon(Icons.Default.Fullscreen, "Toggle console expansion")
@@ -246,7 +248,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                     Spacer(Modifier.weight(1f))
                     Text("${sqlResult.rows.size} rows", Modifier.align(Alignment.CenterVertically),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        color = consoleMuted)
                 }
             }
             RunErrorLinks(errorLinks, onOpenError)
@@ -256,7 +258,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                     if (showFilter && filterOutput.isNotEmpty()) "No matching lines"
                     else if (session.running) "Waiting for program output…" else "Run a file to see output here."
                 }
-                val defaultInk = MaterialTheme.colorScheme.onSurface
+                val defaultInk = consoleInk
                 val formatted = remember(textToShow, defaultInk) {
                     ConsoleAnsi.format(textToShow, defaultInk)
                 }

@@ -94,6 +94,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var selectedSnippetLine by remember { mutableIntStateOf(1) }
     var focusMode by rememberSaveable { mutableStateOf(false) }
     val explorerPinned = m.explorerPinned
+    var wideOutputExpanded by rememberSaveable { mutableStateOf(false) }
     val context = androidx.compose.ui.platform.LocalContext.current
     val tutorialPrefs = remember(context) {
         context.getSharedPreferences("first-run-guide", android.content.Context.MODE_PRIVATE)
@@ -151,6 +152,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         if (it != null) { incoming = it.toString(); dialog = "import" }
     }
     val p = m.project
+    LaunchedEffect(p) { wideOutputExpanded = false }
     LaunchedEffect(m.active) {
         selectedSnippet = ""
         selectedSnippetLine = 1
@@ -266,21 +268,27 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 }
                 val outputPane: @Composable (Modifier) -> Unit = { pane ->
                     if (m.console) RunConsole(m.runner, pane, m.active, m.files,
-                        onToggleMaximize = if (wide) null else { { m.choosePhoneSplitEnabled(!m.phoneSplitEnabled) } }) { path, line ->
+                        onToggleMaximize = { if (wide) wideOutputExpanded = !wideOutputExpanded
+                            else m.choosePhoneSplitEnabled(!m.phoneSplitEnabled) }) { path, line ->
                         m.select(path, goToLine = line)
                     }
                     else if (m.preview && m.active != null)
                         HtmlPreview(p, m.active!!, m.source, pane)
                 }
                 if (phoneSplit) {
-                    val heightPx = with(LocalDensity.current) { maxHeight.toPx() }
+                    val heightPx = with(LocalDensity.current) { (maxHeight - 48.dp).coerceAtLeast(1.dp).toPx() }
                     Column(Modifier.fillMaxSize()) {
                         editorPane(Modifier.weight(m.phoneSplitPercent.toFloat()).fillMaxWidth())
                         PhonePanelDivider(m.phoneSplitPercent, heightPx, m::choosePhoneSplitPercent)
                         outputPane(Modifier.weight((100 - m.phoneSplitPercent).toFloat()).fillMaxWidth())
                     }
                 } else {
-                    val showSidebar = wide && explorerPinned && !focusMode
+                    val showSidebar = wide && explorerPinned && !focusMode && !wideOutputExpanded
+                    val wideSplit = wide && !wideOutputExpanded && (m.console || m.preview)
+                    val panelWidth = (maxWidth - (if (showSidebar) 225.dp else 0.dp) - 48.dp).coerceAtLeast(1.dp)
+                    val panelWidthPx = with(LocalDensity.current) { panelWidth.toPx() }
+                    val maxEditor = ((panelWidth.value - 180f) / panelWidth.value * 100f).toInt().coerceIn(35, 80)
+                    val widePercent = m.panelSplitPercent.coerceIn(35, maxEditor)
                     Row(Modifier.fillMaxSize()) {
                     AnimatedVisibility(visible = showSidebar,
                         // Translate the fixed-width sidebar; do not continuously
@@ -331,13 +339,14 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         }
                     }
-                        if ((!m.console && !m.preview) || wide)
+                        if ((!m.console && !m.preview) || wideSplit)
                             editorPane(Modifier.weight(
-                                if (wide && (m.console || m.preview)) m.panelSplitPercent / 100f else 1f
+                                if (wideSplit) widePercent.toFloat() else 1f
                             ).fillMaxHeight())
+                        if (wideSplit) WidePanelDivider(widePercent, panelWidthPx, maxEditor, m::setPanelSplit)
                         if (m.console || m.preview)
                             outputPane(Modifier.weight(
-                                if (wide) (100 - m.panelSplitPercent) / 100f else 1f
+                                if (wideSplit) (100 - widePercent).toFloat() else 1f
                             ).fillMaxHeight())
                     }
                 }
@@ -350,7 +359,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }
             if (!focusMode) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                PanelButton("Editor", !m.console && !m.preview, motionMillis) { m.console = false; m.preview = false }
+                PanelButton("Editor", !m.console && !m.preview, motionMillis) { wideOutputExpanded = false; m.console = false; m.preview = false }
                 PanelButton("Console", m.console && (!m.phoneSplitEnabled || LocalConfiguration.current.screenWidthDp >= 820), motionMillis) {
                     m.choosePhoneSplitEnabled(false); m.console = true; m.preview = false
                 }
@@ -363,7 +372,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }
                 }
                 if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
-                    PanelButton("Preview", m.preview, motionMillis) { m.console = false; m.preview = true }
+                    PanelButton("Preview", m.preview, motionMillis) { wideOutputExpanded = false; m.console = false; m.preview = true }
                 val languageLabel = when {
                     m.active?.endsWith(".js", true) == true -> "JavaScript"
                     m.active?.endsWith(".sql", true) == true -> "SQLite"

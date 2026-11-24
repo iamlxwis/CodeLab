@@ -1,6 +1,10 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.setProgress
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DragHandle
@@ -63,11 +67,40 @@ internal fun PhonePanelDivider(
             .semantics {
                 contentDescription = "Resize split panels"
                 stateDescription = "Editor $percent percent"
+                progressBarRangeInfo = ProgressBarRangeInfo(percent.toFloat(), 35f..80f)
+                setProgress { target -> currentCallback(clampPhoneSplit(target.roundToInt())); true }
             },
         contentAlignment = Alignment.Center
     ) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Icon(Icons.Default.DragHandle, contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+/** Tablet divider also exposes a range action for TalkBack/keyboard users. */
+@Composable
+internal fun WidePanelDivider(percent: Int, availableWidthPx: Float, maxPercent: Int, onPercentChange: (Int) -> Unit) {
+    val currentPercent by rememberUpdatedState(percent)
+    val currentCallback by rememberUpdatedState(onPercentChange)
+    var drag by remember { mutableFloatStateOf(percent.toFloat()) }
+    Box(Modifier.fillMaxHeight().width(48.dp)
+        .pointerInput(availableWidthPx, maxPercent) {
+            detectHorizontalDragGestures(
+                onDragStart = { drag = currentPercent.toFloat() },
+                onDragEnd = { currentCallback(drag.roundToInt().coerceIn(35, maxPercent)) },
+                onHorizontalDrag = { change, dx ->
+                    change.consume()
+                    drag = (drag + dx * 100f / availableWidthPx.coerceAtLeast(1f)).coerceIn(35f, maxPercent.toFloat())
+                    currentCallback(drag.roundToInt())
+                })
+        }.semantics {
+            contentDescription = "Resize side-by-side panels"
+            stateDescription = "Editor $percent percent"
+            progressBarRangeInfo = ProgressBarRangeInfo(percent.toFloat(), 35f..maxPercent.toFloat())
+            setProgress { target -> currentCallback(target.roundToInt().coerceIn(35, maxPercent)); true }
+        }, contentAlignment = Alignment.Center) {
+        VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        Icon(Icons.Default.DragHandle, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

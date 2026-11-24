@@ -11,6 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.ViewModelProvider
@@ -37,10 +39,11 @@ class MainActivity : ComponentActivity() {
                 largeInterfaceText = model.largeInterfaceText,
                 studio = model.studioAppearance
             ) { dark ->
+                val lightBars = MaterialTheme.colorScheme.background.luminance() > .179f
                 SideEffect {
                     WindowCompat.getInsetsController(window, window.decorView).apply {
-                        isAppearanceLightStatusBars = !dark
-                        isAppearanceLightNavigationBars = !dark
+                        isAppearanceLightStatusBars = lightBars
+                        isAppearanceLightNavigationBars = lightBars
                     }
                 }
                 CodeLabBackdrop(model.visualStyle, dark, motion.millis(300)) {

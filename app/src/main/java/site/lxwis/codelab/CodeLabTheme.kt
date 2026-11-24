@@ -131,6 +131,10 @@ internal fun CodeLabTheme(
                 onSurface = readable(ink, surface),
                 surfaceContainer = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceContainer,
                 surfaceContainerHigh = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceContainerHigh,
+                surfaceContainerHighest = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceContainerHighest,
+                surfaceContainerLow = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceContainerLow,
+                surfaceContainerLowest = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceContainerLowest,
+                surfaceVariant = if (studio.surface.isNotEmpty()) surface else presetBase.surfaceVariant,
                 onSurfaceVariant = if (studio.surface.isNotEmpty() || studio.foreground.isNotEmpty())
                     readable(ink, surface) else presetBase.onSurfaceVariant)
             val accent = when (accentPreset) {
@@ -146,21 +150,28 @@ internal fun CodeLabTheme(
                     } else base.primary
             }
             // Choose text contrast from actual color luminance, not theme mode alone.
-            val onAccent = if (accent.luminance() > .179f) Color.Black else Color.White
             val accentContainer = accent.copy(alpha = .16f).compositeOver(base.surface)
-            val schemeNormal = base.copy(primary = accent,
+            // Accent is used for text/icons as well as fills; retain its hue where possible.
+            val visibleAccent = contrastAccent(accent, base.surface)
+            val onAccent = studioReadable(base.onSurface, visibleAccent)
+            val schemeNormal = base.copy(primary = visibleAccent,
                 onPrimary = onAccent,
-                primaryContainer = accentContainer, onPrimaryContainer = base.onSurface,
-                secondary = accent, onSecondary = onAccent,
-                secondaryContainer = accentContainer, onSecondaryContainer = base.onSurface)
-            if (highContrast) schemeNormal.copy(
-                onSurface = studioReadable(if (dark) Color.White else Color.Black, base.surface),
-                onSurfaceVariant = studioReadable(if (dark) Color(0xffe3eceb) else Color(0xff243331), base.surface),
-                outline = if (dark) Color.White else Color.Black,
-                outlineVariant = if (dark) Color(0xffaabbb5) else Color(0xff536960),
-                primary = if (dark) Color(0xffbaffd7) else Color(0xff005b46),
-                onPrimaryContainer = if (dark) Color.White else Color.Black
-            ) else schemeNormal
+                primaryContainer = accentContainer, onPrimaryContainer = studioReadable(base.onSurface, accentContainer),
+                secondary = visibleAccent, onSecondary = onAccent,
+                secondaryContainer = accentContainer, onSecondaryContainer = studioReadable(base.onSurface, accentContainer))
+            if (highContrast) {
+                val primary = contrastAccent(if (dark) Color(0xffbaffd7) else Color(0xff005b46), base.surface)
+                val strong = studioReadable(if (dark) Color.White else Color.Black, base.surface)
+                schemeNormal.copy(
+                    onSurface = strong,
+                    onSurfaceVariant = strong,
+                    onBackground = studioReadable(strong, base.background),
+                    outline = strong,
+                    outlineVariant = strong,
+                    primary = primary, onPrimary = studioReadable(strong, primary),
+                    onPrimaryContainer = studioReadable(strong, accentContainer)
+                )
+            } else schemeNormal
     }
     val fontContext = LocalContext.current
     val typography = remember(largeInterfaceText, studio.uiFont, studio.uiFontRevision) {
@@ -219,7 +230,7 @@ internal fun CodeLabForegroundSurface(
 ) {
     Surface(
         modifier = modifier, color = Color.Transparent,
-        contentColor = MaterialTheme.colorScheme.onSurface, content = content
+        contentColor = studioReadable(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.background), content = content
     )
 }
 
@@ -234,4 +245,19 @@ internal fun studioReadable(foreground: Color, background: Color): Color {
     val b = background.luminance()
     return if ((maxOf(a, b) + .05f) / (minOf(a, b) + .05f) >= 4.5f) foreground
         else if (b > .179f) Color.Black else Color.White
+}
+
+/** Smallest practical tint toward black/white that keeps text accents legible. */
+internal fun contrastAccent(accent: Color, background: Color): Color {
+    fun ratio(color: Color): Float {
+        val a = color.luminance(); val b = background.luminance()
+        return (maxOf(a, b) + .05f) / (minOf(a, b) + .05f)
+    }
+    if (ratio(accent) >= 4.5f) return accent
+    val target = studioReadable(accent, background)
+    for (step in 1..20) {
+        val mixed = androidx.compose.ui.graphics.lerp(accent, target, step / 20f)
+        if (ratio(mixed) >= 4.5f) return mixed
+    }
+    return target
 }
