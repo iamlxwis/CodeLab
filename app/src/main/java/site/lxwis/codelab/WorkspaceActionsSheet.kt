@@ -61,6 +61,7 @@ internal fun WorkspaceActionsSheet(
         val editor = "Editor & search"
         val tools = "More tools"
         val settings = "Settings"
+        add("settings", "Settings", "Appearance, workspace and accessibility", settings, Icons.Default.Settings)
         if (!projectOpen) {
             add("newproject", "New project", "Start a local workspace", files, Icons.Default.Add)
             add("importzip", "Import project ZIP", "Restore a backed-up project", files, Icons.Default.FolderZip)

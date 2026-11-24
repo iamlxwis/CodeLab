@@ -318,9 +318,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                     ) {
                         Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Code, contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            FileTypeIcon("file." + language.extension, Modifier.size(28.dp))
                             Column(Modifier.weight(1f).padding(start = 12.dp)) {
                                 Text(language.name, style = MaterialTheme.typography.titleSmall,
                                     maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -371,7 +369,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         "Installed in this APK" else "Runtime unavailable",
                         style = MaterialTheme.typography.titleMedium)
                     Text(if (language.name == "Python") "CPython 3.13 · optional companion APK"
-                        else engine?.engine?.plus(" · ")?.plus(engine.version)
+                        else engine?.let { "Offline runtime · " + it.version }
                             ?: "Editing supported, execution requires a compatible online compiler.")
                     Text(engine?.capabilities ?: RuntimePackCatalog.capability(language.name).detail,
                         style = MaterialTheme.typography.bodySmall)

@@ -49,7 +49,9 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
     val runStatus = when {
         isDemo -> "Ready-made example project"
         language == "Python" -> PythonModuleLocator.check(context).description
-        else -> RuntimePackCatalog.capability(language).label
+        else -> RuntimePackCatalog.capability(language).let { capability ->
+            if (capability.state == RuntimePackCatalog.State.BUNDLED && language !in setOf("Java", "HTML", "CSS", "Web")) "Offline execution available" else capability.label
+        }
     }
     val snippet = remember(language, starter) {
         when {
@@ -189,9 +191,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                                         shape = RoundedCornerShape(16.dp)) {
                                         Column(Modifier.width(100.dp).padding(9.dp),
                                             verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                                            Icon(Icons.Default.Code, contentDescription = null,
-                                                modifier = Modifier.size(19.dp),
-                                                tint = MaterialTheme.colorScheme.primary)
+                                            FileTypeIcon("file." + (LanguageCatalog.extensionFor(choice) ?: "html"), Modifier.size(23.dp))
                                             Text(choice, maxLines = 1,
                                                 style = MaterialTheme.typography.titleSmall)
                                         }

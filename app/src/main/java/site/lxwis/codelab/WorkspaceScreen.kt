@@ -198,7 +198,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 { importZip.launch(arrayOf("*/*")) }, { dialog = "githubimport" },
                 { selected = it; dialog = "renameproject" },
                 { selected = it; dialog = "deleteproject" },
-                { selected = it; dialog = "duplicateproject" }) }
+                { selected = it; dialog = "duplicateproject" }, importFolder = { dialog = "folderimport" }) }
             HomeNavigation { openAction(it) }
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

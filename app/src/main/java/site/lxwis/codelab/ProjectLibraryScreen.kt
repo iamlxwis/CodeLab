@@ -169,7 +169,8 @@ private fun Mark(modifier: Modifier) {
 @Composable
 internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit,
     importZip: () -> Unit, importGitHub: () -> Unit,
-    rename: (String) -> Unit, delete: (String) -> Unit, duplicate: (String) -> Unit) {
+    rename: (String) -> Unit, delete: (String) -> Unit, duplicate: (String) -> Unit,
+    importFolder: (() -> Unit)? = null) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var options by remember { mutableStateOf<String?>(null) }
     var importOptions by rememberSaveable { mutableStateOf(false) }
@@ -337,6 +338,7 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
     if (importOptions) LibraryImportSheet(
         onDismiss = { importOptions = false },
         onZip = { importOptions = false; importZip() },
-        onGitHub = { importOptions = false; importGitHub() }
+        onGitHub = { importOptions = false; importGitHub() },
+        onFolder = importFolder?.let { action -> { importOptions = false; action() } }
     )
 }

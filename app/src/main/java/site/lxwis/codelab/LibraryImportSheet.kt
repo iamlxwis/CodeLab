@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,7 +20,8 @@ import androidx.compose.ui.unit.dp
 internal fun LibraryImportSheet(
     onDismiss: () -> Unit,
     onZip: () -> Unit,
-    onGitHub: () -> Unit
+    onGitHub: () -> Unit,
+    onFolder: (() -> Unit)? = null
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -36,6 +38,8 @@ internal fun LibraryImportSheet(
                 style = MaterialTheme.typography.bodyMedium)
             ImportOption(title = "ZIP archive", detail = "Open a backup or exported project from your device.",
                 icon = { Icon(Icons.Default.Archive, contentDescription = null) }, click = onZip)
+            if (onFolder != null) ImportOption(title = "Device folder", detail = "Copy an existing project folder.",
+                icon = { Icon(Icons.Default.FolderOpen, contentDescription = null) }, click = onFolder)
             ImportOption(title = "GitHub repository",
                 detail = "Download a snapshot of a public repository; no account required.",
                 icon = { Icon(Icons.Default.CloudDownload, contentDescription = null) }, click = onGitHub)
