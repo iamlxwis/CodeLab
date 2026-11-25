@@ -20,7 +20,7 @@ class ReleaseGateTest(unittest.TestCase):
             {"workflow_runs": [run(event="pull_request")]}, SHA)[0])
 
     def test_push_or_manual_api35_run(self):
-        self.assertEqual("pending", classify({"workflow_runs": [run(event="push")]}, SHA)[0])
+        self.assertEqual("pending", classify({"workflow_runs": [run(event="pull_request")]}, SHA)[0])
         self.assertEqual("passed", classify({"workflow_runs": [run(event="workflow_dispatch")]}, SHA)[0])
         self.assertEqual("passed", classify({"workflow_runs": [run(event="push")]}, SHA)[0])
 
