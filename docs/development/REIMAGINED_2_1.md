@@ -17,4 +17,6 @@ The refinement branches from `b4cbbf5`, the head of open Reimagined 2.0 PR #16. 
 
 The two task attachments are written specifications. The annotated BitChord, editor, console, project and keyboard screenshots mentioned in the new brief were unavailable. Earlier CodeLab emulator evidence and public BitChord rendering references from 2.0 are available.
 
-Next action: centralize new execution requests and replace the existing snippet preview and export path.
+The first integration checkpoint compiles, passes local JVM tests and compiles Android instrumentation. The workspace Run, file chooser, recent workspace and practice lesson use per-request execution selection. Code and output share a paginated render plan for preview and export. Home has one resume surface, and the editor panel selector has three modes.
+
+Next action is to exercise the real Android UI and verify a signed APK. Snippet export stress coverage, narrow editor controls, secondary surfaces and physical acceptance are still in progress. [Draft PR #17](https://github.com/iamlxwis/CodeLab/pull/17)

@@ -431,3 +431,7 @@ Focused dependency advisory review: OSV querybatch returned empty results for pi
 ## Nov 25, 2026, 8:16 PM PHT — Reimagined 2.1 begins
 
 Refinement starts at PR #16 head `b4cbbf5` and targets `reimagined-2.0`. Implementation and verification are pending for all ten workstreams. [Baseline verified Android 15](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578) · [Refinement checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 8:26 PM PHT — Reimagined 2.1 integration
+
+PR #17 targets the open 2.0 branch. The first integrated workspace, execution and image export changes pass local JVM tests and Android test compilation. Zero of ten workstreams have complete evidence. Android emulator, strict lint and release-signer verification are next. [Checklist](REIMAGINED_2_1.md)

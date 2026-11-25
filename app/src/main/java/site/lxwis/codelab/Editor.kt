@@ -55,7 +55,7 @@ fun CodeEditor(
     motionMillis: Int = 0,
     workspaceToolbar: List<String>? = null,
     onWorkspaceToolbarChange: ((List<String>) -> Unit)? = null,
-    onSelectionChange: (String, Int) -> Unit = { _, _ -> },
+    onCaptureReader: ((() -> EditorCapture?)?) -> Unit = {},
     touchFeedback: Boolean = false,
     readCurrentText: () -> String = { text }
 ) = key(fileKey) {
@@ -89,7 +89,7 @@ fun CodeEditor(
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", true)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
     var shortcutSettings by remember { mutableStateOf(false) }
-    var keyboardOnlySymbols by remember { mutableStateOf(preferences.getBoolean("keyboard-only-symbols", false)) }
+    var keyboardOnlySymbols by remember { mutableStateOf(preferences.getBoolean("keyboard-only-symbols", true)) }
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     var chromeCollapsed by remember { mutableStateOf(false) }
     val keyboardNow by rememberUpdatedState(imeVisible)
@@ -125,7 +125,11 @@ fun CodeEditor(
     var readOnly by remember { mutableStateOf(false) }
     var view by remember { mutableStateOf<SourceView?>(null) }
     val cursorStatus = remember { EditorCursorStatus() }
-    val selectionCallback by rememberUpdatedState(onSelectionChange)
+    val captureCallback by rememberUpdatedState(onCaptureReader)
+    DisposableEffect(fileKey) {
+        captureCallback { view?.snippetCapture() }
+        onDispose { captureCallback(null) }
+    }
     var find by remember { mutableStateOf(false) }
     var advancedTools by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf("") }
@@ -197,7 +201,7 @@ fun CodeEditor(
                     customShortcuts = preferences.getString(key, "")?.split(" ")?.filter { it in availableShortcuts }?.distinct() ?: emptyList()
                     if (!customizeShortcuts) draftShortcuts = customShortcuts
                 }
-                "keyboard-only-symbols" -> keyboardOnlySymbols = preferences.getBoolean(key, false)
+                "keyboard-only-symbols" -> keyboardOnlySymbols = preferences.getBoolean(key, true)
                 "auto-hide-hardware-toolbar" -> hideToolbarOnHardware = preferences.getBoolean(key, false)
             }
         }
@@ -491,7 +495,7 @@ fun CodeEditor(
     // The editor retains one native view; the toolbar never mounts a second editor.
     BoxWithConstraints(modifier) {
     val compactEditor = maxHeight < 280.dp
-    val keysVisible = !compactEditor && symbols && (!keyboardOnlySymbols || imeVisible) &&
+    val keysVisible = maxHeight >= 155.dp && symbols && (!keyboardOnlySymbols || imeVisible) &&
         !(hardwareKeyboard && hideToolbarOnHardware)
     val hideToolbar = chromeCollapsed && keysVisible && !advancedTools && !find
     val overflow: @Composable () -> Unit = {
@@ -985,17 +989,7 @@ fun CodeEditor(
                     }
                     selectionChanged = { line, col ->
                         cursorStatus.label = "Ln " + line + " · Col " + col
-                        // Use the live Editable, not the captured Composable text snapshot.
-                        // Android can emit selection span changes while replacing characters.
-                        val live = this.text
-                        val start = minOf(selectionStart, selectionEnd).coerceIn(0, live.length)
-                        val end = maxOf(selectionStart, selectionEnd).coerceIn(0, live.length)
-                        if (start == end) selectionCallback("", line)
-                        else {
-                            val firstLine = logicalLineAt(start)
-                            val boundedEnd = start + (end - start).coerceAtMost(24000)
-                            selectionCallback(live.subSequence(start, boundedEnd).toString(), firstLine)
-                        }
+
                     }
                     scrollDirectionChanged = { delta -> chromeCollapsed = EditorChromePolicy.afterScroll(chromeCollapsed, delta) }
                     restorePosition(fileKey)

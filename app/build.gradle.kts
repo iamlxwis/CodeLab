@@ -26,7 +26,7 @@ android {
         // CI releases use an increasing run number; local builds use a stable base.
         versionCode = System.getenv("CODELAB_VERSION_CODE")?.toIntOrNull()
             ?.takeIf { it >= 6 } ?: 6
-        versionName = "0.6.0-alpha"
+        versionName = "0.6.1-alpha"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures { compose = true }

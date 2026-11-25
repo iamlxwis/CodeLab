@@ -31,7 +31,7 @@ internal fun WorkspaceEditorPane(
     onFiles: () -> Unit,
     onScreenshot: () -> Unit,
     onCommands: () -> Unit,
-    onSelection: (String, Int) -> Unit
+    onCaptureReader: ((() -> EditorCapture?)?) -> Unit
 ) {
     val motion = rememberCodeLabMotion(m.motionPreference, m.motionIntensity, m.motionSpeed, m.springIntensity, m.transitionEffect)
     val file = m.active
@@ -61,7 +61,7 @@ internal fun WorkspaceEditorPane(
                 onPreviousTab = { m.moveActiveTab(-1) },
                 onNextTab = { m.moveActiveTab(1) },
                 onOpenCommands = onCommands,
-                onSelectionChange = onSelection,
+                onCaptureReader = onCaptureReader,
                 showStatusBar = m.showEditorStatus,
                 motionMillis = motion.millis(170),
                 touchFeedback = m.touchFeedback,

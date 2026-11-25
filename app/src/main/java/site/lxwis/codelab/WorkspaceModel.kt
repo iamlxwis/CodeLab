@@ -123,7 +123,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         panelSplitPercent, showEditorStatus, interfaceDensity, quickEditorActions, editorToolbarIds, explorerPinned, focusMode,
         systemStatusVisible, if (console) "Console" else if (preview) "Preview" else "Editor", outputMaximized,
         editorPreferences.getString("shortcut-layout", "Standard"), editorPreferences.getString("custom-shortcuts", "Tab { } ( ) ;"),
-        editorPreferences.getBoolean("symbol-toolbar", true), editorPreferences.getBoolean("keyboard-only-symbols", false))
+        editorPreferences.getBoolean("symbol-toolbar", true), editorPreferences.getBoolean("keyboard-only-symbols", true))
     private fun rememberProjectLayout() {
         if (restoringLayout) return
         val name = project ?: return
@@ -293,17 +293,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         cloudPending = filename
     }
 
-    fun requestCloudRun() {
-        val filename = active ?: return
-        if (runner.running) return
-        if (!cloudAvailable(filename)) {
-            error = "Online execution is unavailable for this language. Check Languages & Cloud."
-            return
-        }
-        // This command explicitly requests cloud execution, even if Offline was selected.
-        chooseExecutionMode("Online")
-        prepareOnlineApproval(filename)
-    }
+    fun requestCloudRun() = requestExecution(suggested = "Online")
 
     fun startCloudRun(stdin: String) {
         val filename = cloudPending ?: return
@@ -317,6 +307,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         if (!isOnline || language == null) { error = "Online compiler is unavailable"; return }
         flush()
         runner.runOnline(filename, source, cloudEndpoint, cloudHeader, cloudCredential, language, stdin.take(4096))
+        if (runner.running) lastExecutionProject = project
         console = true
         preview = false
     }
@@ -1626,17 +1617,12 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         preferences.edit().putString("app-appearance", mode).apply()
     }
 
-    fun debugCurrent(lines: List<Int>) {
-        val filename = active ?: return
-        if (!filename.endsWith(".js", true)) {
-            error = "The line debugger supports JavaScript files only."
-            return
-        }
-        flush()
-        console = true
-        preview = false
-        runner.run(filename, source, debug = true, breakpoints = lines)
-    }
+    internal var executionRequest by mutableStateOf<ExecutionRequest?>(null)
+        private set
+
+    private var lastExecutionProject: String? = null
+
+    fun debugCurrent(lines: List<Int>) = requestExecution(breakpoints = lines, suggested = "Offline")
 
     fun runPreferred() {
         val target = resolveRunTarget(projectMetadata.entrypoint, active, files)
@@ -1645,50 +1631,106 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun runTarget(path: String) {
-        if (runner.running) return
+        if (runner.running || executionRequest != null || cloudPending != null) return
         if (path !in files) { error = "File no longer exists: $path"; return }
-        if (path == active) run()
-        else select(path, runOnOpen = true)
+        if (path == active) run() else select(path, runOnOpen = true)
     }
 
-    fun run() {
-        val filename = active ?: return
-        if (filename.endsWith(".html", true) || filename.endsWith(".htm", true)) {
+    fun run() = requestExecution()
+
+    fun requestRerun() {
+        val previous = runner.execution ?: return
+        val name = lastExecutionProject ?: return
+        if (runner.running || executionRequest != null || cloudPending != null) return
+        if (project != name) {
+            openWorkspaceLocation(WorkspaceLocation(name, previous.file), run = true)
+        } else if (active == previous.file) {
+            requestExecution(previous.breakpoints, previous.mode)
+        } else runTarget(previous.file)
+    }
+
+    private fun requestExecution(breakpoints: List<Int>? = null, suggested: String = executionMode) {
+        val path = active ?: return
+        val name = project ?: return
+        if (runner.running || executionRequest != null || cloudPending != null) return
+        if (breakpoints != null && !path.endsWith(".js", true)) {
+            error = "The line debugger supports JavaScript files only."
+            return
+        }
+        executionRequest = ExecutionRequest(name, path, revision, breakpoints, suggested)
+    }
+
+    internal fun executionOptions(request: ExecutionRequest): ExecutionOptions {
+        val file = request.file
+        val extension = languageExtension(file)
+        val web = extension in setOf("html", "htm")
+        val local = web || isLocalExecutable(file)
+        val pack = when (extension) {
+            "py" -> "Python"
+            "ts" -> "TypeScript"
+            else -> null
+        }
+        val remote = !web && request.breakpoints == null && cloudAvailable(file)
+        return ExecutionOptions(
+            offline = when {
+                web -> "Open the local web preview on this device."
+                local -> "Run on this device without uploading source."
+                extension == "py" -> PythonModuleLocator.check(getApplication<Application>()).description
+                extension == "ts" -> OptionalRuntimeLocator.check(getApplication<Application>(),
+                    OptionalRuntimeLocator.Pack.TYPESCRIPT).description
+                else -> "No offline runtime for this file type."
+            },
+            online = when {
+                web -> "Web previews use the local browser."
+                request.breakpoints != null -> "JavaScript debugging uses the offline runtime."
+                !isOnline -> "Internet connection required."
+                cloudChecking -> "Checking compiler availability."
+                remote -> "Send source to the configured compiler after approval."
+                else -> "No configured online compiler for this file."
+            },
+            canRunOffline = local,
+            canRunOnline = remote,
+            installLanguage = pack.takeUnless { local }
+        )
+    }
+
+    fun cancelExecution() {
+        executionRequest = null
+    }
+
+    internal fun confirmExecution(request: ExecutionRequest, mode: String) {
+        if (executionRequest != request || runner.running) return
+        executionRequest = null
+        if (project != request.project || active != request.file || revision != request.revision) {
+            error = "The file or source changed. Open Run again."
+            return
+        }
+        val options = executionOptions(request)
+        if (mode == "Online") {
+            if (!options.canRunOnline) { error = options.online; return }
+            chooseExecutionMode(mode)
+            prepareOnlineApproval(request.file)
+        } else if (mode == "Offline") {
+            if (!options.canRunOffline) { error = options.offline; return }
+            chooseExecutionMode(mode)
             flush()
-            preview = true
-            console = false
-            return
+            if (languageExtension(request.file) in setOf("html", "htm")) {
+                preview = true
+                console = false
+            } else {
+                console = true
+                preview = false
+                runner.run(request.file, source, debug = request.breakpoints != null,
+                    breakpoints = request.breakpoints.orEmpty())
+                if (runner.running) lastExecutionProject = project
+            }
         }
-        // Never switch from offline to cloud implicitly; the user chooses.
-        if (executionMode == "Online") {
-            if (cloudAvailable(filename)) prepareOnlineApproval(filename)
-            else error = if (!isOnline) "Connect to the internet to run online."
-                else if (cloudChecking) "Checking the online compiler. Retry shortly."
-                else "No online compiler available for this file. Configure one in Languages & Cloud."
-            return
-        }
-        if (filename.endsWith(".py", true) &&
-            !PythonModuleLocator.installed(getApplication<Application>())) {
-            error = PythonModuleLocator.check(getApplication<Application>()).description +
-                ". Download Python inside the Languages screen."
-            return
-        }
-        if (filename.endsWith(".ts", true) && !isLocalExecutable(filename)) {
-            error = OptionalRuntimeLocator.check(getApplication<Application>(),
-                OptionalRuntimeLocator.Pack.TYPESCRIPT).description +
-                ". Download TypeScript inside Languages to run offline."
-            return
-        }
-        if (isLocalExecutable(filename)) {
-            flush()
-            console = true
-            preview = false
-            runner.run(filename, source)
-        } else {
-            val capability = RunCapability.forPath(filename)
-            error = capability.description + ". Offline execution requires an installed runtime; " +
-                "choose Online beside Run if a remote compiler supports this file."
-        }
+    }
+
+    internal fun snippetExecution(): SnippetExecution? {
+        val execution = runner.execution ?: return null
+        return SnippetExecution(execution.file, execution.source, lastExecutionProject,
+            execution.mode, runner.status, runner.transcript, runner.running, runner.outputOmitted)
     }
 
     override fun onCleared() {

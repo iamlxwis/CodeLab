@@ -89,14 +89,24 @@ internal fun EditorAppearanceControls(m: WorkspaceModel) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SettingChoices(title: String, choices: List<String>, selected: String, select: (String) -> Unit) {
     Text(title, style = MaterialTheme.typography.titleSmall)
-    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        choices.forEach { choice ->
-            FilterChip(choice == selected, { select(choice) }, label = { Text(choice) },
-                modifier = Modifier.heightIn(min = 48.dp))
+    if (choices.size <= 3) {
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            choices.forEachIndexed { index, choice ->
+                SegmentedButton(choice == selected, { select(choice) },
+                    SegmentedButtonDefaults.itemShape(index, choices.size), icon = {}) { Text(choice) }
+            }
+        }
+    } else {
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            choices.forEach { choice ->
+                FilterChip(choice == selected, { select(choice) }, label = { Text(choice) },
+                    modifier = Modifier.heightIn(min = 48.dp))
+            }
         }
     }
 }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -41,7 +42,8 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     onToggleMaximize: (() -> Unit)? = null,
     onNotice: ((String) -> Unit)? = null,
     motionMillis: Int = 0,
-    glassHeader: Boolean = false,
+    onRerun: (() -> Unit)? = null,
+    onSnippet: (() -> Unit)? = null,
     onOpenError: (String, Int) -> Unit = { _, _ -> }) {
     var tableMode by rememberSaveable(fileName) { mutableStateOf(true) }
     val sqlResult = remember(session.transcript, fileName, session.running) {
@@ -89,7 +91,15 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
         if (input.isNotBlank()) sentInputs = (listOf(input) + sentInputs).take(20)
         session.submit(input)
     }
-    LaunchedEffect(scroll.maxValue) { scroll.scrollTo(scroll.maxValue) }
+    var following by remember { mutableStateOf(true) }
+    LaunchedEffect(scroll) {
+        snapshotFlow { Triple(scroll.isScrollInProgress, scroll.value, scroll.maxValue) }.collect { (moving, position, end) ->
+            if (moving) following = end - position <= 12
+        }
+    }
+    LaunchedEffect(scroll.maxValue) {
+        if (following && scroll.maxValue != Int.MAX_VALUE) scroll.scrollTo(scroll.maxValue)
+    }
     LaunchedEffect(session.waiting) { if (!session.waiting) input = "" }
     if (showExecutionSettings) CodeLabAlertDialog(
         onDismissRequest = { showExecutionSettings = false },
@@ -165,16 +175,14 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             // Reserve stdin before laying out optional console chrome and output.
             // A short split pane must still let a waiting program receive input.
             Column(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
-            LiquidGlassSurface(Modifier.fillMaxWidth(), CodeLabCorners.panel, null,
-                androidx.compose.ui.geometry.Offset.Zero,
-                if (glassHeader) GlassRendering.Frosted else GlassRendering.Solid, progressive = false) {
+            Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
             Row(Modifier.fillMaxWidth().padding(start = 12.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Console", modifier = if (onToggleMaximize != null)
                         Modifier.pointerInput(onToggleMaximize) { detectTapGestures(onDoubleTap = { onToggleMaximize() }) }
                         else Modifier, style = MaterialTheme.typography.titleSmall)
-                    Text(if (session.status == "Ready" && session.transcript.isBlank()) "No run yet" else session.status,
+                    Text(if (session.status == "Ready" && session.transcript.isBlank()) "No run yet" else listOfNotNull(session.execution?.mode, session.status).joinToString(" · "),
                         style = MaterialTheme.typography.labelSmall, maxLines = 2,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         color = if (session.running) consoleAccent else consoleMuted)
@@ -184,7 +192,8 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                     TextButton(onClick = { session.debugAction(true) }) { Text("Step") }
                 }
                 if (session.running) TextButton(onClick = session::stop) { Text("Stop") }
-                else if (session.canRerun) TextButton(onClick = session::rerun) { Text("Rerun") }
+                else if (onRerun != null && session.execution != null)
+                    IconButton(onClick = onRerun) { Icon(Icons.Default.Replay, "Rerun") }
                 if (session.running) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                 IconButton(onClick = { showFilter = !showFilter }) {
                     Icon(Icons.Default.Search, "Filter output",
@@ -199,6 +208,9 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                     }
                     CodeLabDropdownMenu(expanded = showActions, onDismissRequest = { showActions = false }) {
                         val hasOutput = session.transcript.isNotEmpty()
+                        if (onSnippet != null && session.execution != null) DropdownMenuItem(
+                            text = { Text("Share result image") },
+                            onClick = { showActions = false; onSnippet() })
                         DropdownMenuItem(text = { Text("Execution history…") },
                             onClick = { showActions = false; showHistory = true })
                         DropdownMenuItem(text = { Text("Execution limits…") },

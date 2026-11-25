@@ -214,7 +214,7 @@ private fun EditorPreferenceControls(keyboard: Boolean) {
     key(revision) {
         if (keyboard) {
             SettingToggle("Coding accessory bar", prefs.getBoolean("symbol-toolbar", true)) { prefs.edit().putBoolean("symbol-toolbar", it).apply() }
-            SettingToggle("Show accessory only with keyboard", prefs.getBoolean("keyboard-only-symbols", false)) { prefs.edit().putBoolean("keyboard-only-symbols", it).apply() }
+            SettingToggle("Show accessory only with keyboard", prefs.getBoolean("keyboard-only-symbols", true)) { prefs.edit().putBoolean("keyboard-only-symbols", it).apply() }
             SettingToggle("Hide accessory with hardware keyboard", prefs.getBoolean("auto-hide-hardware-toolbar", false)) { prefs.edit().putBoolean("auto-hide-hardware-toolbar", it).apply() }
             Text("Accessory layout")
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {

@@ -171,26 +171,39 @@ internal object ScreenshotSyntax {
     enum class Kind { PLAIN, KEYWORD, STRING, COMMENT, NUMBER }
     data class Segment(val text: String, val kind: Kind)
 
+    data class Token(val range: IntRange, val kind: Kind)
+
     private val tokens = Regex(
-        """("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')|(//.*$|#.*$)|"""+
-        """(\b(?:fun|val|var|let|const|class|interface|public|private|return|if|else|for|while|"""+
-        """function|async|await|def|import|from|print|package|static|void|new|true|false|null|"""+
-        """SELECT|FROM|WHERE|CREATE|TABLE|INSERT|INTO|UPDATE|DELETE|local|end)\b)|"""+
-        """(\b\d+(?:\.\d+)?\b)""")
+        """(/\*[\s\S]*?(?:\*/|$)|//[^\n]*|(?<hash>\#[^\n]*)|(?<dash>--[^\n]*))|""" +
+        """(["]{3}[\s\S]*?(?:["]{3}|$)|'{3}[\s\S]*?(?:'{3}|$)|""" +
+        """`(?:\\.|[^`\\])*+`?|"(?:\\.|[^"\\\n])*+"?|'(?:\\.|[^'\\\n])*+'?)|""" +
+        """(\b(?:fun|val|var|let|const|class|interface|public|private|return|if|else|for|while|""" +
+        """function|async|await|def|import|from|print|package|static|void|new|true|false|null|""" +
+        """SELECT|FROM|WHERE|CREATE|TABLE|INSERT|INTO|UPDATE|DELETE|local|end)\b)|""" +
+        """(\b(?:0[xX][0-9a-fA-F]+|\d+(?:\.\d+)?)\b)""")
+
+    fun ranges(source: String, filename: String): Sequence<Token> {
+        val extension = filename.substringAfterLast('.', "").lowercase()
+        return tokens.findAll(source).mapNotNull { match ->
+            val kind = when {
+                match.groups["hash"] != null && extension !in setOf("", "py", "rb", "sh", "toml", "yaml", "yml", "r", "pl") -> null
+                match.groups["dash"] != null && extension !in setOf("lua", "sql") -> null
+                match.groups[1] != null -> Kind.COMMENT
+                match.groups[4] != null -> Kind.STRING
+                match.groups[5] != null -> Kind.KEYWORD
+                else -> Kind.NUMBER
+            }
+            kind?.let { Token(match.range, it) }
+        }
+    }
 
     fun tokenize(line: String): List<Segment> {
         val result = mutableListOf<Segment>()
         var at = 0
-        for (match in tokens.findAll(line)) {
-            if (match.range.first > at) result += Segment(line.substring(at, match.range.first), Kind.PLAIN)
-            val kind = when {
-                match.groups[1] != null -> Kind.STRING
-                match.groups[2] != null -> Kind.COMMENT
-                match.groups[3] != null -> Kind.KEYWORD
-                else -> Kind.NUMBER
-            }
-            result += Segment(match.value, kind)
-            at = match.range.last + 1
+        for (token in ranges(line, "")) {
+            if (token.range.first > at) result += Segment(line.substring(at, token.range.first), Kind.PLAIN)
+            result += Segment(line.substring(token.range), token.kind)
+            at = token.range.last + 1
         }
         if (at < line.length) result += Segment(line.substring(at), Kind.PLAIN)
         return result
