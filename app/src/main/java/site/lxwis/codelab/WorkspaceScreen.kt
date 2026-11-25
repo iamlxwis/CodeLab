@@ -319,7 +319,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             else { m.chooseOutputMaximized(m.phoneSplitEnabled); m.choosePhoneSplitEnabled(!m.phoneSplitEnabled) } },
                         onNotice = { message ->
                             snackbarScope.launch { snackbarHost.showSnackbar(message) }
-                        }, motionMillis = motionMillis) { path, line ->
+                        }, motionMillis = motionMillis, glassHeader = m.glassEnabled && !m.highContrast) { path, line ->
                         m.select(path, goToLine = line)
                     }
                     else if (m.preview && m.active != null)
@@ -472,6 +472,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 requestedLanguage = language
                 dialog = "languages"
             }, close = { dialog = "" })
+        "utilities" -> UtilitiesScreen(::openAction) { dialog = "" }
         "activity" -> ActivityScreen(m.developerActivity) { dialog = "" }
         "actions" -> WorkspaceActionsSheet(
             projectOpen = p != null,

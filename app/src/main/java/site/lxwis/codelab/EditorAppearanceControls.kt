@@ -25,14 +25,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.material.icons.filled.Terminal
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.ui.unit.dp
 
 @Composable
 internal fun AppearanceSettings(m: WorkspaceModel) {
-    SettingChoices("Appearance", appAppearanceModes, m.appearance, m::setMode)
+    SettingChoices("Color mode", appAppearanceModes, m.appearance, m::setMode)
     FontChoices(m, editor = false)
     SettingToggle("Liquid Glass", m.glassEnabled, m::chooseGlass)
     SettingToggle("Progressive blur", m.progressiveBlur, m::chooseProgressiveBlur)
@@ -42,15 +39,15 @@ internal fun AppearanceSettings(m: WorkspaceModel) {
 @Composable
 internal fun EditorAppearanceControls(m: WorkspaceModel) {
     val context = LocalContext.current
-    val settings = m.studioAppearance
+    val settings = m.editorAppearance
     val preferences = remember(context) { context.getSharedPreferences("editor", Context.MODE_PRIVATE) }
     val size = settings.editorTextSize.takeIf { it in 10..28 } ?: preferences.getInt("font-size", 15)
     FontChoices(m, editor = true)
     SettingChoices("Code surface", appAppearanceModes, settings.editorMode) {
-        m.updateStudioAppearance(m.studioAppearance.copy(editorMode = it))
+        m.updateEditorAppearance(m.editorAppearance.copy(editorMode = it))
     }
     Text("Text size · ${size} sp", style = MaterialTheme.typography.titleSmall)
-    Slider(size.toFloat(), { m.updateStudioAppearance(m.studioAppearance.copy(editorTextSize = it.toInt())) },
+    Slider(size.toFloat(), { m.updateEditorAppearance(m.editorAppearance.copy(editorTextSize = it.toInt())) },
         valueRange = 10f..28f, steps = 17,
         modifier = Modifier.semantics { contentDescription = "Editor text size" })
     var syntaxPalette by remember { mutableStateOf(preferences.getString("syntax-palette", "Classic") ?: "Classic") }
@@ -65,28 +62,28 @@ internal fun EditorAppearanceControls(m: WorkspaceModel) {
     if (showColors) {
         val fallback = MaterialTheme.colorScheme.onSurface
         ThemeColor("Comments", studioColor(settings.comments, fallback)) {
-            m.updateStudioAppearance(m.studioAppearance.copy(comments = it))
+            m.updateEditorAppearance(m.editorAppearance.copy(comments = it))
         }
         ThemeColor("Strings", studioColor(settings.strings, fallback)) {
-            m.updateStudioAppearance(m.studioAppearance.copy(strings = it))
+            m.updateEditorAppearance(m.editorAppearance.copy(strings = it))
         }
         ThemeColor("Numbers", studioColor(settings.numbers, fallback)) {
-            m.updateStudioAppearance(m.studioAppearance.copy(numbers = it))
+            m.updateEditorAppearance(m.editorAppearance.copy(numbers = it))
         }
         ThemeColor("Keywords", studioColor(settings.keywords, fallback)) {
-            m.updateStudioAppearance(m.studioAppearance.copy(keywords = it))
+            m.updateEditorAppearance(m.editorAppearance.copy(keywords = it))
         }
         ThemeColor("Functions", studioColor(settings.functions, fallback)) {
-            m.updateStudioAppearance(m.studioAppearance.copy(functions = it))
+            m.updateEditorAppearance(m.editorAppearance.copy(functions = it))
         }
         ThemeColor("Types", studioColor(settings.types, fallback)) {
-            m.updateStudioAppearance(m.studioAppearance.copy(types = it))
+            m.updateEditorAppearance(m.editorAppearance.copy(types = it))
         }
         ThemeColor("Properties", studioColor(settings.properties, fallback)) {
-            m.updateStudioAppearance(m.studioAppearance.copy(properties = it))
+            m.updateEditorAppearance(m.editorAppearance.copy(properties = it))
         }
         TextButton(onClick = {
-            m.updateStudioAppearance(m.studioAppearance.copy(comments = "", strings = "", numbers = "",
+            m.updateEditorAppearance(m.editorAppearance.copy(comments = "", strings = "", numbers = "",
                 keywords = "", functions = "", types = "", properties = ""))
         }) { Text("Reset syntax colors") }
     }
@@ -106,7 +103,7 @@ internal fun SettingChoices(title: String, choices: List<String>, selected: Stri
 
 @Composable
 private fun FontChoices(m: WorkspaceModel, editor: Boolean) {
-    val setting = m.studioAppearance
+    val setting = m.editorAppearance
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var notice by rememberSaveable { mutableStateOf("") }
@@ -114,8 +111,8 @@ private fun FontChoices(m: WorkspaceModel, editor: Boolean) {
         if (uri != null) scope.launch {
             val revision = withContext(Dispatchers.IO) { ImportedFonts.install(context, uri, editor) }
             if (revision != null) {
-                val current = m.studioAppearance
-                m.updateStudioAppearance(if (editor) current.copy(editorFont = "Custom", editorFontRevision = revision)
+                val current = m.editorAppearance
+                m.updateEditorAppearance(if (editor) current.copy(editorFont = "Custom", editorFontRevision = revision)
                     else current.copy(uiFont = "Custom", uiFontRevision = revision))
                 notice = ""
             } else notice = "Could not load this font. Choose a valid TTF or OTF file."
@@ -126,13 +123,13 @@ private fun FontChoices(m: WorkspaceModel, editor: Boolean) {
     val customAvailable = if (editor) setting.editorFontRevision != 0L else setting.uiFontRevision != 0L
     SettingChoices(if (editor) "Editor font" else "Interface font",
         if (customAvailable) choices + "Custom" else choices, current) { font ->
-        val latest = m.studioAppearance
-        m.updateStudioAppearance(if (editor) latest.copy(editorFont = font) else latest.copy(uiFont = font))
+        val latest = m.editorAppearance
+        m.updateEditorAppearance(if (editor) latest.copy(editorFont = font) else latest.copy(uiFont = font))
     }
     if (!editor) {
         Text("Interface text size · ${setting.uiScale}%", style = MaterialTheme.typography.titleSmall)
         Slider(setting.uiScale.toFloat(), {
-            m.updateStudioAppearance(m.studioAppearance.copy(uiScale = it.toInt()))
+            m.updateEditorAppearance(m.editorAppearance.copy(uiScale = it.toInt()))
         }, valueRange = 80f..140f, modifier = Modifier.semantics { contentDescription = "Interface text size" })
     }
     TextButton(onClick = { picker.launch(arrayOf("*/*")) }) { Text("Import font") }
@@ -229,9 +226,9 @@ private fun ThemeColor(label: String, color: Color, onChange: (String) -> Unit) 
                         }
                     }, singleLine = true, label = { Text("#RRGGBB") }, isError = !draft.matches(Regex("#[0-9a-fA-F]{6}")))
                     else -> {
-                        StudioSlider("Red", red, 0f..255f) { red = it }
-                        StudioSlider("Green", green, 0f..255f) { green = it }
-                        StudioSlider("Blue", blue, 0f..255f) { blue = it }
+                        ColorSlider("Red", red, 0f..255f) { red = it }
+                        ColorSlider("Green", green, 0f..255f) { green = it }
+                        ColorSlider("Blue", blue, 0f..255f) { blue = it }
                     }
                 }
             }
@@ -242,7 +239,7 @@ private fun ThemeColor(label: String, color: Color, onChange: (String) -> Unit) 
 
 
 @Composable
-private fun StudioSlider(label: String, value: Int, range: ClosedFloatingPointRange<Float>, onChange: (Int) -> Unit) {
+private fun ColorSlider(label: String, value: Int, range: ClosedFloatingPointRange<Float>, onChange: (Int) -> Unit) {
     Text("$label · $value", style = MaterialTheme.typography.labelMedium)
     Slider(value.toFloat(), { onChange(it.toInt()) }, valueRange = range,
         modifier = Modifier.semantics { contentDescription = label })

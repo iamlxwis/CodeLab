@@ -44,7 +44,8 @@ internal val projectTemplates = listOf("Web") + LanguageCatalog.entries.map { it
 
 private val discoverableTools = listOf(
     "languages" to "Offline runtimes", "catalog" to "Language catalog", "downloads" to "Downloads",
-    "updates" to "Software update", "activity" to "Developer activity", "devtools" to "Developer tools",
+    "updates" to "Software update", "activity" to "Developer activity", "utilities" to "Utilities",
+    "devtools" to "Text and data tools", "httpsinspector" to "HTTP inspector",
     "trash" to "Recently deleted", "tutorial" to "Quick start guide", "licenses" to "Licenses"
 )
 

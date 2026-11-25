@@ -36,8 +36,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 
-internal enum class GlassRendering { Solid, Frosted, Blur, Refraction }
-
 @Composable
 internal fun rememberGlassRendering(model: WorkspaceModel): GlassRendering {
     if (!model.glassEnabled || model.highContrast) return GlassRendering.Solid
@@ -45,9 +43,8 @@ internal fun rememberGlassRendering(model: WorkspaceModel): GlassRendering {
     val hardwareAccelerated = LocalView.current.isHardwareAccelerated
     val lowRam = remember(context) { context.getSystemService(ActivityManager::class.java)?.isLowRamDevice == true }
     val powerSave = rememberPowerSaveMode()
-    if (!hardwareAccelerated || powerSave || model.reduceDynamicBlur ||
-        (lowRam && model.automaticOptimization) || Build.VERSION.SDK_INT < 31) return GlassRendering.Frosted
-    return if (Build.VERSION.SDK_INT >= 33) GlassRendering.Refraction else GlassRendering.Blur
+    return glassRendering(Build.VERSION.SDK_INT, model.glassEnabled, model.highContrast,
+        hardwareAccelerated, lowRam, powerSave, model.reduceDynamicBlur, model.automaticOptimization)
 }
 
 /** Record scrolling content once. Floating controls are siblings and never enter the recording. */

@@ -1,3 +1,7 @@
+## Nov 25, 2026, 5:42 PM PHT — PR APK and upgrade verification
+
+The first [branch APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45586362366) passed compilation, JVM tests, strict lint, optional runtime assembly, signature verification and certificate continuity. Local JVM evidence for that checkpoint contains 200 tests without failures. Refined editor appearance migration, console and workspace chrome, update metadata validation and runtime sizing, and extended device smoke. No workstream is fully accepted yet. See [PR #16](https://github.com/iamlxwis/CodeLab/pull/16) and [the handoff](REIMAGINED_2_0.md) for the next verification.
+
 ## Nov 25, 2026, 5:31 PM PHT — Reimagined 2.0 integration checkpoint
 
 Branch source includes the neutral app modes, separate editor preferences, backdrop navigation, primary destinations, all 95 language visuals, workspace resume, search, activity and verified installer flow. The platform runtime, stored projects and explicit upload consent remain in use. Local app compile passed before the final integration edits. Fifteen Python QA guards and static security invariants passed. Workstreams fully verified 0/10. Branch signing and API 35 checks are pending. See [the handoff](REIMAGINED_2_0.md).

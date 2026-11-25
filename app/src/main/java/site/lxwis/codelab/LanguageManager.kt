@@ -1,5 +1,6 @@
 package site.lxwis.codelab
 
+import android.text.format.Formatter
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -58,7 +59,7 @@ internal fun LanguageManagerScreen(model: WorkspaceModel, initialLanguage: Strin
     var transfer by remember { mutableStateOf(module.inspect(downloadId)) }
     var moduleMessage by remember { mutableStateOf("") }
     var recheck by remember { mutableIntStateOf(0) }
-    var publishedAssets by remember { mutableStateOf<Set<String>?>(null) }
+    var publishedAssets by remember { mutableStateOf<Map<String, Long>?>(null) }
     var publishedError by remember { mutableStateOf<String?>(null) }
     var releaseRefresh by remember { mutableIntStateOf(0) }
     LaunchedEffect(releaseRefresh) {
@@ -270,7 +271,8 @@ internal fun LanguageManagerScreen(model: WorkspaceModel, initialLanguage: Strin
             pack = pack,
             manager = requireNotNull(optionalPacks[pack]),
             status = requireNotNull(optionalStatuses[pack]),
-            published = publishedAssets?.contains("CodeLab-" + pack.suffix + ".apk"),
+            published = publishedAssets?.containsKey("CodeLab-" + pack.suffix + ".apk"),
+            downloadBytes = publishedAssets?.get("CodeLab-" + pack.suffix + ".apk"),
             publishedError = publishedError,
             onCheckRelease = { releaseRefresh++ },
             onDismiss = { if (detailOnly) close() else { optionalInspect = null; recheck++ } },
@@ -303,6 +305,13 @@ internal fun LanguageManagerScreen(model: WorkspaceModel, initialLanguage: Strin
                         else "No verified downloadable runtime is published for this language.",
                         style = MaterialTheme.typography.labelSmall)
                     if (language.name == "Python") {
+                        Text("Installed APK · " + Formatter.formatShortFileSize(context, module.installedApkBytes()) +
+                            (module.installedVersionCode()?.let { " · build $it" } ?: ""),
+                            style = MaterialTheme.typography.bodySmall)
+                        publishedAssets?.get("CodeLab-Python.apk")?.let { bytes ->
+                            Text("Download · " + Formatter.formatShortFileSize(context, bytes),
+                                style = MaterialTheme.typography.bodySmall)
+                        }
                         if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
                             transfer.stage == PythonModuleDownload.Stage.PAUSED) {
                             if (transfer.total > 0L) {
@@ -324,10 +333,11 @@ internal fun LanguageManagerScreen(model: WorkspaceModel, initialLanguage: Strin
                                     style = MaterialTheme.typography.bodySmall)
                             }
                             if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED) {
-                                val verification = remember(downloadId, transfer.stage, recheck) { module.verify() }
-                                val versionDecision = remember(downloadId, transfer.stage, recheck) {
-                                    module.downloadedVersionDecision()
+                                val checks by produceState<Pair<String?, PythonModuleVersionPolicy.Decision?>?>(null, downloadId, recheck) {
+                                    value = withContext(Dispatchers.IO) { module.verify() to module.downloadedVersionDecision() }
                                 }
+                                val verification = checks?.first
+                                val versionDecision = checks?.second
                                 val verifiedDescription = when (versionDecision) {
                                     PythonModuleVersionPolicy.Decision.UPDATE ->
                                         "Newer signed Python runtime verified"
@@ -337,11 +347,11 @@ internal fun LanguageManagerScreen(model: WorkspaceModel, initialLanguage: Strin
                                         "Python download complete · signature verified"
                                     else -> "Python download verified"
                                 }
-                                Text(verification ?: verifiedDescription,
+                                Text(verification ?: if (checks == null) "Verifying installer…" else verifiedDescription,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (verification == null) MaterialTheme.colorScheme.primary
                                         else MaterialTheme.colorScheme.error)
-                                if (verification == null) Button(onClick = {
+                                if (checks != null && verification == null) Button(onClick = {
                                     moduleMessage = module.install()
                                 }) { Text(when (versionDecision) {
                                     PythonModuleVersionPolicy.Decision.UPDATE -> "Update Python"
@@ -407,11 +417,13 @@ internal fun OptionalRuntimeDetails(
     manager: OptionalRuntimeDownload,
     status: PythonModuleLocator.Status,
     published: Boolean?,
+    downloadBytes: Long?,
     publishedError: String?,
     onCheckRelease: () -> Unit,
     onDismiss: () -> Unit,
     onRefresh: () -> Unit
 ) {
+    val context = LocalContext.current
     var transfer by remember(pack) { mutableStateOf(manager.inspect()) }
     var message by remember(pack) { mutableStateOf("") }
     var confirmRemove by remember(pack) { mutableStateOf(false) }
@@ -445,10 +457,13 @@ internal fun OptionalRuntimeDetails(
                         "This engine needs its optional module installed."
                     else "Bundled " + pack.label + " remains available if this optional module is removed.",
                     style = MaterialTheme.typography.bodySmall)
-                Text("Installed APK: " + manager.installedApkBytes() / 1024 / 1024 +
-                    " MB · cache: " + manager.cachedBytes() / 1024 / 1024 + " MB" +
-                    (manager.installedVersionCode()?.let { " · version code " + it } ?: ""),
-                    style = MaterialTheme.typography.labelSmall)
+                Text("Installed APK · " + Formatter.formatShortFileSize(context, manager.installedApkBytes()) +
+                    (manager.installedVersionCode()?.let { " · build $it" } ?: ""),
+                    style = MaterialTheme.typography.bodySmall)
+                Text("Installer cache · " + Formatter.formatShortFileSize(context, manager.cachedBytes()),
+                    style = MaterialTheme.typography.bodySmall)
+                downloadBytes?.let { Text("Download · " + Formatter.formatShortFileSize(context, it),
+                    style = MaterialTheme.typography.bodySmall) }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Wi-Fi only downloads", modifier = Modifier.weight(1f))
                     Switch(checked = wifiOnly, onCheckedChange = {
@@ -473,11 +488,14 @@ internal fun OptionalRuntimeDetails(
                     }) { Text("Cancel download") }
                 } else {
                     if (transfer.stage == OptionalRuntimeDownload.Stage.DOWNLOADED) {
-                        val error = manager.verify()
-                        Text(error ?: "APK signature and package verified",
+                        val verification by produceState<Pair<Boolean, String?>>(false to null, transfer) {
+                            value = true to withContext(Dispatchers.IO) { manager.verify() }
+                        }
+                        val (verified, error) = verification
+                        Text(error ?: if (verified) "APK signature and package verified" else "Verifying installer…",
                             color = if (error == null) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.error)
-                        if (error == null) Button(onClick = {
+                        if (verified && error == null) Button(onClick = {
                             message = manager.install()
                         }) { Text(if (status.ready) "Update or reinstall" else "Install module") }
                     }

@@ -435,11 +435,33 @@ def main():
     snapshot("11-typescript")
 
 
+    # Find an actual saved source line from another project in universal search.
+    tap("Project library")
+    tap("Search")
+    wait_for("Search CodeLab")
+    search_field = wait_for(field=True)
+    tap_node(search_field)
+    adb("shell", "input", "text", shlex.quote("print(6*7)"))
+    wait_for("answer.js:1")
+    snapshot("universal-code-search")
+    tap("answer.js:1")
+    wait_for("Close answer.js")
+    wait_for("print(6*7)", contains=True)
+    tap("Project library")
+    wait_for("Resume workspace")
+    tap("Home")
+    tap_node(scroll_to("Developer activity"))
+    wait_for("Last 30 days")
+    wait_for("Recent executions")
+    snapshot("developer-activity")
+    tap("Back")
+
     (OUT / "result.txt").write_text(
         "Passed: install, create, launch offline JavaScript, interactive input, "
         "computed output, normal exit, file creation, editing, tab switching, autosave, "
         "process restoration, rotation, SQLite execution, rendered HTML preview, offline Lua, " 
-        "Java beta execution, TypeScript single-file transpilation, and real CPython execution in airplane mode.\n")
+        "Java beta execution, TypeScript single-file transpilation, real CPython execution in airplane mode, "
+        "cross-project code search, workspace resume, and local activity.\n")
 
 
 if __name__ == "__main__":

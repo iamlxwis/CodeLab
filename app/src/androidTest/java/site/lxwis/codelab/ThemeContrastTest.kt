@@ -52,9 +52,9 @@ class ThemeContrastTest {
         var editorMode = ""
         compose.setContent {
             CodeLabTheme("Light", true, false,
-                StudioAppearance(editorMode = "Dark", editorBackground = "#212224")) {
+                EditorAppearance(editorMode = "Dark", editorBackground = "#212224")) {
                 val current = MaterialTheme.colorScheme.background
-                val editor = LocalStudioAppearance.current
+                val editor = LocalEditorAppearance.current
                 SideEffect { background = current; editorMode = editor.editorMode }
             }
         }

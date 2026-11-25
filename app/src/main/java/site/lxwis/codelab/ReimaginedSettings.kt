@@ -1,6 +1,8 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.semantics.semantics
@@ -39,17 +41,21 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
     val title = settingsDestinations.firstOrNull { it.id == page }?.name ?: "Settings"
     fun goBack() { if (page != null && initialPage == null) page = null else close() }
     CodeLabDialog(onDismissRequest = ::goBack,
-        properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         androidx.activity.compose.BackHandler(enabled = page != null, onBack = ::goBack)
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding().padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { goBack() }) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    IconButton(onClick = ::goBack,
+                        modifier = Modifier.size(48.dp).background(MaterialTheme.colorScheme.surfaceContainer, CircleShape)) {
                         Icon(Icons.Default.ArrowBack, if (page != null && initialPage == null) "Back to settings" else "Close settings")
                     }
-                    Text(title, Modifier.weight(1f), style = MaterialTheme.typography.headlineLarge)
+                    Text(title, Modifier.weight(1f), style = if (page == null) MaterialTheme.typography.headlineLarge else MaterialTheme.typography.headlineMedium)
                 }
-                if (page == null) CodeLabSearch(query, { query = it }, "Search settings")
+                if (page == null) {
+                    Spacer(Modifier.height(12.dp))
+                    CodeLabSearch(query, { query = it }, "Search settings")
+                }
                 LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     if (page == null) {
@@ -88,8 +94,6 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                                     EditorAppearanceControls(m)
                                     EditorPreferenceControls(false)
                                     SettingToggle("Focus mode", m.focusMode, m::chooseFocusMode)
-                                    SettingsLink("Workspace layout", "Density, panel sizes and status bar", Icons.Default.ViewSidebar) { onAction("panels") }
-                                    SettingsLink("Saved layouts", "Save and restore pinned actions and proportions", Icons.Default.Dashboard) { onAction("layoutpresets") }
                                 }
                                 "keyboard" -> {
                                     EditorPreferenceControls(true)

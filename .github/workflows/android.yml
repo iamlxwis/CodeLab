@@ -35,11 +35,14 @@ jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 85
+    env:
+      CODELAB_TEST_UPGRADE: ${{ github.ref == 'refs/heads/reimagined-2.0' && github.event_name == 'workflow_dispatch' }}
     steps:
       # Checkout is read-only; never persist a token that could commit as github-actions[bot].
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref == 'reimagined-2.0' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -111,7 +114,7 @@ jobs:
             "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$apk/build/outputs/apk/release/$apk-release.apk"
           done
       - name: Enforce actual production signing certificate
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         env:
           CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
           CODELAB_KEY_ALIAS: ${{ secrets.CODELAB_KEY_ALIAS }}
@@ -144,7 +147,7 @@ jobs:
             exit 1
           fi
       - name: Audit upgrade signing compatibility
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -194,16 +197,16 @@ jobs:
       # release gate below. GitHub Release assets remain individual APKs because
       # the in-app module manager downloads those exact public asset filenames.
       - name: Release build memory before production upgrade verification
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         run: bash gradlew --stop
       - name: Enable acceleration for production upgrade verification
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Verify production upgrade and preserved data on Android 15
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -216,7 +219,7 @@ jobs:
           disable-animations: true
           script: python3 qa/production_upgrade_smoke.py
       - name: Record verified production upgrade
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         run: |
           test -s qa-results/production-upgrade-api-35.txt
           echo "CODELAB_UPGRADE_TEST=passed_api35" >> "$GITHUB_ENV"

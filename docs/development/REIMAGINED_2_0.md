@@ -15,7 +15,7 @@ Branch `reimagined-2.0` starts at main commit `517f5bc5e2ee0b88d42fc17151a205328
 | Settings, onboarding and accessibility | Searchable groups and revised tutorial integrated. Font scaling, keyboard access and TalkBack review pending |
 | Local developer activity | Foreground coding time, distinct files, creations and actual run outcomes with disable, reset and sharing implemented |
 | Official updater and unified downloads | Official asset metadata, SHA-256, package/version/signer checks, DownloadManager and Android installer implemented. Live update/install flow pending |
-| CI, signed APK and device verification | Earlier local app compilation passed. Branch APK and API 35 device checks pending |
+| CI, signed APK and device verification | First PR APK and signer gate passed. Updated-source APK, API 35 device and in-place upgrade checks pending |
 
 ## Architecture and evidence
 
@@ -24,6 +24,12 @@ The Compose backdrop is recorded only on the three library destinations. The And
 CodeLab’s own implementation uses BitChord’s public navigation and backdrop source for reference. The GPL navigation, branding and assets were not copied. The task attachment contained the specification only. Existing CodeLab editor and web preview screenshots were inspected from `docs/screenshots`.
 
 Baseline [APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45518242552) and [API 35 device smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45518254838) passed at `517f5bc`. The separate baseline publication workflow failed. The branch passed local static security invariants and 15 Python QA guard tests. Full Android and device verification remains pending.
+
+## Branch evidence
+
+[Draft PR #16](https://github.com/iamlxwis/CodeLab/pull/16) tracks the entire overhaul. The first source checkpoint `a67ca92` passed the [Android APK workflow](https://github.com/iamlxwis/CodeLab/actions/runs/45586362366), including signer continuity for the editor and optional packs. The [first PR artifact](https://github.com/iamlxwis/CodeLab/actions/runs/45586362366/artifacts/15009042968) is a QA build. The [initial API 35 smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45586416088) runs on that earlier source.
+
+The updated candidate simplifies editor-settings migration, applies workspace and console chrome, checks trusted update metadata and runtime download sizes, and extends smoke coverage to cross-project search and activity. A manual dispatch of the Android APK workflow on this branch runs the signed in-place upgrade gate. The stable publication steps are gated to main.
 
 ## Next action
 

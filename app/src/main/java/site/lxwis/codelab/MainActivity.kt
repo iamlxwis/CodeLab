@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
                 appearance = model.appearance,
                 highContrast = model.highContrast,
                 largeInterfaceText = model.largeInterfaceText,
-                studio = model.studioAppearance
+                editorAppearance = model.editorAppearance
             ) { _ ->
                 val lightBars = MaterialTheme.colorScheme.background.luminance() > .179f
                 SideEffect {
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 CompositionLocalProvider(LocalWorkspaceMotion provides motion,
-                    LocalStudioAppearanceUpdater provides { value -> model.updateStudioAppearance(value) },
+                    LocalEditorAppearanceUpdater provides { value -> model.updateEditorAppearance(value) },
                     LocalModalStatusVisible provides (model.systemStatusVisible && !(model.focusMode && model.project != null))) {
                     CodeLabForegroundSurface(Modifier.fillMaxSize().graphicsLayer { alpha = entrance.value }) {
                         Studio(model, Modifier.windowInsetsPadding(WindowInsets.safeDrawing).imePadding())

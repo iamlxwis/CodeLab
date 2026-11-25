@@ -45,7 +45,7 @@ internal fun RunModeStrip(
         else -> "No online compiler for this file"
     }
     val colors = MaterialTheme.colorScheme
-    val toolbar = studioColor(LocalStudioAppearance.current.navigationBackground, colors.surfaceContainer)
+    val toolbar = colors.surfaceContainerLow
     Surface(color = toolbar, contentColor = studioReadable(colors.onSurface, toolbar)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {

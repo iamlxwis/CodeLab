@@ -148,6 +148,7 @@ internal fun DownloadCenter(
                             updater.latest != null -> Text("You have the latest available build.")
                         }
                         updater.checkError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                        updater.compatibilityIssue?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                         if (transfer.stage != AppUpdater.Stage.Idle) {
                             val message = when {
                                 transfer.stage == AppUpdater.Stage.Downloaded && verified -> "APK verified · ready to install"
@@ -181,7 +182,8 @@ internal fun DownloadCenter(
                                     }
                                 }
                             }, enabled = !busy) { Text("Install update") }
-                            available != null -> Button(onClick = { changeDownload { updater.begin(available) } }, enabled = !busy) {
+                            available != null && updater.compatibilityIssue == null ->
+                                Button(onClick = { changeDownload { updater.begin(available) } }, enabled = !busy) {
                                 val action = if (transfer.stage == AppUpdater.Stage.Failed || verification != null) "Retry" else "Download"
                                 Text("$action · " + Formatter.formatShortFileSize(context, available.apkBytes))
                             }
@@ -199,7 +201,11 @@ internal fun DownloadCenter(
             }
             val notes = updater.latest?.notes.orEmpty()
             if (updatesOnly && notes.isNotBlank()) {
-                item { Text("What's new", style = MaterialTheme.typography.titleLarge) }
+                item {
+                    Text("What's new", style = MaterialTheme.typography.titleLarge)
+                    updater.latest?.let { Text(it.title, style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
                 items(notes.lines().filter(String::isNotBlank).take(140)) { line -> ReleaseNote(line) }
             }
             if (!updatesOnly) {

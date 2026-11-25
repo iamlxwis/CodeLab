@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.semantics.Role
@@ -54,7 +56,7 @@ private val exploreCategories = listOf(
     ExploreCategory("Templates", "Start from a runnable example", "templates", Icons.Default.Layers, Color(0xff805b9e)),
     ExploreCategory("Snippets", "Find saved code and examples", "snippets", Icons.Default.ContentCut, Color(0xff916447)),
     ExploreCategory("Downloads", "App updates and runtime packs", "downloads", Icons.Default.Download, Color(0xff4e6786)),
-    ExploreCategory("Utilities", "Developer tools and diagnostics", "devtools", Icons.Default.Build, Color(0xff77662e))
+    ExploreCategory("Utilities", "Developer tools and diagnostics", "utilities", Icons.Default.Build, Color(0xff77662e))
 )
 
 @Composable
@@ -71,6 +73,7 @@ internal fun MainDestinations(
     var origin by remember { mutableStateOf(Offset.Zero) }
     val workspace = model.recentWorkspace
     val runtimeStatus = model.parkedWorkspace?.let { model.runner.status }
+    val haptics = LocalHapticFeedback.current
     val colors = MaterialTheme.colorScheme
     Box(modifier.fillMaxWidth().background(colors.background)) {
         Box(Modifier.fillMaxSize()
@@ -102,7 +105,12 @@ internal fun MainDestinations(
                             Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
                                 Text(workspace.project, maxLines = 1, overflow = TextOverflow.Ellipsis,
                                     style = MaterialTheme.typography.labelLarge)
-                                Text(runtimeStatus ?: workspace.file.substringAfterLast('/'), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                val subtitle = when {
+                                    model.isWorkspaceDirty(workspace) -> workspace.file.substringAfterLast('/') + " · Saving"
+                                    runtimeStatus != null -> runtimeStatus
+                                    else -> workspace.file.substringAfterLast('/')
+                                }
+                                Text(subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis,
                                     style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
                             }
                             Icon(Icons.Default.ArrowOutward, "Resume workspace", Modifier.size(18.dp))
@@ -120,8 +128,10 @@ internal fun MainDestinations(
                     }
                 }
             }
-            FloatingNavigation(destination, onDestination, { onAction("search") }, backdrop, origin, rendering,
-                model.progressiveBlur)
+            FloatingNavigation(destination, {
+                if (model.touchFeedback && it != destination) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onDestination(it)
+            }, { onAction("search") }, backdrop, origin, rendering, model.progressiveBlur)
         }
     }
 }
@@ -261,10 +271,13 @@ private fun HomeDashboard(
         }
         val pins = model.quickHomeActions.mapNotNull { id -> workspaceCommandCatalog.firstOrNull { it.id == id } }
             .filterNot { it.id in setOf("newproject", "importzip") || it.requiresProject }
-        if (pins.isNotEmpty()) {
-            item { Text("Pinned actions", style = MaterialTheme.typography.titleLarge) }
-            items(pins, key = { it.id }) { action -> DestinationRow(action.label) { onAction(action.id) } }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Pinned actions", Modifier.weight(1f), style = MaterialTheme.typography.titleLarge)
+                TextButton(onClick = { onAction("actions") }) { Text("Edit shortcuts") }
+            }
         }
+        items(pins, key = { it.id }) { action -> DestinationRow(action.label) { onAction(action.id) } }
     }
 }
 
@@ -290,6 +303,31 @@ private fun ExploreScreen(bottomPadding: Dp, onAction: (String) -> Unit) {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun UtilitiesScreen(onAction: (String) -> Unit, close: () -> Unit) {
+    DestinationPage("Utilities", close) {
+        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            item {
+                DestinationRow("Text & data tools", "Format JSON, convert encodings, and hash text",
+                    leading = { Icon(Icons.Default.Build, null) }) { onAction("devtools") }
+            }
+            item {
+                DestinationRow("HTTP inspector", "Inspect a response and its headers",
+                    leading = { Icon(Icons.Default.Http, null) }) { onAction("httpsinspector") }
+            }
+            item {
+                DestinationRow("Performance diagnostics", "Inspect local editor and project timings",
+                    leading = { Icon(Icons.Default.Speed, null) }) { onAction("performance") }
+            }
+            item {
+                DestinationRow("Command palette", "Find and run CodeLab actions",
+                    leading = { Icon(Icons.Default.Terminal, null) }) { onAction("commands") }
             }
         }
     }

@@ -50,6 +50,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
@@ -93,14 +94,18 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
         }
         val swipeThreshold = with(LocalDensity.current) { 44.dp.toPx() }
         var titleDrag by remember(project) { mutableFloatStateOf(0f) }
-        Column(Modifier.weight(1f).padding(start = 4.dp)
+        Column(Modifier.weight(1f).padding(horizontal = 4.dp)
+            .clip(CodeLabCorners.iconTile)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .pointerInput(project, swipeThreshold) {
                 if (project != null) detectHorizontalDragGestures(
                     onDragStart = { titleDrag = 0f },
                     onDragEnd = { if (kotlin.math.abs(titleDrag) >= swipeThreshold)
                         m.moveActiveTab(if (titleDrag > 0) -1 else 1) },
                     onHorizontalDrag = { change, dx -> change.consume(); titleDrag += dx })
-            }.clickable(enabled = project != null) { onAction("switchproject") }) {
+            }.clickable(enabled = project != null) { onAction("switchproject") }
+            .heightIn(min = 48.dp).padding(horizontal = 10.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.Center) {
             AnimatedContent(
                 targetState = project ?: "CodeLab",
                 transitionSpec = { fadeIn(tween(duration)) togetherWith fadeOut(tween(duration)) },
@@ -188,8 +193,11 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
     var sortOpen by remember { mutableStateOf(false) }
     LaunchedEffect(m.projects, m.project) { m.refreshProjectCardDetails() }
     val spacing = CodeLabSpacing.forDensity(m.interfaceDensity)
+    val recentNames = remember(m.recentWorkspaceFiles, m.projects) {
+        (m.recentWorkspaceFiles.map { it.project }.filter { it in m.projects } + m.projects).distinct()
+    }
     val visibleProjects = orderedProjects(
-        m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) && (!favoritesOnly || it in m.favorites) },
+        recentNames.filter { it.contains(projectSearch.trim(), ignoreCase = true) && (!favoritesOnly || it in m.favorites) },
         m.favorites, projectSort)
     LazyColumn(Modifier.fillMaxSize(), contentPadding = pagePadding(bottomPadding),
         verticalArrangement = Arrangement.spacedBy(spacing)) {

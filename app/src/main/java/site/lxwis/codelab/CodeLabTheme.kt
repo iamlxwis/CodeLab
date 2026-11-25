@@ -8,14 +8,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 internal val appAppearanceModes = listOf("System", "Light", "Dark")
 
@@ -34,6 +32,8 @@ private val night = darkColorScheme(
     secondary = Color(0xffb9b9bd), onSecondary = Color.Black,
     secondaryContainer = Color(0xff29292a), onSecondaryContainer = Color(0xffeeeeef),
     tertiary = Color(0xff79d4a1), onTertiary = Color(0xff042413),
+    tertiaryContainer = Color(0xff17452d), onTertiaryContainer = Color(0xffd3f4e0),
+    inverseSurface = Color(0xffeeeeef), inverseOnSurface = Color(0xff242426), inversePrimary = Color(0xff262628),
     background = Color.Black, onBackground = Color(0xfff5f5f6),
     surface = Color.Black, onSurface = Color(0xfff5f5f6),
     surfaceVariant = Color(0xff222223), onSurfaceVariant = Color(0xffb0b0b5),
@@ -51,6 +51,8 @@ private val day = lightColorScheme(
     secondary = Color(0xff505054), onSecondary = Color.White,
     secondaryContainer = Color(0xffeeeef0), onSecondaryContainer = Color(0xff252527),
     tertiary = Color(0xff17623d), onTertiary = Color.White,
+    tertiaryContainer = Color(0xffd3f4e0), onTertiaryContainer = Color(0xff0b3520),
+    inverseSurface = Color(0xff242426), inverseOnSurface = Color(0xffeeeeef), inversePrimary = Color(0xffeeeeef),
     background = Color.White, onBackground = Color(0xff171719),
     surface = Color.White, onSurface = Color(0xff171719),
     surfaceVariant = Color(0xffebebee), onSurfaceVariant = Color(0xff59595f),
@@ -75,22 +77,22 @@ internal fun CodeLabTheme(
     appearance: String,
     highContrast: Boolean,
     largeInterfaceText: Boolean,
-    studio: StudioAppearance = StudioAppearance(),
+    editorAppearance: EditorAppearance = EditorAppearance(),
     content: @Composable (Boolean) -> Unit
 ) {
     val dark = appearanceIsDark(appearance, isSystemInDarkTheme())
     val scheme = remember(dark, highContrast) { codeLabColorScheme(dark, highContrast) }
     val fontContext = LocalContext.current
-    val typography = remember(largeInterfaceText, studio.uiFont, studio.uiFontRevision, studio.uiScale) {
-        val family = when (studio.uiFont) {
+    val typography = remember(largeInterfaceText, editorAppearance.uiFont, editorAppearance.uiFontRevision, editorAppearance.uiScale) {
+        val family = when (editorAppearance.uiFont) {
             "System" -> FontFamily.Default
             "Serif" -> FontFamily.Serif
-            "Custom" -> ImportedFonts.load(fontContext, false, studio.uiFontRevision)?.let { FontFamily(it) }
+            "Custom" -> ImportedFonts.load(fontContext, false, editorAppearance.uiFontRevision)?.let { FontFamily(it) }
                 ?: FontFamily(Font(R.font.inter))
             else -> FontFamily(Font(R.font.inter))
         }
         val baseTypography = Typography()
-            val textScale = (if (largeInterfaceText) 1.16f else 1f) * studio.uiScale.coerceIn(80, 140) / 100f
+            val textScale = (if (largeInterfaceText) 1.16f else 1f) * editorAppearance.uiScale.coerceIn(80, 140) / 100f
         fun styled(style: androidx.compose.ui.text.TextStyle, weight: FontWeight? = null) =
             style.copy(fontFamily = family, fontSize = style.fontSize * textScale, lineHeight = style.lineHeight * textScale,
                 fontWeight = weight ?: style.fontWeight)
@@ -112,7 +114,7 @@ internal fun CodeLabTheme(
             labelSmall = styled(baseTypography.labelSmall)
         )
     }
-    CompositionLocalProvider(LocalStudioAppearance provides studio) {
+    CompositionLocalProvider(LocalEditorAppearance provides editorAppearance) {
         MaterialTheme(colorScheme = scheme, typography = typography, shapes = codeLabShapes) {
             content(dark)
         }
@@ -133,14 +135,13 @@ internal fun CodeLabForegroundSurface(
     content: @Composable () -> Unit
 ) {
     Surface(
-        modifier = modifier, color = Color.Transparent,
+        modifier = modifier, color = MaterialTheme.colorScheme.background,
         contentColor = studioReadable(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.background), content = content
     )
 }
 
-internal val LocalStudioAppearance = androidx.compose.runtime.staticCompositionLocalOf { StudioAppearance() }
 
-/** Shared color resolution used by the real components and Theme Studio preview. */
+/** Resolve a saved editor color against the active code palette. */
 internal fun studioColor(value: String, fallback: Color): Color =
     if (value.matches(Regex("#[0-9a-fA-F]{6}"))) Color(0xff000000 or value.drop(1).toLong(16)) else fallback
 

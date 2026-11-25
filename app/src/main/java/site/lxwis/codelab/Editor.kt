@@ -73,9 +73,9 @@ fun CodeEditor(
             preferences.edit().putString("toolbar-actions", ids.joinToString(",")).apply()
         }
     }
-    val studioStyle = LocalStudioAppearance.current
+    val studioStyle = LocalEditorAppearance.current
     val latestStudio by rememberUpdatedState(studioStyle)
-    val studioUpdate by rememberUpdatedState(LocalStudioAppearanceUpdater.current)
+    val studioUpdate by rememberUpdatedState(LocalEditorAppearanceUpdater.current)
     var fontSize by remember { mutableStateOf(studioStyle.editorTextSize.takeIf { it in 10..28 } ?: preferences.getInt("font-size", 15)) }
     fun chooseEditorSize(value: Int) {
         fontSize = value.coerceIn(10, 28)
@@ -516,7 +516,8 @@ fun CodeEditor(
         AnimatedVisibility(visible = !hideToolbar,
             enter = expandVertically(animationSpec = tween(motionMillis)) + fadeIn(tween(motionMillis)),
             exit = shrinkVertically(animationSpec = tween(motionMillis)) + fadeOut(tween(motionMillis))) {
-        Row(Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 4.dp),
+        Row(Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 4.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow, CodeLabCorners.iconTile),
             verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()),
                 verticalAlignment = Alignment.CenterVertically) {

@@ -41,6 +41,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     onToggleMaximize: (() -> Unit)? = null,
     onNotice: ((String) -> Unit)? = null,
     motionMillis: Int = 0,
+    glassHeader: Boolean = false,
     onOpenError: (String, Int) -> Unit = { _, _ -> }) {
     var tableMode by rememberSaveable(fileName) { mutableStateOf(true) }
     val sqlResult = remember(session.transcript, fileName, session.running) {
@@ -155,7 +156,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             TextButton(onClick = { selectedRun = null; showHistory = false }) { Text("Close") }
         })
     val palette = MaterialTheme.colorScheme
-    val consoleBackground = studioColor(LocalStudioAppearance.current.consoleBackground, palette.surface)
+    val consoleBackground = palette.surface
     val consoleInk = studioReadable(palette.onSurface, consoleBackground)
     val consoleMuted = studioReadable(palette.onSurfaceVariant, consoleBackground)
     val consoleAccent = contrastAccent(palette.primary, consoleBackground)
@@ -164,12 +165,18 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
             // Reserve stdin before laying out optional console chrome and output.
             // A short split pane must still let a waiting program receive input.
             Column(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            LiquidGlassSurface(Modifier.fillMaxWidth(), CodeLabCorners.panel, null,
+                androidx.compose.ui.geometry.Offset.Zero,
+                if (glassHeader) GlassRendering.Frosted else GlassRendering.Solid, progressive = false) {
+            Row(Modifier.fillMaxWidth().padding(start = 12.dp),
+                verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Console", modifier = if (onToggleMaximize != null)
                         Modifier.pointerInput(onToggleMaximize) { detectTapGestures(onDoubleTap = { onToggleMaximize() }) }
                         else Modifier, style = MaterialTheme.typography.titleSmall)
-                    Text(if (session.status == "Ready" && session.transcript.isBlank()) "No run yet" else session.status, style = MaterialTheme.typography.labelSmall,
+                    Text(if (session.status == "Ready" && session.transcript.isBlank()) "No run yet" else session.status,
+                        style = MaterialTheme.typography.labelSmall, maxLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         color = if (session.running) consoleAccent else consoleMuted)
                 }
                 if (session.paused) {
@@ -226,6 +233,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                         })
                     }
                 }
+            }
             }
             AnimatedVisibility(showFilter, enter = fadeIn(tween(motionMillis)),
                 exit = fadeOut(tween(motionMillis))) {

@@ -28,7 +28,8 @@ internal data class AppUpdate(
     val versionCode: Long,
     val notes: String,
     val apkBytes: Long,
-    val sha256: String
+    val sha256: String,
+    val signerSha256: String?
 ) {
     val url: String get() = "$officialReleaseDownload/$tag/CodeLab.apk"
 }
@@ -42,8 +43,12 @@ internal object OfficialAppReleases {
     private const val latestRelease = "https://api.github.com/repos/iamlxwis/CodeLab/releases/latest"
     private val assetHosts = setOf("github.com", "release-assets.githubusercontent.com", "objects.githubusercontent.com")
 
-    fun fetch(): AppUpdate {
-        val metadata = JSONObject(read(latestRelease, 256_000, setOf("api.github.com")))
+    fun fetch(): AppUpdate = parse(read(latestRelease, 256_000, setOf("api.github.com"))) { url, limit ->
+        read(url, limit, assetHosts)
+    }
+
+    fun parse(json: String, readAsset: (String, Int) -> String): AppUpdate {
+        val metadata = JSONObject(json)
         if (metadata.optBoolean("draft") || metadata.optBoolean("prerelease")) throw IOException("Official release is unavailable")
         val tag = metadata.optString("tag_name")
         if (!validReleaseTag.matches(tag)) throw IOException("Unexpected release tag")
@@ -59,7 +64,7 @@ internal object OfficialAppReleases {
         }
         val apk = asset("CodeLab.apk", maxUpdateBytes)
         val buildInfo = asset("CodeLab-build-info.txt", 8192)
-        val info = read(buildInfo.getString("browser_download_url"), 8192, assetHosts)
+        val info = readAsset(buildInfo.getString("browser_download_url"), 8192)
         val version = info.lineSequence().firstNotNullOfOrNull { line ->
             line.takeIf { it.startsWith("Version code: ") }?.substringAfter(": ")?.trim()?.toLongOrNull()
         }?.takeIf { it > 0 } ?: throw IOException("Release version is missing")
@@ -68,13 +73,16 @@ internal object OfficialAppReleases {
             ?.takeIf(sha256Pattern::matches)
         val digest = reportedDigest ?: run {
             val checksum = asset("CodeLab.apk.sha256", 8192)
-            val sums = read(checksum.getString("browser_download_url"), 8192, assetHosts)
+            val sums = readAsset(checksum.getString("browser_download_url"), 8192)
             sums.lineSequence().map { it.trim().split(Regex("\\s+"), limit = 2) }.firstNotNullOfOrNull { parts ->
                 parts.firstOrNull()?.takeIf { parts.getOrNull(1)?.removePrefix("*") == "CodeLab.apk" && sha256Pattern.matches(it) }
             } ?: throw IOException("The official APK checksum is missing")
         }
+        val signer = info.lineSequence().firstNotNullOfOrNull { line ->
+            line.takeIf { it.startsWith("Signer SHA-256: ") }?.substringAfter(": ")?.trim()?.takeIf(sha256Pattern::matches)
+        }
         return AppUpdate(tag, metadata.optString("name").ifBlank { "CodeLab $tag" },
-            version, metadata.optString("body").take(24_000), apk.getLong("size"), digest.lowercase())
+            version, metadata.optString("body").take(24_000), apk.getLong("size"), digest.lowercase(), signer?.lowercase())
     }
 
     private fun read(start: String, maxBytes: Int, hosts: Set<String>): String {
@@ -142,6 +150,20 @@ internal class AppUpdater(private val context: Context) {
     val installedVersion: Long = version(installed)
     val installedVersionName: String = installed.versionName.orEmpty()
     val available: AppUpdate? get() = latest?.takeIf { it.versionCode > installedVersion }
+    val compatibilityIssue: String?
+        get() = available?.signerSha256?.let { official ->
+            if (official in installedSignerDigests) null
+            else "The official release uses a different signing certificate from this installation."
+        }
+
+    @Suppress("DEPRECATION")
+    private val installedSignerDigests by lazy {
+        val flags = if (Build.VERSION.SDK_INT >= 28) PackageManager.GET_SIGNING_CERTIFICATES
+            else PackageManager.GET_SIGNATURES
+        signatures(installedPackage(flags)).map { signature ->
+            MessageDigest.getInstance("SHA-256").digest(signature.toByteArray()).toHex()
+        }.toSet()
+    }
 
     suspend fun check(force: Boolean = false) {
         if (checking || (!force && lastCheck != 0L && System.currentTimeMillis() - lastCheck < 3_600_000)) return
@@ -173,6 +195,7 @@ internal class AppUpdater(private val context: Context) {
     @Synchronized fun begin(update: AppUpdate) {
         require(update == available && sha256Pattern.matches(update.sha256) &&
             validReleaseTag.matches(update.tag) && update.apkBytes in 1..maxUpdateBytes)
+        if (compatibilityIssue != null) throw IOException(compatibilityIssue)
         if (inspect().active) return
         clear()
         val request = DownloadManager.Request(Uri.parse(update.url))
@@ -282,8 +305,12 @@ internal class AppUpdater(private val context: Context) {
         else info.versionCode.toLong()
 
     @Suppress("DEPRECATION")
-    private fun signers(info: PackageInfo): Set<String> = (if (Build.VERSION.SDK_INT >= 28)
-        info.signingInfo?.apkContentsSigners else info.signatures).orEmpty().map { it.toCharsString() }.toSet()
+    private fun signatures(info: PackageInfo): Array<out android.content.pm.Signature> =
+        (if (Build.VERSION.SDK_INT >= 28) info.signingInfo?.apkContentsSigners else info.signatures).orEmpty()
+
+    private fun signers(info: PackageInfo): Set<String> = signatures(info).map { it.toCharsString() }.toSet()
+
+    private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
 
     private fun checksum(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")
@@ -295,6 +322,6 @@ internal class AppUpdater(private val context: Context) {
                 digest.update(buffer, 0, size)
             }
         }
-        return digest.digest().joinToString("") { "%02x".format(it) }
+        return digest.digest().toHex()
     }
 }

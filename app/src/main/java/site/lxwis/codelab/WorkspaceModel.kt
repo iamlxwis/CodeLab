@@ -469,15 +469,15 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         preferences.edit().putString("density", value).apply()
         rememberProjectLayout()
     }
-    internal var studioAppearance by mutableStateOf(
-        StudioAppearance.decode(preferences.getString("editor-and-fonts", null)
-            ?: legacyAppearanceSettings(preferences)).retainedPreferences()
+    internal var editorAppearance by mutableStateOf(
+        EditorAppearance.decode(preferences.getString("editor-and-fonts", null)
+            ?: legacyAppearanceSettings(preferences))
     )
         private set
 
-    internal fun updateStudioAppearance(value: StudioAppearance) {
-        studioAppearance = value.retainedPreferences()
-        preferences.edit().putString("editor-and-fonts", studioAppearance.encode()).apply()
+    internal fun updateEditorAppearance(value: EditorAppearance) {
+        editorAppearance = value
+        preferences.edit().putString("editor-and-fonts", editorAppearance.encode()).apply()
     }
 
     private var shellSession: WorkspaceShell? = null
@@ -759,6 +759,9 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     private var parkedTabs = emptyList<String>()
     internal val recentWorkspace: WorkspaceLocation?
         get() = parkedWorkspace ?: recentWorkspaceFiles.firstOrNull { it.project in projects }
+
+    internal fun isWorkspaceDirty(location: WorkspaceLocation): Boolean =
+        bufferKey(location.project, location.file) in dirtyTabKeys
 
     private fun readWorkspaceLocations(): List<WorkspaceLocation> = runCatching {
         val list = org.json.JSONArray(preferences.getString("recent-workspace-files", "[]"))

@@ -58,7 +58,7 @@ internal fun WorkspaceTab(
     val move by rememberUpdatedState(onMove)
     Row(
         Modifier.widthIn(max = maxWidth).padding(end = 2.dp)
-            .background(background, RoundedCornerShape(topStart = 9.dp, topEnd = 9.dp)),
+            .background(background, RoundedCornerShape(12.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {
         FileTypeIcon(path, Modifier.padding(start = 8.dp).size(16.dp), selected = active)

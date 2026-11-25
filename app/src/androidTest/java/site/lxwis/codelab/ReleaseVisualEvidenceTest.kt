@@ -49,7 +49,7 @@ class ReleaseVisualEvidenceTest {
             scenario.onActivity { activity ->
                 val model = ViewModelProvider(activity)[WorkspaceModel::class.java]
                 model.setMode(style)
-                model.updateStudioAppearance(StudioAppearance(editorTextSize = 15, editorMode = style))
+                model.updateEditorAppearance(EditorAppearance(editorTextSize = 15, editorMode = style))
                 model.chooseFocusMode(false)
                 model.openProject(projectName, create = createProject, template = "JavaScript", starter = StarterExamples.HELLO)
             }
