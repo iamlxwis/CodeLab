@@ -75,6 +75,29 @@ def tap(*labels):
     tap_node(wait_for(*labels))
 
 
+def begin_run(*entry):
+    tap(*(entry or ("Run",)))
+    wait_for("Run file")
+
+
+def confirm_run(mode="Offline"):
+    tap(mode)
+    actions = [node for node in nodes() if node.attrib.get("text") == "Run"]
+    assert any(node.attrib.get("enabled") == "true" for node in actions), (
+        f"Run was not available for {mode}")
+    tap_node(next(node for node in actions if node.attrib.get("enabled") == "true"))
+
+
+def run_offline(*entry):
+    begin_run(*entry)
+    confirm_run()
+
+
+def open_projects():
+    tap("Projects")
+    wait_for("New project")
+
+
 def scroll_to(*labels, attempts=6, direction="down", swipe_x=.5):
     """Reach a real visible UI target on varied screen sizes without fixed pixel coordinates."""
     size = adb("shell", "wm", "size")
@@ -90,10 +113,19 @@ def scroll_to(*labels, attempts=6, direction="down", swipe_x=.5):
     return wait_for(*labels, timeout=4)
 
 
-def select_style(name):
-    tap_node(scroll_to(name, f"{name} style", f"{name} style, selected"))
-    wait_for(f"{name} style, selected")
-    snapshot("theme-" + name.lower())
+def selected(label):
+    return any(
+        (node.attrib.get("selected") == "true"
+         or (node.attrib.get("checkable") == "true" and node.attrib.get("checked") == "true"))
+        and any(child.attrib.get("text") == label for child in node.iter("node"))
+        for node in nodes()
+    )
+
+
+def select_mode(name):
+    tap_node(scroll_to(name))
+    assert selected(name), f"{name} appearance did not report its selected state"
+    snapshot("appearance-" + name.lower())
 
 
 def tap_text_result(name):
@@ -175,41 +207,30 @@ def main():
     tap("Finish basics")
     wait_for("New project")
     snapshot("01-home")
-    # Verify actual theme settings, not merely preview names.
-    open_workspace_action("Appearance")
-    wait_for("Themes")
-    for style in ("Obsidian", "Titanium", "Crystal", "Midnight", "Porcelain", "Sandstone"):
-        select_style(style)
-    # Return to the top before verifying the intended default dark treatment.
-    size = adb("shell", "wm", "size")
-    w, h = map(int, re.findall(r"(\d+)x(\d+)", size)[-1])
-    for _ in range(3):
-        adb("shell", "input", "swipe", str(w//2), str(int(h*.3)),
-            str(w//2), str(int(h*.8)), "350")
-    select_style("Obsidian")
-    tap_node(scroll_to("Toggle sample console"))
-    # Scroll in the outer gutter: native code editing retains its own gestures.
-    scroll_to("Sample output", swipe_x=.04)
-    wait_for("Hello 42")
-    snapshot("theme-interactive-preview")
-    tap_node(scroll_to("Toggle sample console", direction="up", swipe_x=.04))
-    tap("Done")
+    # Verify the real app-wide color mode selector and its selected semantics.
+    tap("Settings")
+    tap("Appearance")
+    wait_for("Liquid Glass")
+    for mode in ("Light", "Dark", "System", "Dark"):
+        select_mode(mode)
+    tap("Back to settings")
+    tap("Close settings")
     wait_for("New project")
-    # The Python pack is installed by this smoke run; verify native in-app
-    # management affordances without downloading on the airplane-mode emulator.
-    open_workspace_action("Languages")
-    wait_for("Offline packs and editor support")
+    tap("Explore")
+    tap("Offline runtimes")
+    wait_for("Search languages")
     wait_for("Installed")
     tap("Downloads")
-    wait_for("Download settings")
-    wait_for("Python: Wi-Fi only")
-    tap("Downloads")
+    wait_for("Wi-Fi only")
+    wait_for("Offline runtime packs")
+    tap("Back")
+    tap("Offline runtimes")
     tap("Available")
     # Validate installed signed companions through their actual detail dialogs.
     for language in ("JavaScript", "Lua", "Java", "TypeScript", "SQLite"):
         tap_node(scroll_to(language))
         wait_for(f"Verified optional {language} module installed", contains=True)
-        tap("Close")
+        tap("Back")
     tap("Installed")
     wait_for("languages", contains=True)
     # Searching automatically expands to All instead of hiding an edit-only language.
@@ -227,8 +248,9 @@ def main():
     tap("Cancel")
     # A cancelled confirmation must keep the installed signed module intact.
     wait_for("Python runtime")
-    tap("Close")
-    tap("Close languages")
+    tap("Back")
+    tap("Back")
+    tap("Home")
     wait_for("New project")
     # Python is now a genuine CPython runtime. Run the starter with airplane mode on.
     tap("New project")
@@ -237,23 +259,24 @@ def main():
     adb("shell", "input", "text", "PySmoke")
     tap("Create project")
     wait_for("main.py", contains=True)
-    tap("Run")
+    run_offline()
     wait_for("Hello from CodeLab!", contains=True, timeout=40)
     wait_for("Exit 0", contains=True)
     snapshot("10-offline-python")
 
     tap("Project library")
-    wait_for("New project")
+    open_projects()
     tap("New project")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "Smoke")
     tap("Create project")
     wait_for("main.js", contains=True)
     snapshot("02-editor")
-    tap("Run", "Run file")
-    wait_for("Waiting for input")
+    run_offline()
+    wait_for("Waiting for input", contains=True)
     snapshot("03-input")
-    tap_node(wait_for(field=True))
+    # Split has a source field alongside stdin. Use the console's visible label.
+    tap("Program input")
     adb("shell", "input", "text", "Ada")
     # Keep the IME open: Send must remain reachable without hiding the keyboard.
     wait_for("Send")
@@ -262,11 +285,18 @@ def main():
     wait_for("Hello, Ada!", contains=True)
     wait_for("Exit 0", contains=True)
     snapshot("04-output")
+    begin_run("Rerun")
+    tap("Cancel")
+    wait_for("Hello, Ada!", contains=True)
+    run_offline("Rerun")
+    wait_for("Waiting for input", contains=True)
+    tap("Stop")
+    wait_for("Stopped", contains=True)
+
     # Exercise the real stacked mobile layout before returning to single-panel editing.
     tap("Split")
     wait_for("Resize split panels")
     snapshot("04a-phone-split")
-    tap("Split")
     tap("Editor")
     tap("Add file")
     tap_node(wait_for(field=True))
@@ -290,20 +320,20 @@ def main():
     ime = adb("shell", "dumpsys", "input_method")
     if re.search(r"(?:mInputShown|mIsInputViewShown|isInputViewShown)=true", ime):
         adb("shell", "input", "keyevent", "4")
-    # Primary Run honors the preferred entry file; explicitly choose this tab.
-    # Run modes are deliberate, never a silent fallback to cloud.
-    wait_for("Ready: local runtime")
+    # Primary Run honors the preferred entry file. Choose this exact tab's file.
+    open_workspace_action("Run a file")
+    tap("answer.js")
+    wait_for("Run file")
     tap("Online")
-    # The emulator can retain a validated default network even with its
-    # airplane toggle on. Both states are legitimate: no network or no
-    # configured cloud provider, or a usable online compiler. Never assert
-    # airplane mode implies the app cannot access an online compiler.
-    wait_for("Internet connection required", "No online compiler for this file",
-             "Online: source upload needs confirmation")
-    tap("Offline")
-    wait_for("Ready: local runtime")
-    tap("Run file and entry options")
-    tap("Run active · answer.js")
+    wait_for("Internet connection required.", "No configured online compiler for this file.",
+             "Send source to the configured compiler after approval.")
+    snapshot("execution-chooser-online-availability")
+    tap("Cancel")
+    assert not any("42" == n.attrib.get("text") for n in nodes()), "Cancel executed the file"
+    open_workspace_action("Run a file")
+    tap("answer.js")
+    wait_for("Run file")
+    confirm_run()
     wait_for("42", contains=True)
     wait_for("Exit 0", contains=True)
     tap("Editor")
@@ -335,7 +365,7 @@ def main():
     adb("shell", "settings", "put", "system", "user_rotation", "0")
     time.sleep(1)
     tap("Project library")
-    wait_for("New project")
+    open_projects()
     # Favorites must hide other projects, including Smoke.
     tap("Manage PySmoke")
     tap("Add to favorites")
@@ -363,37 +393,38 @@ def main():
     adb("shell", "input", "text", "SqlSmoke")
     tap("Create project")
     wait_for("main.sql", contains=True)
-    tap("Run")
+    run_offline()
     wait_for("2 rows", contains=True)
     wait_for("Exit 0", contains=True)
     snapshot("06-sql")
 
     # Verify the web starter and embedded preview navigation, fully offline.
     tap("Project library")
-    wait_for("New project")
+    open_projects()
     tap("New project")
     choose_language("Web")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "WebSmoke")
     tap("Create project")
     wait_for("index.html", contains=True)
-    tap("Preview")
+    run_offline("Preview", "Run")
     wait_for("Local preview")
     wait_for("Hello, CodeLab.", contains=True, timeout=20)
     snapshot("07-web-preview")
 
     # Verify both additional offline interpreters from installed Android APK.
     tap("Project library")
-    wait_for("New project")
+    open_projects()
     tap("New project")
     choose_language("Lua")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "LuaSmoke")
     tap("Create project")
     wait_for("main.lua", contains=True)
-    tap("Run")
-    wait_for("Waiting for input")
-    tap_node(wait_for(field=True))
+    run_offline()
+    wait_for("Waiting for input", contains=True)
+    # Split has a source field alongside stdin. Use the console's visible label.
+    tap("Program input")
     adb("shell", "input", "text", "Ada")
     # Keep the IME open: Send must remain reachable without hiding the keyboard.
     wait_for("Send")
@@ -402,21 +433,23 @@ def main():
     wait_for("Hello, Ada!", contains=True)
     wait_for("Exit 0", contains=True)
     snapshot("08-lua")
+    assert "Ada" not in adb("shell", "run-as", PACKAGE, "cat",
+                            "files/workspace/projects/LuaSmoke/main.lua"), "Program input modified source"
 
     tap("Project library")
-    wait_for("New project")
+    open_projects()
     tap("New project")
     choose_language("Java")
     tap_node(wait_for(field=True))
     adb("shell", "input", "text", "JavaSmoke")
     tap("Create project")
     wait_for("Main.java", contains=True)
-    tap("Run")
+    run_offline()
     wait_for("Hello from CodeLab!", contains=True)
     wait_for("Exit 0", contains=True)
     snapshot("09-java-beta")
     tap("Project library")
-    wait_for("New project")
+    open_projects()
     tap("New project")
     choose_language("TypeScript")
     tap_node(wait_for(field=True))
@@ -430,17 +463,50 @@ def main():
     assert "const message: string" in typed_source, (
         "TypeScript starter must contain a real type annotation")
     (OUT / "typescript-starter.txt").write_text(typed_source)
-    tap("Run")
+    run_offline()
     wait_for("Hello from CodeLab!", contains=True, timeout=30)
     wait_for("Exit 0", contains=True)
     snapshot("11-typescript")
+    tap("Console actions")
+    tap("Share result image")
+    wait_for("Snippet Studio")
+    wait_for("Snippet PNG preview, page 1")
+    snapshot("snippet-studio-result")
+    tap("Code + Result")
+    tap("Light")
+    wait_for("Snippet PNG preview, page 1")
+    snapshot("snippet-studio-combined-light")
+    tap("Close")
 
+
+
+    # Find an actual saved source line from another project in universal search.
+    tap("Project library")
+    tap("Search")
+    wait_for("Search CodeLab")
+    search_field = wait_for(field=True)
+    tap_node(search_field)
+    adb("shell", "input", "text", shlex.quote("print(6*7)"))
+    wait_for("answer.js:1")
+    snapshot("universal-code-search")
+    tap("answer.js:1")
+    wait_for("Close answer.js")
+    wait_for("print(6*7)", contains=True)
+    tap("Project library")
+    wait_for("Resume workspace")
+    tap("Home")
+    tap_node(scroll_to("Developer activity"))
+    wait_for("Last 30 days")
+    wait_for("Recent executions")
+    snapshot("developer-activity")
+    tap("Back")
 
     (OUT / "result.txt").write_text(
         "Passed: install, create, launch offline JavaScript, interactive input, "
         "computed output, normal exit, file creation, editing, tab switching, autosave, "
         "process restoration, rotation, SQLite execution, rendered HTML preview, offline Lua, " 
-        "Java beta execution, TypeScript single-file transpilation, and real CPython execution in airplane mode.\n")
+        "Java beta execution, TypeScript single-file transpilation, real CPython execution in airplane mode, "
+        "cross-project code search, workspace resume, and local activity.\n")
 
 
 if __name__ == "__main__":
@@ -451,6 +517,8 @@ if __name__ == "__main__":
         # Preserve the original failure even if the emulator itself disappeared.
         try:
             snapshot("failure")
+            (OUT / "functional-failure.xml").write_text(
+                adb("exec-out", "cat", "/sdcard/window.xml", check=False))
         except Exception as capture_error:
             (OUT / "failure-capture-error.txt").write_text(str(capture_error))
         for filename, args in (("logcat.txt", ("logcat", "-d", "-t", "12000")),

@@ -5,3 +5,84 @@ Icons identify file languages only. They do not imply installed execution suppor
 Trademarks remain the property of their respective owners; CC0 does not grant trademark rights.
 
 Java glyph: Devicon java-plain.svg, MIT; https://github.com/devicons/devicon/blob/master/icons/java/java-plain.svg
+
+Reimagined 2.0 language visual audit
+
+New vectors use Devicon v2.17.0 (MIT), the pinned Simple Icons collection (CC0) and the pinned Material Icon Theme collection (MIT). The CodeLab monograms below identify languages without a suitable bundled mark in these collections. React and Sass marks identify the corresponding JSX/TSX and Sass/SCSS language variants. OpenGL and NVIDIA marks identify GLSL and CUDA respectively. The Racket logo identifies the Scheme family. The Verilog mark covers Verilog and SystemVerilog.
+
+C#: https://github.com/devicons/devicon/tree/v2.17.0/icons/csharp/csharp-plain.svg
+Scala: https://github.com/devicons/devicon/tree/v2.17.0/icons/scala/scala-plain.svg
+Perl: https://github.com/devicons/devicon/tree/v2.17.0/icons/perl/perl-plain.svg
+Haskell: https://github.com/devicons/devicon/tree/v2.17.0/icons/haskell/haskell-plain.svg
+R: https://github.com/devicons/devicon/tree/v2.17.0/icons/r/r-plain.svg
+Elixir: https://github.com/devicons/devicon/tree/v2.17.0/icons/elixir/elixir-plain.svg
+Erlang: https://github.com/devicons/devicon/tree/v2.17.0/icons/erlang/erlang-plain.svg
+OCaml: https://github.com/devicons/devicon/tree/v2.17.0/icons/ocaml/ocaml-plain.svg
+Fortran: https://github.com/devicons/devicon/tree/v2.17.0/icons/fortran/fortran-original.svg
+COBOL: https://github.com/devicons/devicon/tree/v2.17.0/icons/cobol/cobol-original.svg
+Pascal: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/pascal.svg
+Assembly: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/assembly.svg
+Objective-C: https://github.com/devicons/devicon/tree/v2.17.0/icons/objectivec/objectivec-plain.svg
+Groovy: https://github.com/devicons/devicon/tree/v2.17.0/icons/groovy/groovy-plain.svg
+F#: https://github.com/devicons/devicon/tree/v2.17.0/icons/fsharp/fsharp-plain.svg
+Visual Basic .NET: https://github.com/devicons/devicon/tree/v2.17.0/icons/visualbasic/visualbasic-plain.svg
+Prolog: https://github.com/devicons/devicon/tree/v2.17.0/icons/prolog/prolog-plain.svg
+Julia: https://github.com/devicons/devicon/tree/v2.17.0/icons/julia/julia-plain.svg
+Zig: https://github.com/devicons/devicon/tree/v2.17.0/icons/zig/zig-original.svg
+Nim: https://github.com/devicons/devicon/tree/v2.17.0/icons/nim/nim-plain.svg
+Crystal: https://github.com/devicons/devicon/tree/v2.17.0/icons/crystal/crystal-original.svg
+D: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/d.svg
+Ada: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/ada.svg
+Common Lisp: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/lisp.svg
+Scheme: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/racket.svg
+Clojure: https://github.com/devicons/devicon/tree/v2.17.0/icons/clojure/clojure-original.svg
+ClojureScript: https://github.com/devicons/devicon/tree/v2.17.0/icons/clojurescript/clojurescript-plain.svg
+Elm: https://github.com/devicons/devicon/tree/v2.17.0/icons/elm/elm-plain.svg
+PureScript: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/purescript.svg
+ReasonML: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/reason.svg
+ReScript: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/rescript.svg
+PowerShell: https://github.com/devicons/devicon/tree/v2.17.0/icons/powershell/powershell-plain.svg
+Fish: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/fishshell.svg
+Zsh: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/zsh.svg
+Tcl: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/tcl.svg
+AWK: https://github.com/devicons/devicon/tree/v2.17.0/icons/awk/awk-original.svg
+Solidity: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/solidity.svg
+Move: CodeLab MV monogram
+VHDL: CodeLab VHD monogram
+Verilog: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/verilog.svg
+SystemVerilog: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/verilog.svg
+CUDA: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/nvidia.svg
+GLSL: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/opengl.svg
+HLSL: CodeLab HLS monogram
+GraphQL: https://github.com/devicons/devicon/tree/v2.17.0/icons/graphql/graphql-plain.svg
+LaTeX: https://github.com/devicons/devicon/tree/v2.17.0/icons/latex/latex-original.svg
+Nix: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/nixos.svg
+HCL: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/hcl.svg
+YAML: https://github.com/devicons/devicon/tree/v2.17.0/icons/yaml/yaml-plain.svg
+TOML: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/toml.svg
+XML: https://github.com/devicons/devicon/tree/v2.17.0/icons/xml/xml-plain.svg
+Markdown: https://github.com/devicons/devicon/tree/v2.17.0/icons/markdown/markdown-original.svg
+Sass: https://github.com/devicons/devicon/tree/v2.17.0/icons/sass/sass-original.svg
+SCSS: https://github.com/devicons/devicon/tree/v2.17.0/icons/sass/sass-original.svg
+Less: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/less.svg
+Svelte: https://github.com/devicons/devicon/tree/v2.17.0/icons/svelte/svelte-plain.svg
+Vue: https://github.com/devicons/devicon/tree/v2.17.0/icons/vuejs/vuejs-plain.svg
+Astro: https://github.com/devicons/devicon/tree/v2.17.0/icons/astro/astro-plain.svg
+JSX: https://github.com/devicons/devicon/tree/v2.17.0/icons/react/react-original.svg
+TSX: https://github.com/devicons/devicon/tree/v2.17.0/icons/react/react-original.svg
+Pug: https://github.com/devicons/devicon/tree/v2.17.0/icons/pug/pug-plain.svg
+Handlebars: https://github.com/devicons/devicon/tree/v2.17.0/icons/handlebars/handlebars-original.svg
+Dockerfile: https://github.com/devicons/devicon/tree/v2.17.0/icons/docker/docker-plain.svg
+Makefile: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/makefile.svg
+INI: CodeLab INI monogram
+BASIC: CodeLab BAS monogram
+Smalltalk: CodeLab ST monogram
+APL: https://github.com/devicons/devicon/tree/v2.17.0/icons/apl/apl-plain.svg
+Forth: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/forth.svg
+Wolfram Language: https://github.com/simple-icons/simple-icons/tree/d59bb32d4f94b1aa8c7cef9d264280d35d5f8f97/icons/wolframlanguage.svg
+Idris: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/idris.svg
+Agda: CodeLab AGD monogram
+Lean: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/lean.svg
+Pony: CodeLab PNY monogram
+GDScript: https://github.com/devicons/devicon/tree/v2.17.0/icons/godot/godot-plain.svg
+Q#: https://github.com/material-extensions/vscode-material-icon-theme/tree/3bf5135d7cb7c41ffcd1c60c5f6afdb6c6e6cc41/icons/qsharp.svg

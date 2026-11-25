@@ -20,31 +20,22 @@ Write, run, and manage projects from your phone.
   &nbsp;&nbsp;
   <img src="docs/screenshots/web-preview.png" alt="CodeLab offline HTML preview on Android" width="290" />
 </p>
-<p align="center"><sub>Earlier-build Android emulator screenshots; current candidate screenshots and visual acceptance are pending.</sub></p>
+<p align="center"><sub>Earlier CodeLab emulator screenshots. <a href="https://github.com/iamlxwis/CodeLab/actions/runs/45591645578/artifacts/15012039749">Reimagined 2.0 emulator screenshots</a>.</sub></p>
 
 ## CodeLab Development Tracker
 
-| Field | Latest committed checkpoint |
-| --- | --- |
-| Update | CodeLab — Reimagined |
-| Status | **ACTIVE — Final Release Stabilization; 0/9 verified, 9/9 remaining** |
-| Current-pass checks | [7028e40 API35](https://github.com/iamlxwis/CodeLab/actions/runs/45515021053): 9/10 stages passed, 45 instrumentation tests passed; phone viewport failed at 11 lines |
-| Source coverage | **37/37 decisions mapped; 8/8 audited implementation gaps addressed** — validation is separate |
-| Current workstream | Final stabilization W1/W2/W6/W7; [acceptance matrix](docs/development/RELEASE_ACCEPTANCE.md): 0/37 redesign, 0/10 UI accepted |
-| Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [7028e40 build](https://github.com/iamlxwis/CodeLab/actions/runs/45515006850) passed; latest app binary 0.5.1-alpha/1389, permanent signer verified |
-| Next to build | Verify phone >=12 lines and useful landscape source, then same-key upgrade; review real screenshots/performance before acceptance |
-| Last activity | November 25, 2026 — 08:27:07 AM PHT |
+**Development status:** STOPPED — Nov 25, 2026, 10:42 PM PHT — 7/10 workstreams verified. Signed 2.1 test APK delivered for manual approval. Physical-device, TalkBack and secondary-flow review remain open.
 
-**Current activity:** November 25, 2026 — 08:27:07 AM PHT — W1/W2/W7: API35 functional smoke and all 45 instrumentation tests passed; fixing measured 11-line phone viewport and source-starved landscape; 0/9 complete, 9 remaining; next exact-source layout rerun and production upgrade.
-
-> One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
+[Reimagined 2.1 handoff](docs/development/REIMAGINED_2_1.md) · [Signed test APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Android 15 evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45632769173/artifacts/15034300327) · [Reimagined 2.0 baseline PR](https://github.com/iamlxwis/CodeLab/pull/16)
 
 ## Features
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.
 - **Run offline** — JavaScript, Lua, SQL, and limited Java support, with an integrated console.
-- **Language Manager** — Compact Available/Installed/All browser, optional signed packs for six baseline languages, progress/cancel/retry, per-pack network/cache controls, Android-approved installation and removal.
+- **Explore** — Language and runtime details, templates, snippets, local developer tools, and downloads. Six optional signed runtime packs remain supported.
+- **Home and universal search** — Resume recent files, find projects and source, and run workspace commands. Search history stays on your device.
+- **Appearance and activity** — System, Light and Dark app modes, independent editor colors and fonts, and optional local activity totals.
+- **Software updates** — Check official GitHub releases and verify APKs before opening Android’s installer.
 - **Web preview** — Build and preview HTML, CSS, and JavaScript locally.
 - **Projects** — Templates, autosave, file management, and ZIP import/export.
 - **Tools** — Selective Git commits, optional GitHub remote sync, JavaScript debugging and code screenshots.

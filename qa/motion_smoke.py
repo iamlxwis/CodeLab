@@ -64,6 +64,8 @@ def main():
                 tap_node(wait_for("Finish basics"))
             elif "Project library" in labels:
                 tap_node(wait_for("Project library"))
+            elif "Projects" in labels:
+                tap_node(wait_for("Projects"))
             else:
                 adb("shell", "input", "keyevent", "KEYCODE_BACK")
             time.sleep(0.8)

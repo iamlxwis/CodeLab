@@ -37,17 +37,16 @@ private val projectDemos = listOf(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, String, String) -> Unit) {
+internal fun GuidedProjectSheet(cancel: () -> Unit, initialLanguage: String = "JavaScript", submit: (String, String, String) -> Unit) {
     val keyboard = LocalSoftwareKeyboardController.current
     var name by rememberSaveable { mutableStateOf("") }
-    var language by rememberSaveable { mutableStateOf("JavaScript") }
+    var language by rememberSaveable { mutableStateOf(initialLanguage) }
     var starter by rememberSaveable { mutableStateOf(StarterExamples.BEGINNER) }
     var browsing by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }
     var offlineOnly by rememberSaveable { mutableStateOf(false) }
     var demosOpen by rememberSaveable { mutableStateOf(false) }
     var guided by rememberSaveable { mutableStateOf(false) }
-    var execution by rememberSaveable { mutableStateOf("Offline") }
     val isDemo = language in projectDemos
     val catalog = LanguageCatalog.entries.firstOrNull { it.name == language }
     val runtime = rememberInstalledRuntimeState()
@@ -232,20 +231,6 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                             }
                         }
                     }
-                    item {
-                        Column {
-                            Text("Execution", style = MaterialTheme.typography.labelMedium)
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                listOf("Offline", "Online").forEach { mode ->
-                                    FilterChip(selected = execution == mode, onClick = { execution = mode },
-                                        label = { Text(mode) })
-                                }
-                            }
-                            Text(if (execution == "Offline") "Runs locally when the required pack is available."
-                                else "Internet and explicit source-upload approval required.",
-                                style = MaterialTheme.typography.bodySmall)
-                        }
-                    }
                     if (!isDemo) item {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Template", style = MaterialTheme.typography.labelSmall,
@@ -326,7 +311,7 @@ internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, Str
                         }
                     }
                 }
-                Button(onClick = { keyboard?.hide(); submit(name.trim(), language, starter, execution) },
+                Button(onClick = { keyboard?.hide(); submit(name.trim(), language, starter) },
                     enabled = name.isNotBlank(),
                     modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
                     shape = RoundedCornerShape(15.dp)) {

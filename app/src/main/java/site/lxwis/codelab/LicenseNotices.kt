@@ -25,6 +25,7 @@ internal fun LicenseNotices(close: () -> Unit) {
         "Inter" to "Inter-OFL.txt", "JetBrains Mono" to "JetBrainsMono-OFL.txt",
         "Language icon sources" to "language-icons-SOURCE.txt",
         "Simple Icons" to "SimpleIcons-CC0.md", "Devicon" to "Devicon-MIT.txt",
+        "Material Icon Theme" to "MaterialIconTheme-MIT.txt",
         "Mozilla Rhino" to "rhino/LICENSE.txt", "Rhino notices" to "rhino/NOTICE.txt",
         "Rhino tools notices" to "rhino/NOTICE-tools.txt", "Rhino source" to "rhino/SOURCE.txt") }
     var selected by remember { mutableStateOf<String?>(null) }

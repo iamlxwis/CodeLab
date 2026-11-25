@@ -29,17 +29,20 @@ permissions:
   contents: write
   actions: read
 concurrency:
-  group: android-${{ github.event.pull_request.head.ref || github.ref_name }}
+  group: android-${{ github.event.pull_request.head.ref || github.ref_name }}${{ github.event_name == 'workflow_dispatch' && contains(fromJSON('["reimagined-2.0","reimagined-2.1-refinement"]'), github.ref_name) && '-signed-upgrade' || '' }}
   cancel-in-progress: true
 jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 85
+    env:
+      CODELAB_TEST_UPGRADE: ${{ contains(fromJSON('["reimagined-2.0","reimagined-2.1-refinement"]'), github.ref_name) && github.event_name == 'workflow_dispatch' }}
     steps:
       # Checkout is read-only; never persist a token that could commit as github-actions[bot].
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          ref: ${{ github.event_name == 'pull_request' && contains(fromJSON('["reimagined-2.0","reimagined-2.1-refinement"]'), github.head_ref) && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -111,7 +114,7 @@ jobs:
             "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$apk/build/outputs/apk/release/$apk-release.apk"
           done
       - name: Enforce actual production signing certificate
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         env:
           CODELAB_KEYSTORE_PASSWORD: ${{ secrets.CODELAB_KEYSTORE_PASSWORD }}
           CODELAB_KEY_ALIAS: ${{ secrets.CODELAB_KEY_ALIAS }}
@@ -144,7 +147,7 @@ jobs:
             exit 1
           fi
       - name: Audit upgrade signing compatibility
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -194,16 +197,16 @@ jobs:
       # release gate below. GitHub Release assets remain individual APKs because
       # the in-app module manager downloads those exact public asset filenames.
       - name: Release build memory before production upgrade verification
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         run: bash gradlew --stop
       - name: Enable acceleration for production upgrade verification
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       - name: Verify production upgrade and preserved data on Android 15
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -216,7 +219,7 @@ jobs:
           disable-animations: true
           script: python3 qa/production_upgrade_smoke.py
       - name: Record verified production upgrade
-        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        if: env.CODELAB_TEST_UPGRADE == 'true' || (github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
         run: |
           test -s qa-results/production-upgrade-api-35.txt
           echo "CODELAB_UPGRADE_TEST=passed_api35" >> "$GITHUB_ENV"
@@ -248,6 +251,34 @@ jobs:
           path: artifact-out/packs/
           if-no-files-found: error
           retention-days: 90
+      - name: Verify Reimagined test APK preserves upgrade signing
+        if: github.event_name == 'pull_request' && contains(fromJSON('["reimagined-2.0","reimagined-2.1-refinement"]'), github.head_ref) && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p test-signing-baseline
+          gh release download latest --pattern CodeLab.apk --dir test-signing-baseline
+          signer="$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          signer_sha256() {
+            "$signer" verify --print-certs "$1" |
+              sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n 1
+          }
+          existing="$(signer_sha256 test-signing-baseline/CodeLab.apk)"
+          candidate="$(signer_sha256 artifact-out/app/CodeLab.apk)"
+          printf 'Test APK version code: %s\nAPK SHA-256: %s\nSigning certificate: %s\n' \
+            "$CODELAB_VERSION_CODE" "$(sha256sum artifact-out/app/CodeLab.apk | cut -d' ' -f1)" "$candidate" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$CODELAB_SIGNING_MODE" != production || -z "$existing" || "$candidate" != "$existing" ]]; then
+            echo "::error::The test APK does not match the existing CodeLab release signing certificate."
+            exit 1
+          fi
+          for pack in artifact-out/packs/CodeLab-*.apk; do
+            if [[ "$(signer_sha256 "$pack")" != "$candidate" ]]; then
+              echo "::error::Runtime pack signer differs from the CodeLab APK: $pack"
+              exit 1
+            fi
+          done
       - name: Prepare installable release APK and checksum
         if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         run: |

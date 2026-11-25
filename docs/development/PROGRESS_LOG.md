@@ -1,3 +1,27 @@
+## Nov 25, 2026, 6:05 PM PHT — Device evidence and exact smoke retry
+
+The [API 35 run](https://github.com/iamlxwis/CodeLab/actions/runs/45589161235) passed clean install, tutorial, missing-runtime recovery, all 45 instrumentation tests, performance collection, motion collection, automated accessibility, 200% font scaling and layouts. Functional smoke stopped at the same checked-state distinction as signed upgrade. Restored the Compose-level assertion that actually passed. The shell smoke continues to require the target mode's actual checked state. Fully verified workstreams 0/10. [Branch handoff](REIMAGINED_2_0.md).
+
+## Nov 25, 2026, 6:01 PM PHT — Signed APK and Android appearance evidence
+
+The [branch build](https://github.com/iamlxwis/CodeLab/actions/runs/45588932391) passed 202 JVM tests, strict lint and production signer continuity. Build 1396 and all six optional APKs matched the expected production certificate. The [signed Android 15 upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45588925015) installed and restored the project, then stopped at a Dark mode assertion. The Android tree records the mode as checked. Tests now read that state and retain the preference and runtime assertions. Fully verified workstreams 0/10. See [the handoff](REIMAGINED_2_0.md).
+
+## Nov 25, 2026, 5:48 PM PHT — Compose lint correction
+
+The prior source passed 202 JVM tests and compiled instrumentation. Strict lint reported `ProduceStateDoesNotAssignValue` on the two runtime installer checks. Both checks now use keyed effects and keep APK verification on the I/O dispatcher. Next verify strict lint, the signed PR artifact and API 35 evidence. Fully verified workstreams 0/10. [Branch handoff](REIMAGINED_2_0.md).
+
+## Nov 25, 2026, 5:42 PM PHT — PR APK and upgrade verification
+
+The first [branch APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45586362366) passed compilation, JVM tests, strict lint, optional runtime assembly, signature verification and certificate continuity. Local JVM evidence for that checkpoint contains 200 tests without failures. Refined editor appearance migration, console and workspace chrome, update metadata validation and runtime sizing, and extended device smoke. No workstream is fully accepted yet. See [PR #16](https://github.com/iamlxwis/CodeLab/pull/16) and [the handoff](REIMAGINED_2_0.md) for the next verification.
+
+## Nov 25, 2026, 5:31 PM PHT — Reimagined 2.0 integration checkpoint
+
+Branch source includes the neutral app modes, separate editor preferences, backdrop navigation, primary destinations, all 95 language visuals, workspace resume, search, activity and verified installer flow. The platform runtime, stored projects and explicit upload consent remain in use. Local app compile passed before the final integration edits. Fifteen Python QA guards and static security invariants passed. Workstreams fully verified 0/10. Branch signing and API 35 checks are pending. See [the handoff](REIMAGINED_2_0.md).
+
+## Nov 25, 2026, 5:07 PM PHT — Reimagined 2.0 branch opened
+
+Reimagined 2.0 starts from main `517f5bc` on `reimagined-2.0`. Verified workstreams 0/10. Baseline [APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45518242552) and [API 35 smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45518254838) passed. Branch architecture, workstream status and next action are tracked in [the handoff](REIMAGINED_2_0.md).
+
 ## November 25, 2026 — 08:27:07 AM PHT — Real-device suite exposed two viewport defects
 
 W1/W2/W7: API35 functional smoke and all 45 instrumentation tests passed; fixing measured 11-line phone viewport and source-starved landscape; 0/9 complete, 9 remaining; next exact-source layout rerun and production upgrade.
@@ -399,3 +423,35 @@ Device 45512870975 suite-results.json: release clean install PASS, tutorial resu
 CI-only correction: build instrumentation APK before boot, run Kotlin compiler in build process with two workers, stop build Gradle daemon before boot, bound connected-test JVM to 1GiB/no persistent daemon, explicit two-core/2GiB software-GLES emulator with Vulkan disabled, capture host memory/disk/process/kernel diagnostics. API35/manual dispatch, cancel-in-progress, mandatory checks/signing/publication gates unchanged. Independent suite now labels unavailable-device checks Blocked and keeps the overall result failing; a regression proves no-device cannot pass. Fifteen local QA guard tests plus static security pass. No application code changed in this CI-only repair. Next exact-source build/API35 retry must establish editor input, instrumentation, screenshots and measurements before acceptance.
 
 Focused dependency advisory review: OSV querybatch returned empty results for pinned Maven Rhino1.7.15.1, LuaJ3.0.1, BeanShell2.1.1 and JGit7.6.0.202603022253-r. This is a four-direct-coordinate lookup, not a complete transitive vulnerability scan. Reviewed upstream Rhino advisory GHSA-3w8q-xq97-5j7x (pinned1.7.15.1 is listed patched); JGit7.7.1 release describes an Apache SSHD security update, which must not be conflated with proven core HTTPS exposure without a resolved graph. No dependency upgrades were made speculatively.
+
+## Nov 25, 2026, 6:33 PM PHT — Reimagined 2.0 owner handoff
+
+**Session STOPPED.** Signed test APK build 1399 is ready. Four of ten workstreams have automated verification within their stated scope. The PR build passed 202 JVM tests and strict lint with zero errors. Android 15 passed all 10 device stages and 45 instrumentation tests. The signed in-place upgrade retained source and Dark appearance and ran the upgraded Python companion. Physical performance, TalkBack, secondary flows, live online execution and installer flows remain open in the handoff. [Draft PR](https://github.com/iamlxwis/CodeLab/pull/16) · [APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45591658540) · [Device evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578/artifacts/15012039749) · [Signed upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45591086074) · [Handoff](REIMAGINED_2_0.md)
+
+## Nov 25, 2026, 8:16 PM PHT — Reimagined 2.1 begins
+
+Refinement starts at PR #16 head `b4cbbf5` and targets `reimagined-2.0`. Implementation and verification are pending for all ten workstreams. [Baseline verified Android 15](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578) · [Refinement checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 8:26 PM PHT — Reimagined 2.1 integration
+
+PR #17 targets the open 2.0 branch. The first integrated workspace, execution and image export changes pass local JVM tests and Android test compilation. Zero of ten workstreams have complete evidence. Android emulator, strict lint and release-signer verification are next. [Checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 9:54 PM PHT — Reimagined 2.1 Android fixes
+
+Android 15 passed eight of ten stages on the first integration. Repaired two observed layout failures and the first APK run's lint constant error. Further testing covers execution eligibility, preview-to-PNG parity, grouped settings and narrow editor controls. Zero workstreams have complete evidence. [Device evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45613861590/artifacts/15022342038) · [Checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 10:03 PM PHT — Reimagined 2.1 refinement and signed checkpoint
+
+Confirmed build 1402 uses the existing production signer. Added responsive project cards, clearer download states, exact trailing snippet line breaks, consent recovery and a hardware Canvas shader test. Zero workstreams have complete evidence across final Android checks. [Integration APK](https://github.com/iamlxwis/CodeLab/actions/runs/45628377294) · [Checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 10:18 PM PHT — Reimagined 2.1 signed APK and smoke correction
+
+Build 1403 from dc3ee23 was downloaded and verified against the existing production certificate. Android 15 passed nine stages on the preceding revision, including the landscape and phone IME matrices. Corrected the functional check to enter Lua stdin in the console during Split and assert that source stays unchanged. The preceding signed in-place upgrade passed. [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 10:19 PM PHT — Console stdin regression test
+
+The functional smoke now taps Program input for JavaScript and Lua, verifies the Lua file was untouched, and retains the failure hierarchy before later stages overwrite it. The previous commit documented the finding.
+
+## Nov 25, 2026, 10:42 PM PHT — Reimagined 2.1 owner handoff
+
+Session stopped at 7/10 verified workstreams. Build 1403 was downloaded, verified with the existing production signer and left for manual approval. Android 15 passed all ten stages and 50 instrumentation tests, including shader displacement and PNG content. Signed in-place upgrade passed on the delivered app source. Physical GPU performance, TalkBack, live online-provider and secondary-screen review remain open. [Draft PR](https://github.com/iamlxwis/CodeLab/pull/17) · [Signed test APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Android evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45632769173/artifacts/15034300327) · [Handoff](REIMAGINED_2_1.md)

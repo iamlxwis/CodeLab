@@ -2,32 +2,37 @@ package site.lxwis.codelab
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ThemeOperationsTest {
-    @Test fun renamingAndDuplicatingKeepAllThemeFieldsAndPersistDistinctIds() {
+    @Test fun legacyModeFontsAndSyntaxMigrateIndependently() {
         val app = ApplicationProvider.getApplicationContext<Application>()
         val prefs = app.getSharedPreferences("appearance", 0)
-        val before = prefs.getString("saved-appearance-recipes", null)
+        val keys = listOf("mode", "visual-style", "studio:Titanium", "app-appearance", "editor-and-fonts")
+        val before = keys.associateWith { prefs.getString(it, null) }
         try {
+            prefs.edit().putString("mode", "Light").putString("visual-style", "Clay")
+                .putString("studio:Titanium", """{"background":"#AB12CD","uiFont":"Serif","editorFont":"System Mono","comments":"#52735F","editorTextSize":17}""")
+                .remove("app-appearance").remove("editor-and-fonts").commit()
             val model = WorkspaceModel(app)
-            val name = "Test " + java.util.UUID.randomUUID().toString().take(8)
-            assertTrue(model.saveAppearanceRecipe(name))
-            val original = model.savedAppearanceRecipes.last()
-            val activeBefore = model.studioAppearance
-            assertTrue(model.duplicateAppearanceRecipe(original.id))
-            val copy = model.savedAppearanceRecipes.last()
-            assertNotEquals(original.id, copy.id)
-            assertEquals(original.copy(id = copy.id, name = copy.name), copy)
-            assertTrue(model.renameAppearanceRecipe(copy.id, "Renamed copy"))
-            assertEquals(copy.copy(name = "Renamed copy"), model.savedAppearanceRecipes.last())
-            assertEquals(original, model.savedAppearanceRecipes.first { it.id == original.id })
-            assertEquals(activeBefore, model.studioAppearance)
-            assertEquals(model.savedAppearanceRecipes, WorkspaceModel(app).savedAppearanceRecipes)
+            assertEquals("Light", model.appearance)
+            assertEquals("Serif", model.editorAppearance.uiFont)
+            assertEquals("System Mono", model.editorAppearance.editorFont)
+            assertEquals("#52735F", model.editorAppearance.comments)
+            assertEquals(17, model.editorAppearance.editorTextSize)
+            assertEquals(false, org.json.JSONObject(model.editorAppearance.encode()).has("background"))
+            model.setMode("Dark")
+            model.updateEditorAppearance(model.editorAppearance.copy(editorMode = "Light"))
+            val restored = WorkspaceModel(app)
+            assertEquals("Dark", restored.appearance)
+            assertEquals("Light", restored.editorAppearance.editorMode)
+            assertEquals("#52735F", restored.editorAppearance.comments)
+            assertEquals("Clay", prefs.getString("visual-style", null))
         } finally {
-            if (before == null) prefs.edit().remove("saved-appearance-recipes").commit()
-            else prefs.edit().putString("saved-appearance-recipes", before).commit()
+            val editor = prefs.edit()
+            before.forEach { (key, value) -> if (value == null) editor.remove(key) else editor.putString(key, value) }
+            editor.commit()
         }
     }
 }

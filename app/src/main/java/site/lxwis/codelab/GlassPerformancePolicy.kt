@@ -9,9 +9,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 
-/** Manual High can override the low-memory recommendation; system battery saving wins. */
-internal fun glassBlurEnabled(api: Int, quality: String, lowRam: Boolean, powerSave: Boolean): Boolean =
-    api >= 31 && quality != "Lightweight" && !powerSave && (quality == "High" || !lowRam)
+internal enum class GlassRendering { Solid, Frosted, Blur, Refraction }
+
+internal fun glassRendering(
+    api: Int,
+    enabled: Boolean,
+    highContrast: Boolean,
+    accelerated: Boolean,
+    lowRam: Boolean,
+    powerSave: Boolean,
+    reducedBlur: Boolean,
+    automaticOptimization: Boolean
+): GlassRendering {
+    if (!enabled || highContrast) return GlassRendering.Solid
+    if (!accelerated || powerSave || reducedBlur || (lowRam && automaticOptimization) || api < 31) {
+        return GlassRendering.Frosted
+    }
+    return if (api >= 33) GlassRendering.Refraction else GlassRendering.Blur
+}
 
 /** Reacts to system changes without polling or running a background worker. */
 @Composable

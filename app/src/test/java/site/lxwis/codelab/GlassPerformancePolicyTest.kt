@@ -1,17 +1,24 @@
 package site.lxwis.codelab
 
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class GlassPerformancePolicyTest {
-    @Test fun respectsPlatformPowerAndManualFallbackAcrossQualities() {
-        for (quality in listOf("Auto", "High", "Lightweight")) {
-            assertFalse(glassBlurEnabled(30, quality, false, false))
-            assertFalse(glassBlurEnabled(35, quality, false, true))
-        }
-        assertFalse(glassBlurEnabled(35, "Auto", true, false))
-        assertFalse(glassBlurEnabled(35, "Lightweight", false, false))
-        assertTrue(glassBlurEnabled(35, "Auto", false, false))
-        assertTrue(glassBlurEnabled(35, "High", true, false))
+    @Test fun androidApiAndPerformanceControlsChooseSupportedRendering() {
+        assertEquals(GlassRendering.Frosted, render(api = 30))
+        assertEquals(GlassRendering.Blur, render(api = 31))
+        assertEquals(GlassRendering.Refraction, render(api = 33))
+        assertEquals(GlassRendering.Frosted, render(powerSave = true))
+        assertEquals(GlassRendering.Frosted, render(reduced = true))
+        assertEquals(GlassRendering.Frosted, render(lowRam = true))
+        assertEquals(GlassRendering.Refraction, render(lowRam = true, optimize = false))
+        assertEquals(GlassRendering.Frosted, render(accelerated = false))
+        assertEquals(GlassRendering.Solid, render(highContrast = true))
+        assertEquals(GlassRendering.Solid, render(enabled = false))
     }
+
+    private fun render(
+        api: Int = 35, enabled: Boolean = true, highContrast: Boolean = false, accelerated: Boolean = true,
+        lowRam: Boolean = false, powerSave: Boolean = false, reduced: Boolean = false, optimize: Boolean = true
+    ) = glassRendering(api, enabled, highContrast, accelerated, lowRam, powerSave, reduced, optimize)
 }

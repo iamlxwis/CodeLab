@@ -1,5 +1,6 @@
 package site.lxwis.codelab
 
+import kotlinx.coroutines.ensureActive
 import android.app.Application
 import android.content.Context
 import android.net.ConnectivityManager
@@ -122,7 +123,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         panelSplitPercent, showEditorStatus, interfaceDensity, quickEditorActions, editorToolbarIds, explorerPinned, focusMode,
         systemStatusVisible, if (console) "Console" else if (preview) "Preview" else "Editor", outputMaximized,
         editorPreferences.getString("shortcut-layout", "Standard"), editorPreferences.getString("custom-shortcuts", "Tab { } ( ) ;"),
-        editorPreferences.getBoolean("symbol-toolbar", true), editorPreferences.getBoolean("keyboard-only-symbols", false))
+        editorPreferences.getBoolean("symbol-toolbar", true), editorPreferences.getBoolean("keyboard-only-symbols", true))
     private fun rememberProjectLayout() {
         if (restoringLayout) return
         val name = project ?: return
@@ -216,6 +217,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val wasConnected = isOnline
         isOnline = connected
         if (!connected) {
+            if (cloudPending != null) error = "Internet connection lost. Open Run again to choose a mode."
             cancelCloudRun()
             cloudLanguages = emptyMap()
             cloudError = "No internet connection"
@@ -244,6 +246,11 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                         cloudLanguages = emptyMap()
                         cloudError = it.message ?: "Online compiler unavailable"
                     }
+                val approval = cloudApproval
+                if (approval != null && cloudLanguages[CloudJudge0.extension(approval.filename)]?.id != approval.languageId) {
+                    cancelCloudRun()
+                    error = "Online compiler availability changed. Open Run again."
+                }
             }
         }
     }
@@ -292,17 +299,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         cloudPending = filename
     }
 
-    fun requestCloudRun() {
-        val filename = active ?: return
-        if (runner.running) return
-        if (!cloudAvailable(filename)) {
-            error = "Online execution is unavailable for this language. Check Languages & Cloud."
-            return
-        }
-        // This command explicitly requests cloud execution, even if Offline was selected.
-        chooseExecutionMode("Online")
-        prepareOnlineApproval(filename)
-    }
+    fun requestCloudRun() = requestExecution(suggested = "Online")
 
     fun startCloudRun(stdin: String) {
         val filename = cloudPending ?: return
@@ -316,6 +313,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         if (!isOnline || language == null) { error = "Online compiler is unavailable"; return }
         flush()
         runner.runOnline(filename, source, cloudEndpoint, cloudHeader, cloudCredential, language, stdin.take(4096))
+        lastExecutionProject = project
         console = true
         preview = false
     }
@@ -325,7 +323,9 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         cloudApproval = null
     }
     private val main = Handler(Looper.getMainLooper())
-    val runner = RunSession(app)
+    internal val updater = AppUpdater(app)
+    internal val developerActivity = DeveloperActivity(app)
+    val runner = RunSession(app).apply { onFinished = developerActivity::recordRun }
     var executionMode by mutableStateOf(
         preferences.getString("run-mode", "Offline")?.takeIf { it in listOf("Offline", "Online") }
             ?: "Offline"
@@ -337,52 +337,39 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         executionMode = value
         preferences.edit().putString("run-mode", value).apply()
     }
-    var appearance by mutableStateOf(preferences.getString("mode", "Dark") ?: "Dark")
-        private set
-    var visualStyle by mutableStateOf(
-        preferences.getString("visual-style", null)?.takeIf(CodeLabVisualStyles::accepts)
-            ?: when (preferences.getString("preset", "Obsidian")) {
-                "OLED" -> "AMOLED"
-                "Paper", "GitHub Light" -> "Paper"
-                else -> "Obsidian"
-            }
+    var appearance by mutableStateOf(
+        migrateAppearanceMode(preferences.getString("app-appearance", preferences.getString("mode", null)))
     )
         private set
-    fun chooseVisualStyle(value: String) {
-        if (!CodeLabVisualStyles.accepts(value)) return
-        val old = visualStyle
-        val canonical = CodeLabVisualStyles.canonical(value)
-        val oldCanonical = CodeLabVisualStyles.canonical(old)
-        // Migrate legacy style preferences rather than discarding saved customization.
-        preferences.edit().putString("accent:$old", accent).putString("accent:$oldCanonical", accent)
-            .putString("mode:$old", appearance).putString("mode:$oldCanonical", appearance)
-            .putString("studio:$oldCanonical", studioAppearance.encode()).apply()
-        if (canonical == oldCanonical) {
-            visualStyle = canonical
-            preferences.edit().putString("visual-style", canonical).apply()
-            return
-        }
-        fun stored(key: String, fallback: String?): String? {
-            val candidates = listOf(canonical, value) + CodeLabVisualStyles.legacyNames(canonical)
-            return candidates.asSequence().mapNotNull { preferences.getString("$key:$it", null) }.firstOrNull() ?: fallback
-        }
-        visualStyle = canonical
-        studioAppearance = StudioAppearance.decode(stored("studio", null))
-        accent = stored("accent", AppearanceRecipes.defaultAccent(canonical))
-            ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(canonical)
-        appearance = stored("mode", CodeLabVisualStyles.defaultMode(canonical))
-            ?.takeIf { it in listOf("Dark", "Light", "System", MATERIAL_YOU_MODE) } ?: CodeLabVisualStyles.defaultMode(canonical)
-        preferences.edit().putString("visual-style", canonical)
-            .putString("accent", accent).putString("mode", appearance).apply()
-    }
-    var themePreset by mutableStateOf(preferences.getString("preset", "Obsidian") ?: "Obsidian")
+    var glassEnabled by mutableStateOf(preferences.getBoolean("liquid-glass", true))
         private set
-    fun choosePreset(value: String) {
-        if (value !in listOf("Obsidian", "Nocturne", "Paper",
-                "Dracula", "One Dark", "Monokai", "GitHub Light", "OLED")) return
-        themePreset = value
-        preferences.edit().putString("preset", value).apply()
+    var progressiveBlur by mutableStateOf(preferences.getBoolean("progressive-blur", true))
+        private set
+    var reduceDynamicBlur by mutableStateOf(preferences.getBoolean("reduce-dynamic-blur", false))
+        private set
+    var automaticOptimization by mutableStateOf(preferences.getBoolean("automatic-optimization", true))
+        private set
+
+    fun chooseGlass(value: Boolean) {
+        glassEnabled = value
+        preferences.edit().putBoolean("liquid-glass", value).apply()
     }
+
+    fun chooseProgressiveBlur(value: Boolean) {
+        progressiveBlur = value
+        preferences.edit().putBoolean("progressive-blur", value).apply()
+    }
+
+    fun chooseReduceDynamicBlur(value: Boolean) {
+        reduceDynamicBlur = value
+        preferences.edit().putBoolean("reduce-dynamic-blur", value).apply()
+    }
+
+    fun chooseAutomaticOptimization(value: Boolean) {
+        automaticOptimization = value
+        preferences.edit().putBoolean("automatic-optimization", value).apply()
+    }
+
     var motionPreference by mutableStateOf(preferences.getString("motion", "System") ?: "System")
         private set
     fun chooseMotion(value: String) {
@@ -479,91 +466,17 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         preferences.edit().putString("density", value).apply()
         rememberProjectLayout()
     }
-    var accent by mutableStateOf(
-        preferences.getString("accent:" + visualStyle,
-            preferences.getString("accent", AppearanceRecipes.defaultAccent(visualStyle)))
-            ?.takeIf(AppearanceRecipes::validAccent) ?: AppearanceRecipes.defaultAccent(visualStyle)
+    internal var editorAppearance by mutableStateOf(
+        EditorAppearance.decode(preferences.getString("editor-and-fonts", null)
+            ?: legacyAppearanceSettings(preferences))
     )
         private set
-    internal var studioAppearance by mutableStateOf(
-        StudioAppearance.decode(preferences.getString("studio:$visualStyle", null)))
-        private set
-    internal fun updateStudioAppearance(value: StudioAppearance) {
-        studioAppearance = value
-        preferences.edit().putString("studio:$visualStyle", value.encode()).apply()
-    }
-    internal fun importAppearanceRecipe(raw: String): Boolean {
-        if (raw.length > 65_536) return false
-        val imported = AppearanceRecipes.decode(raw).firstOrNull() ?: return false
-        val copy = imported.copy(id = java.util.UUID.randomUUID().toString())
-        savedAppearanceRecipes = savedAppearanceRecipes + copy
-        preferences.edit().putString("saved-appearance-recipes",
-            AppearanceRecipes.encode(savedAppearanceRecipes)).apply()
-        return true
-    }
-    internal var savedAppearanceRecipes by mutableStateOf(
-        AppearanceRecipes.decode(preferences.getString("saved-appearance-recipes", "[]")))
-        private set
 
-    fun saveAppearanceRecipe(name: String, editingId: String? = null): Boolean {
-        val clean = name.trim()
-        if (!AppearanceRecipes.validName(clean)) return false
-        val old = savedAppearanceRecipes.firstOrNull { it.id == editingId }
-        val recipe = AppearanceRecipe(old?.id ?: java.util.UUID.randomUUID().toString(),
-            clean, visualStyle, appearance, accent, studioAppearance,
-            ThemeMotionRecipe(motionPreference, motionIntensity, motionSpeed, springIntensity, transitionEffect))
-        savedAppearanceRecipes = if (old == null) savedAppearanceRecipes + recipe
-            else savedAppearanceRecipes.map { if (it.id == old.id) recipe else it }
-        preferences.edit().putString("saved-appearance-recipes",
-            AppearanceRecipes.encode(savedAppearanceRecipes)).apply()
-        return true
+    internal fun updateEditorAppearance(value: EditorAppearance) {
+        editorAppearance = value
+        preferences.edit().putString("editor-and-fonts", editorAppearance.encode()).apply()
     }
 
-    fun useAppearanceRecipe(id: String) {
-        val recipe = savedAppearanceRecipes.firstOrNull { it.id == id } ?: return
-        chooseVisualStyle(recipe.style)
-        setMode(recipe.mode)
-        chooseAccent(recipe.accent)
-        updateStudioAppearance(recipe.studio)
-        recipe.motion?.let { motion ->
-            // A saved theme may reduce motion, but must never enable motion after a user
-            // has explicitly selected the app's Reduced accessibility setting.
-            if (motionPreference != "Reduced") chooseMotion(motion.preference)
-            chooseMotionIntensity(motion.intensity)
-            chooseMotionSpeed(motion.speed)
-            chooseSpringIntensity(motion.spring)
-            chooseTransitionEffect(motion.transition)
-        }
-    }
-
-    fun renameAppearanceRecipe(id: String, name: String): Boolean {
-        val clean = name.trim()
-        if (!AppearanceRecipes.validName(clean) || savedAppearanceRecipes.none { it.id == id }) return false
-        savedAppearanceRecipes = savedAppearanceRecipes.map { if (it.id == id) it.copy(name = clean) else it }
-        preferences.edit().putString("saved-appearance-recipes", AppearanceRecipes.encode(savedAppearanceRecipes)).apply()
-        return true
-    }
-
-    fun duplicateAppearanceRecipe(id: String): Boolean {
-        val original = savedAppearanceRecipes.firstOrNull { it.id == id } ?: return false
-        val copy = original.copy(id = java.util.UUID.randomUUID().toString(),
-            name = AppearanceRecipes.copyName(original.name, savedAppearanceRecipes.map { it.name }.toSet()))
-        savedAppearanceRecipes = savedAppearanceRecipes + copy
-        preferences.edit().putString("saved-appearance-recipes", AppearanceRecipes.encode(savedAppearanceRecipes)).apply()
-        return true
-    }
-
-    fun deleteAppearanceRecipe(id: String) {
-        savedAppearanceRecipes = savedAppearanceRecipes.filterNot { it.id == id }
-        preferences.edit().putString("saved-appearance-recipes",
-            AppearanceRecipes.encode(savedAppearanceRecipes)).apply()
-    }
-
-    fun restoreAppearanceDefaults() {
-        setMode(CodeLabVisualStyles.defaultMode(visualStyle))
-        chooseAccent(AppearanceRecipes.defaultAccent(visualStyle))
-        updateStudioAppearance(StudioAppearance())
-    }
     private var shellSession: WorkspaceShell? = null
     private var shellProject: String? = null
     var terminalOutput by mutableStateOf("CodeLab workspace commands\nType help for available commands.")
@@ -836,6 +749,46 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             }
         }
     }
+    internal var recentWorkspaceFiles by mutableStateOf(readWorkspaceLocations())
+        private set
+    internal var parkedWorkspace by mutableStateOf<WorkspaceLocation?>(null)
+        private set
+    private var parkedTabs = emptyList<String>()
+    internal val recentWorkspace: WorkspaceLocation?
+        get() = parkedWorkspace ?: recentWorkspaceFiles.firstOrNull { it.project in projects }
+
+    internal fun isWorkspaceDirty(location: WorkspaceLocation): Boolean =
+        bufferKey(location.project, location.file) in dirtyTabKeys
+
+    private fun readWorkspaceLocations(): List<WorkspaceLocation> = runCatching {
+        val list = org.json.JSONArray(preferences.getString("recent-workspace-files", "[]"))
+        (0 until minOf(list.length(), 12)).mapNotNull { index ->
+            val location = list.optJSONObject(index) ?: return@mapNotNull null
+            val project = location.optString("project")
+            val file = location.optString("file")
+            if (project.isBlank() || file.isBlank()) null else WorkspaceLocation(project, file)
+        }
+    }.getOrDefault(emptyList())
+
+    private fun rememberWorkspaceFile(project: String, file: String) {
+        val location = WorkspaceLocation(project, file)
+        if (recentWorkspaceFiles.firstOrNull() == location) return
+        recentWorkspaceFiles = (listOf(location) + recentWorkspaceFiles.filterNot { it == location }).take(12)
+        val list = org.json.JSONArray()
+        recentWorkspaceFiles.forEach {
+            list.put(org.json.JSONObject().put("project", it.project).put("file", it.file))
+        }
+        preferences.edit().putString("recent-workspace-files", list.toString()).apply()
+    }
+
+    internal fun openWorkspaceLocation(location: WorkspaceLocation, line: Int? = null, run: Boolean = false) {
+        if (location.project == project) {
+            if (location.file == active && line == null) {
+                if (run) run()
+            } else select(location.file, goToLine = line, runOnOpen = run)
+        } else openProject(location.project, fileToOpen = location.file, goToLine = line, runOnOpen = run)
+    }
+
     var project by mutableStateOf<String?>(null)
         private set
     var files by mutableStateOf(emptyList<String>())
@@ -1000,6 +953,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         projectMetadata = open.metadata
         tabs = open.tabs
         active = open.file
+        open.file?.let { rememberWorkspaceFile(open.project, it) }
         val key = open.file?.let { bufferKey(open.project, it) }
         val keepEdits = key != null && key in unsavedBuffers
         source = if (keepEdits) openBuffers[key] ?: open.text else open.text
@@ -1058,6 +1012,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         if (value == source) return
         source = value
         project?.let { p -> active?.let { f ->
+            developerActivity.edit(p, f)
             val key = bufferKey(p, f)
             openBuffers[key] = value
             unsavedBuffers.add(key)
@@ -1101,9 +1056,16 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     // Explicit Save, lifecycle flush and project switches make the rename durable.
     fun flush() = saveAsync(durable = true)
 
-    fun openProject(name: String, create: Boolean = false, template: String = "JavaScript", starter: String = StarterExamples.BEGINNER) {
+    fun openProject(name: String, create: Boolean = false, template: String = "JavaScript",
+        starter: String = StarterExamples.BEGINNER, fileToOpen: String? = null,
+        goToLine: Int? = null, runOnOpen: Boolean = false
+    ) {
+        developerActivity.finishEditing()
         rememberProjectLayout()
         flush()
+        val resume = parkedWorkspace?.takeIf { it.project == name && (fileToOpen == null || fileToOpen == it.file) }
+        val preferredFile = fileToOpen ?: resume?.file ?: recentWorkspaceFiles.firstOrNull { it.project == name }?.file
+        val previousTabs = if (resume != null) parkedTabs else emptyList()
         val nav = ++navigationVersion
         pinnedTabs = preferences.getStringSet("pinned:$name", emptySet())?.toSet()
             ?: emptySet()
@@ -1120,15 +1082,27 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
             if (nav == navigationVersion && project == name) home()
         }) {
             if (create) store.createProject(name, template, starter)
-            val opened = persist(load(name, emptyList(), null, allowUnavailable = true))
+            val opened = persist(load(name, previousTabs, preferredFile, allowUnavailable = true))
             val names = store.projects()
             val commit: () -> Unit = {
                 projects = names
+                if (create) developerActivity.recordProject()
                 if (nav == navigationVersion && project == name) {
-                    runner.stop()
+                    if (resume == null) runner.stop()
+                    parkedWorkspace = null
+                    parkedTabs = emptyList()
                     console = false
                     apply(opened)
-                    restoreDesiredOutput()
+                    if (resume != null) {
+                        console = true
+                        preview = false
+                    }
+                    if (fileToOpen != null) {
+                        if (opened.file == fileToOpen) {
+                            pendingLine = goToLine
+                            if (runOnOpen) run()
+                        } else error = "File no longer exists: $fileToOpen"
+                    }
                 }
             }
             commit
@@ -1198,11 +1172,21 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun home() {
+    fun home(keepExecution: Boolean = false) {
+        developerActivity.finishEditing()
         rememberProjectLayout()
         flush()
         val nav = ++navigationVersion
-        runner.stop()
+        val name = project
+        val file = active
+        if (keepExecution && name != null && file != null && runner.running) {
+            parkedWorkspace = WorkspaceLocation(name, file)
+            parkedTabs = tabs
+        } else {
+            runner.stop()
+            parkedWorkspace = null
+            parkedTabs = emptyList()
+        }
         project = null
         pinnedTabs = emptySet()
         active = null
@@ -1544,6 +1528,46 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    internal suspend fun findWorkspaceMatches(
+        query: String, names: List<String>, includeFiles: Boolean, includeCode: Boolean,
+        dirtyLocation: WorkspaceLocation?, source: String?
+    ): List<SearchResult> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val files = mutableListOf<SearchResult>()
+        val code = mutableListOf<SearchResult>()
+        for (name in names) {
+            coroutineContext.ensureActive()
+            val paths = runCatching { store.files(name) }.getOrDefault(emptyList())
+            if (includeFiles && files.size < 45) {
+                paths.asSequence().filter { it.contains(query, ignoreCase = true) }
+                    .take(45 - files.size).forEach { path ->
+                        files += SearchResult(SearchCategory.Files, path.substringAfterLast('/'),
+                            "$name · $path", WorkspaceLocation(name, path))
+                    }
+            }
+            if (includeCode && code.size < 45) {
+                val dirtyFile = dirtyLocation?.takeIf { it.project == name }?.file
+                if (dirtyFile != null && source != null) {
+                    source.lineSequence().withIndex().filter { it.value.contains(query, ignoreCase = true) }
+                        .take(45 - code.size).forEach { hit ->
+                            code += SearchResult(SearchCategory.Code, "$dirtyFile:${hit.index + 1}",
+                                hit.value.trim().take(160), WorkspaceLocation(name, dirtyFile), hit.index + 1)
+                        }
+                }
+                for (chunk in paths.asSequence().filterNot { it == dirtyFile }.chunked(8)) {
+                    coroutineContext.ensureActive()
+                    if (code.size == 45) break
+                    val hits = runCatching { store.searchText(name, query, false, chunk) }.getOrDefault(emptyList())
+                    hits.take(45 - code.size).forEach { hit ->
+                        code += SearchResult(SearchCategory.Code, "${hit.path}:${hit.line}",
+                            hit.preview, WorkspaceLocation(name, hit.path), hit.line)
+                    }
+                }
+            }
+            if ((!includeFiles || files.size == 45) && (!includeCode || code.size == 45)) break
+        }
+        files + code
+    }
+
     internal fun searchProject(query: String, caseSensitive: Boolean,
         folder: String = "", kind: ProjectFileKind? = null) {
         val p = project ?: return
@@ -1594,29 +1618,17 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun setMode(mode: String) {
-        if (mode !in listOf("Dark", "Light", "System", MATERIAL_YOU_MODE)) return
+        if (mode !in appAppearanceModes) return
         appearance = mode
-        preferences.edit().putString("mode", mode).putString("mode:$visualStyle", mode).apply()
+        preferences.edit().putString("app-appearance", mode).apply()
     }
 
-    fun chooseAccent(value: String) {
-        if (!AppearanceRecipes.validAccent(value)) return
-        accent = value
-        preferences.edit().putString("accent", value)
-            .putString("accent:$visualStyle", value).apply()
-    }
+    internal var executionRequest by mutableStateOf<ExecutionRequest?>(null)
+        private set
 
-    fun debugCurrent(lines: List<Int>) {
-        val filename = active ?: return
-        if (!filename.endsWith(".js", true)) {
-            error = "The line debugger supports JavaScript files only."
-            return
-        }
-        flush()
-        console = true
-        preview = false
-        runner.run(filename, source, debug = true, breakpoints = lines)
-    }
+    private var lastExecutionProject: String? = null
+
+    fun debugCurrent(lines: List<Int>) = requestExecution(breakpoints = lines, suggested = "Offline")
 
     fun runPreferred() {
         val target = resolveRunTarget(projectMetadata.entrypoint, active, files)
@@ -1625,53 +1637,113 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun runTarget(path: String) {
-        if (runner.running) return
+        if (runner.running || executionRequest != null || cloudPending != null) return
         if (path !in files) { error = "File no longer exists: $path"; return }
-        if (path == active) run()
-        else select(path, runOnOpen = true)
+        if (path == active) run() else select(path, runOnOpen = true)
     }
 
-    fun run() {
-        val filename = active ?: return
-        if (filename.endsWith(".html", true) || filename.endsWith(".htm", true)) {
+    fun run() = requestExecution()
+
+    fun requestRerun() {
+        val previous = runner.execution ?: return
+        val name = lastExecutionProject ?: return
+        if (runner.running || executionRequest != null || cloudPending != null) return
+        if (project != name) {
+            openWorkspaceLocation(WorkspaceLocation(name, previous.file), run = true)
+        } else if (active == previous.file) {
+            requestExecution(previous.breakpoints, previous.mode)
+        } else runTarget(previous.file)
+    }
+
+    private fun requestExecution(breakpoints: List<Int>? = null, suggested: String = executionMode) {
+        val path = active ?: return
+        val name = project ?: return
+        if (runner.running || executionRequest != null || cloudPending != null) return
+        if (breakpoints != null && !path.endsWith(".js", true)) {
+            error = "The line debugger supports JavaScript files only."
+            return
+        }
+        executionRequest = ExecutionRequest(name, path, revision, breakpoints, suggested)
+    }
+
+    internal fun executionOptions(request: ExecutionRequest): ExecutionOptions {
+        val file = request.file
+        val extension = languageExtension(file)
+        val web = extension in setOf("html", "htm")
+        val sourceTooLarge = !web && source.length > 128_000
+        val local = web || isLocalExecutable(file)
+        val pack = when (extension) {
+            "py" -> "Python"
+            "ts" -> "TypeScript"
+            else -> null
+        }
+        val remote = !web && request.breakpoints == null && cloudAvailable(file)
+        return ExecutionOptions(
+            offline = when {
+                web -> "Open the local web preview on this device."
+                sourceTooLarge -> "Execution supports up to 128,000 characters."
+                local -> "Run on this device without uploading source."
+                extension == "py" -> PythonModuleLocator.check(getApplication<Application>()).description
+                extension == "ts" -> OptionalRuntimeLocator.check(getApplication<Application>(),
+                    OptionalRuntimeLocator.Pack.TYPESCRIPT).description
+                else -> "No offline runtime for this file type."
+            },
+            online = when {
+                web -> "Web previews use the local browser."
+                request.breakpoints != null -> "JavaScript debugging uses the offline runtime."
+                !isOnline -> "Internet connection required."
+                sourceTooLarge -> "Execution supports up to 128,000 characters."
+                cloudChecking -> "Checking compiler availability."
+                remote -> "Send source to the configured compiler after approval."
+                else -> "No configured online compiler for this file."
+            },
+            canRunOffline = local && !sourceTooLarge,
+            canRunOnline = remote && !sourceTooLarge,
+            installLanguage = pack.takeUnless { local }
+        )
+    }
+
+    fun cancelExecution() {
+        executionRequest = null
+    }
+
+    internal fun confirmExecution(request: ExecutionRequest, mode: String) {
+        if (executionRequest != request || runner.running) return
+        executionRequest = null
+        if (project != request.project || active != request.file || revision != request.revision) {
+            error = "The file or source changed. Open Run again."
+            return
+        }
+        val options = executionOptions(request)
+        if (mode == "Online") {
+            if (!options.canRunOnline) { error = options.online; return }
+            chooseExecutionMode(mode)
+            prepareOnlineApproval(request.file)
+        } else if (mode == "Offline") {
+            if (!options.canRunOffline) { error = options.offline; return }
+            chooseExecutionMode(mode)
             flush()
-            preview = true
-            console = false
-            return
+            if (languageExtension(request.file) in setOf("html", "htm")) {
+                preview = true
+                console = false
+            } else {
+                console = true
+                preview = false
+                runner.run(request.file, source, debug = request.breakpoints != null,
+                    breakpoints = request.breakpoints.orEmpty())
+                lastExecutionProject = project
+            }
         }
-        // Never switch from offline to cloud implicitly; the user chooses.
-        if (executionMode == "Online") {
-            if (cloudAvailable(filename)) prepareOnlineApproval(filename)
-            else error = if (!isOnline) "Connect to the internet to run online."
-                else if (cloudChecking) "Checking the online compiler. Retry shortly."
-                else "No online compiler available for this file. Configure one in Languages & Cloud."
-            return
-        }
-        if (filename.endsWith(".py", true) &&
-            !PythonModuleLocator.installed(getApplication<Application>())) {
-            error = PythonModuleLocator.check(getApplication<Application>()).description +
-                ". Download Python inside the Languages screen."
-            return
-        }
-        if (filename.endsWith(".ts", true) && !isLocalExecutable(filename)) {
-            error = OptionalRuntimeLocator.check(getApplication<Application>(),
-                OptionalRuntimeLocator.Pack.TYPESCRIPT).description +
-                ". Download TypeScript inside Languages to run offline."
-            return
-        }
-        if (isLocalExecutable(filename)) {
-            flush()
-            console = true
-            preview = false
-            runner.run(filename, source)
-        } else {
-            val capability = RunCapability.forPath(filename)
-            error = capability.description + ". Offline execution requires an installed runtime; " +
-                "choose Online beside Run if a remote compiler supports this file."
-        }
+    }
+
+    internal fun snippetExecution(): SnippetExecution? {
+        val execution = runner.execution ?: return null
+        return SnippetExecution(execution.file, execution.source, lastExecutionProject,
+            execution.mode, runner.status, runner.transcript, runner.running, runner.outputOmitted, runner.outputCleared)
     }
 
     override fun onCleared() {
+        developerActivity.setForeground(false)
         flush()
         main.removeCallbacks(autoSave)
         io.shutdown()

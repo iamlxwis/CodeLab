@@ -30,17 +30,8 @@ class MainActivity : ComponentActivity() {
         // follows the saved app palette before Compose renders its first frame.
         val systemDark = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
             android.content.res.Configuration.UI_MODE_NIGHT_YES
-        val launchDark = when (model.appearance) {
-            "Light" -> false
-            "System", MATERIAL_YOU_MODE -> systemDark
-            else -> true
-        }
-        val launchPalette = if (model.appearance == MATERIAL_YOU_MODE && android.os.Build.VERSION.SDK_INT >= 31) {
-            if (launchDark) androidx.compose.material3.dynamicDarkColorScheme(this)
-            else androidx.compose.material3.dynamicLightColorScheme(this)
-        } else null
-        val launchScheme = codeLabColorScheme(model.themePreset, model.visualStyle, launchDark, model.accent,
-            model.highContrast, model.studioAppearance, launchPalette)
+        val launchDark = appearanceIsDark(model.appearance, systemDark)
+        val launchScheme = codeLabColorScheme(launchDark, model.highContrast)
         window.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(
             launchScheme.background.toArgb()))
         // Transparent system bars; content still accounts for safeDrawing and IME insets.
@@ -52,14 +43,11 @@ class MainActivity : ComponentActivity() {
                 if (motion.millis(240) > 0) { entrance.snapTo(.82f); entrance.animateTo(1f, tween(motion.millis(240))) }
             }
             CodeLabTheme(
-                themePreset = model.themePreset,
-                visualStyle = model.visualStyle,
                 appearance = model.appearance,
-                accentPreset = model.accent,
                 highContrast = model.highContrast,
                 largeInterfaceText = model.largeInterfaceText,
-                studio = model.studioAppearance
-            ) { dark ->
+                editorAppearance = model.editorAppearance
+            ) { _ ->
                 val lightBars = MaterialTheme.colorScheme.background.luminance() > .179f
                 SideEffect {
                     WindowCompat.getInsetsController(window, window.decorView).apply {
@@ -68,13 +56,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
                 CompositionLocalProvider(LocalWorkspaceMotion provides motion,
-                    LocalStudioAppearanceUpdater provides { value -> model.updateStudioAppearance(value) },
+                    LocalEditorAppearanceUpdater provides { value -> model.updateEditorAppearance(value) },
                     LocalModalStatusVisible provides (model.systemStatusVisible && !(model.focusMode && model.project != null))) {
-                CodeLabBackdrop(model.visualStyle, dark, motion.millis(300)) {
                     CodeLabForegroundSurface(Modifier.fillMaxSize().graphicsLayer { alpha = entrance.value }) {
                         Studio(model, Modifier.windowInsetsPadding(WindowInsets.safeDrawing).imePadding())
                     }
-                }
                 }
             }
         }
@@ -83,7 +69,13 @@ class MainActivity : ComponentActivity() {
         super.onStart()
         PerformanceRecorder.onStart(this)
     }
+    override fun onResume() {
+        super.onResume()
+        model.developerActivity.setForeground(true)
+    }
+
     override fun onPause() {
+        model.developerActivity.setForeground(false)
         model.flush()
         super.onPause()
     }

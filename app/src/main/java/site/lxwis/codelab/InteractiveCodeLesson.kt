@@ -29,15 +29,12 @@ internal fun InteractiveCodeLesson(close: () -> Unit) {
     var code by rememberSaveable { mutableStateOf("const name = \"Android\";\nprint(\"Hello, \" + name + \"!\");") }
     var executedSource by rememberSaveable { mutableStateOf<String?>(null) }
     var notice by remember { mutableStateOf("") }
+    var proposedSource by rememberSaveable { mutableStateOf<String?>(null) }
     val complete = executedSource == code && runner.status == "Exit 0" &&
         runner.transcript.lineSequence().any { it.trim() == "Hello, CodeLab!" }
     DisposableEffect(runner) { onDispose { runner.close() } }
     fun run() {
-        if (!runner.running) {
-            executedSource = code
-            notice = ""
-            runner.run("practice.js", code)
-        }
+        if (!runner.running) proposedSource = code
     }
     CodeLabDialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -76,6 +73,18 @@ internal fun InteractiveCodeLesson(close: () -> Unit) {
                     horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = close) { Text(if (complete) "Back to guide" else "Skip practice") }
                 }
+            }
+        }
+    }
+    proposedSource?.let { proposed ->
+        ExecutionChooser("practice.js", "Offline",
+            ExecutionOptions("Run this exercise locally.", "The practice lesson is offline.", true, false),
+            cancel = { proposedSource = null }, install = {}) { mode ->
+            proposedSource = null
+            if (mode == "Offline" && proposed == code) {
+                executedSource = proposed
+                notice = ""
+                runner.run("practice.js", proposed)
             }
         }
     }

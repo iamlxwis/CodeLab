@@ -23,7 +23,7 @@ internal val workspaceCommandCatalog = listOf(
     PaletteCommand("save", "Save file", "Ctrl+S", requiresFile = true),
     PaletteCommand("projectsearch", "Search project", requiresProject = true),
     PaletteCommand("projectreplace", "Replace across project", requiresProject = true),
-    PaletteCommand("screenshot", "Code Screenshot Studio", requiresFile = true),
+    PaletteCommand("screenshot", "Snippet Studio", requiresFile = true),
     PaletteCommand("history", "File history", requiresFile = true),
     PaletteCommand("git", "Git version control", requiresProject = true),
     PaletteCommand("commands", "Command palette", "Ctrl+Shift+P"),

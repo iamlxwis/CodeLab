@@ -241,7 +241,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
     private var syntaxPalette = "Classic"
     private var customInk = listOf<String>()
     private var editorFontChoice = ""
-    fun setStudioEditorStyle(style: StudioAppearance) {
+    fun setStudioEditorStyle(style: EditorAppearance) {
         if (style.selectionColor.matches(Regex("#[0-9a-fA-F]{6}"))) {
             highlightColor = (android.graphics.Color.parseColor(style.selectionColor) and 0x00ffffff) or 0x66000000
         } else highlightColor = (active and 0x00ffffff) or 0x55000000
@@ -560,6 +560,19 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             editable.replace(start, end, transformed)
             setSelection(start, start + transformed.length)
         }
+    }
+
+    fun snippetCapture(): EditorCapture {
+        val visual = layout
+        val first = visual?.getLineForVertical(scrollY.coerceAtLeast(0)) ?: 0
+        val visibleHeight = (height - totalPaddingTop - totalPaddingBottom).coerceAtLeast(1)
+        val last = visual?.getLineForVertical((scrollY + visibleHeight - 1).coerceAtLeast(0)) ?: 0
+        return EditorCapture(
+            minOf(selectionStart, selectionEnd).coerceIn(0, length()),
+            maxOf(selectionStart, selectionEnd).coerceIn(0, length()),
+            logicalLineAt(visual?.getLineStart(first) ?: 0),
+            logicalLineAt(visual?.getLineStart(last) ?: 0)
+        )
     }
 
     fun selectedSource(): String {

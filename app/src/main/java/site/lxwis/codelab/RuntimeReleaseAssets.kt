@@ -13,24 +13,26 @@ internal object RuntimeReleaseAssets {
     private const val MAX_APK_BYTES = 120L * 1024L * 1024L
 
     /** Only an explicitly published, small, recognized APK may enable a Download button. */
-    fun parseAssetNames(json: String): Set<String> {
-        val assets = JSONObject(json).optJSONArray("assets") ?: return emptySet()
+    fun parseAssetNames(json: String): Set<String> = parseAssetSizes(json).keys
+
+    private fun parseAssetSizes(json: String): Map<String, Long> {
+        val assets = JSONObject(json).optJSONArray("assets") ?: return emptyMap()
         val known = OptionalRuntimeLocator.Pack.entries.map {
             "CodeLab-" + it.suffix + ".apk"
         }.toSet()
-        val result = mutableSetOf<String>()
+        val result = mutableMapOf<String, Long>()
         for (i in 0 until assets.length()) {
             val asset = assets.optJSONObject(i) ?: continue
             val name = asset.optString("name")
             val size = asset.optLong("size", -1)
             if (name in known && asset.optString("state") == "uploaded" &&
-                size in 1..MAX_APK_BYTES) result.add(name)
+                size in 1..MAX_APK_BYTES) result[name] = size
         }
         return result
     }
 
     /** Call from Dispatchers.IO; never connect on the Android UI thread. */
-    fun fetch(): Set<String> {
+    fun fetch(): Map<String, Long> {
         val connection = URL(ENDPOINT).openConnection() as HttpURLConnection
         connection.connectTimeout = 6_000
         connection.readTimeout = 6_000
@@ -51,7 +53,7 @@ internal object RuntimeReleaseAssets {
                     output.write(block, 0, count)
                 }
             }
-            parseAssetNames(output.toString("UTF-8"))
+            parseAssetSizes(output.toString("UTF-8"))
         } finally {
             connection.disconnect()
         }

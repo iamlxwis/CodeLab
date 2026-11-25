@@ -34,16 +34,22 @@ class RunSession(context: Context) {
     }.getOrDefault(emptyList())
     var history by mutableStateOf(loadHistory())
         private set
+    internal var onFinished: ((RunRecord) -> Unit)? = null
     private var activeName: String? = null
-    private var lastLocalName: String? = null
-    private var lastLocalSource: String? = null
-    private var lastDebug = false
-    private var lastBreakpoints: List<Int> = emptyList()
-    val canRerun: Boolean get() = !running && lastLocalName != null
-    fun rerun() {
-        val name = lastLocalName ?: return
-        val source = lastLocalSource ?: return
-        run(name, source, lastDebug, lastBreakpoints)
+    internal data class Execution(val file: String, val source: String, val mode: String, val breakpoints: List<Int>? = null)
+
+    internal var execution by mutableStateOf<Execution?>(null)
+        private set
+
+    internal var outputOmitted by mutableStateOf(false)
+        private set
+
+    internal var outputCleared by mutableStateOf(false)
+        private set
+
+    private fun appendOutput(text: String) {
+        if (transcript.length + text.length > 70_000) outputOmitted = true
+        transcript = (transcript + text).takeLast(70_000)
     }
     // A stopped module may still be terminating its dedicated Android process.
     // Avoid immediately binding a new request to that dying service instance.
@@ -80,7 +86,6 @@ class RunSession(context: Context) {
     fun run(name: String, source: String, debug: Boolean = false,
         breakpoints: List<Int> = emptyList()) {
         if (running) return
-        transcript = ""
         if (!name.endsWith(".js", true) && !name.endsWith(".sql", true) && !name.endsWith(".lua", true) && !name.endsWith(".java", true) && !name.endsWith(".py", true) && !name.endsWith(".ts", true)) { status = "Run a .js, .py, .ts, .sql, .lua or .java file"; return }
         if (source.length > 128_000) { status = "Script exceeds 128,000 characters"; return }
         val pythonPack = if (name.endsWith(".py", true)) PythonModuleLocator.component(app) else null
@@ -97,32 +102,31 @@ class RunSession(context: Context) {
                 OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.SQLITE)
             else -> null
         }
-        if (name.endsWith(".py", true) && pythonPack == null) {
-            status = PythonModuleLocator.check(app).description
-            return
+        execution = Execution(name, source, "Offline", breakpoints.toList().takeIf { debug })
+        transcript = ""
+        outputOmitted = false
+        outputCleared = false
+        pausedLine = 0
+        debugVariables = ""
+        val unavailable = when {
+            name.endsWith(".py", true) && pythonPack == null -> PythonModuleLocator.check(app).description
+            name.endsWith(".ts", true) && optionalPack == null ->
+                OptionalRuntimeLocator.check(app, OptionalRuntimeLocator.Pack.TYPESCRIPT).description
+            debug && !name.endsWith(".js", true) -> "Debugger currently supports JavaScript only"
+            else -> null
         }
-        if (name.endsWith(".ts", true) && optionalPack == null) {
-            status = OptionalRuntimeLocator.check(app, OptionalRuntimeLocator.Pack.TYPESCRIPT).description
-            return
-        }
-        if (debug && !name.endsWith(".js", true)) {
-            status = "Debugger currently supports JavaScript only"
+        if (unavailable != null) {
+            status = unavailable
             return
         }
         activeName = name
-        lastLocalName = name
-        lastLocalSource = source
-        lastDebug = debug
-        lastBreakpoints = breakpoints
-        pausedLine = 0
-        debugVariables = ""
         running = true
         status = "Starting"
         val token = ++generation
         val replies = Messenger(Handler(Looper.getMainLooper()) { msg ->
             if (generation == token && running) {
                 when (msg.what) {
-                    OUTPUT -> transcript = (transcript + msg.body()).takeLast(70_000)
+                    OUTPUT -> appendOutput(msg.body())
                     WAITING -> { waiting = true; status = "Waiting for input" }
                     DEBUG_VARIABLES -> debugVariables = msg.body().take(4096)
                     DEBUG_PAUSED -> {
@@ -199,13 +203,12 @@ class RunSession(context: Context) {
     fun runOnline(name: String, source: String, endpoint: String, header: String,
                   credential: String, language: CloudJudge0.Language, stdin: String) {
         if (running) return
-        transcript = ""
         if (source.length > 128_000) { status = "Source exceeds 128,000 characters"; return }
         activeName = name
-        lastLocalName = null
-        lastLocalSource = null
-        lastDebug = false
-        lastBreakpoints = emptyList()
+        execution = Execution(name, source, "Online")
+        transcript = ""
+        outputOmitted = false
+        outputCleared = false
         pausedLine = 0
         debugVariables = ""
         running = true
@@ -217,7 +220,7 @@ class RunSession(context: Context) {
                 val result = CloudJudge0.execute(endpoint, header, credential, language, source, stdin)
                 main.post {
                     if (token == generation && running) {
-                        transcript = result.output.takeLast(70_000)
+                        appendOutput(result.output)
                         end("Online · " + result.status + " · Exit " + result.exitCode)
                     }
                 }
@@ -245,7 +248,11 @@ class RunSession(context: Context) {
         } catch (_: RemoteException) { end("Runtime disconnected") }
     }
 
-    fun clear() { transcript = "" }
+    fun clear() {
+        if (transcript.isNotEmpty()) outputCleared = true
+        transcript = ""
+        outputOmitted = false
+    }
 
     fun stop() {
         if (!running) return
@@ -269,6 +276,7 @@ class RunSession(context: Context) {
                     .put("result", item.result).put("excerpt", item.excerpt))
             }
             settings.edit().putString("history", encoded.toString()).apply()
+            onFinished?.invoke(record)
         }
         activeName = null
         generation++

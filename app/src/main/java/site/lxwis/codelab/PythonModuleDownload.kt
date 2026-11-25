@@ -105,6 +105,7 @@ internal class PythonModuleDownload(private val app: Context) {
             .setMimeType("application/vnd.android.package-archive")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setAllowedOverMetered(!wifiOnly())
+            .apply { if (wifiOnly()) setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI) }
             .setDestinationInExternalFilesDir(app, Environment.DIRECTORY_DOWNLOADS, apkName)
         val id = manager.enqueue(request)
         preferences.edit().putLong("python-id", id).apply()

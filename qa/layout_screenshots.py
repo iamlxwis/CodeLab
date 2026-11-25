@@ -35,7 +35,7 @@ def main():
                                        ('tablet', '2560x1600', '320')]:
             adb('shell', 'wm', 'size', pixels)
             adb('shell', 'wm', 'density', density)
-            for theme in ('Obsidian', 'Porcelain'):
+            for theme in ('Dark', 'Light'):
                 result = adb('shell', 'am', 'instrument', '-w', '-r',
                              '-e', 'class', 'site.lxwis.codelab.ReleaseVisualEvidenceTest',
                              '-e', 'visualEvidence', 'true', '-e', 'visualSize', name,

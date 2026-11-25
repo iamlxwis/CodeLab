@@ -1,6 +1,5 @@
 package site.lxwis.codelab
 
-import androidx.compose.runtime.staticCompositionLocalOf
 
 /** Public presets; legacy names remain readable for stored user recipes. */
 internal object CodeLabVisualStyles {
@@ -18,5 +17,3 @@ internal object CodeLabVisualStyles {
     }
     fun defaultMode(style: String) = if (canonical(style) in listOf("Porcelain", "Sandstone")) "Light" else "Dark"
 }
-
-internal val LocalCodeLabVisualStyle = staticCompositionLocalOf { "Obsidian" }

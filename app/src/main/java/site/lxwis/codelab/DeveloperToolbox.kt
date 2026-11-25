@@ -67,14 +67,11 @@ fun DeveloperToolbox(dismiss: () -> Unit) {
     var input by rememberSaveable { mutableStateOf("") }
     var output by rememberSaveable { mutableStateOf("") }
     var error by remember { mutableStateOf("") }
-    val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = dismiss, sheetState = sheet,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(.92f)
+    DestinationPage("Developer tools", dismiss) {
+        Column(Modifier.fillMaxWidth().weight(1f)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Developer tools", style = MaterialTheme.typography.headlineSmall)
             Text("Local transformations. Nothing is uploaded.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
