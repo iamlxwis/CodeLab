@@ -12,6 +12,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
 @RunWith(AndroidJUnit4::class)
 class ScreenshotRendererAndroidTest {
@@ -41,6 +42,9 @@ class ScreenshotRendererAndroidTest {
             SnippetScope.Visible, SnippetTheme.Light, true, false)
         assertEquals(source.lines().subList(1, 4), rows(visible).filter { it.number != null }.map(::rowText))
         assertNotEquals(selected.colors.page, visible.colors.page)
+        val withTrailingBreak = SnippetRenderer.plan(snapshot("first\nsecond",
+            EditorCapture(0, 6, 1, 2)), SnippetContent.Code, SnippetScope.Selected, SnippetTheme.Dark, true, false)
+        assertEquals(listOf("first", ""), rows(withTrailingBreak).filter { it.number != null }.map(::rowText))
     }
 
     @Test fun wrapsLongLinesAndExportsEveryNumberedPageWithPreviewPixels() = runBlocking {
@@ -64,6 +68,7 @@ class ScreenshotRendererAndroidTest {
         assertEquals(Intent.ACTION_SEND_MULTIPLE, share.action)
         assertEquals(uris.size, share.clipData?.itemCount)
         assertTrue(share.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0)
+        val output = File(context.getExternalFilesDir(null), "release-evidence").apply { mkdirs() }
         for (index in listOf(0, plan.pages.lastIndex)) {
             val preview = SnippetRenderer.render(plan, index)
             try {
@@ -74,6 +79,20 @@ class ScreenshotRendererAndroidTest {
                     assertEquals(1080, png.width)
                     assertTrue(png.height <= 1660)
                     assertTrue("Export raster differs from the preview", preview.sameAs(png))
+                    val numbered = if (index == 0) 1 else source.lines().size - 1
+                    val inPage = plan.pages[index]
+                    val row = inPage.indexOfFirst { it.number == numbered }
+                    assertTrue("Expected a first or last source row on this page", row >= 0)
+                    val y = 190 + inPage.take(row).sumOf(SnippetRenderer.Row::height)
+                    val left = inPage[row].paragraph.left
+                    assertTrue("Expected visible source ink in the exported PNG",
+                        (y until y + inPage[row].height).any { scan ->
+                            (left until left + 120).any { x -> png.getPixel(x, scan) != plan.colors.panel }
+                        })
+                    val label = if (index == 0) "first" else "last"
+                    checkNotNull(context.contentResolver.openInputStream(uris[index])).use { input ->
+                        File(output, "snippet-export-light-$label.png").outputStream().use { input.copyTo(it) }
+                    }
                 } finally { png.recycle() }
             } finally { preview.recycle() }
         }

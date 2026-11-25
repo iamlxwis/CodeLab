@@ -65,10 +65,22 @@ internal fun ActivityScreen(activity: DeveloperActivity, close: () -> Unit) {
 internal fun ActivitySummary(report: DeveloperActivity.Report) {
     Surface(shape = CodeLabCorners.card, color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(formatCodingTime(report.codingMillis) + " coding", style = MaterialTheme.typography.titleLarge)
-            Text("${report.projects} projects created · ${report.files} files edited",
-                style = MaterialTheme.typography.bodyMedium)
-            Text("${report.runs} runs · ${report.passed} passed · ${report.failed} failed · ${report.stopped} stopped",
+            Text(formatCodingTime(report.codingMillis), style = MaterialTheme.typography.headlineMedium)
+            Text("Time coding", style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            HorizontalDivider(Modifier.padding(vertical = 4.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf("Projects created" to report.projects, "Files edited" to report.files, "Runs" to report.runs)
+                    .forEach { (label, total) ->
+                        Column(Modifier.weight(1f)) {
+                            Text(total.toString(), style = MaterialTheme.typography.titleMedium)
+                            Text(label, style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+            }
+            if (report.runs > 0) Text(
+                "${report.passed} passed · ${report.failed} failed · ${report.stopped} stopped",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

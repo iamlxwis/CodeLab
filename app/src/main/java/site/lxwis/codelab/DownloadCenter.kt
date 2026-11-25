@@ -214,7 +214,13 @@ internal fun DownloadCenter(
                     Surface(shape = CodeLabCorners.iconTile, color = MaterialTheme.colorScheme.surfaceContainerLow) {
                         Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)) {
                             val storage = if (row.cached > 0) " · " + Formatter.formatShortFileSize(context, row.cached) + " cached" else ""
-                            DestinationRow(row.name, (if (row.installed) "Installed" else "Optional runtime") + storage,
+                            val status = when {
+                                row.installed -> "Verified pack installed"
+                                OfflineRuntimeRegistry.locallyAvailable(row.extension) -> "Built-in runtime · optional pack"
+                                row.completed -> "Pack ready to verify"
+                                else -> "Downloadable offline pack"
+                            }
+                            DestinationRow(row.name, status + storage,
                                 leading = { FileTypeIcon("runtime.${row.extension}", Modifier.size(24.dp)) }) {
                                 onRuntime(row.name)
                             }

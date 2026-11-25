@@ -124,7 +124,13 @@ private fun glassEffect(
 }
 
 @RequiresApi(33)
-private fun refractingEffect(size: Size, blur: android.graphics.RenderEffect, progressive: Boolean): android.graphics.RenderEffect {
+private fun refractingEffect(size: Size, blur: android.graphics.RenderEffect, progressive: Boolean): android.graphics.RenderEffect =
+    android.graphics.RenderEffect.createChainEffect(
+        android.graphics.RenderEffect.createRuntimeShaderEffect(refractionShader(size, progressive), "backdrop"), blur
+    )
+
+@RequiresApi(33)
+internal fun refractionShader(size: Size, progressive: Boolean): RuntimeShader {
     val shader = RuntimeShader(
         """
         uniform shader backdrop;
@@ -154,7 +160,5 @@ private fun refractingEffect(size: Size, blur: android.graphics.RenderEffect, pr
     )
     shader.setFloatUniform("bounds", size.width, size.height)
     shader.setFloatUniform("progressive", if (progressive) 1f else 0f)
-    return android.graphics.RenderEffect.createChainEffect(
-        android.graphics.RenderEffect.createRuntimeShaderEffect(shader, "backdrop"), blur
-    )
+    return shader
 }

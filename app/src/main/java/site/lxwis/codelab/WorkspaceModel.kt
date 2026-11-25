@@ -217,6 +217,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val wasConnected = isOnline
         isOnline = connected
         if (!connected) {
+            if (cloudPending != null) error = "Internet connection lost. Open Run again to choose a mode."
             cancelCloudRun()
             cloudLanguages = emptyMap()
             cloudError = "No internet connection"
@@ -245,6 +246,11 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                         cloudLanguages = emptyMap()
                         cloudError = it.message ?: "Online compiler unavailable"
                     }
+                val approval = cloudApproval
+                if (approval != null && cloudLanguages[CloudJudge0.extension(approval.filename)]?.id != approval.languageId) {
+                    cancelCloudRun()
+                    error = "Online compiler availability changed. Open Run again."
+                }
             }
         }
     }

@@ -302,41 +302,60 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                             onHorizontalDrag = { change, dx -> change.consume(); drag += dx })
                     }
             ) {
-                Row(Modifier.fillMaxWidth().padding(if (m.projectGrid) 4.dp else 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    ProjectLanguageIcon(m.projectCardDetails[name]?.template,
-                        Modifier.size(if (columns > 1) 22.dp else 28.dp))
-                    if (name in m.favorites) {
-                        Icon(Icons.Default.Star, "Favorite project",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = if (m.projectGrid) 2.dp else 10.dp).size(18.dp))
-                    }
-                    Column(Modifier.weight(1f).padding(start = if (m.projectGrid) 6.dp else 14.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                val summary = m.projectCardDetails[name]
+                val marked = name in m.favorites
+                val languageMark: @Composable () -> Unit = {
+                    ProjectLanguageIcon(summary?.template, Modifier.size(28.dp))
+                    if (marked) Icon(Icons.Default.Star, "Favorite project",
+                        tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(start = 6.dp).size(18.dp))
+                }
+                val details: @Composable (Modifier) -> Unit = { detailModifier ->
+                    Column(detailModifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.titleMedium)
-                        val summary = m.projectCardDetails[name]
                         Text(if (summary != null) summary.template + " · " +
                             summary.fileCount + (if (summary.fileCount == 1) " file" else " files")
                             else "Local project",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (summary?.description?.isNotBlank() == true) Text(
-                            summary.description,
-                            maxLines = 3, overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            summary.description, maxLines = 3, overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                }
+                val actions: @Composable () -> Unit = {
                     Box {
                         IconButton(onClick = { options = name }) { Icon(Icons.Default.MoreVert, "Manage $name") }
                         CodeLabDropdownMenu(expanded = options == name, onDismissRequest = { options = null }) {
                             DropdownMenuItem(
-                                text = { Text(if (name in m.favorites) "Remove from favorites" else "Add to favorites") },
+                                text = { Text(if (marked) "Remove from favorites" else "Add to favorites") },
                                 onClick = { options = null; m.toggleFavoriteProject(name) })
-                            DropdownMenuItem(text = { Text("Duplicate") }, leadingIcon = { Icon(Icons.Default.ContentCopy, null) }, onClick = { options = null; duplicate(name) })
-                            DropdownMenuItem(text = { Text("Rename") }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = { options = null; rename(name) })
+                            DropdownMenuItem(text = { Text("Duplicate") }, leadingIcon = { Icon(Icons.Default.ContentCopy, null) },
+                                onClick = { options = null; duplicate(name) })
+                            DropdownMenuItem(text = { Text("Rename") }, leadingIcon = { Icon(Icons.Default.Edit, null) },
+                                onClick = { options = null; rename(name) })
                             HorizontalDivider()
-                            DropdownMenuItem(text = { Text("Move to trash", color = MaterialTheme.colorScheme.error) }, leadingIcon = { Icon(Icons.Default.DeleteOutline, null, tint = MaterialTheme.colorScheme.error) }, onClick = { options = null; delete(name) })
+                            DropdownMenuItem(text = { Text("Move to trash", color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = { Icon(Icons.Default.DeleteOutline, null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = { options = null; delete(name) })
                         }
+                    }
+                }
+                if (columns > 1) {
+                    Column(Modifier.fillMaxWidth().heightIn(min = 124.dp).padding(start = 12.dp, end = 4.dp, bottom = 12.dp)) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            languageMark()
+                            Spacer(Modifier.weight(1f))
+                            actions()
+                        }
+                        details(Modifier.fillMaxWidth().padding(end = 8.dp))
+                    }
+                } else {
+                    Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        languageMark()
+                        details(Modifier.weight(1f).padding(start = 12.dp))
+                        actions()
                     }
                 }
             }

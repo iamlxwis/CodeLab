@@ -439,3 +439,7 @@ PR #17 targets the open 2.0 branch. The first integrated workspace, execution an
 ## Nov 25, 2026, 9:54 PM PHT — Reimagined 2.1 Android fixes
 
 Android 15 passed eight of ten stages on the first integration. Repaired two observed layout failures and the first APK run's lint constant error. Further testing covers execution eligibility, preview-to-PNG parity, grouped settings and narrow editor controls. Zero workstreams have complete evidence. [Device evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45613861590/artifacts/15022342038) · [Checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 10:03 PM PHT — Reimagined 2.1 refinement and signed checkpoint
+
+Confirmed build 1402 uses the existing production signer. Added responsive project cards, clearer download states, exact trailing snippet line breaks, consent recovery and a hardware Canvas shader test. Zero workstreams have complete evidence across final Android checks. [Integration APK](https://github.com/iamlxwis/CodeLab/actions/runs/45628377294) · [Checklist](REIMAGINED_2_1.md)

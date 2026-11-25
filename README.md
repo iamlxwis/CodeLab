@@ -24,7 +24,7 @@ Write, run, and manage projects from your phone.
 
 ## CodeLab Development Tracker
 
-**Development status:** IN PROGRESS — Nov 25, 2026, 9:54 PM PHT — 0/10 workstreams fully verified. Corrected Android lint, landscape source space and active-tab visibility. Rebuilding and rerunning Android 15.
+**Development status:** IN PROGRESS — Nov 25, 2026, 10:03 PM PHT — 0/10 workstreams fully verified. Verified the first signed candidate, then refined project cards, download states, snippet boundaries and consent recovery.
 
 [Reimagined 2.1 handoff](docs/development/REIMAGINED_2_1.md) · [Reimagined 2.0 baseline PR](https://github.com/iamlxwis/CodeLab/pull/16) · [Baseline Android 15 CI](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578)
 

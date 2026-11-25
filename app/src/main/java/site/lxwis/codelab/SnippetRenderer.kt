@@ -120,7 +120,7 @@ internal object SnippetRenderer {
                 SnippetScope.Full -> 0
             }
             val last = when (scope) {
-                SnippetScope.Selected -> lines.lineAt(((capture?.selectionEnd ?: 1) - 1).coerceIn(0, source.length))
+                SnippetScope.Selected -> lines.lineAt((capture?.selectionEnd ?: 0).coerceIn(0, source.length))
                 SnippetScope.Visible -> (capture?.lastLine?.minus(1) ?: first).coerceIn(first, lines.count - 1)
                 SnippetScope.Full -> lines.count - 1
             }

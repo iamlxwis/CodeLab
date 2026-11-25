@@ -242,7 +242,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     { selected = it; dialog = "deleteproject" },
                     { selected = it; dialog = "duplicateproject" }, importFolder = { openAction("folderimport") },
                     bottomPadding = bottom)
-            }, modifier = Modifier.weight(1f), backdropVisible = dialog.isEmpty() && !showTutorial && !keyboardEditing)
+            }, modifier = Modifier.weight(1f),
+                backdropVisible = dialog.isEmpty() && !showTutorial && !keyboardEditing,
+                workspaceCapsuleVisible = !keyboardEditing)
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             if (!focusMode && (!outputOpen || splitOpen)) Row(verticalAlignment = Alignment.CenterVertically) {

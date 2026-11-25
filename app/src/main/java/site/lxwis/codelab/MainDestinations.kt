@@ -67,7 +67,8 @@ internal fun MainDestinations(
     onAction: (String) -> Unit,
     projects: @Composable (Dp) -> Unit,
     modifier: Modifier = Modifier,
-    backdropVisible: Boolean = true
+    backdropVisible: Boolean = true,
+    workspaceCapsuleVisible: Boolean = true
 ) {
     val rendering = if (backdropVisible) rememberGlassRendering(model) else GlassRendering.Solid
     val backdrop = if (rendering >= GlassRendering.Blur) rememberGraphicsLayer() else null
@@ -84,7 +85,7 @@ internal fun MainDestinations(
         Box(Modifier.fillMaxSize()
             .onGloballyPositioned { origin = it.positionInRoot() }
             .then(if (backdrop != null) Modifier.recordGlassBackdrop(backdrop, colors.background) else Modifier)) {
-            val bottomPadding = if (workspace != null) 150.dp else 84.dp
+            val bottomPadding = if (workspace != null && workspaceCapsuleVisible) 150.dp else 84.dp
             when (destination) {
                 MainDestination.Home -> HomeDashboard(model, workspace, bottomPadding, onAction)
                 MainDestination.Projects -> projects(bottomPadding)
@@ -98,7 +99,7 @@ internal fun MainDestinations(
         }
         Column(Modifier.align(Alignment.BottomCenter).widthIn(max = 520.dp).fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (workspace != null) {
+            if (workspace != null && workspaceCapsuleVisible) {
                 LiquidGlassSurface(Modifier.fillMaxWidth(), RoundedCornerShape(50), backdrop, origin,
                     rendering, model.progressiveBlur) {
                     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
