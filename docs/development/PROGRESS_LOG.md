@@ -1,3 +1,7 @@
+## Nov 25, 2026, 5:07 PM PHT — Reimagined 2.0 branch opened
+
+Reimagined 2.0 starts from main `517f5bc` on `reimagined-2.0`. Verified workstreams 0/10. Baseline [APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45518242552) and [API 35 smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45518254838) passed. Branch architecture, workstream status and next action are tracked in [the handoff](REIMAGINED_2_0.md).
+
 ## November 25, 2026 — 08:27:07 AM PHT — Real-device suite exposed two viewport defects
 
 W1/W2/W7: API35 functional smoke and all 45 instrumentation tests passed; fixing measured 11-line phone viewport and source-starved landscape; 0/9 complete, 9 remaining; next exact-source layout rerun and production upgrade.
