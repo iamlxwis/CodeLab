@@ -427,3 +427,7 @@ Focused dependency advisory review: OSV querybatch returned empty results for pi
 ## Nov 25, 2026, 6:33 PM PHT — Reimagined 2.0 owner handoff
 
 **Session STOPPED.** Signed test APK build 1399 is ready. Four of ten workstreams have automated verification within their stated scope. The PR build passed 202 JVM tests and strict lint with zero errors. Android 15 passed all 10 device stages and 45 instrumentation tests. The signed in-place upgrade retained source and Dark appearance and ran the upgraded Python companion. Physical performance, TalkBack, secondary flows, live online execution and installer flows remain open in the handoff. [Draft PR](https://github.com/iamlxwis/CodeLab/pull/16) · [APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45591658540) · [Device evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578/artifacts/15012039749) · [Signed upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45591086074) · [Handoff](REIMAGINED_2_0.md)
+
+## Nov 25, 2026, 8:16 PM PHT — Reimagined 2.1 begins
+
+Refinement starts at PR #16 head `b4cbbf5` and targets `reimagined-2.0`. Implementation and verification are pending for all ten workstreams. [Baseline verified Android 15](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578) · [Refinement checklist](REIMAGINED_2_1.md)
