@@ -1,3 +1,7 @@
+## Nov 25, 2026, 6:33 PM PHT — Reimagined 2.0 owner handoff
+
+**Session STOPPED.** Signed test APK build 1399 is ready. Four of ten workstreams have automated verification within their stated scope. The PR build passed 202 JVM tests and strict lint with zero errors. Android 15 passed all 10 device stages and 45 instrumentation tests. The signed in-place upgrade retained source and Dark appearance and ran the upgraded Python companion. Physical performance, TalkBack, secondary flows, live online execution and installer flows remain open in the handoff. [Draft PR](https://github.com/iamlxwis/CodeLab/pull/16) · [APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45591658540) · [Device evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578/artifacts/15012039749) · [Signed upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45591086074) · [Handoff](REIMAGINED_2_0.md)
+
 ## Nov 25, 2026, 6:05 PM PHT — Device evidence and exact smoke retry
 
 The [API 35 run](https://github.com/iamlxwis/CodeLab/actions/runs/45589161235) passed clean install, tutorial, missing-runtime recovery, all 45 instrumentation tests, performance collection, motion collection, automated accessibility, 200% font scaling and layouts. Functional smoke stopped at the same checked-state distinction as signed upgrade. Restored the Compose-level assertion that actually passed. The shell smoke continues to require the target mode's actual checked state. Fully verified workstreams 0/10. [Branch handoff](REIMAGINED_2_0.md).

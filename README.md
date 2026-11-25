@@ -20,15 +20,13 @@ Write, run, and manage projects from your phone.
   &nbsp;&nbsp;
   <img src="docs/screenshots/web-preview.png" alt="CodeLab offline HTML preview on Android" width="290" />
 </p>
-<p align="center"><sub>Earlier-build Android emulator screenshots; current candidate screenshots and visual acceptance are pending.</sub></p>
+<p align="center"><sub>Earlier CodeLab emulator screenshots. <a href="https://github.com/iamlxwis/CodeLab/actions/runs/45591645578/artifacts/15012039749">Reimagined 2.0 emulator screenshots</a>.</sub></p>
 
 ## CodeLab Development Tracker
 
-**Development status:** IN PROGRESS — Nov 25, 2026, 6:05 PM PHT — 0/10 workstreams fully verified. Signed APK ready. API 35 passed 9/10 stages, with the appearance assertion corrected for the retry.
+**Development status:** STOPPED FOR OWNER REVIEW — Nov 25, 2026, 6:33 PM PHT — 4/10 workstreams verified within their automated scope. Signed build 1399 is ready. Android 15 passed all 10 test stages and the signed in-place upgrade.
 
-[Draft PR #16](https://github.com/iamlxwis/CodeLab/pull/16) · [Reimagined 2.0 handoff](docs/development/REIMAGINED_2_0.md) · [Baseline build](https://github.com/iamlxwis/CodeLab/actions/runs/45518242552) · [Baseline API 35 smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45518254838)
-
-[Test APK build 1396](https://github.com/iamlxwis/CodeLab/actions/runs/45588932391/artifacts/15011095244)
+[Draft PR #16](https://github.com/iamlxwis/CodeLab/pull/16) · [Download test APK](https://github.com/iamlxwis/CodeLab/actions/runs/45591658540/artifacts/15011378513) · [Android 15 evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578/artifacts/15012039749) · [Reimagined 2.0 handoff](docs/development/REIMAGINED_2_0.md)
 
 ## Features
 
