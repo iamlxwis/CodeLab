@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.1-alpha — Reimagined 2.1 (2026-11-25)
+
+Merged into main; public APK publication is separate.
+
+- Run-time execution chooser, compact editor, keyboard-aware controls and integrated console.
+- Code, Result and Combined snippet images, full-file capture, pagination and Light/Dark themes.
+- Distinct Home and Projects, responsive project cards, grouped settings and refined glass navigation.
+
+## 0.6.0-alpha — Reimagined 2.0 (2026-11-25)
+
+- Neutral System, Light and Dark appearance, independent editor preferences and floating workspace navigation.
+- Home, Projects, Explore, universal search, local activity, unified downloads and official update checks.
+- Language identity assets or monograms across the existing catalog.
+
+See [current release notes](docs/RELEASE_NOTES.md) for verification and limitations.
+
 ## 0.5.0-alpha — 2026-11-23
 
 - System-aware motion controller honoring Android animation disable setting.
