@@ -92,7 +92,8 @@ def scroll_to(*labels, attempts=6, direction="down", swipe_x=.5):
 
 def selected(label):
     return any(
-        node.attrib.get("selected") == "true"
+        (node.attrib.get("selected") == "true"
+         or (node.attrib.get("checkable") == "true" and node.attrib.get("checked") == "true"))
         and any(child.attrib.get("text") == label for child in node.iter("node"))
         for node in nodes()
     )

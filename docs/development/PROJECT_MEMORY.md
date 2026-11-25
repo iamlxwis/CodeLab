@@ -1,3 +1,7 @@
+## Nov 25, 2026, 6:01 PM PHT — Signed APK and Android appearance evidence
+
+The [branch build](https://github.com/iamlxwis/CodeLab/actions/runs/45588932391) passed 202 JVM tests, strict lint and production signer continuity. Build 1396 and all six optional APKs matched the expected production certificate. The [signed Android 15 upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45588925015) installed and restored the project, then stopped at a Dark mode assertion. The Android tree records the mode as checked. Tests now read that state and retain the preference and runtime assertions. Fully verified workstreams 0/10. See [the handoff](REIMAGINED_2_0.md).
+
 ## Nov 25, 2026, 5:48 PM PHT — Compose lint correction
 
 The prior source passed 202 JVM tests and compiled instrumentation. Strict lint reported `ProduceStateDoesNotAssignValue` on the two runtime installer checks. Both checks now use keyed effects and keep APK verification on the I/O dispatcher. Next verify strict lint, the signed PR artifact and API 35 evidence. Fully verified workstreams 0/10. [Branch handoff](REIMAGINED_2_0.md).

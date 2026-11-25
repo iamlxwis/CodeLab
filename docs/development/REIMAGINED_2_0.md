@@ -33,6 +33,10 @@ The updated candidate simplifies editor-settings migration, applies workspace an
 
 The `febfa99` local JVM suite passed 202 tests and compiled the instrumentation suite. Strict lint flagged `ProduceStateDoesNotAssignValue` on two runtime verification producers. The follow-up keeps verification on the I/O dispatcher using keyed effects and separate observable state. It also gives the manual signed-upgrade run a separate concurrency group from the fast PR build.
 
+Commit `85f0a7b` produced the [signed test APK, build 1396](https://github.com/iamlxwis/CodeLab/actions/runs/45588932391/artifacts/15011095244). The PR workflow passed 202 JVM tests and strict lint with 76 warnings. The distributed APK verifies with production signer `c81d2aa1…c9e42392` and APK SHA-256 `304222016a759f8373eddcc97f330db65988a2e3e0348b8fcbc6ea59bde6a056`. All six packs' signer and SHA-256 values were also independently verified.
+
+The [initial signed upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45588925015) installed the newer signed packages and restored the saved project and source. It stopped at the Dark mode assertion. The archived accessibility tree shows the Dark option as `checkable=true, checked=true`. The earlier assertion read only `selected`. The follow-up verifies the real checked state and reruns the upgrade and runtime gates.
+
 ## Next action
 
 Review the branch APK workflow and device evidence. Fix real failures, download and inspect the candidate APK, and record remaining physical-device coverage before handing off.

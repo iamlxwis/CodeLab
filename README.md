@@ -24,9 +24,11 @@ Write, run, and manage projects from your phone.
 
 ## CodeLab Development Tracker
 
-**Development status:** IN PROGRESS — Nov 25, 2026, 5:48 PM PHT — 0/10 workstreams fully verified. Corrected Compose lint errors and queued updated APK and device checks.
+**Development status:** IN PROGRESS — Nov 25, 2026, 6:01 PM PHT — 0/10 workstreams fully verified. Signed build 1396 is available. Correcting the device test assertion for the appearance mode.
 
 [Draft PR #16](https://github.com/iamlxwis/CodeLab/pull/16) · [Reimagined 2.0 handoff](docs/development/REIMAGINED_2_0.md) · [Baseline build](https://github.com/iamlxwis/CodeLab/actions/runs/45518242552) · [Baseline API 35 smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45518254838)
+
+[Test APK build 1396](https://github.com/iamlxwis/CodeLab/actions/runs/45588932391/artifacts/15011095244)
 
 ## Features
 
