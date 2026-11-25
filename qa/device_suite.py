@@ -9,7 +9,8 @@ STAGES = [
     ('tutorial-resume', ['python3', 'qa/tutorial_resume_smoke.py']),
     ('missing-runtime', ['python3', 'qa/missing_python_smoke.py']),
     ('functional-smoke', ['python3', 'qa/device_smoke.py']),
-    ('instrumentation', ['bash', 'gradlew', ':app:connectedDebugAndroidTest']),
+    ('instrumentation', ['bash', 'gradlew', '--no-daemon', '--max-workers=2',
+                         '-Dorg.gradle.jvmargs=-Xmx1g -Dfile.encoding=UTF-8', ':app:connectedDebugAndroidTest']),
     ('performance', ['python3', 'qa/performance_smoke.py']),
     ('motion', ['python3', 'qa/motion_smoke.py']),
     ('accessibility', ['python3', 'qa/accessibility_audit.py']),
@@ -17,7 +18,14 @@ STAGES = [
     ('layouts', ['python3', 'qa/layout_screenshots.py']),
 ]
 
-def run_stages(stages, output, execute=subprocess.run):
+def device_online():
+    try:
+        result = subprocess.run(['adb', 'get-state'], capture_output=True, text=True, timeout=15)
+        return result.returncode == 0 and result.stdout.strip() == 'device'
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+def run_stages(stages, output, execute=subprocess.run, probe=None):
     output.mkdir(parents=True, exist_ok=True)
     results = []
     for name, command in stages:
@@ -26,6 +34,12 @@ def run_stages(stages, output, execute=subprocess.run):
         (output / 'suite-results.json').write_text(json.dumps(results, indent=2))
         print(f'::group::Device verification: {name}', flush=True)
         started = time.monotonic()
+        if probe is not None and not probe():
+            entry.update(status='blocked', returncode=1, error='Android device unavailable')
+            (output / 'suite-results.json').write_text(json.dumps(results, indent=2))
+            print(f'{name}: blocked (Android device unavailable)', flush=True)
+            print('::endgroup::', flush=True)
+            continue
         try:
             entry['returncode'] = execute(command, check=False).returncode
         except Exception as error:
@@ -33,15 +47,18 @@ def run_stages(stages, output, execute=subprocess.run):
             entry['error'] = type(error).__name__
         entry['seconds'] = round(time.monotonic() - started, 2)
         entry['status'] = 'passed' if entry['returncode'] == 0 else 'failed'
+        if probe is not None and not probe():
+            entry['command_returncode'] = entry['returncode']
+            entry.update(status='blocked', returncode=1, error='Android device connection lost during this stage')
         (output / 'suite-results.json').write_text(json.dumps(results, indent=2))
         print(f'{name}: {entry["status"]} (exit {entry["returncode"]})', flush=True)
         print('::endgroup::', flush=True)
     return results
 
 def successful(results):
-    return bool(results) and all(entry['returncode'] == 0 for entry in results)
+    return bool(results) and all(entry['returncode'] == 0 and entry['status'] == 'passed' for entry in results)
 
 if __name__ == '__main__':
-    results = run_stages(STAGES, Path('qa-results'))
+    results = run_stages(STAGES, Path('qa-results'), probe=device_online)
     print(json.dumps(results, indent=2))
     raise SystemExit(0 if successful(results) else 1)

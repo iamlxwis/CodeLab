@@ -1,5 +1,19 @@
 
 
+## November 25, 2026 — 08:02:41 AM PHT — Emulator transport loss, not an accepted app result
+
+W1: repairing emulator infrastructure after ADB vanished; prebuilding instrumentation, stopping build daemons and disabling emulator Vulkan; 0/9 verified complete, 9 remaining; next retry API35 with host diagnostics and preserve every failed or blocked check.
+
+Source 61ab6f2a6bc9ed8e88ebff11a1afdecf64f01033 passed CI 45512837209. Actual JUnit XML: 208 tests, zero failures/errors/skips; strict lint zero errors/37 warnings. APK 0.5.1-alpha/1389 is 4,383,948 bytes, SHA256 66e75994485f4ffa4faa03f9ca06f5270aff61b0a24896e25d6e6804d7987d5c; actual v2 signing certificate matches permanent c81d2aa1…c9e42392.
+
+Device 45512870975 suite-results.json: release clean install PASS, tutorial resume PASS, missing Python recovery PASS; functional smoke lost the emulator while opening Themes before reaching editor input. Screenshot/logcat capture then timed out; connected tests reported No connected devices; shutdown could not connect to emulator TCP5554. This establishes a lost emulator, NOT seven independent application defects and NOT verification of the rapid-input fix. Precise host death cause is unestablished because host kernel/resource logs were absent.
+
+CI-only correction: build instrumentation APK before boot, run Kotlin compiler in build process with two workers, stop build Gradle daemon before boot, bound connected-test JVM to 1GiB/no persistent daemon, explicit two-core/2GiB software-GLES emulator with Vulkan disabled, capture host memory/disk/process/kernel diagnostics. API35/manual dispatch, cancel-in-progress, mandatory checks/signing/publication gates unchanged. Independent suite now labels unavailable-device checks Blocked and keeps the overall result failing; a regression proves no-device cannot pass. Fifteen local QA guard tests plus static security pass. No application code changed in this CI-only repair. Next exact-source build/API35 retry must establish editor input, instrumentation, screenshots and measurements before acceptance.
+
+Focused dependency advisory review: OSV querybatch returned empty results for pinned Maven Rhino1.7.15.1, LuaJ3.0.1, BeanShell2.1.1 and JGit7.6.0.202603022253-r. This is a four-direct-coordinate lookup, not a complete transitive vulnerability scan. Reviewed upstream Rhino advisory GHSA-3w8q-xq97-5j7x (pinned1.7.15.1 is listed patched); JGit7.7.1 release describes an Apache SSHD security update, which must not be conflated with proven core HTTPS exposure without a resolved graph. No dependency upgrades were made speculatively.
+
+
+
 ## November 25, 2026 — 07:46:41 AM PHT — Native editor input blocker and independent QA
 
 W1/W2/W7: fixing rapid-input loss by reading the live editor model; keeping stdin visible in short panes and guidance compact; 0/9 verified complete, 9 remaining; next cumulative build plus all independent API35 checks with failures retained.

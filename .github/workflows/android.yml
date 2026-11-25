@@ -193,6 +193,9 @@ jobs:
       # No emulator on routine source pushes; preserve the manual same-SHA
       # release gate below. GitHub Release assets remain individual APKs because
       # the in-app module manager downloads those exact public asset filenames.
+      - name: Release build memory before production upgrade verification
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
+        run: bash gradlew --stop
       - name: Enable acceleration for production upgrade verification
         if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.publish_release == true
         run: |
@@ -207,6 +210,9 @@ jobs:
           arch: x86_64
           target: google_apis
           profile: pixel_2
+          cores: 2
+          ram-size: 2048M
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot -feature -Vulkan
           disable-animations: true
           script: python3 qa/production_upgrade_smoke.py
       - name: Record verified production upgrade

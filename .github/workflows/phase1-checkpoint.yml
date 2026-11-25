@@ -1,5 +1,5 @@
 # Explicit Reimagined APK delivery checkpoint; routine source pushes remain fast.
-# Final stabilization: retain rapid input across recomposition and collect every device result.
+# Final stabilization: release build heap before emulator boot; diagnose device disconnections.
 name: Guarded release checkpoint
 on:
   push:

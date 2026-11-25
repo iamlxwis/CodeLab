@@ -22,3 +22,11 @@ class DeviceSuiteTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             self.assertFalse(successful(run_stages([('missing', ['missing'])], Path(folder), execute)))
         self.assertFalse(successful([]))
+
+    def test_disconnected_emulator_is_blocked_and_cannot_pass(self):
+        with tempfile.TemporaryDirectory() as folder:
+            def never_run(command, **kwargs):
+                self.fail('A device-dependent stage ran without a device')
+            results = run_stages([('check', ['check'])], Path(folder), never_run, probe=lambda: False)
+            self.assertEqual('blocked', results[0]['status'])
+            self.assertFalse(successful(results))
