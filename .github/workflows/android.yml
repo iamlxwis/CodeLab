@@ -343,7 +343,7 @@ jobs:
           [Installation guide](https://github.com/iamlxwis/CodeLab/blob/main/docs/INSTALLATION.md) · [Changelog](https://github.com/iamlxwis/CodeLab/blob/main/CHANGELOG.md)
           EOF
           )"
-          NOTES="$NOTES"$'\n\n'"Build: `$GITHUB_SHA`"
+          NOTES="$NOTES"$'\n\n'"Build: \`$GITHUB_SHA\`"
           if [[ "$CODELAB_UPGRADE_COMPATIBILITY" == "signature_changed" ]]; then
             NOTES="$NOTES IMPORTANT: The signing certificate changed since the previous release. Android may reject this APK over an existing CodeLab installation. Export project ZIPs while the old app still works and save them outside the app. Only then uninstall, install CodeLab.apk and import the backups. There is no safe bypass for Android's signature check."
           fi
@@ -357,3 +357,12 @@ jobs:
           else
             gh release create latest release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab-JavaScript.apk release/CodeLab-Lua.apk release/CodeLab-Java.apk release/CodeLab-TypeScript.apk release/CodeLab-SQLite.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --target "$GITHUB_SHA" --title "CodeLab — Reimagined 2.1" --notes "$NOTES" --latest
           fi
+          # Keep the legacy latest tag for installed clients, and create a
+          # separate versioned release with the exact same verified assets.
+          VERSION="$(sed -nE 's/^[[:space:]]*versionName = "([^"]+)".*/\1/p' app/build.gradle.kts | head -n 1)"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9.-]+)?$ ]] || { echo "::error::Invalid app version"; exit 1; }
+          TAG="v$VERSION"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            TAG="$TAG-build.$CODELAB_VERSION_CODE"
+          fi
+          gh release create "$TAG" release/CodeLab.apk release/CodeLab-Python.apk release/CodeLab-JavaScript.apk release/CodeLab-Lua.apk release/CodeLab-Java.apk release/CodeLab-TypeScript.apk release/CodeLab-SQLite.apk release/CodeLab.apk.sha256 release/CodeLab-build-info.txt --target "$GITHUB_SHA" --title "CodeLab — Reimagined 2.1" --notes "$NOTES" --latest
