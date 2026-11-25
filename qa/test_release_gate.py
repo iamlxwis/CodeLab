@@ -17,11 +17,12 @@ class ReleaseGateTest(unittest.TestCase):
     def test_only_exact_commit_authorizes_release(self):
         self.assertEqual("pending", classify({"workflow_runs": [run(OTHER)]}, SHA)[0])
         self.assertEqual("pending", classify(
-            {"workflow_runs": [run(event="push")]}, SHA)[0])
+            {"workflow_runs": [run(event="pull_request")]}, SHA)[0])
 
-    def test_manual_api35_run_only(self):
+    def test_push_or_manual_api35_run(self):
         self.assertEqual("pending", classify({"workflow_runs": [run(event="push")]}, SHA)[0])
         self.assertEqual("passed", classify({"workflow_runs": [run(event="workflow_dispatch")]}, SHA)[0])
+        self.assertEqual("passed", classify({"workflow_runs": [run(event="push")]}, SHA)[0])
 
     def test_success_requires_completed_workflow(self):
         self.assertEqual("pending", classify(

@@ -1,5 +1,16 @@
 name: Android device smoke
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'engine-*/**'
+      - 'qa/**'
+      - 'gradle/**'
+      - 'gradlew'
+      - '*.gradle.kts'
+      - '.github/workflows/android.yml'
+      - '.github/workflows/device.yml'
   workflow_dispatch:
 permissions:
   contents: read
