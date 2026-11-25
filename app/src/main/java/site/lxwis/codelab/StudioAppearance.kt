@@ -13,7 +13,8 @@ internal data class StudioAppearance(
     val editorBackground: String = "", val consoleBackground: String = "",
     val navigationBackground: String = "", val borderColor: String = "", val selectionColor: String = "",
     val uiScale: Int = 100, val editorTextSize: Int = 0,
-    val functions: String = "", val types: String = "", val properties: String = ""
+    val functions: String = "", val types: String = "", val properties: String = "",
+    val editorMode: String = "System"
 ) {
     fun encode(): String = JSONObject().put("background", background).put("surface", surface)
         .put("foreground", foreground).put("corners", corners).put("opacity", opacity)
@@ -24,7 +25,8 @@ internal data class StudioAppearance(
         .put("editorBackground", editorBackground).put("consoleBackground", consoleBackground)
         .put("navigationBackground", navigationBackground).put("borderColor", borderColor)
         .put("selectionColor", selectionColor).put("uiScale", uiScale).put("editorTextSize", editorTextSize)
-        .put("functions", functions).put("types", types).put("properties", properties).toString()
+        .put("functions", functions).put("types", types).put("properties", properties)
+        .put("editorMode", editorMode).toString()
 
     companion object {
         fun decode(raw: String?): StudioAppearance = try {
@@ -43,9 +45,30 @@ internal data class StudioAppearance(
                 hex("editorBackground"), hex("consoleBackground"), hex("navigationBackground"), hex("borderColor"), hex("selectionColor"),
                 j.optInt("uiScale", 100).coerceIn(80, 140),
                 j.optInt("editorTextSize", 0).takeIf { it in 10..28 } ?: 0,
-                hex("functions"), hex("types"), hex("properties"))
+                hex("functions"), hex("types"), hex("properties"), migrateAppearanceMode(j.optString("editorMode")))
         } catch (_: Exception) { StudioAppearance() }
     }
 }
 
 internal val LocalStudioAppearanceUpdater = androidx.compose.runtime.staticCompositionLocalOf<((StudioAppearance) -> Unit)?> { null }
+
+/** Read legacy preferences while keeping project data and old builds' settings intact. */
+internal fun legacyAppearanceSettings(preferences: android.content.SharedPreferences): String? {
+    val style = preferences.getString("visual-style", null)
+        ?: when (preferences.getString("preset", null)) {
+            "OLED" -> "AMOLED"
+            "Paper", "GitHub Light" -> "Paper"
+            else -> "Obsidian"
+        }
+    val canonical = CodeLabVisualStyles.canonical(style)
+    return (listOf(style, canonical) + CodeLabVisualStyles.legacyNames(canonical))
+        .firstNotNullOfOrNull { preferences.getString("studio:$it", null) }
+}
+
+internal fun StudioAppearance.retainedPreferences(): StudioAppearance = StudioAppearance(
+    uiFont = uiFont, editorFont = editorFont, uiFontRevision = uiFontRevision,
+    editorFontRevision = editorFontRevision, uiScale = uiScale, editorTextSize = editorTextSize,
+    editorBackground = editorBackground, selectionColor = selectionColor, comments = comments,
+    strings = strings, numbers = numbers, keywords = keywords, functions = functions,
+    types = types, properties = properties, editorMode = editorMode
+)

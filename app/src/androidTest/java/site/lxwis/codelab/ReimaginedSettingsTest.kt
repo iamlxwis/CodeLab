@@ -25,8 +25,9 @@ class ReimaginedSettingsTest {
         try {
             compose.setContent { MaterialTheme { ReimaginedSettings(model, {}, {}) } }
             compose.onNodeWithContentDescription("Search settings").performTextInput("motion")
-            compose.onNodeWithText("Motion & Haptics").performClick()
-            compose.onNodeWithText("Reduced").performClick()
+            compose.onNodeWithText("Performance & Interaction").performClick()
+            compose.onNodeWithText("Advanced motion").performScrollTo().performClick()
+            compose.onNodeWithText("Reduced").performScrollTo().performClick()
             compose.runOnIdle { assertEquals("Reduced", model.motionPreference) }
             compose.onNodeWithText("Fluid").performClick()
             compose.onNodeWithText("Slide").performScrollTo().performClick()

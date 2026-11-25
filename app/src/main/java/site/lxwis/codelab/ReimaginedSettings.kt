@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -18,35 +19,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-private data class SettingDestination(val name: String, val detail: String, val id: String, val icon: ImageVector)
+internal data class SettingDestination(val name: String, val detail: String, val id: String, val icon: ImageVector)
 
-private val settingsDestinations = listOf(
-    SettingDestination("Appearance", "Presets, accent and automatic light/dark", "appearance", Icons.Default.Palette),
-    SettingDestination("Theme Studio", "Component colors, glass, fonts and syntax", "studio", Icons.Default.ColorLens),
-    SettingDestination("Motion & Haptics", "Animation presets, speed and touch feedback", "motion", Icons.Default.Animation),
-    SettingDestination("Editor", "Text, indentation and workspace controls", "editor", Icons.Default.Code),
-    SettingDestination("Languages & Runtimes", "Installed packs and execution availability", "languages", Icons.Default.Extension),
-    SettingDestination("Keyboard & Gestures", "Coding shortcuts and accessible alternatives", "keyboard", Icons.Default.Keyboard),
-    SettingDestination("Storage & Projects", "Import, export, recovery and saved layouts", "storage", Icons.Default.FolderOpen),
-    SettingDestination("Privacy & Security", "Source uploads, credentials and local storage", "privacy", Icons.Default.Security),
-    SettingDestination("Help & About", "Replay lessons, accessibility and app information", "help", Icons.Default.HelpOutline)
+internal val settingsDestinations = listOf(
+    SettingDestination("Appearance", "Light and dark, fonts and glass", "appearance", Icons.Default.Palette),
+    SettingDestination("Performance & Interaction", "Motion, haptics and automatic optimization", "motion", Icons.Default.Speed),
+    SettingDestination("Editor", "Fonts, text size, indentation and syntax", "editor", Icons.Default.Code),
+    SettingDestination("Workspace", "Keyboard, gestures, panels and layouts", "keyboard", Icons.Default.Keyboard),
+    SettingDestination("Execution", "Language support and offline runtimes", "languages", Icons.Default.Extension),
+    SettingDestination("Downloads & Storage", "Downloads, backups and recovery", "storage", Icons.Default.FolderOpen),
+    SettingDestination("Privacy & Security", "Source uploads, credentials and local data", "privacy", Icons.Default.Security),
+    SettingDestination("Help & About", "Tutorials, updates, licenses and accessibility", "help", Icons.Default.HelpOutline)
 )
 
 @Composable
-internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, close: () -> Unit) {
+internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, close: () -> Unit, initialPage: String? = null) {
     var query by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
-    var page by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+    var page by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(initialPage) }
     val title = settingsDestinations.firstOrNull { it.id == page }?.name ?: "Settings"
-    CodeLabDialog(onDismissRequest = { if (page != null) page = null else close() },
+    fun goBack() { if (page != null && initialPage == null) page = null else close() }
+    CodeLabDialog(onDismissRequest = ::goBack,
         properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        androidx.activity.compose.BackHandler(enabled = page != null) { page = null }
+        androidx.activity.compose.BackHandler(enabled = page != null, onBack = ::goBack)
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().imePadding().padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { if (page != null) page = null else close() }) {
-                        Icon(Icons.Default.ArrowBack, if (page != null) "Back to settings" else "Close settings")
+                    IconButton(onClick = { goBack() }) {
+                        Icon(Icons.Default.ArrowBack, if (page != null && initialPage == null) "Back to settings" else "Close settings")
                     }
-                    Text(title, Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
+                    Text(title, Modifier.weight(1f), style = MaterialTheme.typography.headlineLarge)
                 }
                 if (page == null) CodeLabSearch(query, { query = it }, "Search settings")
                 LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(vertical = 12.dp),
@@ -61,7 +62,7 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                                 fadeOutSpec = if (workspaceMotion().millis(140) > 0) androidx.compose.animation.core.tween(workspaceMotion().millis(140)) else null)) {
                             SettingsLink(row.name, row.detail, row.icon) {
                                 when (row.id) {
-                                    "appearance", "studio", "languages" -> onAction(row.id)
+                                    "languages" -> onAction(row.id)
                                     else -> page = row.id
                                 }
                             }
@@ -70,8 +71,21 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                     } else item {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             when (page) {
-                                "motion" -> MotionSettingsControls(m)
+                                "appearance" -> AppearanceSettings(m)
+                                "motion" -> {
+                                    SettingToggle("Reduce animations", m.motionPreference == "Reduced") {
+                                        m.chooseMotionPreset(if (it) "Reduced" else "Standard")
+                                    }
+                                    SettingToggle("Haptic feedback", m.touchFeedback, m::chooseTouchFeedback)
+                                    SettingToggle("Automatic optimization", m.automaticOptimization, m::chooseAutomaticOptimization)
+                                    var advanced by rememberSaveable { mutableStateOf(false) }
+                                    SettingsLink("Advanced motion", "Adjust animation speed and response", Icons.Default.Animation) {
+                                        advanced = !advanced
+                                    }
+                                    if (advanced) MotionSettingsControls(m)
+                                }
                                 "editor" -> {
+                                    EditorAppearanceControls(m)
                                     EditorPreferenceControls(false)
                                     SettingToggle("Focus mode", m.focusMode, m::chooseFocusMode)
                                     SettingsLink("Workspace layout", "Density, panel sizes and status bar", Icons.Default.ViewSidebar) { onAction("panels") }
@@ -79,12 +93,15 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                                 }
                                 "keyboard" -> {
                                     EditorPreferenceControls(true)
+                                    SettingsLink("Workspace layout", "Density, panel sizes and status bar", Icons.Default.ViewSidebar) { onAction("panels") }
+                                    SettingsLink("Saved layouts", "Save and restore workspace configurations", Icons.Default.Dashboard) { onAction("layoutpresets") }
                                     Text("Gestures", style = MaterialTheme.typography.titleMedium)
                                     Text("Swipe the editor navigation strip to change files. Swipe the Explorer button to reveal files. Long-press a tab handle, then drag to reorder. Pinch with two fingers to change editor text size.")
                                     Text("Drag the console divider to resize it; double-tap its header to maximize. Swipe project rows for quick actions. Long-press files and projects for contextual actions.")
                                     Text("Use tab menus, text-size controls, Explorer and panel sliders as alternatives. Gestures stay inside workspace controls to preserve Android navigation and text selection.", style = MaterialTheme.typography.bodySmall)
                                 }
                                 "storage" -> {
+                                    SettingsLink("Downloads", "Manage app updates and offline packs", Icons.Default.Download) { onAction("downloads") }
                                     Text("Projects are stored in CodeLab's private app storage. Export a backup before uninstalling or clearing app data.")
                                     SettingsLink("Import projects", "Review a ZIP archive before copying it", Icons.Default.Archive) { onAction("importzip") }
                                     SettingsLink("Import device folder", "Copy files while preserving the original folder", Icons.Default.FolderOpen) { onAction("folderimport") }
@@ -93,6 +110,7 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                                     SettingsLink("Saved layouts", "Named workspace configurations", Icons.Default.Dashboard) { onAction("layoutpresets") }
                                 }
                                 "privacy" -> {
+                                    SettingsLink("Developer activity", "Configure activity recording and clear history", Icons.Default.QueryStats) { onAction("activity") }
                                     Text("Source code", style = MaterialTheme.typography.titleMedium)
                                     Text("Offline execution stays on your device. Online execution requires confirmation before uploading source. Changing execution mode does not upload code.")
                                     Text("Credentials", style = MaterialTheme.typography.titleMedium)
@@ -108,6 +126,12 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                                     val context = androidx.compose.ui.platform.LocalContext.current
                                     val version = remember(context) { context.packageManager.getPackageInfo(context.packageName, 0).versionName.orEmpty() }
                                     Text("Version " + version, style = MaterialTheme.typography.bodySmall)
+                                    SettingsLink("Software update", "Check official GitHub releases", Icons.Default.SystemUpdate) { onAction("updates") }
+                                    SettingsLink("What's new", "Release notes and update history", Icons.Default.NewReleases) { onAction("updates") }
+                                    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                                    SettingsLink("GitHub", "Source code and issue tracker", Icons.Default.OpenInNew) {
+                                        uriHandler.openUri("https://github.com/iamlxwis/CodeLab")
+                                    }
                                     SettingsLink("Quick start guide", "Replay practical lessons and try real features", Icons.Default.School) { onAction("tutorial") }
                                     SettingsLink("Accessibility", "Contrast, interface text and touch feedback", Icons.Default.AccessibilityNew) { onAction("accessibility") }
                                     SettingsLink("Performance diagnostics", "Actual local save and workspace timings", Icons.Default.Speed) { onAction("performance") }
@@ -161,12 +185,11 @@ internal fun MotionSettingsControls(m: WorkspaceModel) {
             FilterChip(m.transitionEffect == effect, { m.chooseTransitionEffect(effect) }, label = { Text(effect) })
         }
     }
-    SettingToggle("Touch feedback", m.touchFeedback, m::chooseTouchFeedback)
     Text("Android's Remove animations setting always takes precedence. Touch feedback respects the system haptics setting.", style = MaterialTheme.typography.bodySmall)
 }
 
 @Composable
-private fun SettingToggle(label: String, checked: Boolean, change: (Boolean) -> Unit) {
+internal fun SettingToggle(label: String, checked: Boolean, change: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(label, Modifier.weight(1f))
         Switch(checked, change, modifier = Modifier.semantics { contentDescription = label })

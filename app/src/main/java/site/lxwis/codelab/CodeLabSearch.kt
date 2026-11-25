@@ -1,6 +1,7 @@
 package site.lxwis.codelab
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -20,7 +21,7 @@ import androidx.compose.ui.unit.dp
 /** Shared compact, filled search field with explicit clear affordance. */
 @Composable
 internal fun CodeLabSearch(value: String, change: (String) -> Unit, hint: String,
-    modifier: Modifier = Modifier.fillMaxWidth()) {
+    modifier: Modifier = Modifier.fillMaxWidth(), submit: (() -> Unit)? = null) {
     val motion = workspaceMotion()
     val colors = MaterialTheme.colorScheme
     TextField(value = value, onValueChange = change, modifier = modifier.semantics { contentDescription = hint },
@@ -34,6 +35,7 @@ internal fun CodeLabSearch(value: String, change: (String) -> Unit, hint: String
             }
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = submit?.let { action -> { action() } }),
         colors = TextFieldDefaults.colors(
             focusedContainerColor = colors.surfaceContainerHigh,
             unfocusedContainerColor = colors.surfaceContainer,

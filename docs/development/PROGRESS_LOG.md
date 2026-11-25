@@ -1,3 +1,7 @@
+## Nov 25, 2026, 5:31 PM PHT — Reimagined 2.0 integration checkpoint
+
+Branch source includes the neutral app modes, separate editor preferences, backdrop navigation, primary destinations, all 95 language visuals, workspace resume, search, activity and verified installer flow. The platform runtime, stored projects and explicit upload consent remain in use. Local app compile passed before the final integration edits. Fifteen Python QA guards and static security invariants passed. Workstreams fully verified 0/10. Branch signing and API 35 checks are pending. See [the handoff](REIMAGINED_2_0.md).
+
 ## Nov 25, 2026, 5:07 PM PHT — Reimagined 2.0 branch opened
 
 Reimagined 2.0 starts from main `517f5bc` on `reimagined-2.0`. Verified workstreams 0/10. Baseline [APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45518242552) and [API 35 smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45518254838) passed. Branch architecture, workstream status and next action are tracked in [the handoff](REIMAGINED_2_0.md).

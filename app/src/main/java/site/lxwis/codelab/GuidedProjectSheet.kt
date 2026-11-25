@@ -37,10 +37,10 @@ private val projectDemos = listOf(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun GuidedProjectSheet(cancel: () -> Unit, submit: (String, String, String, String) -> Unit) {
+internal fun GuidedProjectSheet(cancel: () -> Unit, initialLanguage: String = "JavaScript", submit: (String, String, String, String) -> Unit) {
     val keyboard = LocalSoftwareKeyboardController.current
     var name by rememberSaveable { mutableStateOf("") }
-    var language by rememberSaveable { mutableStateOf("JavaScript") }
+    var language by rememberSaveable { mutableStateOf(initialLanguage) }
     var starter by rememberSaveable { mutableStateOf(StarterExamples.BEGINNER) }
     var browsing by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable { mutableStateOf("") }

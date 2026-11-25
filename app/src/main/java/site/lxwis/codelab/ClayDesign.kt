@@ -1,23 +1,15 @@
 package site.lxwis.codelab
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.draw.shadow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * Consistent, restrained clay depth for navigation and project surfaces.
+ * Shared spacing and surface geometry.
  * Editing, console, code diagnostics and selectable text remain flat.
  */
 internal object CodeLabSpacing {
@@ -48,34 +40,14 @@ internal object CodeLabElevation {
     val panel = 3.dp
 }
 
-/** Decorative border is not used as the sole indication of interaction. */
 @Composable
 internal fun ClayPanel(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val style = LocalCodeLabVisualStyle.current
-    val shape = if (style == "Clay") CodeLabCorners.panel else MaterialTheme.shapes.large
-    val colors = MaterialTheme.colorScheme
-    val studio = LocalStudioAppearance.current
-    Surface(
-        modifier = modifier.glassHighlight(style, shape).then(if (studio.shadow > 0) Modifier.shadow(studio.shadow.dp, shape, clip = false) else Modifier),
-        shape = shape,
-        color = if (style == "Crystal") colors.surfaceContainer.copy(alpha = studio.opacity / 100f)
-            else colors.surfaceContainer,
-        tonalElevation = if (style == "Clay") 2.dp else 0.dp,
-        shadowElevation = if (style == "Clay") 3.dp else 0.dp,
-        border = when (style) {
-            "Crystal" -> if (studio.border > 0) BorderStroke(studio.border.dp, Brush.linearGradient(listOf(
-                Color.White.copy(alpha = .58f),
-                colors.outlineVariant.copy(alpha = .28f)))) else null
-            "Clay" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
-                Color.White.copy(alpha = .30f),
-                colors.outlineVariant.copy(alpha = .5f))))
-            "Obsidian" -> BorderStroke(1.dp, colors.outlineVariant.copy(alpha = .72f))
-            else -> null
-        }
-    ) { content() }
+    Surface(modifier, shape = CodeLabCorners.panel, color = MaterialTheme.colorScheme.surfaceContainer) {
+        content()
+    }
 }
 
 @Composable
@@ -85,43 +57,11 @@ internal fun ClayActionCard(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val style = LocalCodeLabVisualStyle.current
-    val shape = if (style == "Clay") CodeLabCorners.card else MaterialTheme.shapes.large
-    val colors = MaterialTheme.colorScheme
-    val studio = LocalStudioAppearance.current
     Surface(
         onClick = onClick,
-        modifier = modifier.glassHighlight(style, shape).then(if (studio.shadow > 0) Modifier.shadow(studio.shadow.dp, shape, clip = false) else Modifier),
-        enabled = true,
+        modifier = modifier,
         interactionSource = interactionSource,
-        shape = shape,
-        color = if (style == "Crystal")
-            colors.surfaceContainerHigh.copy(alpha = studio.opacity / 100f)
-            else colors.surfaceContainerHigh,
-        tonalElevation = if (style == "Clay") CodeLabElevation.tonal else 0.dp,
-        shadowElevation = if (style == "Clay") 9.dp else 0.dp,
-        border = when (style) {
-            "Crystal" -> if (studio.border > 0) BorderStroke(studio.border.dp, Brush.linearGradient(listOf(
-                Color.White.copy(alpha = .55f), colors.outlineVariant.copy(alpha = .20f)))) else null
-            "Clay" -> BorderStroke(1.dp, Brush.linearGradient(listOf(
-                Color.White.copy(alpha = .35f), colors.outlineVariant.copy(alpha = .55f))))
-            "Obsidian" -> BorderStroke(1.dp, colors.outlineVariant.copy(alpha = .75f))
-            else -> null
-        }
+        shape = CodeLabCorners.card,
+        color = MaterialTheme.colorScheme.surfaceContainer
     ) { content() }
-}
-
-/** Neutral optical edge approximation, cached and omitted in lightweight mode. */
-@Composable
-private fun Modifier.glassHighlight(style: String, shape: androidx.compose.ui.graphics.Shape): Modifier {
-    val quality = LocalStudioAppearance.current.glassQuality
-    if (style != "Crystal" || quality == "Lightweight") return this
-    return this.clip(shape).drawWithCache {
-        val shine = Brush.verticalGradient(listOf(Color.White.copy(alpha = .12f),
-            Color.Transparent, Color.Transparent, Color.White.copy(alpha = .045f)))
-        onDrawWithContent {
-            drawContent()
-            drawRect(shine)
-        }
-    }
 }

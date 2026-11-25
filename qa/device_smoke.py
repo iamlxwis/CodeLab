@@ -90,10 +90,18 @@ def scroll_to(*labels, attempts=6, direction="down", swipe_x=.5):
     return wait_for(*labels, timeout=4)
 
 
-def select_style(name):
-    tap_node(scroll_to(name, f"{name} style", f"{name} style, selected"))
-    wait_for(f"{name} style, selected")
-    snapshot("theme-" + name.lower())
+def selected(label):
+    return any(
+        node.attrib.get("selected") == "true"
+        and any(child.attrib.get("text") == label for child in node.iter("node"))
+        for node in nodes()
+    )
+
+
+def select_mode(name):
+    tap_node(scroll_to(name))
+    assert selected(name), f"{name} appearance did not report its selected state"
+    snapshot("appearance-" + name.lower())
 
 
 def tap_text_result(name):
@@ -175,41 +183,30 @@ def main():
     tap("Finish basics")
     wait_for("New project")
     snapshot("01-home")
-    # Verify actual theme settings, not merely preview names.
-    open_workspace_action("Appearance")
-    wait_for("Themes")
-    for style in ("Obsidian", "Titanium", "Crystal", "Midnight", "Porcelain", "Sandstone"):
-        select_style(style)
-    # Return to the top before verifying the intended default dark treatment.
-    size = adb("shell", "wm", "size")
-    w, h = map(int, re.findall(r"(\d+)x(\d+)", size)[-1])
-    for _ in range(3):
-        adb("shell", "input", "swipe", str(w//2), str(int(h*.3)),
-            str(w//2), str(int(h*.8)), "350")
-    select_style("Obsidian")
-    tap_node(scroll_to("Toggle sample console"))
-    # Scroll in the outer gutter: native code editing retains its own gestures.
-    scroll_to("Sample output", swipe_x=.04)
-    wait_for("Hello 42")
-    snapshot("theme-interactive-preview")
-    tap_node(scroll_to("Toggle sample console", direction="up", swipe_x=.04))
-    tap("Done")
+    # Verify the real app-wide color mode selector and its selected semantics.
+    tap("Settings")
+    tap("Appearance")
+    wait_for("Liquid Glass")
+    for mode in ("Light", "Dark", "System", "Dark"):
+        select_mode(mode)
+    tap("Back to settings")
+    tap("Close settings")
     wait_for("New project")
-    # The Python pack is installed by this smoke run; verify native in-app
-    # management affordances without downloading on the airplane-mode emulator.
-    open_workspace_action("Languages")
-    wait_for("Offline packs and editor support")
+    tap("Explore")
+    tap("Offline runtimes")
+    wait_for("Search languages")
     wait_for("Installed")
     tap("Downloads")
-    wait_for("Download settings")
-    wait_for("Python: Wi-Fi only")
-    tap("Downloads")
+    wait_for("Wi-Fi only")
+    wait_for("Offline runtime packs")
+    tap("Back")
+    tap("Offline runtimes")
     tap("Available")
     # Validate installed signed companions through their actual detail dialogs.
     for language in ("JavaScript", "Lua", "Java", "TypeScript", "SQLite"):
         tap_node(scroll_to(language))
         wait_for(f"Verified optional {language} module installed", contains=True)
-        tap("Close")
+        tap("Back")
     tap("Installed")
     wait_for("languages", contains=True)
     # Searching automatically expands to All instead of hiding an edit-only language.
@@ -227,8 +224,9 @@ def main():
     tap("Cancel")
     # A cancelled confirmation must keep the installed signed module intact.
     wait_for("Python runtime")
-    tap("Close")
-    tap("Close languages")
+    tap("Back")
+    tap("Back")
+    tap("Home")
     wait_for("New project")
     # Python is now a genuine CPython runtime. Run the starter with airplane mode on.
     tap("New project")
@@ -336,6 +334,7 @@ def main():
     time.sleep(1)
     tap("Project library")
     wait_for("New project")
+    tap("Projects")
     # Favorites must hide other projects, including Smoke.
     tap("Manage PySmoke")
     tap("Add to favorites")

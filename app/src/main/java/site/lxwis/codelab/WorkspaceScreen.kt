@@ -79,7 +79,10 @@ import kotlinx.coroutines.flow.first
 @Composable
 internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     var dialog by rememberSaveable { mutableStateOf("") }
+    var destination by rememberSaveable { mutableStateOf(MainDestination.Home) }
+    var returnToDownloads by rememberSaveable { mutableStateOf(false) }
     var requestedLanguage by rememberSaveable { mutableStateOf<String?>(null) }
+    var template by rememberSaveable { mutableStateOf("JavaScript") }
     var selected by rememberSaveable { mutableStateOf("") }
     val snackbarHost = remember { SnackbarHostState() }
     val snackbarScope = rememberCoroutineScope()
@@ -166,6 +169,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         if (it != null) { incoming = it.toString(); dialog = "import" }
     }
     val p = m.project
+    LaunchedEffect(m.isOnline) { if (m.isOnline) m.updater.check() }
     LaunchedEffect(m.project, m.console, m.preview, m.outputMaximized, m.busy) { m.rememberWorkspacePanels() }
     LaunchedEffect(m.active) {
         selectedSnippet = ""
@@ -173,6 +177,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
     fun openAction(action: String) {
         when (action) {
+            "newproject" -> { template = "JavaScript"; dialog = action }
             "importfile" -> importFile.launch(arrayOf("*/*"))
             "importmany" -> importMany.launch(arrayOf("*/*"))
             "importzip" -> importZip.launch(arrayOf("*/*"))
@@ -195,14 +200,15 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             else -> dialog = action
         }
     }
-    BackHandler(enabled = p != null && dialog.isEmpty()) {
-        if (focusMode) m.chooseFocusMode(false)
-        else if (m.preview) m.preview = false else if (m.console) m.console = false else m.home()
+    BackHandler(enabled = dialog.isEmpty() && (p != null || destination != MainDestination.Home)) {
+        if (p == null) destination = MainDestination.Home
+        else if (focusMode) m.chooseFocusMode(false)
+        else if (m.preview) m.preview = false else if (m.console) m.console = false else m.home(keepExecution = true)
     }
 
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-        if (!focusMode || p == null) WorkspaceTopBar(m, p) { dialog = it }
+        if (p != null && !focusMode) WorkspaceTopBar(m, p, ::openAction)
         if (p != null && !focusMode && !compactChrome) RunModeStrip(m,
             onLanguages = {
                 val ext = m.active?.substringAfterLast('.', "")?.lowercase()
@@ -218,12 +224,14 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 else "Swipe the title or status strip to change files. Open Explorer to manage files; long-press tab handles for actions.",
             onGuide = { showTutorial = true })
         if (p == null) {
-            Box(Modifier.weight(1f)) { ProjectLibrary(m, motionMillis, { dialog = "newproject" },
-                { importZip.launch(arrayOf("*/*")) }, { dialog = "githubimport" },
-                { selected = it; dialog = "renameproject" },
-                { selected = it; dialog = "deleteproject" },
-                { selected = it; dialog = "duplicateproject" }, importFolder = { openAction("folderimport") }) }
-            HomeNavigation { openAction(it) }
+            MainDestinations(m, destination, { destination = it }, ::openAction, projects = { bottom ->
+                ProjectLibrary(m, motionMillis, { openAction("newproject") },
+                    { importZip.launch(arrayOf("*/*")) }, { dialog = "githubimport" },
+                    { selected = it; dialog = "renameproject" },
+                    { selected = it; dialog = "deleteproject" },
+                    { selected = it; dialog = "duplicateproject" }, importFolder = { openAction("folderimport") },
+                    bottomPadding = bottom)
+            }, modifier = Modifier.weight(1f))
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             if (!focusMode) Row(verticalAlignment = Alignment.CenterVertically) {
@@ -452,6 +460,19 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
 
     when (dialog) {
+        "search", "snippets", "templates" -> UniversalSearch(m, when (dialog) {
+            "snippets" -> SearchCategory.Snippets
+            "templates" -> SearchCategory.Templates
+            else -> SearchCategory.All
+        }, onAction = { dialog = ""; openAction(it) }, onTemplate = { template = it; dialog = "newproject" },
+            close = { dialog = "" })
+        "downloads", "updates" -> DownloadCenter(m, updatesOnly = dialog == "updates",
+            onRuntime = { language ->
+                returnToDownloads = true
+                requestedLanguage = language
+                dialog = "languages"
+            }, close = { dialog = "" })
+        "activity" -> ActivityScreen(m.developerActivity) { dialog = "" }
         "actions" -> WorkspaceActionsSheet(
             projectOpen = p != null,
             fileOpen = m.active != null,
@@ -465,8 +486,14 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             onAction = ::openAction,
             motionMillis = motionMillis,
             onDismiss = { dialog = "" })
-        "languages" -> LanguageManagerSheet(m, initialLanguage = requestedLanguage) {
-            dialog = ""
+        "library-import" -> LibraryImportSheet(onDismiss = { dialog = "" },
+            onZip = { dialog = ""; openAction("importzip") },
+            onGitHub = { dialog = "githubimport" },
+            onFolder = { dialog = ""; openAction("folderimport") })
+        "languages", "catalog" -> LanguageManagerScreen(m, initialLanguage = requestedLanguage,
+            showCatalog = dialog == "catalog", detailOnly = returnToDownloads, onDownloads = { dialog = "downloads" }) {
+            dialog = if (returnToDownloads) "downloads" else ""
+            returnToDownloads = false
             requestedLanguage = null
         }
         "switchproject" -> ProjectSwitcher(m) { dialog = "" }
@@ -495,7 +522,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Text("Project: " + m.project.orEmpty())
             } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Close") } })
 
-        "newproject" -> GuidedProjectSheet(cancel = { dialog = "" }) { name, template, starter, execution ->
+        "newproject" -> GuidedProjectSheet(cancel = { dialog = "" }, initialLanguage = template) { name, template, starter, execution ->
             m.chooseExecutionMode(execution)
             m.openProject(name, true, template, starter)
             dialog = ""
@@ -642,10 +669,13 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     TextButton(onClick = { dialog = "layoutpresets" }) { Text("Save or restore layouts") }
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
-        "appearance", "studio" -> AppearanceGallery(m, openStudio = dialog == "studio") { dialog = "" }
+        "appearance" -> ReimaginedSettings(m, ::openAction, { dialog = "" }, initialPage = "appearance")
         "settings" -> ReimaginedSettings(m, onAction = ::openAction, close = { dialog = "" })
         "licenses" -> LicenseNotices { dialog = "" }
         "layoutpresets" -> WorkspaceLayoutPresets(m) { dialog = "" }
+        else -> if (dialog.startsWith("settings/")) key(dialog) {
+            ReimaginedSettings(m, ::openAction, { dialog = "" }, initialPage = dialog.substringAfter('/'))
+        }
     }
     if (showTutorial) FirstRunTutorial(
         onFinish = {
@@ -729,35 +759,5 @@ private fun PanelButton(text: String, active: Boolean, motionMillis: Int, touchF
             style = MaterialTheme.typography.labelLarge,
             color = if (active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium)
-    }
-}
-
-/** Direct destinations replace hidden home overflow navigation. */
-@Composable
-private fun HomeNavigation(onAction: (String) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val studio = LocalStudioAppearance.current
-    val navigation = studioColor(studio.navigationBackground, colors.surfaceContainerHigh).let {
-        if (LocalCodeLabVisualStyle.current == "Crystal") it.copy(alpha = studio.opacity / 100f) else it
-    }
-    Surface(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(28.dp), color = navigation,
-        contentColor = studioReadable(colors.onSurface, navigation),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))) {
-        Row(Modifier.fillMaxWidth().padding(4.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-            listOf(Triple("projects", "Projects", Icons.Default.Folder),
-                Triple("languages", "Languages", Icons.Default.Code),
-                Triple("actions", "Tools", Icons.Default.Build),
-                Triple("settings", "Settings", Icons.Default.Settings)).forEach { (id, label, icon) ->
-                Column(Modifier.weight(1f).heightIn(min = 54.dp).background(
-                    if (id == "projects") MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                    RoundedCornerShape(24.dp)).clickable { if (id != "projects") onAction(id) }.padding(6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Icon(icon, null, Modifier.size(20.dp), tint = if (id == "projects")
-                        MaterialTheme.colorScheme.onPrimaryContainer else studioReadable(colors.onSurfaceVariant, navigation))
-                    Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 1)
-                }
-            }
-        }
     }
 }

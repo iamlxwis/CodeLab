@@ -34,6 +34,7 @@ class RunSession(context: Context) {
     }.getOrDefault(emptyList())
     var history by mutableStateOf(loadHistory())
         private set
+    internal var onFinished: ((RunRecord) -> Unit)? = null
     private var activeName: String? = null
     private var lastLocalName: String? = null
     private var lastLocalSource: String? = null
@@ -269,6 +270,7 @@ class RunSession(context: Context) {
                     .put("result", item.result).put("excerpt", item.excerpt))
             }
             settings.edit().putString("history", encoded.toString()).apply()
+            onFinished?.invoke(record)
         }
         activeName = null
         generation++

@@ -139,24 +139,19 @@ def validate_persistence_and_python():
     ui.tap("UpgradeProof")
     ui.wait_for(MARKER, contains=True, timeout=45)
     open_workspace_action("Appearance")
-    ui.wait_for("Choose your style", "Themes")
-    verify_clay()
-    ui.tap("Done")
+    ui.wait_for("Liquid Glass")
+    assert ui.selected("Dark"), "Dark mode from the existing Clay preset was not preserved"
+    ui.tap("Close settings")
     ui.snapshot("signed-upgrade-after")
     open_workspace_action("Languages")
-    ui.wait_for("Language Manager", "Offline packs and editor support")
+    ui.wait_for("Search languages")
     ui.tap("Downloads")
-    ui.wait_for("DOWNLOAD MANAGER", "Download settings")
-    if any(n.attrib.get("text") == "Download settings" for n in ui.nodes()):
-        ui.tap("Downloads")
-    ui.tap_node(ui.wait_for(field=True))
-    ui.adb("shell", "input", "text", "Python")
-    ui.adb("shell", "input", "keyevent", "4")
-    ui.tap_text_result("Python")
+    ui.wait_for("Wi-Fi only")
+    ui.tap_node(ui.scroll_to("Python"))
     ui.wait_for("Python runtime")
     ui.wait_for("Download latest Python")
-    ui.tap("Close")
-    ui.tap("Close languages")
+    ui.tap("Back")
+    ui.tap("Back")
     ui.tap("Project library")
     ui.tap("New project")
     ui.choose_language("Python")
@@ -189,7 +184,7 @@ def main():
     (OUT / f"production-upgrade-api-{api}.txt").write_text(
         f"PASS API{api}: same-certificate editor/Python adb install -r, "
         f"monotonic versions {a[1]}->{b[1]} and {c[1]}->{d[1]}, "
-        "persisted project text and migrated Clay/Titanium setting, trusted companion and real Python execution.\n")
+        "persisted project text and migrated Dark appearance, trusted companion and real Python execution.\n")
 
 
 if __name__ == "__main__":

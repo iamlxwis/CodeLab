@@ -34,6 +34,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
+internal val editorSyntaxThemes = listOf("Classic", "Neon", "Monochrome")
+
 @Composable
 fun CodeEditor(
     fileKey: String,
@@ -105,6 +107,13 @@ fun CodeEditor(
         mutableStateOf(preferences.getBoolean("auto-hide-hardware-toolbar", false))
     }
     var syntaxPalette by remember { mutableStateOf(preferences.getString("syntax-palette", "Classic") ?: "Classic") }
+    DisposableEffect(preferences) {
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == "syntax-palette") syntaxPalette = preferences.getString(key, "Classic") ?: "Classic"
+        }
+        preferences.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { preferences.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
     var indentWidth by remember { mutableStateOf(preferences.getInt("indent-width", 4)) }
     var useTabs by remember { mutableStateOf(preferences.getBoolean("indent-tabs", false)) }
     var completionMenu by remember { mutableStateOf(false) }
@@ -381,10 +390,12 @@ fun CodeEditor(
         }
     }
     val palette = MaterialTheme.colorScheme
-    val editorBackground = studioColor(studioStyle.editorBackground, palette.surface)
-    val foreground = studioReadable(palette.onSurface, editorBackground).toArgb()
+    val codePalette = codeLabColorScheme(appearanceIsDark(studioStyle.editorMode,
+        androidx.compose.foundation.isSystemInDarkTheme()))
+    val editorBackground = studioColor(studioStyle.editorBackground, codePalette.surface)
+    val foreground = studioReadable(codePalette.onSurface, editorBackground).toArgb()
     val background = editorBackground.toArgb()
-    val secondary = studioReadable(palette.onSurfaceVariant, editorBackground).toArgb()
+    val secondary = studioReadable(codePalette.onSurfaceVariant, editorBackground).toArgb()
     val accent = palette.primary.toArgb()
     val dark = android.graphics.Color.luminance(background) < .35f
     fun matchCount(): Int {
@@ -734,7 +745,7 @@ fun CodeEditor(
                             preferences.edit().putBoolean("active-line", showActiveLine).apply()
                             settings = false })
                     HorizontalDivider()
-                    listOf("Classic", "Neon", "Monochrome").forEach { palette ->
+                    editorSyntaxThemes.forEach { palette ->
                         DropdownMenuItem(text = { Text("Syntax colors · " + palette) },
                             onClick = {
                                 syntaxPalette = palette

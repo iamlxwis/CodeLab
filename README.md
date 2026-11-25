@@ -24,7 +24,7 @@ Write, run, and manage projects from your phone.
 
 ## CodeLab Development Tracker
 
-**Development status:** IN PROGRESS — Nov 25, 2026, 5:07 PM PHT — 0/10 workstreams verified. Auditing the baseline and replacing the application appearance and navigation.
+**Development status:** IN PROGRESS — Nov 25, 2026, 5:31 PM PHT — 0/10 workstreams fully verified. Integrated the redesigned app and started the branch APK and device verification.
 
 [Reimagined 2.0 handoff](docs/development/REIMAGINED_2_0.md) · [Baseline build](https://github.com/iamlxwis/CodeLab/actions/runs/45518242552) · [Baseline API 35 smoke](https://github.com/iamlxwis/CodeLab/actions/runs/45518254838)
 
@@ -32,7 +32,10 @@ Write, run, and manage projects from your phone.
 
 - **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.
 - **Run offline** — JavaScript, Lua, SQL, and limited Java support, with an integrated console.
-- **Language Manager** — Compact Available/Installed/All browser, optional signed packs for six baseline languages, progress/cancel/retry, per-pack network/cache controls, Android-approved installation and removal.
+- **Explore** — Language and runtime details, templates, snippets, local developer tools, and downloads. Six optional signed runtime packs remain supported.
+- **Home and universal search** — Resume recent files, find projects and source, and run workspace commands. Search history stays on your device.
+- **Appearance and activity** — System, Light and Dark app modes, independent editor colors and fonts, and optional local activity totals.
+- **Software updates** — Check official GitHub releases and verify APKs before opening Android’s installer.
 - **Web preview** — Build and preview HTML, CSS, and JavaScript locally.
 - **Projects** — Templates, autosave, file management, and ZIP import/export.
 - **Tools** — Selective Git commits, optional GitHub remote sync, JavaScript debugging and code screenshots.

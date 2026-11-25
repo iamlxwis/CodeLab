@@ -59,6 +59,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -87,8 +88,8 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically) {
         if (project == null) Mark(Modifier.padding(horizontal = 8.dp).size(34.dp))
-        else IconButton(onClick = { UiLatencyProbe.nextFrame(context, "Home"); m.home() }) {
-            Icon(Icons.Default.ArrowBack, "Project library")
+        else IconButton(onClick = { UiLatencyProbe.nextFrame(context, "Home"); m.home(keepExecution = true) }) {
+            Icon(Icons.Default.Home, "Project library")
         }
         val swipeThreshold = with(LocalDensity.current) { 44.dp.toPx() }
         var titleDrag by remember(project) { mutableFloatStateOf(0f) }
@@ -108,9 +109,16 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                 Text(title, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            if (project != null) Text(if (m.dirty) androidx.compose.ui.res.stringResource(R.string.workspace_saving) else m.active?.substringAfterLast('/') ?: androidx.compose.ui.res.stringResource(R.string.workspace_local),
-                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (project != null) Row(verticalAlignment = Alignment.CenterVertically) {
+                m.active?.let { FileTypeIcon(it, Modifier.size(12.dp)); Spacer(Modifier.width(5.dp)) }
+                val status = when {
+                    m.dirty -> androidx.compose.ui.res.stringResource(R.string.workspace_saving)
+                    m.runner.running -> m.runner.status
+                    else -> m.active?.substringAfterLast('/') ?: androidx.compose.ui.res.stringResource(R.string.workspace_local)
+                }
+                Text(status, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
         if (project != null && (m.runner.running || m.active != null)) {
             Button(
@@ -142,6 +150,7 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
             }
         }
         if (project != null) {
+            IconButton(onClick = { onAction("search") }) { Icon(Icons.Default.Search, "Search") }
             IconButton(onClick = {
                 UiLatencyProbe.nextFrame(context, "Save")
                 if (m.touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -169,7 +178,7 @@ private fun Mark(modifier: Modifier) {
 internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Unit,
     importZip: () -> Unit, importGitHub: () -> Unit,
     rename: (String) -> Unit, delete: (String) -> Unit, duplicate: (String) -> Unit,
-    importFolder: (() -> Unit)? = null) {
+    importFolder: (() -> Unit)? = null, bottomPadding: Dp = 18.dp) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var options by remember { mutableStateOf<String?>(null) }
     var importOptions by rememberSaveable { mutableStateOf(false) }
@@ -182,12 +191,10 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
     val visibleProjects = orderedProjects(
         m.projects.filter { it.contains(projectSearch.trim(), ignoreCase = true) && (!favoritesOnly || it in m.favorites) },
         m.favorites, projectSort)
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(
-        horizontal = CodeLabSpacing.screen, vertical = CodeLabSpacing.large),
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = pagePadding(bottomPadding),
         verticalArrangement = Arrangement.spacedBy(spacing)) {
         item {
-             Text("Projects", style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.SemiBold)
+            DestinationTitle("Projects")
              Spacer(Modifier.height(CodeLabSpacing.large))
             Row(Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(CodeLabSpacing.small)) {
@@ -294,11 +301,11 @@ internal fun ProjectLibrary(m: WorkspaceModel, motionMillis: Int, new: () -> Uni
                     }
             ) {
                 Row(Modifier.fillMaxWidth().padding(if (m.projectGrid) 4.dp else 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    if (!m.projectGrid) Surface(shape = CodeLabCorners.iconTile,
+                    Surface(shape = CodeLabCorners.iconTile,
                         tonalElevation = CodeLabElevation.icon,
                         color = MaterialTheme.colorScheme.primaryContainer) {
-                        Icon(Icons.Default.Folder, null, Modifier.padding(10.dp).size(22.dp),
-                            tint = MaterialTheme.colorScheme.primary)
+                        ProjectLanguageIcon(m.projectCardDetails[name]?.template,
+                            Modifier.padding(if (m.projectGrid) 4.dp else 10.dp).size(22.dp))
                     }
                     if (name in m.favorites) {
                         Icon(Icons.Default.Star, "Favorite project",

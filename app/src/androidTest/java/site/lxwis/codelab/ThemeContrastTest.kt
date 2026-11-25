@@ -20,93 +20,56 @@ import org.junit.runner.RunWith
 class ThemeContrastTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun allStylesAndModesProvideLegibleDefaultForeground() {
-        var visualStyle by mutableStateOf("Minimal")
-        var appearance by mutableStateOf("Dark")
-        var actualText = Color.Unspecified
-        var expectedText = Color.Unspecified
-        var background = Color.Unspecified
-
-        compose.setContent {
-            // Nocturne previously forced a dark surface even in Light mode.
-            CodeLabTheme("Nocturne", visualStyle, appearance, "Rose", false, false) { dark ->
-                CodeLabBackdrop(visualStyle, dark) {
-                    CodeLabForegroundSurface(Modifier.fillMaxSize()) {
-                        val foreground = LocalContentColor.current
-                        val onSurface = studioReadable(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.background)
-                        val canvas = MaterialTheme.colorScheme.background
-                        SideEffect {
-                            actualText = foreground
-                            expectedText = onSurface
-                            background = canvas
-                        }
-                        Text("Foreground regression sample")
-                    }
-                }
-            }
-        }
-
-        for (style in CodeLabVisualStyles.all) {
-            for (mode in listOf("Dark", "Light")) {
-                compose.runOnIdle {
-                    visualStyle = style
-                    appearance = mode
-                }
-                compose.waitForIdle()
-                compose.runOnIdle {
-                    assertEquals("$style $mode should inherit onSurface", expectedText, actualText)
-                    val bright = maxOf(actualText.luminance(), background.luminance())
-                    val dim = minOf(actualText.luminance(), background.luminance())
-                    val ratio = (bright + .05f) / (dim + .05f)
-                    assertTrue("$style $mode contrast ratio: $ratio", ratio >= 4.5f)
-                }
-            }
-        }
-    }
-    @Test fun customSurfaceAndAccentRemainLegibleInBothModes() {
+    @Test fun lightAndDarkUseNeutralBackgroundsAndLegibleForeground() {
         var mode by mutableStateOf("Dark")
-        var scheme: androidx.compose.material3.ColorScheme? = null
+        var text = Color.Unspecified
+        var background = Color.Unspecified
+        var darkAppearance = false
         compose.setContent {
-            CodeLabTheme("Obsidian", "Crystal", mode, "#FFFFFF", true, false,
-                StudioAppearance(background = "#FFFFFF", surface = "#FAFAFA", foreground = "#FFFFFF")) {
-                val current = MaterialTheme.colorScheme
-                SideEffect { scheme = current }
+            CodeLabTheme(mode, false, false) { dark ->
+                CodeLabForegroundSurface(Modifier.fillMaxSize()) {
+                    val foreground = LocalContentColor.current
+                    val canvas = MaterialTheme.colorScheme.background
+                    SideEffect { text = foreground; background = canvas; darkAppearance = dark }
+                    Text("CodeLab")
+                }
             }
         }
-        for (value in listOf("Dark", "Light")) {
-            compose.runOnIdle { mode = value }
-            compose.waitForIdle()
+        for ((name, expected) in listOf("Dark" to Color.Black, "Light" to Color.White)) {
+            compose.runOnIdle { mode = name }
             compose.runOnIdle {
-                val c = requireNotNull(scheme)
-                fun contrast(a: Color, b: Color): Float {
-                    val x = a.luminance(); val y = b.luminance()
-                    return (maxOf(x, y) + .05f) / (minOf(x, y) + .05f)
-                }
-                assertTrue(contrast(c.onBackground, c.background) >= 4.5f)
-                assertTrue(contrast(c.onSurface, c.surface) >= 4.5f)
-                assertTrue(contrast(c.primary, c.surface) >= 4.5f)
-                assertTrue(contrast(c.onPrimary, c.primary) >= 4.5f)
-                assertTrue(contrast(c.onPrimaryContainer, c.primaryContainer) >= 4.5f)
+                assertEquals(expected, background)
+                assertEquals(name == "Dark", darkAppearance)
+                val bright = maxOf(text.luminance(), background.luminance())
+                val dim = minOf(text.luminance(), background.luminance())
+                assertTrue((bright + .05f) / (dim + .05f) >= 4.5f)
             }
         }
     }
 
-    @Test fun sixPresetsUseTheApprovedBaseColors() {
-        var style by mutableStateOf("Obsidian")
-        var actual = Color.Unspecified
+    @Test fun editorConfigurationDoesNotRecolorAppSurfaces() {
+        var background = Color.Unspecified
+        var editorMode = ""
         compose.setContent {
-            CodeLabTheme("Obsidian", style, CodeLabVisualStyles.defaultMode(style), "Mono", false, false) {
+            CodeLabTheme("Light", true, false,
+                StudioAppearance(editorMode = "Dark", editorBackground = "#212224")) {
                 val current = MaterialTheme.colorScheme.background
-                SideEffect { actual = current }
+                val editor = LocalStudioAppearance.current
+                SideEffect { background = current; editorMode = editor.editorMode }
             }
         }
-        val expected = linkedMapOf("Obsidian" to 0xFF000000, "Titanium" to 0xFF17191C,
-            "Crystal" to 0xFF252932, "Midnight" to 0xFF090F1D,
-            "Porcelain" to 0xFFF5F5F7, "Sandstone" to 0xFFEAE3D7)
-        for ((name, value) in expected) {
-            compose.runOnIdle { style = name }
-            compose.waitForIdle()
-            compose.runOnIdle { assertEquals(name, Color(value), actual) }
+        compose.runOnIdle {
+            assertEquals(Color.White, background)
+            assertEquals("Dark", editorMode)
         }
+    }
+
+    @Test fun systemModeTracksTheCurrentAndroidAppearance() {
+        var seen: Pair<Boolean, Boolean>? = null
+        compose.setContent {
+            val expected = androidx.compose.foundation.isSystemInDarkTheme()
+            CodeLabTheme("System", false, false) { actual -> SideEffect { seen = expected to actual } }
+        }
+        compose.runOnIdle { assertEquals(requireNotNull(seen).first, requireNotNull(seen).second) }
     }
 }

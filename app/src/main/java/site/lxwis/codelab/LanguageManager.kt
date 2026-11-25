@@ -32,13 +32,12 @@ import androidx.compose.ui.unit.dp
 
 private val catalog = LanguageCatalog.entries
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null, close: () -> Unit) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+internal fun LanguageManagerScreen(model: WorkspaceModel, initialLanguage: String? = null,
+    showCatalog: Boolean = false, detailOnly: Boolean = false, onDownloads: () -> Unit, close: () -> Unit
+) {
     var search by rememberSaveable { mutableStateOf("") }
-    var filter by rememberSaveable { mutableStateOf("Available") }
-    var showDownloadSettings by rememberSaveable { mutableStateOf(false) }
+    var filter by rememberSaveable { mutableStateOf(if (showCatalog) "All" else "Available") }
     var showOnlineStatus by rememberSaveable { mutableStateOf(false) }
     val languageListState = rememberLazyListState()
     // Filtered rows have different lengths; always reveal the new section heading.
@@ -47,8 +46,6 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     var optionalInspect by remember(initialLanguage) {
         mutableStateOf(OptionalRuntimeLocator.Pack.entries.firstOrNull { it.label == initialLanguage })
     }
-    var clearCacheConfirm by remember { mutableStateOf(false) }
-    var wifiOnly by remember { mutableStateOf(false) }
     var inspected by remember(initialLanguage) {
         mutableStateOf(catalog.firstOrNull { candidate ->
             candidate.name == initialLanguage &&
@@ -57,7 +54,6 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
     }
     val context = LocalContext.current
     val module = remember(context) { PythonModuleDownload(context.applicationContext) }
-    LaunchedEffect(module) { wifiOnly = module.wifiOnly() }
     var downloadId by remember { mutableLongStateOf(module.lastJob()) }
     var transfer by remember { mutableStateOf(module.inspect(downloadId)) }
     var moduleMessage by remember { mutableStateOf("") }
@@ -103,7 +99,6 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
             ("py" to python.ready) +
             ("ts" to OptionalRuntimeLocator.check(context, OptionalRuntimeLocator.Pack.TYPESCRIPT).ready)
     }
-    val cachedInstallerBytes = remember(transfer, recheck) { module.cachedBytes() }
     val optionalPacks = remember(context) { OptionalRuntimeLocator.Pack.entries.associateWith {
         OptionalRuntimeDownload(context.applicationContext, it)
     } }
@@ -137,23 +132,10 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
         } else languages
     }
 
-    ModalBottomSheet(onDismissRequest = close, sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        dragHandle = { BottomSheetDefaults.DragHandle() }) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(.92f).padding(horizontal = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("Languages", style = MaterialTheme.typography.headlineSmall)
-                    Text("Offline packs and editor support",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall)
-                }
-                IconButton(onClick = close) {
-                    Icon(Icons.Default.Close, contentDescription = "Close languages")
-                }
-            }
-            ContextualTip("runtime-packs", "Offline runtime packs", "Open a language for verified availability and download requirements. Android confirms installation; online execution still needs source-upload approval.")
+    if (optionalInspect == null && inspected == null) DestinationPage(
+        if (showCatalog) "Languages" else "Offline runtimes", close
+    ) {
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             CodeLabSearch(search, { search = it; if (it.isNotBlank()) filter = "All" }, "Search languages")
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Available", "Installed", "All").forEach { option ->
@@ -174,67 +156,11 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                     Spacer(Modifier.width(4.dp))
                     Text("Online")
                 }
-                TextButton(onClick = { showDownloadSettings = !showDownloadSettings }) {
+                TextButton(onClick = onDownloads) {
                     Icon(Icons.Default.Settings, contentDescription = null,
                         modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(4.dp))
                     Text("Downloads")
-                }
-            }
-            if (showDownloadSettings) {
-                Surface(shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-                    Column(Modifier.fillMaxWidth().padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Download settings", style = MaterialTheme.typography.titleSmall)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
-                                Text("Python: Wi-Fi only", style = MaterialTheme.typography.bodyMedium)
-                                Text("Other packs have their own network settings.",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            Switch(checked = wifiOnly, onCheckedChange = {
-                                wifiOnly = it
-                                module.setWifiOnly(it)
-                            })
-                        }
-                        val pythonActive = transfer.stage == PythonModuleDownload.Stage.DOWNLOADING ||
-                            transfer.stage == PythonModuleDownload.Stage.PAUSED
-                        val activePacks = optionalTransfers.filterValues {
-                            it.stage == OptionalRuntimeDownload.Stage.DOWNLOADING ||
-                                it.stage == OptionalRuntimeDownload.Stage.PAUSED
-                        }
-                        if (!pythonActive && activePacks.isEmpty()) {
-                            Text("No active downloads",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        if (pythonActive) {
-                            TextButton(onClick = {
-                                inspected = catalog.firstOrNull { it.name == "Python" }
-                            }) {
-                                Text("Python · " + (transfer.progress * 100).toInt() + "%")
-                            }
-                            LinearProgressIndicator(progress = { transfer.progress },
-                                modifier = Modifier.fillMaxWidth())
-                        }
-                        activePacks.forEach { (pack, current) ->
-                            TextButton(onClick = { optionalInspect = pack }) {
-                                Text(pack.label + " · " + (current.progress * 100).toInt() + "%")
-                            }
-                            LinearProgressIndicator(progress = { current.progress },
-                                modifier = Modifier.fillMaxWidth())
-                        }
-                        if (cachedInstallerBytes > 0L) {
-                            TextButton(onClick = { clearCacheConfirm = true }) {
-                                Text("Clear Python installer cache")
-                            }
-                        }
-                        Text("Tap a language for installation, updates, removal and detailed status.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
                 }
             }
             if (showOnlineStatus) {
@@ -340,23 +266,23 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
         }
     }
     optionalInspect?.let { pack ->
-        OptionalRuntimeManagerDialog(
+        OptionalRuntimeDetails(
             pack = pack,
             manager = requireNotNull(optionalPacks[pack]),
             status = requireNotNull(optionalStatuses[pack]),
             published = publishedAssets?.contains("CodeLab-" + pack.suffix + ".apk"),
             publishedError = publishedError,
             onCheckRelease = { releaseRefresh++ },
-            onDismiss = { optionalInspect = null; recheck++ },
+            onDismiss = { if (detailOnly) close() else { optionalInspect = null; recheck++ } },
             onRefresh = { recheck++ }
         )
     }
     inspected?.let { language ->
         val engine = OfflineRuntimeRegistry.manifest(language.extension)
-        CodeLabToolDialog(onDismissRequest = { inspected = null },
-            title = { Text(language.name + " runtime") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        DestinationPage(language.name + " runtime", close = { if (detailOnly) close() else inspected = null },
+            trailing = { FileTypeIcon("file." + language.extension, Modifier.size(32.dp)) }) {
+                Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(if (language.name == "Python") python.description
                         else if (engine == null) RuntimePackCatalog.capability(language.name).label else if (detected[language.extension] == true)
                         "Installed in this APK" else "Runtime unavailable",
@@ -455,7 +381,7 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
                         }) { Text("Refresh module status") }
                     }
                 }
-            }, confirmButton = { TextButton(onClick = { inspected = null }) { Text("Close") } })
+        }
     }
 
     if (removePythonConfirm) CodeLabAlertDialog(
@@ -471,28 +397,12 @@ fun LanguageManagerSheet(model: WorkspaceModel, initialLanguage: String? = null,
         dismissButton = { TextButton(onClick = { removePythonConfirm = false }) {
             Text("Cancel")
         } })
-    if (clearCacheConfirm) CodeLabAlertDialog(
-        onDismissRequest = { clearCacheConfirm = false },
-        title = { Text("Clear downloaded installer?") },
-        text = { Text("Remove only the cached Python APK and cancel an active download. " +
-            "The installed Python runtime and CodeLab projects stay untouched.") },
-        confirmButton = { Button(onClick = {
-            val cleared = module.clearCachedInstaller()
-            downloadId = -1L
-            transfer = PythonModuleDownload.Transfer(PythonModuleDownload.Stage.IDLE)
-            moduleMessage = if (cleared) "Installer cache cleared" else "Unable to clear installer cache"
-            clearCacheConfirm = false
-            recheck++
-        }) { Text("Clear installer") } },
-        dismissButton = { TextButton(onClick = { clearCacheConfirm = false }) {
-            Text("Cancel")
-        } })
 
 }
 
 
 @Composable
-internal fun OptionalRuntimeManagerDialog(
+internal fun OptionalRuntimeDetails(
     pack: OptionalRuntimeLocator.Pack,
     manager: OptionalRuntimeDownload,
     status: PythonModuleLocator.Status,
@@ -518,10 +428,9 @@ internal fun OptionalRuntimeManagerDialog(
             }
         }
     }
-    CodeLabAlertDialog(onDismissRequest = onDismiss,
-        title = { Text(pack.label + " offline runtime") },
-        text = {
-            Column(Modifier.heightIn(max = 480.dp).verticalScroll(rememberScrollState()),
+    DestinationPage(pack.label + " offline runtime", onDismiss,
+        trailing = { FileTypeIcon("file." + pack.extension, Modifier.size(32.dp)) }) {
+            Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(status.description)
                 Text(when (published) {
@@ -546,8 +455,13 @@ internal fun OptionalRuntimeManagerDialog(
                         wifiOnly = it; manager.setWifiOnly(it)
                     })
                 }
-                Text("Download: " + transfer.stage.name +
-                    if (transfer.total > 0L) " · " + (transfer.progress * 100).toInt() + "%" else "")
+                Text(when (transfer.stage) {
+                    OptionalRuntimeDownload.Stage.IDLE -> "Ready to download"
+                    OptionalRuntimeDownload.Stage.DOWNLOADING -> "Downloading"
+                    OptionalRuntimeDownload.Stage.PAUSED -> transfer.message.ifBlank { "Download paused" }
+                    OptionalRuntimeDownload.Stage.DOWNLOADED -> "Installer downloaded"
+                    OptionalRuntimeDownload.Stage.FAILED -> transfer.message.ifBlank { "Download failed" }
+                } + if (transfer.total > 0L) " · " + (transfer.progress * 100).toInt() + "%" else "")
                 if (transfer.stage == OptionalRuntimeDownload.Stage.DOWNLOADING ||
                     transfer.stage == OptionalRuntimeDownload.Stage.PAUSED) {
                     LinearProgressIndicator(progress = { transfer.progress },
@@ -589,9 +503,7 @@ internal fun OptionalRuntimeManagerDialog(
                     onRefresh()
                 }) { Text("Refresh") }
             }
-        },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
-    )
+    }
     if (confirmRemove) CodeLabAlertDialog(onDismissRequest = { confirmRemove = false },
         title = { Text("Remove " + pack.label + " module?") },
         text = { Text("Android will ask to remove the optional runtime. " +

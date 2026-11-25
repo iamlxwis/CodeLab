@@ -1,5 +1,17 @@
 package site.lxwis.codelab
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
@@ -9,7 +21,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.Modifier
-import java.util.Locale
 
 internal enum class ProjectFileKind {
     Code, Markup, Stylesheet, Data, Document, Image, Other
@@ -17,8 +28,7 @@ internal enum class ProjectFileKind {
 
 /** Deliberately independent of a runtime's ability to execute a language. */
 internal fun projectFileKind(path: String): ProjectFileKind {
-    val extension = path.substringAfterLast('/').substringAfterLast('.', "")
-        .lowercase(Locale.ROOT)
+    val extension = languageExtension(path)
     return when (extension) {
         "js", "ts", "jsx", "tsx", "kt", "kts", "java", "lua", "py", "rb", "go",
         "rs", "c", "h", "cpp", "hpp", "cs", "php", "swift", "sh", "bash",
@@ -35,35 +45,25 @@ internal fun projectFileKind(path: String): ProjectFileKind {
 
 @Composable
 internal fun FileTypeIcon(path: String, modifier: Modifier = Modifier, selected: Boolean = false) {
-    val extension = path.substringAfterLast('/').substringAfterLast('.', "").lowercase(Locale.ROOT)
-    val iconTint by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.onSurfaceVariant, tween(workspaceMotion().millis(140)), label = "file-icon-state")
-    val logo = when (extension) {
-        "js", "jsx", "mjs", "cjs" -> R.drawable.ic_lang_javascript
-        "ts", "tsx" -> R.drawable.ic_lang_typescript
-        "py", "pyw" -> R.drawable.ic_lang_python
-        "java" -> R.drawable.ic_lang_java
-        "lua" -> R.drawable.ic_lang_lua
-        "kt", "kts" -> R.drawable.ic_lang_kotlin
-        "html", "htm" -> R.drawable.ic_lang_html5
-        "css", "scss", "sass", "less" -> R.drawable.ic_lang_css
-        "sql", "sqlite", "db" -> R.drawable.ic_lang_sqlite
-        "cpp", "hpp", "cc", "cxx", "hxx" -> R.drawable.ic_lang_cplusplus
-        "c", "h" -> R.drawable.ic_lang_c
-        "rs" -> R.drawable.ic_lang_rust
-        "go" -> R.drawable.ic_lang_go
-        "json", "jsonl" -> R.drawable.ic_lang_json
-        "php" -> R.drawable.ic_lang_php
-        "rb" -> R.drawable.ic_lang_ruby
-        "swift" -> R.drawable.ic_lang_swift
-        "dart" -> R.drawable.ic_lang_dart
-        "sh", "bash" -> R.drawable.ic_lang_gnubash
-        else -> null
-    }
-    if (logo != null) {
-        // Monochrome glyphs inherit the readable theme foreground; active tabs use accent.
-        Icon(androidx.compose.ui.res.painterResource(logo), contentDescription = null,
-            modifier = modifier, tint = iconTint)
+    val colors = MaterialTheme.colorScheme
+    val iconTint by animateColorAsState(if (selected) colors.primary else colors.onSurfaceVariant,
+        tween(workspaceMotion().millis(140)), label = "file-icon-state")
+    val visual = languageVisual(languageExtension(path))
+    if (visual != null) {
+        val tint = contrastAccent(visual.color, colors.surfaceContainer)
+        val logo = visual.logo
+        if (logo != null) {
+            Icon(androidx.compose.ui.res.painterResource(logo), null, modifier, tint = tint)
+        } else {
+            val tile = visual.color.copy(alpha = .15f).compositeOver(colors.surfaceContainer)
+            val density = LocalDensity.current
+            Box(modifier.background(tile, RoundedCornerShape(4.dp)), contentAlignment = Alignment.Center) {
+                CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
+                    Text(visual.monogram.orEmpty(), color = contrastAccent(tint, tile), fontSize = 7.sp,
+                        lineHeight = 8.sp, fontWeight = FontWeight.Bold, maxLines = 1, softWrap = false)
+                }
+            }
+        }
         return
     }
     val icon = when (projectFileKind(path)) {

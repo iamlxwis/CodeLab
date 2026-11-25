@@ -38,7 +38,7 @@ class ReleaseVisualEvidenceTest {
         val args = InstrumentationRegistry.getArguments()
         // Invoked explicitly by layout_screenshots.py; ordinary instrumentation keeps its state.
         if (args.getString("visualEvidence") != "true") return
-        val style = args.getString("visualTheme") ?: "Obsidian"
+        val style = args.getString("visualTheme") ?: "Dark"
         val size = args.getString("visualSize") ?: "phone"
         val context = instrumentation.targetContext
         context.getSharedPreferences("first-run-guide", Context.MODE_PRIVATE).edit().putBoolean("complete", true).commit()
@@ -48,9 +48,8 @@ class ReleaseVisualEvidenceTest {
         ActivityScenario.launch(MainActivity::class.java).use { scenario ->
             scenario.onActivity { activity ->
                 val model = ViewModelProvider(activity)[WorkspaceModel::class.java]
-                model.chooseVisualStyle(style)
-                model.restoreAppearanceDefaults()
-                model.updateStudioAppearance(StudioAppearance(editorTextSize = 15))
+                model.setMode(style)
+                model.updateStudioAppearance(StudioAppearance(editorTextSize = 15, editorMode = style))
                 model.chooseFocusMode(false)
                 model.openProject(projectName, create = createProject, template = "JavaScript", starter = StarterExamples.HELLO)
             }
