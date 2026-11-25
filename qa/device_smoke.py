@@ -275,7 +275,8 @@ def main():
     run_offline()
     wait_for("Waiting for input", contains=True)
     snapshot("03-input")
-    tap_node(wait_for(field=True))
+    # Split has a source field alongside stdin. Use the console's visible label.
+    tap("Program input")
     adb("shell", "input", "text", "Ada")
     # Keep the IME open: Send must remain reachable without hiding the keyboard.
     wait_for("Send")
@@ -422,7 +423,8 @@ def main():
     wait_for("main.lua", contains=True)
     run_offline()
     wait_for("Waiting for input", contains=True)
-    tap_node(wait_for(field=True))
+    # Split has a source field alongside stdin. Use the console's visible label.
+    tap("Program input")
     adb("shell", "input", "text", "Ada")
     # Keep the IME open: Send must remain reachable without hiding the keyboard.
     wait_for("Send")
@@ -431,6 +433,8 @@ def main():
     wait_for("Hello, Ada!", contains=True)
     wait_for("Exit 0", contains=True)
     snapshot("08-lua")
+    assert "Ada" not in adb("shell", "run-as", PACKAGE, "cat",
+                            "files/workspace/projects/LuaSmoke/main.lua"), "Program input modified source"
 
     tap("Project library")
     open_projects()
@@ -513,6 +517,8 @@ if __name__ == "__main__":
         # Preserve the original failure even if the emulator itself disappeared.
         try:
             snapshot("failure")
+            (OUT / "functional-failure.xml").write_text(
+                adb("exec-out", "cat", "/sdcard/window.xml", check=False))
         except Exception as capture_error:
             (OUT / "failure-capture-error.txt").write_text(str(capture_error))
         for filename, args in (("logcat.txt", ("logcat", "-d", "-t", "12000")),

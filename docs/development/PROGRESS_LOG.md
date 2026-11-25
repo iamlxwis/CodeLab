@@ -447,3 +447,7 @@ Confirmed build 1402 uses the existing production signer. Added responsive proje
 ## Nov 25, 2026, 10:18 PM PHT — Reimagined 2.1 signed APK and smoke correction
 
 Build 1403 from dc3ee23 was downloaded and verified against the existing production certificate. Android 15 passed nine stages on the preceding revision, including the landscape and phone IME matrices. Corrected the functional check to enter Lua stdin in the console during Split and assert that source stays unchanged. The preceding signed in-place upgrade passed. [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 10:19 PM PHT — Console stdin regression test
+
+The functional smoke now taps Program input for JavaScript and Lua, verifies the Lua file was untouched, and retains the failure hierarchy before later stages overwrite it. The previous commit documented the finding.
