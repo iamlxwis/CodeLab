@@ -1,3 +1,7 @@
+## Nov 25, 2026, 10:18 PM PHT — Reimagined 2.1 signed APK and smoke correction
+
+Build 1403 from dc3ee23 was downloaded and verified against the existing production certificate. Android 15 passed nine stages on the preceding revision, including the landscape and phone IME matrices. Corrected the functional check to enter Lua stdin in the console during Split and assert that source stays unchanged. The preceding signed in-place upgrade passed. [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Checklist](REIMAGINED_2_1.md)
+
 ## Nov 25, 2026, 10:03 PM PHT — Reimagined 2.1 refinement and signed checkpoint
 
 Confirmed build 1402 uses the existing production signer. Added responsive project cards, clearer download states, exact trailing snippet line breaks, consent recovery and a hardware Canvas shader test. Zero workstreams have complete evidence across final Android checks. [Integration APK](https://github.com/iamlxwis/CodeLab/actions/runs/45628377294) · [Checklist](REIMAGINED_2_1.md)
