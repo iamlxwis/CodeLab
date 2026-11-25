@@ -427,3 +427,31 @@ Focused dependency advisory review: OSV querybatch returned empty results for pi
 ## Nov 25, 2026, 6:33 PM PHT — Reimagined 2.0 owner handoff
 
 **Session STOPPED.** Signed test APK build 1399 is ready. Four of ten workstreams have automated verification within their stated scope. The PR build passed 202 JVM tests and strict lint with zero errors. Android 15 passed all 10 device stages and 45 instrumentation tests. The signed in-place upgrade retained source and Dark appearance and ran the upgraded Python companion. Physical performance, TalkBack, secondary flows, live online execution and installer flows remain open in the handoff. [Draft PR](https://github.com/iamlxwis/CodeLab/pull/16) · [APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45591658540) · [Device evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578/artifacts/15012039749) · [Signed upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45591086074) · [Handoff](REIMAGINED_2_0.md)
+
+## Nov 25, 2026, 8:16 PM PHT — Reimagined 2.1 begins
+
+Refinement starts at PR #16 head `b4cbbf5` and targets `reimagined-2.0`. Implementation and verification are pending for all ten workstreams. [Baseline verified Android 15](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578) · [Refinement checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 8:26 PM PHT — Reimagined 2.1 integration
+
+PR #17 targets the open 2.0 branch. The first integrated workspace, execution and image export changes pass local JVM tests and Android test compilation. Zero of ten workstreams have complete evidence. Android emulator, strict lint and release-signer verification are next. [Checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 9:54 PM PHT — Reimagined 2.1 Android fixes
+
+Android 15 passed eight of ten stages on the first integration. Repaired two observed layout failures and the first APK run's lint constant error. Further testing covers execution eligibility, preview-to-PNG parity, grouped settings and narrow editor controls. Zero workstreams have complete evidence. [Device evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45613861590/artifacts/15022342038) · [Checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 10:03 PM PHT — Reimagined 2.1 refinement and signed checkpoint
+
+Confirmed build 1402 uses the existing production signer. Added responsive project cards, clearer download states, exact trailing snippet line breaks, consent recovery and a hardware Canvas shader test. Zero workstreams have complete evidence across final Android checks. [Integration APK](https://github.com/iamlxwis/CodeLab/actions/runs/45628377294) · [Checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 10:18 PM PHT — Reimagined 2.1 signed APK and smoke correction
+
+Build 1403 from dc3ee23 was downloaded and verified against the existing production certificate. Android 15 passed nine stages on the preceding revision, including the landscape and phone IME matrices. Corrected the functional check to enter Lua stdin in the console during Split and assert that source stays unchanged. The preceding signed in-place upgrade passed. [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Checklist](REIMAGINED_2_1.md)
+
+## Nov 25, 2026, 10:19 PM PHT — Console stdin regression test
+
+The functional smoke now taps Program input for JavaScript and Lua, verifies the Lua file was untouched, and retains the failure hierarchy before later stages overwrite it. The previous commit documented the finding.
+
+## Nov 25, 2026, 10:42 PM PHT — Reimagined 2.1 owner handoff
+
+Session stopped at 7/10 verified workstreams. Build 1403 was downloaded, verified with the existing production signer and left for manual approval. Android 15 passed all ten stages and 50 instrumentation tests, including shader displacement and PNG content. Signed in-place upgrade passed on the delivered app source. Physical GPU performance, TalkBack, live online-provider and secondary-screen review remain open. [Draft PR](https://github.com/iamlxwis/CodeLab/pull/17) · [Signed test APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Android evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45632769173/artifacts/15034300327) · [Handoff](REIMAGINED_2_1.md)

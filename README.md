@@ -24,9 +24,9 @@ Write, run, and manage projects from your phone.
 
 ## CodeLab Development Tracker
 
-**Development status:** STOPPED FOR OWNER REVIEW — Nov 25, 2026, 6:33 PM PHT — 4/10 workstreams verified within their automated scope. Signed build 1399 is ready. Android 15 passed all 10 test stages and the signed in-place upgrade.
+**Development status:** STOPPED — Nov 25, 2026, 10:42 PM PHT — 7/10 workstreams verified. Signed 2.1 test APK delivered for manual approval. Physical-device, TalkBack and secondary-flow review remain open.
 
-[Draft PR #16](https://github.com/iamlxwis/CodeLab/pull/16) · [Download test APK](https://github.com/iamlxwis/CodeLab/actions/runs/45591658540/artifacts/15011378513) · [Android 15 evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45591645578/artifacts/15012039749) · [Reimagined 2.0 handoff](docs/development/REIMAGINED_2_0.md)
+[Reimagined 2.1 handoff](docs/development/REIMAGINED_2_1.md) · [Signed test APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Android 15 evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45632769173/artifacts/15034300327) · [Reimagined 2.0 baseline PR](https://github.com/iamlxwis/CodeLab/pull/16)
 
 ## Features
 

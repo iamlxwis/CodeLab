@@ -66,20 +66,26 @@ internal fun MainDestinations(
     onDestination: (MainDestination) -> Unit,
     onAction: (String) -> Unit,
     projects: @Composable (Dp) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    backdropVisible: Boolean = true,
+    workspaceCapsuleVisible: Boolean = true
 ) {
-    val rendering = rememberGlassRendering(model)
+    val rendering = if (backdropVisible) rememberGlassRendering(model) else GlassRendering.Solid
     val backdrop = if (rendering >= GlassRendering.Blur) rememberGraphicsLayer() else null
     var origin by remember { mutableStateOf(Offset.Zero) }
     val workspace = model.recentWorkspace
-    val runtimeStatus = model.parkedWorkspace?.let { model.runner.status }
+    val runtimeStatus = model.parkedWorkspace?.takeIf { it == workspace }?.let {
+        val run = model.runner.execution
+        val otherFile = run?.file?.takeUnless { file -> file == workspace?.file }?.substringAfterLast('/')
+        listOfNotNull(otherFile, run?.mode, model.runner.status).joinToString(" · ")
+    }
     val haptics = LocalHapticFeedback.current
     val colors = MaterialTheme.colorScheme
     Box(modifier.fillMaxWidth().background(colors.background)) {
         Box(Modifier.fillMaxSize()
             .onGloballyPositioned { origin = it.positionInRoot() }
-            .then(if (backdrop != null) Modifier.recordGlassBackdrop(backdrop) else Modifier)) {
-            val bottomPadding = if (workspace != null) 150.dp else 84.dp
+            .then(if (backdrop != null) Modifier.recordGlassBackdrop(backdrop, colors.background) else Modifier)) {
+            val bottomPadding = if (workspace != null && workspaceCapsuleVisible) 150.dp else 84.dp
             when (destination) {
                 MainDestination.Home -> HomeDashboard(model, workspace, bottomPadding, onAction)
                 MainDestination.Projects -> projects(bottomPadding)
@@ -93,7 +99,7 @@ internal fun MainDestinations(
         }
         Column(Modifier.align(Alignment.BottomCenter).widthIn(max = 520.dp).fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (workspace != null) {
+            if (workspace != null && workspaceCapsuleVisible) {
                 LiquidGlassSurface(Modifier.fillMaxWidth(), RoundedCornerShape(50), backdrop, origin,
                     rendering, model.progressiveBlur) {
                     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 8.dp),
@@ -107,7 +113,7 @@ internal fun MainDestinations(
                                     style = MaterialTheme.typography.labelLarge)
                                 val subtitle = when {
                                     model.isWorkspaceDirty(workspace) -> workspace.file.substringAfterLast('/') + " · Saving"
-                                    runtimeStatus != null -> runtimeStatus
+                                    runtimeStatus != null -> workspace.file.substringAfterLast('/') + " · " + runtimeStatus
                                     else -> workspace.file.substringAfterLast('/')
                                 }
                                 Text(subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -190,58 +196,13 @@ private fun HomeDashboard(
     bottomPadding: Dp,
     onAction: (String) -> Unit
 ) {
-    LaunchedEffect(model.projects) { model.refreshProjectCardDetails() }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = pagePadding(bottomPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item { DestinationTitle("Home") }
-        if (workspace != null) item {
-            Surface(onClick = { model.openWorkspaceLocation(workspace) }, shape = CodeLabCorners.card,
-                color = MaterialTheme.colorScheme.surfaceContainer) {
-                Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Continue coding", style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        FileTypeIcon(workspace.file, Modifier.size(34.dp))
-                        Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                            Text(workspace.project, style = MaterialTheme.typography.titleLarge,
-                                maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            Text(workspace.file, style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                        Icon(Icons.Default.ArrowOutward, null)
-                    }
-                }
-            }
-        }
-        item {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { onAction("newproject") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                    Icon(Icons.Default.Add, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(5.dp))
-                    Text("New project", maxLines = 1)
-                }
-                FilledTonalButton(onClick = { onAction("library-import") }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                    Icon(Icons.Default.FileDownload, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(5.dp))
-                    Text("Import", maxLines = 1)
-                }
-            }
-        }
         if (model.projects.isEmpty() && !model.busy) item {
-            Text("Create a project or import files from your device to get started.",
-                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        val recentProjects = model.projects.filterNot { it == workspace?.project }.take(5)
-        if (recentProjects.isNotEmpty()) {
-            item { Text("Recent projects", style = MaterialTheme.typography.titleLarge) }
-            items(recentProjects, key = { it }) { name ->
-                val detail = model.projectCardDetails[name]
-                DestinationRow(name, detail?.let { "${it.template} · ${it.fileCount} files" } ?: "Local project",
-                    leading = { ProjectLanguageIcon(detail?.template, Modifier.size(25.dp)) }) {
-                    model.openProject(name)
-                }
-            }
+            ReimaginedEmptyState(Icons.Default.Code, "Start coding",
+                "Create a project to open your first workspace.",
+                action = "New project", onAction = { onAction("newproject") })
         }
         val recentFiles = model.recentWorkspaceFiles.filter { it.project in model.projects && it != workspace }.take(4)
         if (recentFiles.isNotEmpty()) {
@@ -286,20 +247,41 @@ private fun ExploreScreen(bottomPadding: Dp, onAction: (String) -> Unit) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = pagePadding(bottomPadding),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { DestinationTitle("Explore") }
-        items(exploreCategories.chunked(2), key = { it.first().action }) { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                row.forEach { category ->
-                    Surface({ onAction(category.action) }, Modifier.weight(1f).heightIn(min = 136.dp),
-                        shape = CodeLabCorners.card, color = MaterialTheme.colorScheme.surfaceContainer) {
-                        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Box(Modifier.size(42.dp).background(category.color.copy(alpha = .18f), CodeLabCorners.iconTile),
-                                contentAlignment = Alignment.Center) {
-                                val ink = contrastAccent(category.color, MaterialTheme.colorScheme.surfaceContainer)
-                                Icon(category.icon, null, Modifier.size(23.dp), tint = ink)
+        val languages = exploreCategories.first()
+        item {
+            Surface(onClick = { onAction(languages.action) }, shape = CodeLabCorners.card,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                Row(Modifier.fillMaxWidth().heightIn(min = 96.dp).padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(languages.icon, null, Modifier.size(34.dp),
+                        tint = contrastAccent(languages.color, MaterialTheme.colorScheme.surfaceContainerHigh))
+                    Column(Modifier.weight(1f)) {
+                        Text(languages.title, style = MaterialTheme.typography.titleLarge)
+                        Text(languages.description, style = MaterialTheme.typography.bodyMedium)
+                    }
+                    Icon(Icons.Default.ArrowOutward, null, Modifier.size(18.dp))
+                }
+            }
+        }
+        val other = exploreCategories.drop(1)
+        item {
+            Surface(shape = CodeLabCorners.card, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                Column {
+                    other.forEachIndexed { index, category ->
+                        if (index > 0) HorizontalDivider(Modifier.padding(start = 56.dp))
+                        Surface(onClick = { onAction(category.action) }, color = Color.Transparent) {
+                            Row(Modifier.fillMaxWidth().heightIn(min = 60.dp).padding(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                verticalAlignment = Alignment.CenterVertically) {
+                                Icon(category.icon, null, Modifier.size(24.dp),
+                                    tint = contrastAccent(category.color, MaterialTheme.colorScheme.surfaceContainerLow))
+                                Column(Modifier.weight(1f)) {
+                                    Text(category.title, style = MaterialTheme.typography.titleSmall)
+                                    Text(category.description, style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Icon(Icons.Default.ChevronRight, null, Modifier.size(18.dp))
                             }
-                            Text(category.title, style = MaterialTheme.typography.titleMedium)
-                            Text(category.description, style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -376,6 +358,5 @@ internal fun ProjectLanguageIcon(template: String?, modifier: Modifier = Modifie
 private fun isRunnableWorkspaceFile(model: WorkspaceModel, path: String): Boolean {
     val extension = languageExtension(path)
     if (extension in setOf("html", "htm")) return true
-    return if (model.executionMode == "Online") model.cloudAvailable(path)
-    else extension in setOf("py", "ts") || OfflineRuntimeRegistry.manifest(extension) != null
+    return model.cloudAvailable(path) || extension in setOf("py", "ts") || OfflineRuntimeRegistry.manifest(extension) != null
 }

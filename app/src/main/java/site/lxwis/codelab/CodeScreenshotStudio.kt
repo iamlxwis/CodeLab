@@ -1,11 +1,14 @@
 package site.lxwis.codelab
 
+import android.content.ClipData
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
-import android.widget.Toast
+import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,152 +20,262 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import androidx.documentfile.provider.DocumentFile
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.OutputStream
+
+private const val SHARE_BATCH_SIZE = 80
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CodeScreenshotStudio(
-    filename: String, source: String, selection: String,
-    selectionFirstLine: Int, close: () -> Unit
-) {
+internal fun SnippetStudio(snapshot: SnippetSnapshot, darkApp: Boolean, resultFirst: Boolean, close: () -> Unit) {
     val context = LocalContext.current
-    var preset by rememberSaveable { mutableStateOf("Obsidian") }
-    var useSelection by rememberSaveable { mutableStateOf(selection.isNotEmpty()) }
-    var advanced by rememberSaveable { mutableStateOf(false) }
-    var aspect by rememberSaveable { mutableStateOf(ScreenshotAspect.SQUARE) }
-    var background by rememberSaveable { mutableStateOf("Gradient") }
-    var lineNumbers by rememberSaveable { mutableStateOf(true) }
-    var start by rememberSaveable { mutableStateOf("1") }
-    var count by rememberSaveable { mutableFloatStateOf(18f) }
-    var title by rememberSaveable { mutableStateOf("") }
-    var footer by rememberSaveable { mutableStateOf("") }
-    var highlight by rememberSaveable { mutableStateOf("") }
-    val snippetMode = useSelection && selection.isNotEmpty()
-    val renderSource = if (snippetMode) selection else source
-    val firstLine = if (snippetMode) 1 else (start.toIntOrNull() ?: 1).coerceIn(1, 100000)
-    val selectedLineCount = if (snippetMode) renderSource.lines().size else 0
-    val visibleSelectionLines = minOf(selectedLineCount,
-        ScreenshotRenderer.lineCapacity(aspect), 40)
-    val requestedLines = if (snippetMode) visibleSelectionLines.coerceAtLeast(1)
-        else count.toInt()
-    val options = ScreenshotOptions(
-        palette = preset, aspect = aspect, background = background,
-        lineNumbers = lineNumbers, firstLine = firstLine,
-        selectedLines = requestedLines, title = title, footer = footer,
-        highlightLine = if (snippetMode) 0 else
-            (highlight.toIntOrNull()?.coerceAtLeast(0) ?: 0))
-    val preview = remember(filename, renderSource, options) {
-        ScreenshotRenderer.render(filename, renderSource, options)
+    val coroutine = rememberCoroutineScope()
+    val capture = snapshot.capture
+    var content by rememberSaveable { mutableStateOf(if (resultFirst) SnippetContent.Result else SnippetContent.Code) }
+    var theme by rememberSaveable { mutableStateOf(if (darkApp) SnippetTheme.Dark else SnippetTheme.Light) }
+    var scope by rememberSaveable { mutableStateOf(when {
+        capture != null && capture.selectionEnd > capture.selectionStart -> SnippetScope.Selected
+        capture != null -> SnippetScope.Visible
+        else -> SnippetScope.Full
+    }) }
+    var numbers by rememberSaveable { mutableStateOf(true) }
+    var metadata by rememberSaveable { mutableStateOf(true) }
+    var page by rememberSaveable { mutableIntStateOf(0) }
+    var plan by remember { mutableStateOf<SnippetRenderer.Plan?>(null) }
+    var preview by remember { mutableStateOf<Bitmap?>(null) }
+    var message by remember { mutableStateOf<String?>(null) }
+    var progress by remember { mutableStateOf<String?>(null) }
+    var exportJob by remember { mutableStateOf<Job?>(null) }
+    var chooseSharePages by remember { mutableStateOf(false) }
+    var pendingSave by remember { mutableStateOf<SnippetRenderer.Plan?>(null) }
+    val labelFile = if (content == SnippetContent.Result) snapshot.run?.file ?: snapshot.file else snapshot.file
+    val stem = remember(labelFile) {
+        labelFile.substringAfterLast('/').replace(Regex("[^A-Za-z0-9._-]"), "_").take(72)
+            .ifBlank { "CodeLab" } + "-snippet"
     }
-    val export = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("image/png")
-    ) { uri ->
-        if (uri != null) {
-            val saved = runCatching {
-                checkNotNull(context.contentResolver.openOutputStream(uri, "w")).use { stream ->
-                    check(preview.compress(Bitmap.CompressFormat.PNG, 100, stream))
-                }
-            }.isSuccess
-            Toast.makeText(context, if (saved) "PNG saved" else "Unable to save PNG",
-                Toast.LENGTH_SHORT).show()
+    LaunchedEffect(snapshot, content, scope, theme, numbers, metadata) {
+        plan = null
+        preview = null
+        page = 0
+        try {
+            plan = withContext(Dispatchers.Default) {
+                SnippetRenderer.plan(snapshot, content, scope, theme, numbers, metadata)
+            }
+        } catch (cancel: CancellationException) {
+            throw cancel
+        } catch (_: Exception) {
+            message = "Unable to render the snippet."
         }
     }
-    val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    ModalBottomSheet(onDismissRequest = close, sheetState = sheet,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(.94f)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 18.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Code Screenshot Studio", style = MaterialTheme.typography.headlineSmall)
-            Text("Syntax-colored code cards, rendered locally without internet.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("CODE SOURCE", style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = !snippetMode, onClick = { useSelection = false },
-                    label = { Text("File lines") })
-                FilterChip(selected = snippetMode, enabled = selection.isNotBlank(),
-                    onClick = { useSelection = true },
-                    label = { Text("Selected text") })
-            }
-            if (snippetMode) Text(
-                "Only your selected code will appear · selection starts at line " + selectionFirstLine,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            else if (selection.isBlank()) Text(
-                "Select text in the editor before opening this tool to capture just those words or lines.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Theme", style = MaterialTheme.typography.labelMedium)
-            Row(Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                listOf("Obsidian", "Nocturne", "Paper").forEach { value ->
-                    FilterChip(selected = preset == value, onClick = { preset = value },
-                        label = { Text(value) })
+    LaunchedEffect(plan, page) {
+        preview = null
+        val rendered = plan ?: return@LaunchedEffect
+        if (page in rendered.pages.indices) {
+            preview = withContext(Dispatchers.Default) { SnippetRenderer.render(rendered, page) }
+        }
+    }
+    fun export(image: SnippetRenderer.Plan, destination: Uri? = null, tree: Boolean = false,
+        pages: IntRange = image.pages.indices) {
+        if (exportJob?.isActive == true) return
+        message = null
+        progress = "Preparing PNG"
+        exportJob = coroutine.launch {
+            try {
+                val shared = withContext(Dispatchers.IO) {
+                    exportSnippetPages(context, image, stem, destination, tree, pages) { index ->
+                        withContext(Dispatchers.Main) { progress = "PNG ${index + 1} of ${image.pages.size}" }
+                    }
                 }
+                if (shared.isNotEmpty()) context.startActivity(Intent.createChooser(snippetShareIntent(shared), "Share snippet"))
+                else message = if (image.pages.size == 1) "PNG saved" else "${image.pages.size} PNGs saved"
+            } catch (cancel: CancellationException) {
+                message = "Export cancelled"
+                throw cancel
+            } catch (_: Exception) {
+                message = "Unable to export the snippet."
+            } finally {
+                progress = null
+                exportJob = null
             }
-            Text("Aspect ratio", style = MaterialTheme.typography.labelMedium)
-            Row(Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                ScreenshotAspect.values().forEach { value ->
-                    FilterChip(selected = aspect == value, onClick = { aspect = value },
-                        label = { Text(value.label) })
-                }
-            }
-            TextButton(onClick = { advanced = !advanced }) {
-                Text(if (advanced) "Hide appearance options" else "More appearance options")
-            }
-            if (advanced) {
-            Text("Background", style = MaterialTheme.typography.labelMedium)
-            Row(Modifier.horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                listOf("Gradient", "Solid", "Transparent").forEach { value ->
-                    FilterChip(selected = background == value,
-                        onClick = { background = value }, label = { Text(value) })
-                }
-            }
-            OutlinedTextField(title, { title = it.take(55) }, Modifier.fillMaxWidth(),
-                singleLine = true, label = { Text("Card title (optional)") })
-            OutlinedTextField(footer, { footer = it.take(62) }, Modifier.fillMaxWidth(),
-                singleLine = true, label = { Text("Footer (optional)") })
+        }
+    }
+    val saveFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("image/png")) { uri ->
+        val image = pendingSave
+        pendingSave = null
+        if (uri != null && image != null) export(image, destination = uri)
+    }
+    val saveFolder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        val image = pendingSave
+        pendingSave = null
+        if (uri != null && image != null) export(image, destination = uri, tree = true)
+    }
+    ModalBottomSheet(onDismissRequest = close, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(.95f).padding(horizontal = 16.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Line numbers", Modifier.weight(1f))
-                Switch(checked = lineNumbers, onCheckedChange = { lineNumbers = it })
+                Text("Snippet Studio", Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
+                TextButton(onClick = close) { Text("Close") }
             }
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                SnippetChoices(SnippetContent.entries, content, SnippetContent::label) { content = it }
+                SnippetChoices(SnippetTheme.entries, theme, SnippetTheme::name) { theme = it }
+                if (content != SnippetContent.Result) {
+                    val scopes = SnippetScope.entries.filter { value ->
+                        when (value) {
+                            SnippetScope.Selected -> capture != null && capture.selectionEnd > capture.selectionStart
+                            SnippetScope.Visible -> capture != null
+                            SnippetScope.Full -> true
+                        }
+                    }
+                    if (scopes.size > 1) SnippetChoices(scopes, scope, SnippetScope::label) { scope = it }
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (content != SnippetContent.Result) FilterChip(numbers, { numbers = !numbers }, { Text("Line numbers") })
+                    FilterChip(metadata, { metadata = !metadata }, { Text("Metadata") })
+                }
+                if (content != SnippetContent.Code && snapshot.staleRun) {
+                    Text("The result is from ${snapshot.run?.file} at a different revision or location.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                val pages = plan?.pages?.size ?: 0
+                if (content != SnippetContent.Result && scope == SnippetScope.Visible && capture != null) {
+                    Text("Lines ${capture.firstLine}–${capture.lastLine}. Long lines wrap in the image.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (pages > 1) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween) {
+                    TextButton(onClick = { page-- }, enabled = page > 0) { Text("Previous") }
+                    Text("Page ${page + 1} of $pages", style = MaterialTheme.typography.labelMedium)
+                    TextButton(onClick = { page++ }, enabled = page + 1 < pages) { Text("Next") }
+                }
+                preview?.let { image ->
+                    Image(image.asImageBitmap(), contentDescription = "Snippet PNG preview, page ${page + 1}",
+                        modifier = Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
+                } ?: if (message == null) {
+                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                } else Unit
             }
-            if (!snippetMode) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(start, { start = it.filter(Char::isDigit).take(6) },
-                    modifier = Modifier.weight(1f), singleLine = true,
-                    label = { Text("Start line") })
-                OutlinedTextField(highlight, { highlight = it.filter(Char::isDigit).take(6) },
-                    modifier = Modifier.weight(1f), singleLine = true,
-                    label = { Text("Highlight line") })
+            if (progress != null || message != null) Text(progress ?: message.orEmpty(),
+                Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodySmall)
+            Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (progress != null) OutlinedButton({ exportJob?.cancel() }, Modifier.weight(1f)) { Text("Cancel export") }
+                else {
+                    OutlinedButton({
+                        val image = plan ?: return@OutlinedButton
+                        pendingSave = image
+                        if (image.pages.size == 1) saveFile.launch("$stem.png") else saveFolder.launch(null)
+                    }, Modifier.weight(1f), enabled = plan != null) { Text("Save PNG") }
+                    Button({
+                        val image = plan ?: return@Button
+                        if (image.pages.size > SHARE_BATCH_SIZE) chooseSharePages = true else export(image)
+                    }, Modifier.weight(1f), enabled = plan != null) {
+                        Text(if ((plan?.pages?.size ?: 0) > SHARE_BATCH_SIZE) "Share pages" else "Share PNG")
+                    }
+                }
             }
-            Text("Requested lines · " + count.toInt() +
-                " · " + ScreenshotRenderer.lineCapacity(aspect) + " fit in this layout",
-                style = MaterialTheme.typography.labelSmall)
-            Slider(value = count, onValueChange = { count = it }, valueRange = 1f..40f)
-            } else if (selectedLineCount > visibleSelectionLines) {
-                Text("This image fits $visibleSelectionLines of $selectedLineCount selected lines. Select a smaller range to include everything.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Surface(shape = MaterialTheme.shapes.medium, tonalElevation = 1.dp) {
-                Image(preview.asImageBitmap(), contentDescription = "Code screenshot preview",
-                    modifier = Modifier.fillMaxWidth(), contentScale = ContentScale.FillWidth)
-            }
-            Button(onClick = {
-                export.launch(filename.substringAfterLast('/') + "-" +
-                    aspect.name.lowercase() + ".png")
-            }, modifier = Modifier.fillMaxWidth()) { Text("Export PNG") }
-            Text("1080 px wide · PNG alpha supported · all rendering stays on-device",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(12.dp))
         }
+    }
+    val currentPlan = plan
+    if (chooseSharePages && currentPlan != null) {
+        CodeLabAlertDialog(onDismissRequest = { chooseSharePages = false },
+            title = { Text("Choose pages to share") },
+            text = {
+                Column(Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState())) {
+                    Text("Share a group of PNGs at a time. Save PNG writes every page to a folder.",
+                        style = MaterialTheme.typography.bodySmall)
+                    for (first in currentPlan.pages.indices step SHARE_BATCH_SIZE) {
+                        val last = minOf(first + SHARE_BATCH_SIZE, currentPlan.pages.size) - 1
+                        TextButton(onClick = {
+                            chooseSharePages = false
+                            export(currentPlan, pages = first..last)
+                        }) { Text("Pages ${first + 1}–${last + 1}") }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { chooseSharePages = false }) { Text("Cancel") } })
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun <T> SnippetChoices(values: List<T>, selected: T, label: (T) -> String, onSelect: (T) -> Unit) {
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        values.forEachIndexed { index, value ->
+            SegmentedButton(selected == value, { onSelect(value) },
+                SegmentedButtonDefaults.itemShape(index, values.size), icon = {}) {
+                Text(label(value))
+            }
+        }
+    }
+}
+
+internal suspend fun exportSnippetPages(
+    context: Context, image: SnippetRenderer.Plan, stem: String, destination: Uri?, tree: Boolean,
+    pages: IntRange, onPage: suspend (Int) -> Unit
+): ArrayList<Uri> {
+    val resolver = context.contentResolver
+    val shared = arrayListOf<Uri>()
+    val created = mutableListOf<DocumentFile>()
+    val folder = if (tree) checkNotNull(DocumentFile.fromTreeUri(context, checkNotNull(destination))) else null
+    val cache = if (destination == null) {
+        val root = File(context.cacheDir, "snippet-exports").apply { mkdirs() }
+        root.listFiles()?.filter { it.lastModified() < System.currentTimeMillis() - 86_400_000 }
+            ?.forEach { it.deleteRecursively() }
+        java.nio.file.Files.createTempDirectory(root.toPath(), "pages-").toFile()
+    } else null
+    try {
+        for (page in pages) {
+            currentCoroutineContext().ensureActive()
+            onPage(page)
+            val name = if (image.pages.size == 1) "$stem.png"
+                else "$stem-${(page + 1).toString().padStart(image.pages.size.toString().length, '0')}.png"
+            val bitmap = SnippetRenderer.render(image, page)
+            try {
+                fun write(stream: OutputStream) {
+                    stream.use { check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
+                }
+                if (cache != null) {
+                    val file = File(cache, name)
+                    write(file.outputStream())
+                    shared += FileProvider.getUriForFile(context, "${context.packageName}.runtimefiles", file)
+                } else {
+                    val uri = if (folder != null) {
+                        checkNotNull(folder.createFile("image/png", name)).also { created += it }.uri
+                    } else checkNotNull(destination)
+                    write(checkNotNull(resolver.openOutputStream(uri, "wt")))
+                }
+            } finally {
+                bitmap.recycle()
+            }
+        }
+        return shared
+    } catch (failure: Exception) {
+        cache?.deleteRecursively()
+        created.forEach { runCatching { it.delete() } }
+        if (!tree && destination != null) runCatching { DocumentsContract.deleteDocument(resolver, destination) }
+        throw failure
+    }
+}
+
+internal fun snippetShareIntent(uris: ArrayList<Uri>): Intent {
+    val clip = ClipData.newRawUri("CodeLab snippet", uris.first())
+    uris.drop(1).forEach { clip.addItem(ClipData.Item(it)) }
+    return Intent(if (uris.size == 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {
+        type = "image/png"
+        clipData = clip
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        if (uris.size == 1) putExtra(Intent.EXTRA_STREAM, uris.first())
+        else putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
     }
 }

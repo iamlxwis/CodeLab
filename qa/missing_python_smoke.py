@@ -35,7 +35,8 @@ def main():
     ui.adb("shell", "input", "text", "MissingPython")
     ui.tap("Create project")
     ui.wait_for("main.py", contains=True)
-    ui.tap("Run")
+    ui.begin_run()
+    ui.tap("Offline")
     ui.wait_for("Python runtime module not installed", contains=True, timeout=35)
     ui.wait_for("Manage Python")
     ui.snapshot("python-module-not-installed")
@@ -47,7 +48,7 @@ def main():
     assert f"package:{PYTHON}" not in ui.adb("shell", "pm", "list", "packages")
     api = ui.adb("shell", "getprop", "ro.build.version.sdk")
     (ui.OUT / f"missing-python-api-{api}.txt").write_text(
-        "PASS: Offline Python Run without module showed explicit error and "
+        "PASS: Offline Python Run without module disabled Run with an explicit explanation and "
         "a working Manage Python action, opened in-app Download Python controls; "
         "no silent source upload or module installation. "
         f"Android API {api}. Network transfer, installer approval and module "

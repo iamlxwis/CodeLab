@@ -562,6 +562,19 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         }
     }
 
+    fun snippetCapture(): EditorCapture {
+        val visual = layout
+        val first = visual?.getLineForVertical(scrollY.coerceAtLeast(0)) ?: 0
+        val visibleHeight = (height - totalPaddingTop - totalPaddingBottom).coerceAtLeast(1)
+        val last = visual?.getLineForVertical((scrollY + visibleHeight - 1).coerceAtLeast(0)) ?: 0
+        return EditorCapture(
+            minOf(selectionStart, selectionEnd).coerceIn(0, length()),
+            maxOf(selectionStart, selectionEnd).coerceIn(0, length()),
+            logicalLineAt(visual?.getLineStart(first) ?: 0),
+            logicalLineAt(visual?.getLineStart(last) ?: 0)
+        )
+    }
+
     fun selectedSource(): String {
         val live = text
         val a = minOf(selectionStart, selectionEnd).coerceIn(0, live.length)

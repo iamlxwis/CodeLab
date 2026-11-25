@@ -192,12 +192,22 @@ internal fun UniversalSearch(
             modifier = Modifier.fillMaxWidth().focusRequester(focus),
             submit = { results.firstOrNull()?.let(::open) ?: rememberQuery() })
         if (!isLibrary) {
-            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                SearchCategory.entries.forEach { choice ->
-                    FilterChip(category == choice, { category = choice }, label = { Text(choice.label) },
-                        modifier = Modifier.heightIn(min = 48.dp))
+            var chooseCategory by remember { mutableStateOf(false) }
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) {
+                    FilledTonalButton(onClick = { chooseCategory = true }) {
+                        Text(if (category == SearchCategory.All) "All categories" else category.label)
+                        Icon(Icons.Default.ArrowDropDown, null, Modifier.size(18.dp))
+                    }
+                    CodeLabDropdownMenu(expanded = chooseCategory, onDismissRequest = { chooseCategory = false }) {
+                        SearchCategory.entries.forEach { choice ->
+                            DropdownMenuItem(text = { Text(choice.label) },
+                                trailingIcon = if (category == choice) ({ Icon(Icons.Default.Check, "Selected") }) else null,
+                                onClick = { category = choice; chooseCategory = false })
+                        }
+                    }
                 }
+                if (needle.isNotEmpty()) OutlinedButton(onClick = { query = "" }) { Text("Clear search") }
             }
             LaunchedEffect(Unit) { focus.requestFocus() }
         }
@@ -233,7 +243,11 @@ internal fun UniversalSearch(
                     "Save a snippet from selected code in the editor to find it here." else "No matches",
                     Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            items(results) { result ->
+            results.groupBy(SearchResult::category).forEach { (group, entries) ->
+                if (!isLibrary && category == SearchCategory.All) item(key = group) {
+                    Text(group.label, Modifier.padding(top = 8.dp), style = MaterialTheme.typography.titleSmall)
+                }
+                items(entries) { result ->
                 DestinationRow(result.title, result.subtitle, leading = {
                     when {
                         result.location != null -> FileTypeIcon(result.location.file, Modifier.size(24.dp))
@@ -244,6 +258,7 @@ internal fun UniversalSearch(
                         else -> Icon(Icons.Default.Terminal, null)
                     }
                 }) { open(result) }
+                }
             }
         }
     }

@@ -29,20 +29,20 @@ permissions:
   contents: write
   actions: read
 concurrency:
-  group: android-${{ github.event.pull_request.head.ref || github.ref_name }}${{ github.event_name == 'workflow_dispatch' && github.ref_name == 'reimagined-2.0' && '-signed-upgrade' || '' }}
+  group: android-${{ github.event.pull_request.head.ref || github.ref_name }}${{ github.event_name == 'workflow_dispatch' && contains(fromJSON('["reimagined-2.0","reimagined-2.1-refinement"]'), github.ref_name) && '-signed-upgrade' || '' }}
   cancel-in-progress: true
 jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 85
     env:
-      CODELAB_TEST_UPGRADE: ${{ github.ref == 'refs/heads/reimagined-2.0' && github.event_name == 'workflow_dispatch' }}
+      CODELAB_TEST_UPGRADE: ${{ contains(fromJSON('["reimagined-2.0","reimagined-2.1-refinement"]'), github.ref_name) && github.event_name == 'workflow_dispatch' }}
     steps:
       # Checkout is read-only; never persist a token that could commit as github-actions[bot].
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref == 'reimagined-2.0' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event_name == 'pull_request' && contains(fromJSON('["reimagined-2.0","reimagined-2.1-refinement"]'), github.head_ref) && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -252,7 +252,7 @@ jobs:
           if-no-files-found: error
           retention-days: 90
       - name: Verify Reimagined test APK preserves upgrade signing
-        if: github.event_name == 'pull_request' && github.head_ref == 'reimagined-2.0' && github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'pull_request' && contains(fromJSON('["reimagined-2.0","reimagined-2.1-refinement"]'), github.head_ref) && github.event.pull_request.head.repo.full_name == github.repository
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash

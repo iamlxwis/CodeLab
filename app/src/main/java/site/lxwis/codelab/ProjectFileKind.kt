@@ -2,6 +2,7 @@ package site.lxwis.codelab
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
@@ -48,12 +49,14 @@ internal fun FileTypeIcon(path: String, modifier: Modifier = Modifier, selected:
     val colors = MaterialTheme.colorScheme
     val iconTint by animateColorAsState(if (selected) colors.primary else colors.onSurfaceVariant,
         tween(workspaceMotion().millis(140)), label = "file-icon-state")
-    val visual = languageVisual(languageExtension(path))
+    val extension = languageExtension(path)
+    val visual = languageVisual(extension)
     if (visual != null) {
         val tint = contrastAccent(visual.color, colors.surfaceContainer)
         val logo = visual.logo
         if (logo != null) {
-            Icon(androidx.compose.ui.res.painterResource(logo), null, modifier, tint = tint)
+            val opticalInset = if (extension in setOf("js", "mjs", "cjs", "ts", "toml")) 1.dp else 0.dp
+            Icon(androidx.compose.ui.res.painterResource(logo), null, modifier.padding(opticalInset), tint = tint)
         } else {
             val tile = visual.color.copy(alpha = .15f).compositeOver(colors.surfaceContainer)
             val density = LocalDensity.current

@@ -8,7 +8,6 @@ import androidx.compose.ui.semantics.setProgress
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DragHandle
-import androidx.compose.material.icons.filled.VerticalSplit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,16 +27,6 @@ internal fun clampPhoneSplit(percent: Int): Int = percent.coerceIn(35, 80)
 /** Predictable snap positions help avoid cramped phone editor/console regions. */
 internal fun snapPhoneSplit(percent: Int): Int =
     listOf(40, 60, 75).minBy { abs(it - clampPhoneSplit(percent)) }
-
-@Composable
-internal fun PhoneSplitToggle(enabled: Boolean, onToggle: () -> Unit) {
-    FilterChip(
-        selected = enabled,
-        onClick = onToggle,
-        label = { Text("Split") },
-        leadingIcon = { Icon(Icons.Default.VerticalSplit, contentDescription = null) }
-    )
-}
 
 /**
  * 48dp drag target with a visible handle. No animations: reduced-motion mode is

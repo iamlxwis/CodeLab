@@ -55,7 +55,7 @@ fun CodeEditor(
     motionMillis: Int = 0,
     workspaceToolbar: List<String>? = null,
     onWorkspaceToolbarChange: ((List<String>) -> Unit)? = null,
-    onSelectionChange: (String, Int) -> Unit = { _, _ -> },
+    onCaptureReader: ((() -> EditorCapture?)?) -> Unit = {},
     touchFeedback: Boolean = false,
     readCurrentText: () -> String = { text }
 ) = key(fileKey) {
@@ -89,7 +89,7 @@ fun CodeEditor(
     var symbols by remember { mutableStateOf(preferences.getBoolean("symbol-toolbar", true)) }
     var shortcutLayout by remember { mutableStateOf(preferences.getString("shortcut-layout", "Standard") ?: "Standard") }
     var shortcutSettings by remember { mutableStateOf(false) }
-    var keyboardOnlySymbols by remember { mutableStateOf(preferences.getBoolean("keyboard-only-symbols", false)) }
+    var keyboardOnlySymbols by remember { mutableStateOf(preferences.getBoolean("keyboard-only-symbols", true)) }
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
     var chromeCollapsed by remember { mutableStateOf(false) }
     val keyboardNow by rememberUpdatedState(imeVisible)
@@ -125,7 +125,11 @@ fun CodeEditor(
     var readOnly by remember { mutableStateOf(false) }
     var view by remember { mutableStateOf<SourceView?>(null) }
     val cursorStatus = remember { EditorCursorStatus() }
-    val selectionCallback by rememberUpdatedState(onSelectionChange)
+    val captureCallback by rememberUpdatedState(onCaptureReader)
+    DisposableEffect(fileKey) {
+        captureCallback { view?.snippetCapture() }
+        onDispose { captureCallback(null) }
+    }
     var find by remember { mutableStateOf(false) }
     var advancedTools by remember { mutableStateOf(false) }
     var search by remember { mutableStateOf("") }
@@ -197,7 +201,7 @@ fun CodeEditor(
                     customShortcuts = preferences.getString(key, "")?.split(" ")?.filter { it in availableShortcuts }?.distinct() ?: emptyList()
                     if (!customizeShortcuts) draftShortcuts = customShortcuts
                 }
-                "keyboard-only-symbols" -> keyboardOnlySymbols = preferences.getBoolean(key, false)
+                "keyboard-only-symbols" -> keyboardOnlySymbols = preferences.getBoolean(key, true)
                 "auto-hide-hardware-toolbar" -> hideToolbarOnHardware = preferences.getBoolean(key, false)
             }
         }
@@ -473,7 +477,7 @@ fun CodeEditor(
                 }
             }
         },
-        EditorToolbarAction("share", "Share code as an image", Icons.Default.Share, invoke = onShare),
+        EditorToolbarAction("share", "Open Snippet Studio", Icons.Default.Share, invoke = onShare),
         EditorToolbarAction("find", "Find and replace", Icons.Default.Search, find) { find = !find },
         EditorToolbarAction("wrap", "Toggle line wrapping", Icons.Default.WrapText, wordWrap) {
             wordWrap = !wordWrap
@@ -491,20 +495,23 @@ fun CodeEditor(
     // The editor retains one native view; the toolbar never mounts a second editor.
     BoxWithConstraints(modifier) {
     val compactEditor = maxHeight < 280.dp
-    val keysVisible = !compactEditor && symbols && (!keyboardOnlySymbols || imeVisible) &&
+    val keysVisible = maxHeight >= 155.dp && symbols && (!keyboardOnlySymbols || imeVisible) &&
         !(hardwareKeyboard && hideToolbarOnHardware)
-    val hideToolbar = chromeCollapsed && keysVisible && !advancedTools && !find
+    val hideToolbar = (imeVisible || chromeCollapsed) && keysVisible && !advancedTools && !find
+    val toolbarCapacity = ((maxWidth - 56.dp).value / 48f).toInt().coerceAtLeast(0)
+    val inlineTools = if (hideToolbar) emptyList() else toolbarIds.take(toolbarCapacity)
     val overflow: @Composable () -> Unit = {
         Box {
             EditorIcon(Icons.Default.MoreHoriz, "Editor actions") { toolbarMenu = true }
             CodeLabDropdownMenu(expanded = toolbarMenu, onDismissRequest = { toolbarMenu = false }) {
-                toolbarActions.filter { hideToolbar || it.id !in toolbarIds }.forEach { action ->
+                toolbarActions.filter { it.id !in inlineTools }.forEach { action ->
                     DropdownMenuItem(text = { Text(action.title) }, leadingIcon = { Icon(action.icon, null) },
                         onClick = { toolbarMenu = false; action.invoke() })
                 }
-                if (hideToolbar) DropdownMenuItem(
-                    text = { Text(androidx.compose.ui.res.stringResource(R.string.editor_show_tools)) },
-                    onClick = { toolbarMenu = false; chromeCollapsed = false; advancedTools = true })
+                DropdownMenuItem(
+                    text = { Text(if (advancedTools) "Hide advanced editor tools" else "Show advanced editor tools") },
+                    leadingIcon = { Icon(Icons.Default.Tune, null) },
+                    onClick = { toolbarMenu = false; advancedTools = !advancedTools })
                 HorizontalDivider()
                 DropdownMenuItem(text = { Text("Customize toolbar") },
                     leadingIcon = { Icon(Icons.Default.Tune, null) },
@@ -519,18 +526,14 @@ fun CodeEditor(
         Row(Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 4.dp)
             .background(MaterialTheme.colorScheme.surfaceContainerLow, CodeLabCorners.iconTile),
             verticalAlignment = Alignment.CenterVertically) {
-            Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()),
-                verticalAlignment = Alignment.CenterVertically) {
-                toolbarIds.forEach { id ->
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                inlineTools.forEach { id ->
                     toolbarActions.firstOrNull { it.id == id }?.let { action ->
                         EditorIcon(action.icon, action.title, selected = action.selected, onClick = action.invoke)
                     }
                 }
             }
-            EditorIcon(if (advancedTools) Icons.Default.ExpandLess else Icons.Default.Tune,
-                if (advancedTools) "Hide advanced editor tools" else "Show advanced editor tools",
-                selected = advancedTools) { advancedTools = !advancedTools }
-            if (!hideToolbar) overflow()
+            overflow()
         }
         }
         AnimatedVisibility(visible = advancedTools, enter = fadeIn(tween(motionMillis)), exit = fadeOut(tween(motionMillis))) {
@@ -985,17 +988,7 @@ fun CodeEditor(
                     }
                     selectionChanged = { line, col ->
                         cursorStatus.label = "Ln " + line + " · Col " + col
-                        // Use the live Editable, not the captured Composable text snapshot.
-                        // Android can emit selection span changes while replacing characters.
-                        val live = this.text
-                        val start = minOf(selectionStart, selectionEnd).coerceIn(0, live.length)
-                        val end = maxOf(selectionStart, selectionEnd).coerceIn(0, live.length)
-                        if (start == end) selectionCallback("", line)
-                        else {
-                            val firstLine = logicalLineAt(start)
-                            val boundedEnd = start + (end - start).coerceAtMost(24000)
-                            selectionCallback(live.subSequence(start, boundedEnd).toString(), firstLine)
-                        }
+
                     }
                     scrollDirectionChanged = { delta -> chromeCollapsed = EditorChromePolicy.afterScroll(chromeCollapsed, delta) }
                     restorePosition(fileKey)
@@ -1037,34 +1030,31 @@ fun CodeEditor(
         })
         }
         if (keysVisible) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            if (hideToolbar) overflow()
-            Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(CodeLabSpacing.xSmall),
-                verticalAlignment = Alignment.CenterVertically) {
-                if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") EditorKey("Tab", motionMillis, touchFeedback) { if (!readOnly) view?.indentSelection() }
-                if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") EditorKey("Outdent", motionMillis, touchFeedback) { if (!readOnly) view?.outdentSelection() }
-                if (shortcutLayout != "Brackets" && shortcutLayout != "Custom") EditorKey("←", motionMillis, touchFeedback) { view?.let { editor ->
+            val keys = buildList<Pair<String, () -> Unit>> {
+                fun key(label: String, action: () -> Unit) { add(label to action) }
+                if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") key("Tab") { if (!readOnly) view?.indentSelection() }
+                if (shortcutLayout != "Minimal" && shortcutLayout != "Custom") key("Outdent") { if (!readOnly) view?.outdentSelection() }
+                if (shortcutLayout != "Brackets" && shortcutLayout != "Custom") key("←") { view?.let { editor ->
                     editor.setSelection((editor.selectionStart - 1).coerceAtLeast(0))
                 } }
-                if (shortcutLayout != "Brackets" && shortcutLayout != "Custom") EditorKey("→", motionMillis, touchFeedback) { view?.let { editor ->
+                if (shortcutLayout != "Brackets" && shortcutLayout != "Custom") key("→") { view?.let { editor ->
                     editor.setSelection((editor.selectionEnd + 1).coerceAtMost(editor.length()))
                 } }
                 if (shortcutLayout == "Selection") {
-                    EditorKey("Line", motionMillis, touchFeedback) { view?.selectCurrentLine() }
-                    EditorKey("All", motionMillis, touchFeedback) { view?.selectAll() }
-                    EditorKey("Copy", motionMillis, touchFeedback) { view?.onTextContextMenuItem(android.R.id.copy) }
-                    EditorKey("Cut", motionMillis, touchFeedback) { if (!readOnly) view?.onTextContextMenuItem(android.R.id.cut) }
-                    EditorKey("Paste", motionMillis, touchFeedback) { if (!readOnly) view?.onTextContextMenuItem(android.R.id.paste) }
-                    EditorKey("Undo", motionMillis, touchFeedback) { if (!readOnly) view?.onTextContextMenuItem(android.R.id.undo) }
-                    EditorKey("Redo", motionMillis, touchFeedback) { if (!readOnly) view?.onTextContextMenuItem(android.R.id.redo) }
+                    key("Line") { view?.selectCurrentLine() }
+                    key("All") { view?.selectAll() }
+                    key("Copy") { view?.onTextContextMenuItem(android.R.id.copy) }
+                    key("Cut") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.cut) }
+                    key("Paste") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.paste) }
+                    key("Undo") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.undo) }
+                    key("Redo") { if (!readOnly) view?.onTextContextMenuItem(android.R.id.redo) }
                 }
                 if (shortcutLayout == "Navigation") {
-                    EditorKey("Start", motionMillis, touchFeedback) { view?.scrollToStart() }
-                    EditorKey("End", motionMillis, touchFeedback) { view?.setSelection(view?.length() ?: 0) }
-                    EditorKey("↑", motionMillis, touchFeedback) { view?.moveCursorLine(-1) }
-                    EditorKey("↓", motionMillis, touchFeedback) { view?.moveCursorLine(1) }
-                    EditorKey("Mark", motionMillis, touchFeedback) { view?.toggleBookmark() }
+                    key("Start") { view?.scrollToStart() }
+                    key("End") { view?.setSelection(view?.length() ?: 0) }
+                    key("↑") { view?.moveCursorLine(-1) }
+                    key("↓") { view?.moveCursorLine(1) }
+                    key("Mark") { view?.toggleBookmark() }
                 }
                 val shortcutSymbols = when (shortcutLayout) {
                     "Brackets" -> listOf("{", "}", "(", ")", "[", "]", "<", ">", "'", "\"")
@@ -1072,14 +1062,14 @@ fun CodeEditor(
                     "Selection" -> emptyList()
                     "Custom" -> emptyList()
                     "Minimal" -> listOf("{", "}", "(", ")", ";")
-                    else -> listOf("{", "}", "(", ")", "[", "]", "=", ";", ":", "'", "\"", "/", "<", ">")
+                    else -> listOf("{", "}", "(", ")", ";", "[", "]", "=", ":", "'", "\"", "/", "<", ">")
                 }
                 shortcutSymbols.forEach { symbol ->
-                    EditorKey(symbol, motionMillis, touchFeedback) { if (!readOnly) view?.insertAtSelection(symbol) }
+                    key(symbol) { if (!readOnly) view?.insertAtSelection(symbol) }
                 }
                 if (shortcutLayout == "Custom") {
                     customShortcuts.forEach { symbol ->
-                        EditorKey(symbol, motionMillis, touchFeedback) {
+                        key(symbol) {
                             val editor = view
                             if (editor != null) when (symbol) {
                                 "Tab" -> if (!readOnly) editor.indentSelection()
@@ -1094,6 +1084,24 @@ fun CodeEditor(
                     }
                 }
             }
+            var keyMenu by remember { mutableStateOf(false) }
+            Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainerLow),
+                verticalAlignment = Alignment.CenterVertically) {
+                if (hideToolbar) overflow()
+                Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(CodeLabSpacing.xSmall),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    keys.forEach { (label, action) -> EditorKey(label, motionMillis, touchFeedback, action) }
+                }
+                if (keys.isNotEmpty()) Box {
+                    EditorIcon(Icons.Default.Keyboard, "More coding keys") { keyMenu = true }
+                    CodeLabDropdownMenu(expanded = keyMenu, onDismissRequest = { keyMenu = false }) {
+                        keys.forEach { (label, action) ->
+                            DropdownMenuItem(text = { Text(label, fontFamily = FontFamily.Monospace) },
+                                onClick = { keyMenu = false; action() })
+                        }
+                    }
+                }
             }
         }
         if (!compactEditor && showStatusBar && !imeVisible) EditorStatusBar(

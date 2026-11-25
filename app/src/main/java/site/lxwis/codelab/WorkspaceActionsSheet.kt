@@ -45,7 +45,6 @@ internal fun WorkspaceActionsSheet(
     fileOpen: Boolean,
     multipleProjects: Boolean,
     javascriptFile: Boolean,
-    cloudReady: Boolean,
     focusMode: Boolean,
     quickActions: List<String>,
     onToggleQuick: (String) -> Unit,
@@ -74,6 +73,7 @@ internal fun WorkspaceActionsSheet(
         } else {
             add("files", "Browse files", "Open the project explorer", files, Icons.Default.FolderOpen)
             add("newfile", "New file", "Create a file in this project", files, Icons.Default.NoteAdd)
+            add("runfiles", "Run a file", "Choose a project file to execute", files, Icons.Default.PlayArrow)
             add("newfolder", "New folder", "Organize the project", files, Icons.Default.CreateNewFolder)
             add("importfile", "Import file", "Copy a file from your device", files, Icons.Default.FileOpen)
             add("importmany", "Import multiple files", "Add several local files", files, Icons.Default.UploadFile)
@@ -89,16 +89,16 @@ internal fun WorkspaceActionsSheet(
             }
             add("projectsearch", "Find in project", "Search text across files", editor, Icons.Default.Search)
             add("projectreplace", "Replace across files", "Review and apply replacements", editor, Icons.Default.FindReplace)
+            add("workspaceview", "Workspace view", "Choose Editor, Console or Split", editor, Icons.Default.ViewSidebar)
             add("panels", "Panel layout", "Adjust editor and console sizes", editor, Icons.Default.ViewSidebar)
             add("commands", "Command palette", "Search every workspace action", editor, Icons.Default.ManageSearch)
             if (fileOpen) {
-                add("screenshot", "Code snippet image", "Capture selected code or file lines", tools, Icons.Default.PhotoCamera)
+                add("screenshot", "Snippet Studio", "Capture code, console output, or both", tools, Icons.Default.PhotoCamera)
                 add("history", "File history", "Review previous snapshots", editor, Icons.Default.History)
             }
             add("focus", if (focusMode) "Leave focus mode" else "Focus mode",
                 "Hide distractions while coding", editor, Icons.Default.Fullscreen)
             add("languages", "Languages", "Browse local and online availability", tools, Icons.Default.Code)
-            if (cloudReady) add("cloudrun", "Run online", "Requires confirmation before upload", tools, Icons.Default.Cloud)
             if (javascriptFile) add("jsdebug", "JavaScript diagnostics", "Inspect recent execution", tools, Icons.Default.BugReport)
             add("git", "Version control", "Manage local Git history", tools, Icons.Default.AccountTree)
             add("workspacecommands", "Workspace commands", "Local file commands, not a Linux shell", tools, Icons.Default.Terminal)

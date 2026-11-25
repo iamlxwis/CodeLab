@@ -43,7 +43,7 @@ internal fun WorkspaceTab(
     onCloseAll: () -> Unit,
     onMove: (Int) -> Unit,
     onReveal: () -> Unit,
-    maxWidth: Dp = 240.dp
+    maxWidth: Dp = 200.dp
 ) {
     var menu by remember { mutableStateOf(false) }
     val background by animateColorAsState(
@@ -57,7 +57,7 @@ internal fun WorkspaceTab(
     var dragX by remember(path) { mutableFloatStateOf(0f) }
     val move by rememberUpdatedState(onMove)
     Row(
-        Modifier.widthIn(max = maxWidth).padding(end = 2.dp)
+        Modifier.widthIn(max = minOf(maxWidth, 200.dp)).padding(end = 2.dp)
             .background(background, RoundedCornerShape(12.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -73,10 +73,10 @@ internal fun WorkspaceTab(
                     selected = active
                     stateDescription = if (dirty) "Unsaved changes" else "Saved"
                 }
-                .padding(horizontal = 8.dp, vertical = 14.dp),
+                .padding(horizontal = 5.dp, vertical = 13.dp),
             color = selectedInk,
             fontFamily = FontFamily.Monospace,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )

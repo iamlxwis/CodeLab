@@ -159,7 +159,7 @@ internal fun EditorKey(label: String, motionMillis: Int, touchFeedback: Boolean,
     Surface(onClick = {
         if (touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         onClick()
-    }, modifier = Modifier.width(68.dp).height(48.dp),
+    }, modifier = Modifier.widthIn(min = if (label.length >= 4) 62.dp else 48.dp).height(48.dp),
         shape = CodeLabCorners.iconTile, color = background, interactionSource = interaction) {
         Box(contentAlignment = Alignment.Center) {
             if (arrow != null) Icon(arrow, description, Modifier.size(20.dp), tint = colors.onSurface)

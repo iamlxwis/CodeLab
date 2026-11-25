@@ -74,7 +74,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.first
 
 @Composable
 internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
@@ -101,8 +100,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         else m.dismissUndo(deleted.id)
     }
     var incoming by rememberSaveable { mutableStateOf<String?>(null) }
-    var selectedSnippet by remember { mutableStateOf("") }
-    var selectedSnippetLine by remember { mutableIntStateOf(1) }
+    var captureReader by remember { mutableStateOf<(() -> EditorCapture?)?>(null) }
+    var snippet by remember { mutableStateOf<SnippetSnapshot?>(null) }
+    var resultFirst by remember { mutableStateOf(false) }
     val focusMode = m.focusMode && m.project != null
     val explorerPinned = m.explorerPinned
     val wideOutputExpanded = m.outputMaximized
@@ -117,9 +117,29 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     val motionMillis = motion.millis(170)
     // Reclaim chrome for every text input, including runtime stdin and WebView forms.
     val keyboardEditing = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    // Short landscape windows must reserve room for source even without the IME.
-    // All tools remain reachable through the header action menu.
-    val compactChrome = keyboardEditing || LocalConfiguration.current.screenHeightDp < 480
+    val configuration = LocalConfiguration.current
+    val wideWorkspace = WorkspaceSizeClass.of(configuration.screenWidthDp) != WorkspaceSizeClass.Compact
+    val shortWorkspace = configuration.screenHeightDp < 480
+    val outputOpen = m.console || m.preview
+    val splitOpen = outputOpen && if (wideWorkspace) !wideOutputExpanded else m.phoneSplitEnabled
+    val currentPanel = if (!outputOpen) "Editor" else if (splitOpen) "Split" else "Console"
+
+    fun choosePanel(pane: String) {
+        when (pane) {
+            "Editor" -> { m.console = false; m.preview = false }
+            "Console" -> {
+                m.chooseOutputMaximized(true)
+                m.choosePhoneSplitEnabled(false)
+                m.console = true
+                m.preview = false
+            }
+            "Split" -> {
+                m.chooseOutputMaximized(false)
+                if (!wideWorkspace) m.choosePhoneSplitEnabled(true)
+                if (!m.preview) m.console = true
+            }
+        }
+    }
     val activity = context as? ComponentActivity
     DisposableEffect(activity, focusMode, m.systemStatusVisible) {
         val window = activity?.window
@@ -171,9 +191,13 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     val p = m.project
     LaunchedEffect(m.isOnline) { if (m.isOnline) m.updater.check() }
     LaunchedEffect(m.project, m.console, m.preview, m.outputMaximized, m.busy) { m.rememberWorkspacePanels() }
-    LaunchedEffect(m.active) {
-        selectedSnippet = ""
-        selectedSnippetLine = 1
+    fun openSnippet(result: Boolean = false) {
+        val project = m.project ?: return
+        val run = m.snippetExecution()
+        val file = m.active ?: run?.file ?: return
+        snippet = SnippetSnapshot(project, file, m.source, captureReader?.invoke(), run)
+        resultFirst = result
+        dialog = "screenshot"
     }
     fun openAction(action: String) {
         when (action) {
@@ -192,6 +216,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             "tutorial" -> { dialog = ""; showTutorial = true }
             "run-active" -> m.run()
             "save" -> m.flush()
+            "screenshot" -> openSnippet()
             "focus" -> {
                 m.chooseFocusMode(!focusMode)
                 m.console = false
@@ -208,21 +233,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
 
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-        if (p != null && !focusMode) WorkspaceTopBar(m, p, ::openAction)
-        if (p != null && !focusMode && !compactChrome) RunModeStrip(m,
-            onLanguages = {
-                val ext = m.active?.substringAfterLast('.', "")?.lowercase()
-                requestedLanguage = if (ext == "py") "Python"
-                    else OptionalRuntimeLocator.Pack.entries.firstOrNull { it.extension == ext }?.label
-                dialog = "languages"
-            },
-            onProjectSettings = { dialog = "projectsettings" })
-        if (p != null && !focusMode && !compactChrome) ContextualTip(
-            if (m.console) "console" else "workspace",
-            if (m.console) "Console controls" else "Workspace navigation",
-            if (m.console) "Filter errors or warnings, drag the divider to resize, or double-tap the console header to maximize."
-                else "Swipe the title or status strip to change files. Open Explorer to manage files; long-press tab handles for actions.",
-            onGuide = { showTutorial = true })
+        if (p != null && !focusMode) WorkspaceTopBar(m, p, ::openAction, showFile = outputOpen && !splitOpen)
         if (p == null) {
             MainDestinations(m, destination, { destination = it }, ::openAction, projects = { bottom ->
                 ProjectLibrary(m, motionMillis, { openAction("newproject") },
@@ -231,10 +242,12 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     { selected = it; dialog = "deleteproject" },
                     { selected = it; dialog = "duplicateproject" }, importFolder = { openAction("folderimport") },
                     bottomPadding = bottom)
-            }, modifier = Modifier.weight(1f))
+            }, modifier = Modifier.weight(1f),
+                backdropVisible = dialog.isEmpty() && !showTutorial && !keyboardEditing,
+                workspaceCapsuleVisible = !keyboardEditing)
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            if (!focusMode) Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!focusMode && (!outputOpen || splitOpen)) Row(verticalAlignment = Alignment.CenterVertically) {
                 val threshold = with(LocalDensity.current) { 32.dp.toPx() }
                 var explorerDrag by remember { mutableFloatStateOf(0f) }
                 IconButton(onClick = { dialog = "files" }, modifier = Modifier.pointerInput(threshold) {
@@ -253,22 +266,16 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }
                 }
                 val tabScroll = rememberLazyListState()
-                LaunchedEffect(m.active, m.tabs) {
-                    val index = m.tabs.indexOf(m.active)
-                    if (index >= 0) {
-                        // Wait for the new tab count to be measured, then reveal the entire item.
-                        val layout = snapshotFlow { tabScroll.layoutInfo }.first {
-                            it.totalItemsCount == m.tabs.size && it.viewportEndOffset > it.viewportStartOffset
-                        }
-                        val item = layout.visibleItemsInfo.firstOrNull { it.index == index }
-                        if (item == null || item.offset < layout.viewportStartOffset ||
-                            item.offset + item.size > layout.viewportEndOffset) {
-                            if (motionMillis > 0) tabScroll.animateScrollToItem(index) else tabScroll.scrollToItem(index)
-                        }
-                    }
-                }
                 BoxWithConstraints(Modifier.weight(1f)) {
                 val tabWidth = maxWidth
+                LaunchedEffect(m.active, m.tabs, tabWidth) {
+                    val index = m.tabs.indexOf(m.active)
+                    if (index >= 0 && tabWidth > 0.dp) {
+                        // Request on the current width. Adding a tab also introduces the switcher,
+                        // so the old viewport can report a new tab visible before it shrinks.
+                        tabScroll.requestScrollToItem(index)
+                    }
+                }
                 LazyRow(Modifier.fillMaxWidth(), state = tabScroll,
                     verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
@@ -296,7 +303,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 }
                 }
                 if (m.tabs.size > 1) OpenTabsMenu(m.tabs, m.active, m::select)
-                IconButton(onClick = { dialog = "newfile" }) { Icon(Icons.Default.Add, "Add file") }
+                if (!keyboardEditing) IconButton(onClick = { dialog = "newfile" }) {
+                    Icon(Icons.Default.Add, "Add file")
+                }
             }
             BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
                 val widthClass = WorkspaceSizeClass.of(maxWidth.value.toInt())
@@ -306,12 +315,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 val editorPane: @Composable (Modifier) -> Unit = { pane ->
                     WorkspaceEditorPane(m, p, pane,
                         onFiles = { dialog = "files" },
-                        onScreenshot = { dialog = "screenshot" },
+                        onScreenshot = { openSnippet() },
                         onCommands = { dialog = "commands" },
-                        onSelection = { text, line ->
-                            selectedSnippet = text
-                            selectedSnippetLine = line
-                        })
+                        onCaptureReader = { captureReader = it })
                 }
                 val outputPane: @Composable (Modifier) -> Unit = { pane ->
                     if (m.console) RunConsole(m.runner, pane, m.active, m.files,
@@ -319,7 +325,8 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                             else { m.chooseOutputMaximized(m.phoneSplitEnabled); m.choosePhoneSplitEnabled(!m.phoneSplitEnabled) } },
                         onNotice = { message ->
                             snackbarScope.launch { snackbarHost.showSnackbar(message) }
-                        }, motionMillis = motionMillis, glassHeader = m.glassEnabled && !m.highContrast) { path, line ->
+                        }, motionMillis = motionMillis, onRerun = m::requestRerun,
+                        onSnippet = { openSnippet(result = true) }) { path, line ->
                         m.select(path, goToLine = line)
                     }
                     else if (m.preview && m.active != null)
@@ -333,7 +340,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                         outputPane(Modifier.weight((100 - m.phoneSplitPercent).toFloat()).fillMaxWidth())
                     }
                 } else {
-                    val showSidebar = widthClass == WorkspaceSizeClass.Expanded && explorerPinned && !focusMode && !wideOutputExpanded
+                    val showSidebar = widthClass == WorkspaceSizeClass.Expanded && explorerPinned && !focusMode && !(wideOutputExpanded && (m.console || m.preview))
                     val wideSplit = wide && !wideOutputExpanded && (m.console || m.preview)
                     val panelWidth = (maxWidth - (if (showSidebar) 225.dp else 0.dp) - 48.dp).coerceAtLeast(1.dp)
                     val panelWidthPx = with(LocalDensity.current) { panelWidth.toPx() }
@@ -408,23 +415,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Spacer(Modifier.width(6.dp))
                 Text("Exit Focus Mode")
             }
-            if (!focusMode && !compactChrome) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
-                .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                PanelButton("Editor", !m.console && !m.preview, motionMillis, m.touchFeedback) { m.chooseOutputMaximized(false); m.console = false; m.preview = false }
-                PanelButton("Console", m.console && (!m.phoneSplitEnabled || WorkspaceSizeClass.of(LocalConfiguration.current.screenWidthDp) != WorkspaceSizeClass.Compact), motionMillis, m.touchFeedback) {
-                    m.choosePhoneSplitEnabled(false); m.console = true; m.preview = false
-                }
-                if (WorkspaceSizeClass.of(LocalConfiguration.current.screenWidthDp) == WorkspaceSizeClass.Compact) {
-                    PhoneSplitToggle(m.phoneSplitEnabled && (m.console || m.preview)) {
-                        val next = !(m.phoneSplitEnabled && (m.console || m.preview))
-                        m.choosePhoneSplitEnabled(next)
-                        if (next && !m.console && !m.preview) m.console = true
-                        if (!next) { m.console = false; m.preview = false }
-                    }
-                }
-                if (m.active?.endsWith(".html",true) == true || m.active?.endsWith(".htm",true) == true)
-                    PanelButton("Preview", m.preview, motionMillis, m.touchFeedback) { m.chooseOutputMaximized(false); m.console = false; m.preview = true }
-                QuickActionsBar(m.quickEditorActions, onAction = ::openAction)
+            if (!focusMode && !keyboardEditing && !shortWorkspace) {
+                WorkspacePanels(currentPanel, Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                    ::choosePanel)
             }
         }
         AnimatedVisibility(tutorialDetour && dialog.isEmpty() && !showTutorial,
@@ -479,7 +472,6 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             fileOpen = m.active != null,
             multipleProjects = m.projects.size > 1,
             javascriptFile = m.active?.endsWith(".js", true) == true,
-            cloudReady = m.active?.let(m::cloudAvailable) == true,
             focusMode = focusMode,
             quickActions = if (p != null) m.quickEditorActions else m.quickHomeActions,
             onToggleQuick = { m.toggleQuickAction(it, p != null) },
@@ -498,9 +490,14 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             requestedLanguage = null
         }
         "switchproject" -> ProjectSwitcher(m) { dialog = "" }
-        "screenshot" -> CodeScreenshotStudio(
-            m.active.orEmpty(), m.source, selectedSnippet, selectedSnippetLine
-        ) { dialog = "" }
+        "screenshot" -> snippet?.let {
+            SnippetStudio(it, appearanceIsDark(m.appearance, isSystemInDarkTheme()), resultFirst) {
+                dialog = ""
+                snippet = null
+            }
+        }
+        "runfiles" -> RunFilePicker(m.files, m.files.filter(m::cloudAvailable).map(::languageExtension).toSet(),
+            m::runTarget, setOf("py", "ts").filter { m.isLocalExecutable("file.$it") }.toSet()) { dialog = "" }
         "workspacecommands" -> WorkspaceCommandSheet(m) { dialog = "" }
         "jsdebug" -> JavaScriptDebugDialog(m) { dialog = "" }
         "projectsettings" -> ProjectSettingsDialog(m) { dialog = "" }
@@ -523,8 +520,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Text("Project: " + m.project.orEmpty())
             } }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Close") } })
 
-        "newproject" -> GuidedProjectSheet(cancel = { dialog = "" }, initialLanguage = template) { name, template, starter, execution ->
-            m.chooseExecutionMode(execution)
+        "newproject" -> GuidedProjectSheet(cancel = { dialog = "" }, initialLanguage = template) { name, template, starter ->
             m.openProject(name, true, template, starter)
             dialog = ""
         }
@@ -670,6 +666,13 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     TextButton(onClick = { dialog = "layoutpresets" }) { Text("Save or restore layouts") }
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
+        "workspaceview" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" },
+            title = { Text("Workspace view") },
+            text = { WorkspacePanels(currentPanel, Modifier.fillMaxWidth()) { pane ->
+                choosePanel(pane)
+                dialog = ""
+            } },
+            confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
         "appearance" -> ReimaginedSettings(m, ::openAction, { dialog = "" }, initialPage = "appearance")
         "settings" -> ReimaginedSettings(m, onAction = ::openAction, close = { dialog = "" })
         "licenses" -> LicenseNotices { dialog = "" }
@@ -702,6 +705,16 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
         transitionEffect = m.transitionEffect,
         runtimeBusy = m.runner.running
     )
+    m.executionRequest?.let { request ->
+        ExecutionChooser(request.file, request.suggested, m.executionOptions(request),
+            cancel = m::cancelExecution,
+            install = { language ->
+                m.cancelExecution()
+                requestedLanguage = language
+                dialog = "languages"
+            },
+            run = { mode -> m.confirmExecution(request, mode) })
+    }
     m.cloudPending?.let { filename ->
         val language = m.cloudLanguages[CloudJudge0.extension(filename)]
         if (language != null) {
@@ -747,18 +760,14 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PanelButton(text: String, active: Boolean, motionMillis: Int, touchFeedback: Boolean, click: () -> Unit) {
-    val haptics = LocalHapticFeedback.current
-    val target = if (active) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-    val background by animateColorAsState(target, animationSpec = tween(motionMillis), label = "panel-selection")
-    Surface(onClick = {
-        if (touchFeedback) haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-        click()
-    }, modifier = Modifier.heightIn(min = 48.dp), color = background, shape = CodeLabCorners.iconTile) {
-        Text(text, Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-            style = MaterialTheme.typography.labelLarge,
-            color = if (active) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-            fontWeight = if (active) FontWeight.SemiBold else FontWeight.Medium)
+internal fun WorkspacePanels(current: String, modifier: Modifier = Modifier, choose: (String) -> Unit) {
+    val panels = listOf("Editor", "Console", "Split")
+    SingleChoiceSegmentedButtonRow(modifier) {
+        panels.forEachIndexed { index, pane ->
+            SegmentedButton(current == pane, { choose(pane) },
+                SegmentedButtonDefaults.itemShape(index, panels.size), icon = {}) { Text(pane) }
+        }
     }
 }
