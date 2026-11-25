@@ -78,6 +78,19 @@ class ReleaseVisualEvidenceTest {
             // Give the rendered surface a frame after the editor's background analysis.
             android.os.SystemClock.sleep(300)
             capture("editor")
+            if (size == "landscape") {
+                var visibleLines = 0
+                scenario.onActivity { activity ->
+                    val editor = checkNotNull(source(activity.window.decorView))
+                    val rect = Rect()
+                    assertTrue("Landscape editor must be visible", editor.getLocalVisibleRect(rect))
+                    visibleLines = (rect.height() - editor.compoundPaddingTop - editor.compoundPaddingBottom)
+                        .coerceAtLeast(0) / editor.lineHeight.coerceAtLeast(1)
+                }
+                File(output, "$size-${style.lowercase()}-viewport.json").writeText(
+                    JSONObject().put("visible_complete_lines", visibleLines).toString(2))
+                assertTrue("800x360dp must retain >=4 complete source lines, measured $visibleLines", visibleLines >= 4)
+            }
             if (size == "phone") {
                 scenario.onActivity { activity ->
                     val editor = checkNotNull(source(activity.window.decorView))

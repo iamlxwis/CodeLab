@@ -304,7 +304,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         contentDescription = "Source code, $filename"
         setLineSpacing(dp(3).toFloat(), 1f)
         includeFontPadding = false
-        setPadding(dp(52), dp(8), dp(16), dp(36))
+        setPadding(dp(52), dp(8), dp(16), dp(8))
         addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -362,7 +362,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
         val next = dp(18) + linePaint.measureText("0".repeat(digits)).roundToInt()
         if (next != gutterWidth) {
             gutterWidth = next
-            setPadding(gutterWidth + dp(10), dp(8), dp(16), dp(36))
+            setPadding(gutterWidth + dp(10), dp(8), dp(16), dp(8))
         }
     }
 

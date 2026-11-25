@@ -28,15 +28,15 @@ Write, run, and manage projects from your phone.
 | --- | --- |
 | Update | CodeLab — Reimagined |
 | Status | **ACTIVE — Final Release Stabilization; 0/9 verified, 9/9 remaining** |
-| Current-pass checks | [61ab6f2 build](https://github.com/iamlxwis/CodeLab/actions/runs/45512837209) passed: 208 JVM, 0 lint errors; [API35](https://github.com/iamlxwis/CodeLab/actions/runs/45512870975) passed 3 initial checks, then emulator disappeared; input fix not yet verified |
+| Current-pass checks | [7028e40 API35](https://github.com/iamlxwis/CodeLab/actions/runs/45515021053): 9/10 stages passed, 45 instrumentation tests passed; phone viewport failed at 11 lines |
 | Source coverage | **37/37 decisions mapped; 8/8 audited implementation gaps addressed** — validation is separate |
 | Current workstream | Final stabilization W1/W2/W6/W7; [acceptance matrix](docs/development/RELEASE_ACCEPTANCE.md): 0/37 redesign, 0/10 UI accepted |
 | Baseline | Prior source/CI checkpoint [55a65774d56e](https://github.com/iamlxwis/CodeLab/commit/55a65774d56e949dd06ca1eb1db306026983ed0b); owner reports prior APK works |
-| Latest verified build | [61ab6f2 APK](https://github.com/iamlxwis/CodeLab/actions/runs/45512837209): 0.5.1-alpha/1389, 4,383,948 bytes, permanent certificate matched |
-| Next to build | Check resource-stabilized API35 suite, physical-key regression and current screenshots/viewport/measurement reports, then production upgrade and remaining acceptance |
-| Last activity | November 25, 2026 — 08:02:41 AM PHT |
+| Latest verified build | [7028e40 build](https://github.com/iamlxwis/CodeLab/actions/runs/45515006850) passed; latest app binary 0.5.1-alpha/1389, permanent signer verified |
+| Next to build | Verify phone >=12 lines and useful landscape source, then same-key upgrade; review real screenshots/performance before acceptance |
+| Last activity | November 25, 2026 — 08:27:07 AM PHT |
 
-**Current activity:** November 25, 2026 — 08:02:41 AM PHT — W1: repairing emulator infrastructure after ADB vanished; prebuilding instrumentation, stopping build daemons and disabling emulator Vulkan; 0/9 verified complete, 9 remaining; next retry API35 with host diagnostics and preserve every failed or blocked check.
+**Current activity:** November 25, 2026 — 08:27:07 AM PHT — W1/W2/W7: API35 functional smoke and all 45 instrumentation tests passed; fixing measured 11-line phone viewport and source-starved landscape; 0/9 complete, 9 remaining; next exact-source layout rerun and production upgrade.
 
 > One current activity sentence. [37-decision contract](docs/development/REIMAGINED_SPEC.md) · [Acceptance ledger](docs/development/REIMAGINED.md) · [Historical log](docs/development/PROGRESS_LOG.md) · [Session memory](docs/development/PROJECT_MEMORY.md). Source changes, build verification and device acceptance are tracked separately.
 

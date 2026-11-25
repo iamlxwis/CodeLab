@@ -114,6 +114,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     val motionMillis = motion.millis(170)
     // Reclaim chrome for every text input, including runtime stdin and WebView forms.
     val keyboardEditing = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    // Short landscape windows must reserve room for source even without the IME.
+    // All tools remain reachable through the header action menu.
+    val compactChrome = keyboardEditing || LocalConfiguration.current.screenHeightDp < 480
     val activity = context as? ComponentActivity
     DisposableEffect(activity, focusMode, m.systemStatusVisible) {
         val window = activity?.window
@@ -200,7 +203,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
         if (!focusMode || p == null) WorkspaceTopBar(m, p) { dialog = it }
-        if (p != null && !focusMode && !keyboardEditing) RunModeStrip(m,
+        if (p != null && !focusMode && !compactChrome) RunModeStrip(m,
             onLanguages = {
                 val ext = m.active?.substringAfterLast('.', "")?.lowercase()
                 requestedLanguage = if (ext == "py") "Python"
@@ -208,7 +211,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 dialog = "languages"
             },
             onProjectSettings = { dialog = "projectsettings" })
-        if (p != null && !focusMode && !keyboardEditing) ContextualTip(
+        if (p != null && !focusMode && !compactChrome) ContextualTip(
             if (m.console) "console" else "workspace",
             if (m.console) "Console controls" else "Workspace navigation",
             if (m.console) "Filter errors or warnings, drag the divider to resize, or double-tap the console header to maximize."
@@ -397,7 +400,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Spacer(Modifier.width(6.dp))
                 Text("Exit Focus Mode")
             }
-            if (!focusMode && !keyboardEditing) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+            if (!focusMode && !compactChrome) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 PanelButton("Editor", !m.console && !m.preview, motionMillis, m.touchFeedback) { m.chooseOutputMaximized(false); m.console = false; m.preview = false }
                 PanelButton("Console", m.console && (!m.phoneSplitEnabled || WorkspaceSizeClass.of(LocalConfiguration.current.screenWidthDp) != WorkspaceSizeClass.Compact), motionMillis, m.touchFeedback) {

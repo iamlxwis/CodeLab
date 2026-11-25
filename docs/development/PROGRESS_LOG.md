@@ -1,3 +1,13 @@
+## November 25, 2026 — 08:27:07 AM PHT — Real-device suite exposed two viewport defects
+
+W1/W2/W7: API35 functional smoke and all 45 instrumentation tests passed; fixing measured 11-line phone viewport and source-starved landscape; 0/9 complete, 9 remaining; next exact-source layout rerun and production upgrade.
+
+Main checkpoint 7028e40f0dade0cfd16285e72e2fc14806dd33af: fast CI45515006850 passed. API35 run45515021053 now stays connected and passed release clean install, tutorial resume, missing Python recovery, full functional smoke, all45 instrumentation tests, performance collection, motion collection, automated accessibility and 200% font checks. Rapid physical typing plus viewport resize retained the same native view and complete source; real smoke editing/autosave/process restore/rotation and six offline languages plus local Web preview passed. This verifies the earlier input/console/tab corrections. Device suite remains FAIL because phone layout measured11 complete lines, requirement12.
+
+Reviewed actual 3-size x2-theme images: landscape360dp-high source was entirely consumed by mode/guidance/footer chrome. Fix hides those secondary rows in short windows using the same compact policy as IME; header tools retain access. Native editor bottom padding36dp unnecessarily reserved room above a separately allocated accessory row; reduced to8dp like top padding, without shrinking type or touch targets. Landscape test now requires at least4 complete source lines in addition to actual screenshots; phone >=12 assertion unchanged. These corrections await exact-source device verification.
+
+Measured emulator results, not physical benchmarks: debug cold launch2196ms, PSS106217KiB; sparse9-frame startup sample cannot establish jank. Release motion131frames,118janky(90.08%), p50=81ms,p95=250ms under software GLES. This is poor emulator rendering evidence, not proof of smooth production behavior; D29/W07 not accepted. Accessibility sampled13 controls with0potentially unlabeled/undersized, but manual TalkBack remains unverified. Production upgrade and online run remain pending/blocked. No full workstream is complete and no stable release was published. Next verify viewport repair and then let guarded production verification run; preserve acceptance gates.
+
 # CodeLab — task progress audit
 
 Short, append-only development checkpoints. The [README tracker](../../README.md#codelab-development-tracker) shows the current summary. **Every meaningful change to a task's status or implementation progress must be committed with an update to both this log and the README in the same commit.** Never mark a task complete without verifiable test/build evidence.
