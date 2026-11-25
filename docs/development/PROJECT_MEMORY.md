@@ -1,3 +1,7 @@
+## Nov 25, 2026, 5:48 PM PHT — Compose lint correction
+
+The prior source passed 202 JVM tests and compiled instrumentation. Strict lint reported `ProduceStateDoesNotAssignValue` on the two runtime installer checks. Both checks now use keyed effects and keep APK verification on the I/O dispatcher. Next verify strict lint, the signed PR artifact and API 35 evidence. Fully verified workstreams 0/10. [Branch handoff](REIMAGINED_2_0.md).
+
 ## Nov 25, 2026, 5:42 PM PHT — PR APK and upgrade verification
 
 The first [branch APK build](https://github.com/iamlxwis/CodeLab/actions/runs/45586362366) passed compilation, JVM tests, strict lint, optional runtime assembly, signature verification and certificate continuity. Local JVM evidence for that checkpoint contains 200 tests without failures. Refined editor appearance migration, console and workspace chrome, update metadata validation and runtime sizing, and extended device smoke. No workstream is fully accepted yet. See [PR #16](https://github.com/iamlxwis/CodeLab/pull/16) and [the handoff](REIMAGINED_2_0.md) for the next verification.

@@ -31,6 +31,8 @@ Baseline [APK build](https://github.com/iamlxwis/CodeLab/actions/runs/4551824255
 
 The updated candidate simplifies editor-settings migration, applies workspace and console chrome, checks trusted update metadata and runtime download sizes, and extends smoke coverage to cross-project search and activity. A manual dispatch of the Android APK workflow on this branch runs the signed in-place upgrade gate. The stable publication steps are gated to main.
 
+The `febfa99` local JVM suite passed 202 tests and compiled the instrumentation suite. Strict lint flagged `ProduceStateDoesNotAssignValue` on two runtime verification producers. The follow-up keeps verification on the I/O dispatcher using keyed effects and separate observable state. It also gives the manual signed-upgrade run a separate concurrency group from the fast PR build.
+
 ## Next action
 
 Review the branch APK workflow and device evidence. Fix real failures, download and inspect the candidate APK, and record remaining physical-device coverage before handing off.

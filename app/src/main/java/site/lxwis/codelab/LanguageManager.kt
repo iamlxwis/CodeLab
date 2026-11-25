@@ -333,8 +333,11 @@ internal fun LanguageManagerScreen(model: WorkspaceModel, initialLanguage: Strin
                                     style = MaterialTheme.typography.bodySmall)
                             }
                             if (transfer.stage == PythonModuleDownload.Stage.DOWNLOADED) {
-                                val checks by produceState<Pair<String?, PythonModuleVersionPolicy.Decision?>?>(null, downloadId, recheck) {
-                                    value = withContext(Dispatchers.IO) { module.verify() to module.downloadedVersionDecision() }
+                                var checks by remember(downloadId, recheck) {
+                                    mutableStateOf<Pair<String?, PythonModuleVersionPolicy.Decision?>?>(null)
+                                }
+                                LaunchedEffect(downloadId, recheck) {
+                                    checks = withContext(Dispatchers.IO) { module.verify() to module.downloadedVersionDecision() }
                                 }
                                 val verification = checks?.first
                                 val versionDecision = checks?.second
@@ -488,8 +491,9 @@ internal fun OptionalRuntimeDetails(
                     }) { Text("Cancel download") }
                 } else {
                     if (transfer.stage == OptionalRuntimeDownload.Stage.DOWNLOADED) {
-                        val verification by produceState<Pair<Boolean, String?>>(false to null, transfer) {
-                            value = true to withContext(Dispatchers.IO) { manager.verify() }
+                        var verification by remember(transfer) { mutableStateOf<Pair<Boolean, String?>>(false to null) }
+                        LaunchedEffect(transfer) {
+                            verification = true to withContext(Dispatchers.IO) { manager.verify() }
                         }
                         val (verified, error) = verification
                         Text(error ?: if (verified) "APK signature and package verified" else "Verifying installer…",
