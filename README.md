@@ -2,64 +2,65 @@
 
 # CodeLab
 
-**A native code editor for Android.**  
-Write, run, and manage projects from your phone.
+**A native Android IDE. Write, run and share code from your phone.**
 
 [![Android 8.0+](https://img.shields.io/badge/Android-8.0%2B-3DDC84?logo=android&logoColor=white)](https://github.com/iamlxwis/CodeLab/releases/latest)
 ![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?logo=kotlin&logoColor=white)
-![Offline](https://img.shields.io/badge/Execution-Offline-1F6F5C)
 [![Android CI](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml/badge.svg?branch=main)](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml)
-[![Device CI](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml/badge.svg?branch=main)](https://github.com/iamlxwis/CodeLab/actions/workflows/device.yml)
 
-**[Download APK](https://github.com/iamlxwis/CodeLab/releases/latest/download/CodeLab.apk)** · [Releases](https://github.com/iamlxwis/CodeLab/releases) · [Issues](https://github.com/iamlxwis/CodeLab/issues)
+**[Download APK](https://github.com/iamlxwis/CodeLab/releases/latest/download/CodeLab.apk)** · [Releases](https://github.com/iamlxwis/CodeLab/releases) · [Report an issue](https://github.com/iamlxwis/CodeLab/issues)
 
 </div>
 
-<p align="center">
-  <img src="docs/screenshots/editor.png" alt="CodeLab JavaScript editor on Android" width="290" />
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/web-preview.png" alt="CodeLab offline HTML preview on Android" width="290" />
-</p>
-<p align="center"><sub>Earlier CodeLab emulator screenshots. <a href="https://github.com/iamlxwis/CodeLab/actions/runs/45591645578/artifacts/15012039749">Reimagined 2.0 emulator screenshots</a>.</sub></p>
+## What's new — Reimagined 2.1
 
-## CodeLab Development Tracker
+- Cleaner Light and Dark interface with backdrop-aware glass navigation.
+- Distinct Home dashboard, project library and Explore screens.
+- Compact editor, responsive file tabs and keyboard-aware coding shortcuts.
+- Choose Offline or Online when tapping Run or Rerun.
+- Integrated console with Editor, Console and Split modes.
+- Snippet Studio: export selected code, entire files, results or combined code and output in Light or Dark, with pagination for long content.
+- Refined language icons, project cards, grouped settings and universal search.
 
-**Development status:** STOPPED — Nov 25, 2026, 10:42 PM PHT — 7/10 workstreams verified. Signed 2.1 test APK delivered for manual approval. Physical-device, TalkBack and secondary-flow review remain open.
-
-[Reimagined 2.1 handoff](docs/development/REIMAGINED_2_1.md) · [Signed test APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Android 15 evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45632769173/artifacts/15034300327) · [Reimagined 2.0 baseline PR](https://github.com/iamlxwis/CodeLab/pull/16)
+**Availability:** Reimagined 2.1 (0.6.1-alpha) is merged into main. The public APK may be an earlier build until the next release is published. [Release notes](docs/RELEASE_NOTES.md) · [Changelog](CHANGELOG.md)
 
 ## Features
 
-- **Code editor** — Syntax highlighting, tabs, autocomplete, undo/redo, search, snippets, and formatting.
-- **Run offline** — JavaScript, Lua, SQL, and limited Java support, with an integrated console.
-- **Explore** — Language and runtime details, templates, snippets, local developer tools, and downloads. Six optional signed runtime packs remain supported.
-- **Home and universal search** — Resume recent files, find projects and source, and run workspace commands. Search history stays on your device.
-- **Appearance and activity** — System, Light and Dark app modes, independent editor colors and fonts, and optional local activity totals.
-- **Software updates** — Check official GitHub releases and verify APKs before opening Android’s installer.
-- **Web preview** — Build and preview HTML, CSS, and JavaScript locally.
-- **Projects** — Templates, autosave, file management, and ZIP import/export.
-- **Tools** — Selective Git commits, optional GitHub remote sync, JavaScript debugging and code screenshots.
-- **Privacy** — Optional cloud and GitHub credentials are encrypted in Android Keystore. No source upload without an explicit action.
+- Syntax highlighting, autocomplete, file tabs, search and formatting.
+- Local projects, autosave, templates, ZIP import/export and file history.
+- Offline execution with built-in engines and optional runtime packs.
+- Online execution with explicit source-upload approval.
+- Local HTML, CSS and JavaScript preview.
+- Git history and optional GitHub sync.
+- Code and console image sharing, local activity and update checks.
 
-## Optional GitHub sync
+## Offline languages
 
-From a project, open **Git**, then expand **GitHub sync** and configure an `owner/repository` origin. **Fetch** only downloads remote history. **Pull** requires a clean working tree and only fast-forwards. **Push** requires confirmation, a GitHub access token and a clean branch; it never forces changes. Save a fine-grained token with only the repository permissions you need.
+| Language | Execution |
+| --- | --- |
+| Python | Optional CPython pack (64-bit devices) |
+| JavaScript | Interpreter |
+| Lua | Interpreter |
+| Java | Interpreter beta |
+| TypeScript | Single-file transpilation |
+| SQLite | Local SQL |
+
+Editing support extends beyond runnable languages. [Runtime and installation guide](docs/INSTALLATION.md)
 
 ## Install
 
-Download **[CodeLab.apk](https://github.com/iamlxwis/CodeLab/releases/latest/download/CodeLab.apk)** on an Android 8.0+ device and open it. Allow installation from your browser or file manager if prompted.
+Download [CodeLab.apk](https://github.com/iamlxwis/CodeLab/releases/latest/download/CodeLab.apk) on Android 8.0 or newer and open it. Export important projects before updating; older debug-signed installations may require a one-time reinstall.
 
-> **Before updating:** The permanent production signer was verified in [CI 45205309835](https://github.com/iamlxwis/CodeLab/actions/runs/45205309835), with actual APK certificate SHA-256 `c81d2aa1…c9e42392`. Earlier APKs were signed by rotating Android Debug certificates despite incorrect metadata. Back up and export projects before the **one-time reinstall** needed to move from a debug-signed version. Same-key in-place upgrade **passed** on Android 13 and 15 emulators; physical-phone validation remains pending. Export projects before reinstalling. Java is an interpreter-backed beta; other languages may require an optional online compiler.
+## Development
 
-## Build
-
-Requires JDK 17 and Android SDK 35.
+Built with Kotlin and Jetpack Compose. Requires JDK 17 and Android SDK 35.
 
 ```bash
-./gradlew :app:assembleRelease :app:testDebugUnitTest
+./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
-[Implementation status](docs/IMPLEMENTATION_STATUS.md) · [Architecture](docs/ARCHITECTURE.md) · [Contributing](CONTRIBUTING.md) · [QA](docs/QA_CHECKLIST.md) · [Android CI](https://github.com/iamlxwis/CodeLab/actions/workflows/android.yml)
+[Documentation](docs/README.md) · [Contributing](CONTRIBUTING.md)
 
 ---
-<sub>CodeLab keeps local projects on your device. Online execution only sends source code when you explicitly approve a cloud run.</sub>
+
+Local-first by design. Source is sent for online execution only after explicit approval.
