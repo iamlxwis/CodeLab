@@ -37,6 +37,8 @@ Commit `85f0a7b` produced the [signed test APK, build 1396](https://github.com/i
 
 The [initial signed upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45588925015) installed the newer signed packages and restored the saved project and source. It stopped at the Dark mode assertion. The archived accessibility tree shows the Dark option as `checkable=true, checked=true`. The earlier assertion read only `selected`. The follow-up verifies the real checked state and reruns the upgrade and runtime gates.
 
+The [first complete API 35 device run](https://github.com/iamlxwis/CodeLab/actions/runs/45589161235) passed 9 of 10 stages and all 45 instrumentation tests. The separate Python functional smoke stopped at the same Android checked-state assertion on Light. The Compose instrumentation assertions read Compose semantics and passed as written. The updated smoke reads the Android accessibility tree's checked state. Layout measurements captured 13 visible editor lines on the phone with IME and 6 lines in landscape in both appearances. [Device evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45589161235/artifacts/15009958933)
+
 ## Next action
 
 Review the branch APK workflow and device evidence. Fix real failures, download and inspect the candidate APK, and record remaining physical-device coverage before handing off.

@@ -1,3 +1,7 @@
+## Nov 25, 2026, 6:05 PM PHT — Device evidence and exact smoke retry
+
+The [API 35 run](https://github.com/iamlxwis/CodeLab/actions/runs/45589161235) passed clean install, tutorial, missing-runtime recovery, all 45 instrumentation tests, performance collection, motion collection, automated accessibility, 200% font scaling and layouts. Functional smoke stopped at the same checked-state distinction as signed upgrade. Restored the Compose-level assertion that actually passed. The shell smoke continues to require the target mode's actual checked state. Fully verified workstreams 0/10. [Branch handoff](REIMAGINED_2_0.md).
+
 ## Nov 25, 2026, 6:01 PM PHT — Signed APK and Android appearance evidence
 
 The [branch build](https://github.com/iamlxwis/CodeLab/actions/runs/45588932391) passed 202 JVM tests, strict lint and production signer continuity. Build 1396 and all six optional APKs matched the expected production certificate. The [signed Android 15 upgrade](https://github.com/iamlxwis/CodeLab/actions/runs/45588925015) installed and restored the project, then stopped at a Dark mode assertion. The Android tree records the mode as checked. Tests now read that state and retain the preference and runtime assertions. Fully verified workstreams 0/10. See [the handoff](REIMAGINED_2_0.md).
