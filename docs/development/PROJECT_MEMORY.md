@@ -1,3 +1,7 @@
+## Nov 25, 2026, 10:42 PM PHT — Reimagined 2.1 owner handoff
+
+Session stopped at 7/10 verified workstreams. Build 1403 was downloaded, verified with the existing production signer and left for manual approval. Android 15 passed all ten stages and 50 instrumentation tests, including shader displacement and PNG content. Signed in-place upgrade passed on the delivered app source. Physical GPU performance, TalkBack, live online-provider and secondary-screen review remain open. [Draft PR](https://github.com/iamlxwis/CodeLab/pull/17) · [Signed test APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Android evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45632769173/artifacts/15034300327) · [Handoff](REIMAGINED_2_1.md)
+
 ## Nov 25, 2026, 10:18 PM PHT — Reimagined 2.1 signed APK and smoke correction
 
 Build 1403 from dc3ee23 was downloaded and verified against the existing production certificate. Android 15 passed nine stages on the preceding revision, including the landscape and phone IME matrices. Corrected the functional check to enter Lua stdin in the console during Split and assert that source stays unchanged. The preceding signed in-place upgrade passed. [APK](https://github.com/iamlxwis/CodeLab/actions/runs/45629872711/artifacts/15030262852) · [Checklist](REIMAGINED_2_1.md)
