@@ -44,6 +44,9 @@ class RunSession(context: Context) {
     internal var outputOmitted by mutableStateOf(false)
         private set
 
+    internal var outputCleared by mutableStateOf(false)
+        private set
+
     private fun appendOutput(text: String) {
         if (transcript.length + text.length > 70_000) outputOmitted = true
         transcript = (transcript + text).takeLast(70_000)
@@ -99,24 +102,24 @@ class RunSession(context: Context) {
                 OptionalRuntimeLocator.component(app, OptionalRuntimeLocator.Pack.SQLITE)
             else -> null
         }
-        if (name.endsWith(".py", true) && pythonPack == null) {
-            status = PythonModuleLocator.check(app).description
-            return
-        }
-        if (name.endsWith(".ts", true) && optionalPack == null) {
-            status = OptionalRuntimeLocator.check(app, OptionalRuntimeLocator.Pack.TYPESCRIPT).description
-            return
-        }
-        if (debug && !name.endsWith(".js", true)) {
-            status = "Debugger currently supports JavaScript only"
-            return
-        }
-        activeName = name
         execution = Execution(name, source, "Offline", breakpoints.toList().takeIf { debug })
         transcript = ""
         outputOmitted = false
+        outputCleared = false
         pausedLine = 0
         debugVariables = ""
+        val unavailable = when {
+            name.endsWith(".py", true) && pythonPack == null -> PythonModuleLocator.check(app).description
+            name.endsWith(".ts", true) && optionalPack == null ->
+                OptionalRuntimeLocator.check(app, OptionalRuntimeLocator.Pack.TYPESCRIPT).description
+            debug && !name.endsWith(".js", true) -> "Debugger currently supports JavaScript only"
+            else -> null
+        }
+        if (unavailable != null) {
+            status = unavailable
+            return
+        }
+        activeName = name
         running = true
         status = "Starting"
         val token = ++generation
@@ -205,6 +208,7 @@ class RunSession(context: Context) {
         execution = Execution(name, source, "Online")
         transcript = ""
         outputOmitted = false
+        outputCleared = false
         pausedLine = 0
         debugVariables = ""
         running = true
@@ -244,7 +248,11 @@ class RunSession(context: Context) {
         } catch (_: RemoteException) { end("Runtime disconnected") }
     }
 
-    fun clear() { transcript = ""; outputOmitted = false }
+    fun clear() {
+        if (transcript.isNotEmpty()) outputCleared = true
+        transcript = ""
+        outputOmitted = false
+    }
 
     fun stop() {
         if (!running) return

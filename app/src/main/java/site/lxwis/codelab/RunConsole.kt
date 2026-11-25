@@ -35,6 +35,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: String? = null,
@@ -45,9 +46,10 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     onRerun: (() -> Unit)? = null,
     onSnippet: (() -> Unit)? = null,
     onOpenError: (String, Int) -> Unit = { _, _ -> }) {
-    var tableMode by rememberSaveable(fileName) { mutableStateOf(true) }
-    val sqlResult = remember(session.transcript, fileName, session.running) {
-        if (!session.running && fileName?.endsWith(".sql", ignoreCase = true) == true)
+    val executionFile = session.execution?.file ?: fileName
+    var tableMode by rememberSaveable(executionFile) { mutableStateOf(true) }
+    val sqlResult = remember(session.transcript, executionFile, session.running) {
+        if (!session.running && executionFile?.endsWith(".sql", ignoreCase = true) == true)
             SqlResultParser.parse(session.transcript) else null
     }
     val clipboard = LocalClipboardManager.current
@@ -69,8 +71,8 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
     var consoleFontSize by remember {
         mutableIntStateOf(consolePreferences.getInt("font-size", 13))
     }
-    val errorLinks = remember(session.transcript, fileName, knownFiles) {
-        parseErrorLocations(session.transcript, fileName, knownFiles)
+    val errorLinks = remember(session.transcript, executionFile, knownFiles) {
+        parseErrorLocations(session.transcript, executionFile, knownFiles)
     }
     val displayedOutput = remember(session.transcript, filterOutput, showFilter, severityFilter) {
         filterConsoleOutput(session.transcript, if (showFilter) filterOutput else "", severityFilter)
@@ -84,6 +86,7 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
         }
     }
     val scroll = rememberScrollState()
+    val consoleScope = rememberCoroutineScope()
     var input by rememberSaveable { mutableStateOf("") }
     var sentInputs by remember { mutableStateOf(emptyList<String>()) }
     fun submitInput() {
@@ -194,20 +197,26 @@ fun RunConsole(session: RunSession, modifier: Modifier = Modifier, fileName: Str
                 if (session.running) TextButton(onClick = session::stop) { Text("Stop") }
                 else if (onRerun != null && session.execution != null)
                     IconButton(onClick = onRerun) { Icon(Icons.Default.Replay, "Rerun") }
-                if (session.running) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                IconButton(onClick = { showFilter = !showFilter }) {
-                    Icon(Icons.Default.Search, "Filter output",
-                        tint = if (showFilter) consoleAccent else consoleMuted)
-                }
-                if (onToggleMaximize != null) IconButton(onClick = onToggleMaximize) {
-                    Icon(Icons.Default.Fullscreen, "Toggle console expansion")
-                }
                 Box {
                     IconButton(onClick = { showActions = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Console actions")
                     }
                     CodeLabDropdownMenu(expanded = showActions, onDismissRequest = { showActions = false }) {
                         val hasOutput = session.transcript.isNotEmpty()
+                        if (!following && hasOutput) {
+                            DropdownMenuItem(text = { Text("Jump to latest output") },
+                                onClick = {
+                                    showActions = false
+                                    following = true
+                                    consoleScope.launch { scroll.scrollTo(scroll.maxValue) }
+                                })
+                        }
+                        DropdownMenuItem(text = { Text(if (showFilter) "Hide output filter" else "Filter output") },
+                            leadingIcon = { Icon(Icons.Default.Search, null) },
+                            onClick = { showActions = false; showFilter = !showFilter })
+                        if (onToggleMaximize != null) DropdownMenuItem(
+                            text = { Text("Toggle console expansion") }, leadingIcon = { Icon(Icons.Default.Fullscreen, null) },
+                            onClick = { showActions = false; onToggleMaximize() })
                         if (onSnippet != null && session.execution != null) DropdownMenuItem(
                             text = { Text("Share result image") },
                             onClick = { showActions = false; onSnippet() })

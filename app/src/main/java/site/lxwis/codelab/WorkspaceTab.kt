@@ -43,7 +43,7 @@ internal fun WorkspaceTab(
     onCloseAll: () -> Unit,
     onMove: (Int) -> Unit,
     onReveal: () -> Unit,
-    maxWidth: Dp = 184.dp
+    maxWidth: Dp = 200.dp
 ) {
     var menu by remember { mutableStateOf(false) }
     val background by animateColorAsState(
@@ -57,7 +57,7 @@ internal fun WorkspaceTab(
     var dragX by remember(path) { mutableFloatStateOf(0f) }
     val move by rememberUpdatedState(onMove)
     Row(
-        Modifier.widthIn(max = minOf(maxWidth, 184.dp)).padding(end = 2.dp)
+        Modifier.widthIn(max = minOf(maxWidth, 200.dp)).padding(end = 2.dp)
             .background(background, RoundedCornerShape(12.dp)),
         verticalAlignment = Alignment.CenterVertically
     ) {

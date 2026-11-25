@@ -74,7 +74,9 @@ internal fun MainDestinations(
     var origin by remember { mutableStateOf(Offset.Zero) }
     val workspace = model.recentWorkspace
     val runtimeStatus = model.parkedWorkspace?.takeIf { it == workspace }?.let {
-        listOfNotNull(model.runner.execution?.mode, model.runner.status).joinToString(" · ")
+        val run = model.runner.execution
+        val otherFile = run?.file?.takeUnless { file -> file == workspace?.file }?.substringAfterLast('/')
+        listOfNotNull(otherFile, run?.mode, model.runner.status).joinToString(" · ")
     }
     val haptics = LocalHapticFeedback.current
     val colors = MaterialTheme.colorScheme
@@ -244,20 +246,41 @@ private fun ExploreScreen(bottomPadding: Dp, onAction: (String) -> Unit) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = pagePadding(bottomPadding),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item { DestinationTitle("Explore") }
-        items(exploreCategories.chunked(2), key = { it.first().action }) { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                row.forEach { category ->
-                    Surface({ onAction(category.action) }, Modifier.weight(1f).heightIn(min = 136.dp),
-                        shape = CodeLabCorners.card, color = MaterialTheme.colorScheme.surfaceContainer) {
-                        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Box(Modifier.size(42.dp).background(category.color.copy(alpha = .18f), CodeLabCorners.iconTile),
-                                contentAlignment = Alignment.Center) {
-                                val ink = contrastAccent(category.color, MaterialTheme.colorScheme.surfaceContainer)
-                                Icon(category.icon, null, Modifier.size(23.dp), tint = ink)
+        val languages = exploreCategories.first()
+        item {
+            Surface(onClick = { onAction(languages.action) }, shape = CodeLabCorners.card,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+                Row(Modifier.fillMaxWidth().heightIn(min = 96.dp).padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(languages.icon, null, Modifier.size(34.dp),
+                        tint = contrastAccent(languages.color, MaterialTheme.colorScheme.surfaceContainerHigh))
+                    Column(Modifier.weight(1f)) {
+                        Text(languages.title, style = MaterialTheme.typography.titleLarge)
+                        Text(languages.description, style = MaterialTheme.typography.bodyMedium)
+                    }
+                    Icon(Icons.Default.ArrowOutward, null, Modifier.size(18.dp))
+                }
+            }
+        }
+        val other = exploreCategories.drop(1)
+        item {
+            Surface(shape = CodeLabCorners.card, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                Column {
+                    other.forEachIndexed { index, category ->
+                        if (index > 0) HorizontalDivider(Modifier.padding(start = 56.dp))
+                        Surface(onClick = { onAction(category.action) }, color = Color.Transparent) {
+                            Row(Modifier.fillMaxWidth().heightIn(min = 60.dp).padding(12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                verticalAlignment = Alignment.CenterVertically) {
+                                Icon(category.icon, null, Modifier.size(24.dp),
+                                    tint = contrastAccent(category.color, MaterialTheme.colorScheme.surfaceContainerLow))
+                                Column(Modifier.weight(1f)) {
+                                    Text(category.title, style = MaterialTheme.typography.titleSmall)
+                                    Text(category.description, style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                Icon(Icons.Default.ChevronRight, null, Modifier.size(18.dp))
                             }
-                            Text(category.title, style = MaterialTheme.typography.titleMedium)
-                            Text(category.description, style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }

@@ -20,8 +20,11 @@ class ScreenshotSyntaxTest {
         assertTrue(spans.any { it.kind == ScreenshotSyntax.Kind.NUMBER })
     }
 
-    @Test fun respectsLandscapeCapacity() {
-        assertTrue(ScreenshotRenderer.lineCapacity(ScreenshotAspect.LANDSCAPE) <
-            ScreenshotRenderer.lineCapacity(ScreenshotAspect.SQUARE))
+    @Test fun retainsMultilineStringAcrossSourceLines() {
+        val source = "const text = `line one\n// part of the string\nlast`; // real comment"
+        val tokens = ScreenshotSyntax.ranges(source, "file.js").toList()
+        assertEquals(listOf(ScreenshotSyntax.Kind.KEYWORD, ScreenshotSyntax.Kind.STRING, ScreenshotSyntax.Kind.COMMENT),
+            tokens.map { it.kind })
+        assertTrue(source.substring(tokens[1].range).contains("// part of the string"))
     }
 }

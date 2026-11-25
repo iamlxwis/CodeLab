@@ -571,7 +571,7 @@ internal class SourceView(context: Context, filename: String) : EditText(context
             minOf(selectionStart, selectionEnd).coerceIn(0, length()),
             maxOf(selectionStart, selectionEnd).coerceIn(0, length()),
             logicalLineAt(visual?.getLineStart(first) ?: 0),
-            logicalLineAt(((visual?.getLineEnd(last) ?: 1) - 1).coerceAtLeast(0))
+            logicalLineAt(visual?.getLineStart(last) ?: 0)
         )
     }
 

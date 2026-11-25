@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -32,6 +33,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.OutputStream
 
+private const val SHARE_BATCH_SIZE = 80
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SnippetStudio(snapshot: SnippetSnapshot, darkApp: Boolean, resultFirst: Boolean, close: () -> Unit) {
@@ -53,9 +56,11 @@ internal fun SnippetStudio(snapshot: SnippetSnapshot, darkApp: Boolean, resultFi
     var message by remember { mutableStateOf<String?>(null) }
     var progress by remember { mutableStateOf<String?>(null) }
     var exportJob by remember { mutableStateOf<Job?>(null) }
+    var chooseSharePages by remember { mutableStateOf(false) }
     var pendingSave by remember { mutableStateOf<SnippetRenderer.Plan?>(null) }
-    val stem = remember(snapshot.file) {
-        snapshot.file.substringAfterLast('/').replace(Regex("[^A-Za-z0-9._-]"), "_").take(72)
+    val labelFile = if (content == SnippetContent.Result) snapshot.run?.file ?: snapshot.file else snapshot.file
+    val stem = remember(labelFile) {
+        labelFile.substringAfterLast('/').replace(Regex("[^A-Za-z0-9._-]"), "_").take(72)
             .ifBlank { "CodeLab" } + "-snippet"
     }
     LaunchedEffect(snapshot, content, scope, theme, numbers, metadata) {
@@ -79,14 +84,15 @@ internal fun SnippetStudio(snapshot: SnippetSnapshot, darkApp: Boolean, resultFi
             preview = withContext(Dispatchers.Default) { SnippetRenderer.render(rendered, page) }
         }
     }
-    fun export(image: SnippetRenderer.Plan, destination: Uri? = null, tree: Boolean = false) {
+    fun export(image: SnippetRenderer.Plan, destination: Uri? = null, tree: Boolean = false,
+        pages: IntRange = image.pages.indices) {
         if (exportJob?.isActive == true) return
         message = null
         progress = "Preparing PNG"
         exportJob = coroutine.launch {
             try {
                 val shared = withContext(Dispatchers.IO) {
-                    exportSnippetPages(context, image, stem, destination, tree) { index ->
+                    exportSnippetPages(context, image, stem, destination, tree, pages) { index ->
                         withContext(Dispatchers.Main) { progress = "PNG ${index + 1} of ${image.pages.size}" }
                     }
                 }
@@ -143,6 +149,10 @@ internal fun SnippetStudio(snapshot: SnippetSnapshot, darkApp: Boolean, resultFi
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 val pages = plan?.pages?.size ?: 0
+                if (content != SnippetContent.Result && scope == SnippetScope.Visible && capture != null) {
+                    Text("Lines ${capture.firstLine}–${capture.lastLine}. Long lines wrap in the image.",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 if (pages > 1) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween) {
                     TextButton(onClick = { page-- }, enabled = page > 0) { Text("Previous") }
@@ -166,10 +176,34 @@ internal fun SnippetStudio(snapshot: SnippetSnapshot, darkApp: Boolean, resultFi
                         pendingSave = image
                         if (image.pages.size == 1) saveFile.launch("$stem.png") else saveFolder.launch(null)
                     }, Modifier.weight(1f), enabled = plan != null) { Text("Save PNG") }
-                    Button({ plan?.let { export(it) } }, Modifier.weight(1f), enabled = plan != null) { Text("Share PNG") }
+                    Button({
+                        val image = plan ?: return@Button
+                        if (image.pages.size > SHARE_BATCH_SIZE) chooseSharePages = true else export(image)
+                    }, Modifier.weight(1f), enabled = plan != null) {
+                        Text(if ((plan?.pages?.size ?: 0) > SHARE_BATCH_SIZE) "Share pages" else "Share PNG")
+                    }
                 }
             }
         }
+    }
+    val currentPlan = plan
+    if (chooseSharePages && currentPlan != null) {
+        CodeLabAlertDialog(onDismissRequest = { chooseSharePages = false },
+            title = { Text("Choose pages to share") },
+            text = {
+                Column(Modifier.heightIn(max = 320.dp).verticalScroll(rememberScrollState())) {
+                    Text("Share a group of PNGs at a time. Save PNG writes every page to a folder.",
+                        style = MaterialTheme.typography.bodySmall)
+                    for (first in currentPlan.pages.indices step SHARE_BATCH_SIZE) {
+                        val last = minOf(first + SHARE_BATCH_SIZE, currentPlan.pages.size) - 1
+                        TextButton(onClick = {
+                            chooseSharePages = false
+                            export(currentPlan, pages = first..last)
+                        }) { Text("Pages ${first + 1}–${last + 1}") }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { chooseSharePages = false }) { Text("Cancel") } })
     }
 }
 
@@ -186,9 +220,9 @@ private fun <T> SnippetChoices(values: List<T>, selected: T, label: (T) -> Strin
     }
 }
 
-private suspend fun exportSnippetPages(
+internal suspend fun exportSnippetPages(
     context: Context, image: SnippetRenderer.Plan, stem: String, destination: Uri?, tree: Boolean,
-    onPage: suspend (Int) -> Unit
+    pages: IntRange, onPage: suspend (Int) -> Unit
 ): ArrayList<Uri> {
     val resolver = context.contentResolver
     val shared = arrayListOf<Uri>()
@@ -201,7 +235,7 @@ private suspend fun exportSnippetPages(
         java.nio.file.Files.createTempDirectory(root.toPath(), "pages-").toFile()
     } else null
     try {
-        for (page in image.pages.indices) {
+        for (page in pages) {
             currentCoroutineContext().ensureActive()
             onPage(page)
             val name = if (image.pages.size == 1) "$stem.png"
@@ -229,11 +263,12 @@ private suspend fun exportSnippetPages(
     } catch (failure: Exception) {
         cache?.deleteRecursively()
         created.forEach { runCatching { it.delete() } }
+        if (!tree && destination != null) runCatching { DocumentsContract.deleteDocument(resolver, destination) }
         throw failure
     }
 }
 
-private fun snippetShareIntent(uris: ArrayList<Uri>): Intent {
+internal fun snippetShareIntent(uris: ArrayList<Uri>): Intent {
     val clip = ClipData.newRawUri("CodeLab snippet", uris.first())
     uris.drop(1).forEach { clip.addItem(ClipData.Item(it)) }
     return Intent(if (uris.size == 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {

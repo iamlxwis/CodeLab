@@ -61,17 +61,29 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                     if (page == null) {
                         val matches = settingsDestinations.filter { it.name.contains(query, true) || it.detail.contains(query, true) }
                         if (matches.isEmpty()) item { Text("No matching settings", style = MaterialTheme.typography.bodyMedium) }
-                        items(matches, key = { it.id }) { row ->
-                            Box(Modifier.animateItem(
-                                fadeInSpec = if (workspaceMotion().millis(140) > 0) androidx.compose.animation.core.tween(workspaceMotion().millis(140)) else null,
-                                placementSpec = if (workspaceMotion().millis(140) > 0) androidx.compose.animation.core.tween(workspaceMotion().millis(140)) else null,
-                                fadeOutSpec = if (workspaceMotion().millis(140) > 0) androidx.compose.animation.core.tween(workspaceMotion().millis(140)) else null)) {
-                            SettingsLink(row.name, row.detail, row.icon) {
-                                when (row.id) {
-                                    "languages" -> onAction(row.id)
-                                    else -> page = row.id
+                        val groups = listOf(
+                            "Interface" to setOf("appearance", "motion"),
+                            "Workspace" to setOf("editor", "keyboard", "languages"),
+                            "App & data" to setOf("storage", "privacy", "help")
+                        )
+                        groups.forEach { (section, ids) ->
+                            val rows = matches.filter { it.id in ids }
+                            if (rows.isNotEmpty()) item(key = section) {
+                                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    if (query.isBlank()) Text(section, Modifier.padding(start = 8.dp),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Surface(shape = CodeLabCorners.card, color = MaterialTheme.colorScheme.surfaceContainer) {
+                                        Column {
+                                            rows.forEachIndexed { index, row ->
+                                                if (index > 0) HorizontalDivider(Modifier.padding(start = 48.dp))
+                                                SettingsLink(row.name, row.detail, row.icon, grouped = true) {
+                                                    if (row.id == "languages") onAction(row.id) else page = row.id
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
-                            }
                             }
                         }
                     } else item {
@@ -99,10 +111,8 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
                                     EditorPreferenceControls(true)
                                     SettingsLink("Workspace layout", "Density, panel sizes and status bar", Icons.Default.ViewSidebar) { onAction("panels") }
                                     SettingsLink("Saved layouts", "Save and restore workspace configurations", Icons.Default.Dashboard) { onAction("layoutpresets") }
-                                    Text("Gestures", style = MaterialTheme.typography.titleMedium)
-                                    Text("Swipe the editor navigation strip to change files. Swipe the Explorer button to reveal files. Long-press a tab handle, then drag to reorder. Pinch with two fingers to change editor text size.")
-                                    Text("Drag the console divider to resize it; double-tap its header to maximize. Swipe project rows for quick actions. Long-press files and projects for contextual actions.")
-                                    Text("Use tab menus, text-size controls, Explorer and panel sliders as alternatives. Gestures stay inside workspace controls to preserve Android navigation and text selection.", style = MaterialTheme.typography.bodySmall)
+                                    SettingsLink("Keyboard and gestures guide", "Practice navigation, selection and panel controls",
+                                        Icons.Default.School) { onAction("tutorial") }
                                 }
                                 "storage" -> {
                                     SettingsLink("Downloads", "Manage app updates and offline packs", Icons.Default.Download) { onAction("downloads") }
@@ -152,8 +162,10 @@ internal fun ReimaginedSettings(m: WorkspaceModel, onAction: (String) -> Unit, c
 }
 
 @Composable
-private fun SettingsLink(title: String, detail: String, icon: ImageVector, click: () -> Unit) {
-    Surface(onClick = click, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
+private fun SettingsLink(title: String, detail: String, icon: ImageVector, grouped: Boolean = false, click: () -> Unit) {
+    Surface(onClick = click,
+        shape = if (grouped) androidx.compose.ui.graphics.RectangleShape else MaterialTheme.shapes.large,
+        color = if (grouped) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.surfaceContainer) {
         Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {

@@ -76,7 +76,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.ViewModelProvider
 
 @Composable
-internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (String) -> Unit) {
+internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (String) -> Unit,
+    showFile: Boolean = false) {
     val haptics = LocalHapticFeedback.current
     val context = androidx.compose.ui.platform.LocalContext.current
     val interaction = remember { MutableInteractionSource() }
@@ -113,8 +114,8 @@ internal fun WorkspaceTopBar(m: WorkspaceModel, project: String?, onAction: (Str
                 Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            if (project != null) Row(verticalAlignment = Alignment.CenterVertically) {
-                m.active?.let { FileTypeIcon(it, Modifier.size(12.dp)); Spacer(Modifier.width(5.dp)) }
+            if (project != null && (showFile || m.dirty || m.runner.running)) Row(verticalAlignment = Alignment.CenterVertically) {
+                if (showFile) m.active?.let { FileTypeIcon(it, Modifier.size(12.dp)); Spacer(Modifier.width(5.dp)) }
                 val status = when {
                     m.dirty -> androidx.compose.ui.res.stringResource(R.string.workspace_saving)
                     m.runner.running -> m.runner.status

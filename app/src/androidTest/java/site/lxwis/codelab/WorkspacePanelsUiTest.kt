@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -18,15 +19,16 @@ import org.junit.Test
 class WorkspacePanelsUiTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun splitToggleChangesSelection() {
-        val selected = mutableStateOf(false)
+    @Test fun allThreeModesRemainAccessibleAtNarrowWidth() {
+        val selected = mutableStateOf("Editor")
         compose.setContent {
             MaterialTheme {
-                PhoneSplitToggle(selected.value) { selected.value = !selected.value }
+                WorkspacePanels(selected.value, Modifier.width(280.dp)) { selected.value = it }
             }
         }
-        compose.onNodeWithText("Split").performClick()
-        compose.runOnIdle { assertTrue(selected.value) }
+        compose.onNodeWithText("Editor").assertIsSelected()
+        compose.onNodeWithText("Console").assertIsDisplayed().performClick().assertIsSelected()
+        compose.onNodeWithText("Split").assertIsDisplayed().performClick().assertIsSelected()
     }
 
     @Test fun backgroundTabHasAnAccessibleCloseButton() {

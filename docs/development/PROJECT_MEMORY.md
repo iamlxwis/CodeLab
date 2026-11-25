@@ -1,3 +1,7 @@
+## Nov 25, 2026, 9:54 PM PHT — Reimagined 2.1 Android fixes
+
+Android 15 passed eight of ten stages on the first integration. Repaired two observed layout failures and the first APK run's lint constant error. Further testing covers execution eligibility, preview-to-PNG parity, grouped settings and narrow editor controls. Zero workstreams have complete evidence. [Device evidence](https://github.com/iamlxwis/CodeLab/actions/runs/45613861590/artifacts/15022342038) · [Checklist](REIMAGINED_2_1.md)
+
 ## Nov 25, 2026, 8:26 PM PHT — Reimagined 2.1 integration
 
 PR #17 targets the open 2.0 branch. The first integrated workspace, execution and image export changes pass local JVM tests and Android test compilation. Zero of ten workstreams have complete evidence. Android emulator, strict lint and release-signer verification are next. [Checklist](REIMAGINED_2_1.md)

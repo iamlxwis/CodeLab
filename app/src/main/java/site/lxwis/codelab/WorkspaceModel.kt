@@ -307,7 +307,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         if (!isOnline || language == null) { error = "Online compiler is unavailable"; return }
         flush()
         runner.runOnline(filename, source, cloudEndpoint, cloudHeader, cloudCredential, language, stdin.take(4096))
-        if (runner.running) lastExecutionProject = project
+        lastExecutionProject = project
         console = true
         preview = false
     }
@@ -1664,6 +1664,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         val file = request.file
         val extension = languageExtension(file)
         val web = extension in setOf("html", "htm")
+        val sourceTooLarge = !web && source.length > 128_000
         val local = web || isLocalExecutable(file)
         val pack = when (extension) {
             "py" -> "Python"
@@ -1674,6 +1675,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
         return ExecutionOptions(
             offline = when {
                 web -> "Open the local web preview on this device."
+                sourceTooLarge -> "Execution supports up to 128,000 characters."
                 local -> "Run on this device without uploading source."
                 extension == "py" -> PythonModuleLocator.check(getApplication<Application>()).description
                 extension == "ts" -> OptionalRuntimeLocator.check(getApplication<Application>(),
@@ -1684,12 +1686,13 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                 web -> "Web previews use the local browser."
                 request.breakpoints != null -> "JavaScript debugging uses the offline runtime."
                 !isOnline -> "Internet connection required."
+                sourceTooLarge -> "Execution supports up to 128,000 characters."
                 cloudChecking -> "Checking compiler availability."
                 remote -> "Send source to the configured compiler after approval."
                 else -> "No configured online compiler for this file."
             },
-            canRunOffline = local,
-            canRunOnline = remote,
+            canRunOffline = local && !sourceTooLarge,
+            canRunOnline = remote && !sourceTooLarge,
             installLanguage = pack.takeUnless { local }
         )
     }
@@ -1722,7 +1725,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
                 preview = false
                 runner.run(request.file, source, debug = request.breakpoints != null,
                     breakpoints = request.breakpoints.orEmpty())
-                if (runner.running) lastExecutionProject = project
+                lastExecutionProject = project
             }
         }
     }
@@ -1730,7 +1733,7 @@ class WorkspaceModel(app: Application) : AndroidViewModel(app) {
     internal fun snippetExecution(): SnippetExecution? {
         val execution = runner.execution ?: return null
         return SnippetExecution(execution.file, execution.source, lastExecutionProject,
-            execution.mode, runner.status, runner.transcript, runner.running, runner.outputOmitted)
+            execution.mode, runner.status, runner.transcript, runner.running, runner.outputOmitted, runner.outputCleared)
     }
 
     override fun onCleared() {

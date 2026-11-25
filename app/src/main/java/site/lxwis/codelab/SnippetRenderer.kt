@@ -5,7 +5,6 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
-import android.text.Layout
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.StaticLayout
@@ -18,7 +17,7 @@ data class EditorCapture(val selectionStart: Int, val selectionEnd: Int, val fir
 
 internal data class SnippetExecution(
     val file: String, val source: String, val project: String?, val mode: String,
-    val status: String, val output: String, val running: Boolean, val omitted: Boolean
+    val status: String, val output: String, val running: Boolean, val omitted: Boolean, val cleared: Boolean = false
 )
 
 internal data class SnippetSnapshot(
@@ -46,11 +45,22 @@ internal object SnippetRenderer {
     )
 
     internal data class Palette(val page: Int, val panel: Int, val ink: Int, val muted: Int, val syntax: List<Int>)
-    internal data class Row(val layout: StaticLayout, val line: Int, val number: Int?, val left: Int) {
-        val top get() = layout.getLineTop(line)
-        val height get() = layout.getLineTop(line + 1) - top
-    }
+    internal data class Paragraph(val text: CharSequence, val left: Int, val heading: Boolean)
+    internal data class Row(
+        val paragraph: Paragraph, val line: Int, val number: Int?, val height: Int, val start: Int, val end: Int
+    )
     internal data class Plan(val pages: List<List<Row>>, val title: String, val subtitle: String, val colors: Palette)
+
+    private fun layout(paragraph: Paragraph, paint: TextPaint) =
+        StaticLayout.Builder.obtain(paragraph.text, 0, paragraph.text.length, paint,
+            width - paragraph.left - padding - 27)
+            .setIncludePad(false).setLineSpacing(4f, 1f).build()
+
+    private fun textPaint(colors: Palette, heading: Boolean) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = if (heading) colors.muted else colors.ink
+        textSize = 27f
+        typeface = if (heading) Typeface.create(mono, Typeface.BOLD) else mono
+    }
 
     private fun palette(theme: SnippetTheme) = if (theme == SnippetTheme.Light) {
         Palette(0xffe9edf0.toInt(), Color.WHITE, 0xff232930.toInt(), 0xff526171.toInt(),
@@ -66,21 +76,30 @@ internal object SnippetRenderer {
     suspend fun plan(snapshot: SnippetSnapshot, content: SnippetContent, scope: SnippetScope,
         theme: SnippetTheme, numbers: Boolean, metadata: Boolean): Plan {
         val colors = palette(theme)
-        val body = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { color = colors.ink; textSize = 27f; typeface = mono }
-        val label = TextPaint(body).apply { color = colors.muted; typeface = Typeface.create(mono, Typeface.BOLD) }
+        val body = textPaint(colors, false)
+        val label = textPaint(colors, true)
+        val blankCode = Paragraph("", if (numbers) textLeft else padding + 30, false)
+        val blankResult = Paragraph("", padding + 30, false)
+        val blankCodeLayout = layout(blankCode, body)
+        val blankResultLayout = layout(blankResult, body)
         val pages = mutableListOf<List<Row>>()
         var rows = mutableListOf<Row>()
         var used = 0
 
         fun addLine(line: CharSequence, number: Int? = null, heading: Boolean = false, code: Boolean = false) {
-            val left = if (code && numbers) textLeft else padding + 30
-            val layout = StaticLayout.Builder.obtain(line, 0, line.length, if (heading) label else body,
-                width - left - padding - 27)
-                .setIncludePad(false).setBreakStrategy(Layout.BREAK_STRATEGY_SIMPLE)
-                .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NONE)
-                .setLineSpacing(4f, 1f).build()
+            val paragraph = when {
+                line.isNotEmpty() || heading -> Paragraph(line, if (code && numbers) textLeft else padding + 30, heading)
+                code -> blankCode
+                else -> blankResult
+            }
+            val layout = when {
+                paragraph === blankCode -> blankCodeLayout
+                paragraph === blankResult -> blankResultLayout
+                else -> layout(paragraph, if (heading) label else body)
+            }
             for (i in 0 until layout.lineCount) {
-                val row = Row(layout, i, number.takeIf { i == 0 }, left)
+                val row = Row(paragraph, i, number.takeIf { i == 0 },
+                    layout.getLineTop(i + 1) - layout.getLineTop(i), layout.getLineStart(i), layout.getLineEnd(i))
                 if (used + row.height > pageCapacity && rows.isNotEmpty()) {
                     pages += rows
                     rows = mutableListOf()
@@ -114,16 +133,20 @@ internal object SnippetRenderer {
                 val end = if (line + 1 < lines.count) lines.start(line + 1) - 1 else source.length
                 val from = if (scope == SnippetScope.Selected) maxOf(start, capture?.selectionStart ?: start) else start
                 val to = if (scope == SnippetScope.Selected) minOf(end, capture?.selectionEnd ?: end) else end
-                val row = SpannableString(source.substring(from.coerceAtMost(to), to))
+                val text = source.substring(from.coerceAtMost(to), to)
+                var styled: SpannableString? = null
                 while (token != null && token.range.first < to) {
                     val colorStart = maxOf(token.range.first, from)
                     val colorEnd = minOf(token.range.last + 1, to)
-                    if (colorStart < colorEnd) row.setSpan(ForegroundColorSpan(colors.syntax[token.kind.ordinal - 1]),
-                        colorStart - from, colorEnd - from, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    if (colorStart < colorEnd) {
+                        val span = styled ?: SpannableString(text).also { styled = it }
+                        span.setSpan(ForegroundColorSpan(colors.syntax[token.kind.ordinal - 1]),
+                            colorStart - from, colorEnd - from, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
                     if (token.range.last + 1 > to) break
                     token = if (tokens.hasNext()) tokens.next() else null
                 }
-                addLine(row, (line + 1).takeIf { numbers }, code = true)
+                addLine(styled ?: text, (line + 1).takeIf { numbers }, code = true)
             }
         }
         if (content != SnippetContent.Code) {
@@ -133,19 +156,24 @@ internal object SnippetRenderer {
             if (run == null) addLine("No execution result is available.")
             else {
                 if (metadata || snapshot.staleRun) addLine(run.file, heading = true)
-                if (metadata) addLine("${run.mode} · ${run.status}", heading = true)
+                if (metadata) {
+                    val language = LanguageCatalog.entries.firstOrNull { it.extension == languageExtension(run.file) }?.name
+                    addLine(listOfNotNull(language, run.mode, run.status).joinToString(" · "), heading = true)
+                }
                 if (run.running) addLine("Output captured while the run was active.", heading = true)
                 if (snapshot.staleRun) addLine("This result belongs to another file or revision.", heading = true)
                 if (run.omitted) addLine("Earlier output exceeded the console history limit.", heading = true)
-                if (run.output.isEmpty()) addLine("No output recorded.")
-                else cleanOutput(run.output).lineSequence().forEach {
+                if (run.cleared) addLine("Earlier output was cleared in the console.", heading = true)
+                if (run.output.isEmpty() && !run.cleared) addLine("No output recorded.")
+                if (run.output.isNotEmpty()) cleanOutput(run.output).lineSequence().forEach {
                     currentCoroutineContext().ensureActive()
                     addLine(it)
                 }
             }
         }
         if (rows.isNotEmpty()) pages += rows
-        return Plan(pages, snapshot.file.substringAfterLast('/'),
+        val titleFile = if (content == SnippetContent.Result) snapshot.run?.file ?: snapshot.file else snapshot.file
+        return Plan(pages, titleFile.substringAfterLast('/'),
             if (metadata) "${snapshot.project} · CodeLab" else "CodeLab", colors)
     }
 
@@ -175,13 +203,23 @@ internal object SnippetRenderer {
         text(plan.title, 82f, 105f, 36f, colors.ink, Typeface.DEFAULT_BOLD)
         text(plan.subtitle, 82f, 146f, 23f, colors.muted, Typeface.DEFAULT)
         var y = bodyTop
+        val body = textPaint(colors, false)
+        val label = textPaint(colors, true)
+        var lastParagraph: Paragraph? = null
+        var lastLayout: StaticLayout? = null
         for (row in rows) {
+            val paragraph = row.paragraph
+            val layout = if (paragraph === lastParagraph) checkNotNull(lastLayout)
+                else layout(paragraph, if (paragraph.heading) label else body)
+            lastParagraph = paragraph
+            lastLayout = layout
+            val top = layout.getLineTop(row.line)
             row.number?.let { text(it.toString(), 82f,
-                (y + row.layout.getLineBaseline(row.line) - row.top).toFloat(), 21f, colors.muted) }
+                (y + layout.getLineBaseline(row.line) - top).toFloat(), 21f, colors.muted) }
             canvas.save()
-            canvas.clipRect(row.left, y, width - padding - 23, y + row.height)
-            canvas.translate(row.left.toFloat(), (y - row.top).toFloat())
-            row.layout.draw(canvas)
+            canvas.clipRect(paragraph.left, y, width - padding - 23, y + row.height)
+            canvas.translate(paragraph.left.toFloat(), (y - top).toFloat())
+            layout.draw(canvas)
             canvas.restore()
             y += row.height
         }

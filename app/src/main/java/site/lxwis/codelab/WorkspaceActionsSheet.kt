@@ -89,6 +89,7 @@ internal fun WorkspaceActionsSheet(
             }
             add("projectsearch", "Find in project", "Search text across files", editor, Icons.Default.Search)
             add("projectreplace", "Replace across files", "Review and apply replacements", editor, Icons.Default.FindReplace)
+            add("workspaceview", "Workspace view", "Choose Editor, Console or Split", editor, Icons.Default.ViewSidebar)
             add("panels", "Panel layout", "Adjust editor and console sizes", editor, Icons.Default.ViewSidebar)
             add("commands", "Command palette", "Search every workspace action", editor, Icons.Default.ManageSearch)
             if (fileOpen) {

@@ -74,7 +74,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.first
 
 @Composable
 internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
@@ -118,6 +117,29 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
     val motionMillis = motion.millis(170)
     // Reclaim chrome for every text input, including runtime stdin and WebView forms.
     val keyboardEditing = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    val configuration = LocalConfiguration.current
+    val wideWorkspace = WorkspaceSizeClass.of(configuration.screenWidthDp) != WorkspaceSizeClass.Compact
+    val shortWorkspace = configuration.screenHeightDp < 480
+    val outputOpen = m.console || m.preview
+    val splitOpen = outputOpen && if (wideWorkspace) !wideOutputExpanded else m.phoneSplitEnabled
+    val currentPanel = if (!outputOpen) "Editor" else if (splitOpen) "Split" else "Console"
+
+    fun choosePanel(pane: String) {
+        when (pane) {
+            "Editor" -> { m.console = false; m.preview = false }
+            "Console" -> {
+                m.chooseOutputMaximized(true)
+                m.choosePhoneSplitEnabled(false)
+                m.console = true
+                m.preview = false
+            }
+            "Split" -> {
+                m.chooseOutputMaximized(false)
+                if (!wideWorkspace) m.choosePhoneSplitEnabled(true)
+                if (!m.preview) m.console = true
+            }
+        }
+    }
     val activity = context as? ComponentActivity
     DisposableEffect(activity, focusMode, m.systemStatusVisible) {
         val window = activity?.window
@@ -211,7 +233,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
 
     Box(modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-        if (p != null && !focusMode) WorkspaceTopBar(m, p, ::openAction)
+        if (p != null && !focusMode) WorkspaceTopBar(m, p, ::openAction, showFile = outputOpen && !splitOpen)
         if (p == null) {
             MainDestinations(m, destination, { destination = it }, ::openAction, projects = { bottom ->
                 ProjectLibrary(m, motionMillis, { openAction("newproject") },
@@ -223,9 +245,6 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
             }, modifier = Modifier.weight(1f), backdropVisible = dialog.isEmpty() && !showTutorial && !keyboardEditing)
         } else {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            val wideWorkspace = WorkspaceSizeClass.of(LocalConfiguration.current.screenWidthDp) != WorkspaceSizeClass.Compact
-            val outputOpen = m.console || m.preview
-            val splitOpen = outputOpen && if (wideWorkspace) !wideOutputExpanded else m.phoneSplitEnabled
             if (!focusMode && (!outputOpen || splitOpen)) Row(verticalAlignment = Alignment.CenterVertically) {
                 val threshold = with(LocalDensity.current) { 32.dp.toPx() }
                 var explorerDrag by remember { mutableFloatStateOf(0f) }
@@ -245,22 +264,16 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     }
                 }
                 val tabScroll = rememberLazyListState()
-                LaunchedEffect(m.active, m.tabs) {
-                    val index = m.tabs.indexOf(m.active)
-                    if (index >= 0) {
-                        // Wait for the new tab count to be measured, then reveal the entire item.
-                        val layout = snapshotFlow { tabScroll.layoutInfo }.first {
-                            it.totalItemsCount == m.tabs.size && it.viewportEndOffset > it.viewportStartOffset
-                        }
-                        val item = layout.visibleItemsInfo.firstOrNull { it.index == index }
-                        if (item == null || item.offset < layout.viewportStartOffset ||
-                            item.offset + item.size > layout.viewportEndOffset) {
-                            if (motionMillis > 0) tabScroll.animateScrollToItem(index) else tabScroll.scrollToItem(index)
-                        }
-                    }
-                }
                 BoxWithConstraints(Modifier.weight(1f)) {
                 val tabWidth = maxWidth
+                LaunchedEffect(m.active, m.tabs, tabWidth) {
+                    val index = m.tabs.indexOf(m.active)
+                    if (index >= 0 && tabWidth > 0.dp) {
+                        // Request on the current width. Adding a tab also introduces the switcher,
+                        // so the old viewport can report a new tab visible before it shrinks.
+                        tabScroll.requestScrollToItem(index)
+                    }
+                }
                 LazyRow(Modifier.fillMaxWidth(), state = tabScroll,
                     verticalAlignment = Alignment.CenterVertically) {
                     items(m.tabs, key = { it }) { path ->
@@ -400,24 +413,9 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                 Spacer(Modifier.width(6.dp))
                 Text("Exit Focus Mode")
             }
-            if (!focusMode && !keyboardEditing) {
-                WorkspacePanels(if (!outputOpen) "Editor" else if (splitOpen) "Split" else "Console",
-                    Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) { pane ->
-                    when (pane) {
-                        "Editor" -> { m.console = false; m.preview = false }
-                        "Console" -> {
-                            m.chooseOutputMaximized(true)
-                            m.choosePhoneSplitEnabled(false)
-                            m.console = true
-                            m.preview = false
-                        }
-                        "Split" -> {
-                            m.chooseOutputMaximized(false)
-                            if (!wideWorkspace) m.choosePhoneSplitEnabled(true)
-                            if (!m.preview) m.console = true
-                        }
-                    }
-                }
+            if (!focusMode && !keyboardEditing && !shortWorkspace) {
+                WorkspacePanels(currentPanel, Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                    ::choosePanel)
             }
         }
         AnimatedVisibility(tutorialDetour && dialog.isEmpty() && !showTutorial,
@@ -666,6 +664,13 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
                     TextButton(onClick = { dialog = "layoutpresets" }) { Text("Save or restore layouts") }
                 }
             }, confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Done") } })
+        "workspaceview" -> CodeLabAlertDialog(onDismissRequest = { dialog = "" },
+            title = { Text("Workspace view") },
+            text = { WorkspacePanels(currentPanel, Modifier.fillMaxWidth()) { pane ->
+                choosePanel(pane)
+                dialog = ""
+            } },
+            confirmButton = { TextButton(onClick = { dialog = "" }) { Text("Cancel") } })
         "appearance" -> ReimaginedSettings(m, ::openAction, { dialog = "" }, initialPage = "appearance")
         "settings" -> ReimaginedSettings(m, onAction = ::openAction, close = { dialog = "" })
         "licenses" -> LicenseNotices { dialog = "" }
@@ -755,7 +760,7 @@ internal fun Studio(m: WorkspaceModel, modifier: Modifier) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun WorkspacePanels(current: String, modifier: Modifier = Modifier, choose: (String) -> Unit) {
+internal fun WorkspacePanels(current: String, modifier: Modifier = Modifier, choose: (String) -> Unit) {
     val panels = listOf("Editor", "Console", "Split")
     SingleChoiceSegmentedButtonRow(modifier) {
         panels.forEachIndexed { index, pane ->
